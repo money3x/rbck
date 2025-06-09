@@ -1,0 +1,1337 @@
+/* Advanced CMS Dashboard Styles */
+:root {
+    --primary-color: #27533b;
+    --secondary-color: #e0a800;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+    --border-color: #dee2e6;
+    --shadow: 0 2px 4px rgba(0,0,0,0.1);
+    --shadow-lg: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Sarabun', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--light-color);
+    color: var(--dark-color);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Layout */
+.cms-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.cms-header {
+    background: linear-gradient(135deg, var(--primary-color), #1e3d2b);
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-lg);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.cms-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.cms-body {
+    flex: 1;
+    display: flex;
+    min-height: calc(100vh - 80px);
+}
+
+.cms-sidebar {
+    width: 250px;
+    background: white;
+    border-right: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+    overflow-y: auto;
+}
+
+.cms-sidebar nav ul {
+    list-style: none;
+    padding: 1rem 0;
+}
+
+.cms-sidebar nav ul li {
+    margin: 0;
+}
+
+.cms-sidebar nav ul li a {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    text-decoration: none;
+    color: var(--dark-color);
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+}
+
+.cms-sidebar nav ul li a:hover,
+.cms-sidebar nav ul li a.active {
+    background-color: rgba(39, 83, 59, 0.1);
+    border-left-color: var(--primary-color);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.cms-main {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+    background-color: #fafbfc;
+}
+
+/* Sections */
+.cms-section {
+    display: none;
+}
+
+.cms-section.active {
+    display: block;
+}
+
+/* Dashboard Stats */
+.dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    border-top: 4px solid var(--primary-color);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-card h3 {
+    color: var(--dark-color);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+/* Enhanced Button Styles for SEO Tools */
+.btn-primary, .btn-secondary, .btn-ai, .btn-success, .btn-warning, .btn-danger {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.btn-primary::before, .btn-secondary::before, .btn-ai::before,
+.btn-success::before, .btn-warning::before, .btn-danger::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.6s ease;
+}
+
+.btn-primary:hover::before, .btn-secondary:hover::before, .btn-ai:hover::before,
+.btn-success:hover::before, .btn-warning:hover::before, .btn-danger:hover::before {
+    left: 100%;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), #1e3d2b);
+    color: white;
+    border: 2px solid transparent;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 5px 15px rgba(39, 83, 59, 0.3);
+    border-color: var(--secondary-color);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, var(--secondary-color), #d4950a);
+    color: var(--primary-color);
+    border: 2px solid var(--secondary-color);
+}
+
+.btn-secondary:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 5px 15px rgba(224, 168, 0, 0.3);
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-ai {
+    background: linear-gradient(135deg, #6f42c1, #5a32a3);
+    color: white;
+    border: 2px solid transparent;
+}
+
+.btn-ai:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 5px 15px rgba(111, 66, 193, 0.3);
+    border-color: #e0a800;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--success-color), #1e7e34);
+    color: white;
+    border: 2px solid transparent;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, var(--warning-color), #e0a800);
+    color: var(--dark-color);
+    border: 2px solid var(--warning-color);
+}
+
+.btn-warning:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 5px 15px rgba(255, 193, 7, 0.3);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--danger-color), #bd2130);
+    color: white;
+    border: 2px solid transparent;
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+}
+
+/* ==============================
+   PREMIUM GEMINI 2.0 FLASH UI
+   ============================== */
+
+/* Advanced Keyframes */
+@keyframes gradientFlow {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+@keyframes premiumCardGlow {
+    0%, 100% { 
+        box-shadow: 0 8px 32px rgba(255, 107, 53, 0.15), 
+                    0 4px 16px rgba(247, 147, 30, 0.1);
+    }
+    50% { 
+        box-shadow: 0 12px 48px rgba(255, 107, 53, 0.25), 
+                    0 6px 24px rgba(247, 147, 30, 0.15);
+    }
+}
+
+@keyframes textShimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+@keyframes floatingIcon {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    25% { transform: translateY(-3px) rotate(2deg); }
+    50% { transform: translateY(-6px) rotate(0deg); }
+    75% { transform: translateY(-3px) rotate(-2deg); }
+}
+
+@keyframes pulseBadge {
+    0%, 100% { 
+        transform: scale(1);
+        box-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
+    }
+    50% { 
+        transform: scale(1.05);
+        box-shadow: 0 0 30px rgba(255, 107, 53, 0.8);
+    }
+}
+
+@keyframes shimmerButton {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* ULTRA-PREMIUM BTN-GEMINI STYLES */
+.btn-gemini {
+    position: relative !important;
+    background: linear-gradient(135deg, 
+        #ff6b35 0%, 
+        #f7931e 25%, 
+        #ff6b35 50%,
+        #f7931e 75%,
+        #ff6b35 100%) !important;
+    background-size: 400% 400% !important;
+    border: 3px solid transparent !important;
+    border-radius: 16px !important;
+    padding: 1.2rem 2.5rem !important;
+    font-weight: 900 !important;
+    font-size: 1rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1.5px !important;
+    color: white !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
+    overflow: hidden !important;
+    animation: gradientFlow 3s ease infinite !important;
+    cursor: pointer !important;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1) !important;
+    box-shadow: 
+        0 12px 35px rgba(255, 107, 53, 0.4),
+        0 6px 20px rgba(0,0,0,0.15),
+        inset 0 2px 0 rgba(255,255,255,0.3) !important;
+}
+
+.btn-gemini:hover {
+    transform: translateY(-8px) scale(1.06) !important;
+    box-shadow: 
+        0 20px 60px rgba(255, 107, 53, 0.5),
+        0 10px 30px rgba(0,0,0,0.2),
+        inset 0 2px 0 rgba(255,255,255,0.4) !important;
+    filter: brightness(1.15) contrast(1.1) !important;
+}
+
+.btn-gemini::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255,255,255,0.7) 30%,
+        rgba(255,255,255,0.9) 50%, 
+        rgba(255,255,255,0.7) 70%,
+        transparent 100%) !important;
+    transition: left 0.8s cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+
+.btn-gemini:hover::before {
+    left: 100% !important;
+}
+
+/* PREMIUM TOOL CARD GEMINI STYLES */
+.tool-card.gemini {
+    position: relative !important;
+    background: linear-gradient(145deg, 
+        rgba(255, 255, 255, 1) 0%,
+        rgba(255, 107, 53, 0.03) 30%,
+        rgba(247, 147, 30, 0.03) 70%,
+        rgba(255, 255, 255, 1) 100%) !important;
+    border: 3px solid transparent !important;
+    background-clip: padding-box !important;
+    border-radius: 24px !important;
+    padding: 2.5rem !important;
+    animation: premiumCardGlow 6s ease-in-out infinite !important;
+    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1) !important;
+    overflow: hidden !important;
+}
+
+.tool-card.gemini::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: linear-gradient(135deg, 
+        rgba(255, 107, 53, 0.1) 0%,
+        rgba(247, 147, 30, 0.1) 50%,
+        rgba(255, 107, 53, 0.1) 100%) !important;
+    border-radius: 24px !important;
+    opacity: 0 !important;
+    transition: opacity 0.5s ease !important;
+    z-index: -1 !important;
+}
+
+.tool-card.gemini:hover::before {
+    opacity: 1 !important;
+}
+
+.tool-card.gemini:hover {
+    transform: translateY(-15px) scale(1.05) !important;
+    box-shadow: 
+        0 30px 80px rgba(255, 107, 53, 0.3),
+        0 15px 40px rgba(0,0,0,0.2) !important;
+    border-color: rgba(255, 107, 53, 0.5) !important;
+}
+
+.tool-card.gemini .tool-header h3 {
+    background: linear-gradient(45deg, #ff6b35, #f7931e, #6f42c1, #ff6b35) !important;
+    background-size: 300% 300% !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    font-weight: 900 !important;
+    font-size: 1.6rem !important;
+    text-shadow: none !important;
+    animation: textShimmer 4s ease-in-out infinite !important;
+    margin-bottom: 1rem !important;
+}
+
+/* PREMIUM BORDER EFFECTS */
+.premium-border {
+    position: relative !important;
+    border: 3px solid transparent !important;
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(135deg, #ff6b35, #f7931e, #6f42c1) border-box !important;
+    border-radius: 20px !important;
+}
+
+.premium-border::after {
+    content: '' !important;
+    position: absolute !important;
+    top: -3px !important;
+    left: -3px !important;
+    right: -3px !important;
+    bottom: -3px !important;
+    background: linear-gradient(135deg, #ff6b35, #f7931e, #6f42c1) !important;
+    border-radius: 20px !important;
+    z-index: -1 !important;
+    opacity: 0 !important;
+    transition: opacity 0.5s ease !important;
+}
+
+.premium-border:hover::after {
+    opacity: 0.8 !important;
+    animation: gradientFlow 2s ease infinite !important;
+}
+
+/* FLOATING ICON PREMIUM ANIMATION */
+.floating-icon {
+    animation: floatingIcon 3s ease-in-out infinite !important;
+    transform-origin: center !important;
+    filter: drop-shadow(0 4px 8px rgba(255, 107, 53, 0.3)) !important;
+}
+
+/* PULSE ANIMATION FOR STATUS BADGES */
+.pulse-animation {
+    animation: pulseBadge 2.5s infinite !important;
+    border-radius: 25px !important;
+    padding: 8px 16px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+}
+
+/* ENHANCED HOVER EFFECTS */
+.enhanced-hover {
+    position: relative !important;
+    overflow: hidden !important;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+
+.enhanced-hover::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent) !important;
+    transition: left 0.6s ease !important;
+}
+
+.enhanced-hover:hover::before {
+    left: 100% !important;
+}
+
+.enhanced-hover:hover {
+    transform: translateY(-5px) scale(1.03) !important;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* PREMIUM SHIMMER EFFECT */
+.premium-shimmer {
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.premium-shimmer::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.6) 50%, 
+        transparent 100%) !important;
+    animation: shimmerButton 2s infinite !important;
+}
+
+/* GEMINI HEADER STYLES */
+.gemini-header {
+    background: linear-gradient(135deg, 
+        rgba(255, 107, 53, 0.1) 0%,
+        rgba(247, 147, 30, 0.1) 50%,
+        rgba(255, 255, 255, 1) 100%) !important;
+    border: 2px solid rgba(255, 107, 53, 0.2) !important;
+    border-radius: 20px !important;
+    padding: 2.5rem !important;
+    margin-bottom: 2rem !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.gemini-title {
+    background: linear-gradient(45deg, #ff6b35, #f7931e, #6f42c1) !important;
+    background-size: 300% 300% !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    animation: textShimmer 4s ease-in-out infinite !important;
+    font-weight: 900 !important;
+    font-size: 2.5rem !important;
+    margin-bottom: 1rem !important;
+}
+
+/* Success/Error Messages */
+.alert {
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.alert-success {
+    background-color: rgba(40, 167, 69, 0.1);
+    border: 1px solid rgba(40, 167, 69, 0.2);
+    color: var(--success-color);
+}
+
+.alert-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    border: 1px solid rgba(220, 53, 69, 0.2);
+    color: var(--danger-color);
+}
+
+.alert-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.2);
+    color: var(--warning-color);
+}
+
+/* Score Indicators */
+.score-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.score-high {
+    color: var(--success-color);
+}
+
+.score-medium {
+    color: var(--warning-color);
+}
+
+.score-low {
+    color: var(--danger-color);
+}
+
+.score-circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    color: white;
+    font-weight: bold;
+}
+
+.score-circle.high {
+    background: var(--success-color);
+}
+
+.score-circle.medium {
+    background: var(--warning-color);
+}
+
+.score-circle.low {
+    background: var(--danger-color);
+}
+
+/* ==============================
+   GEMINI 2.0 SEO TOOLS STYLING
+   ============================== */
+
+/* Enhanced Tool Cards */
+.seo-tools-grid .tool-card {
+    background: linear-gradient(145deg, #ffffff, #f8f9fa);
+    border: 1px solid rgba(39, 83, 59, 0.15);
+    border-radius: 16px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 
+        0 4px 15px rgba(0,0,0,0.08),
+        0 1px 3px rgba(0,0,0,0.1);
+}
+
+.seo-tools-grid .tool-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), #6f42c1);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+}
+
+.seo-tools-grid .tool-card:hover::before {
+    transform: translateX(0);
+}
+
+.seo-tools-grid .tool-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(39, 83, 59, 0.15);
+    border-color: var(--primary-color);
+}
+
+.seo-tools-grid .tool-card h3 {
+    color: var(--primary-color);
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.seo-tools-grid .tool-card h3::before {
+    content: '🚀';
+    font-size: 1.2rem;
+    transition: transform 0.3s ease;
+}
+
+.seo-tools-grid .tool-card:hover h3::before {
+    transform: scale(1.2) rotate(10deg);
+}
+
+.seo-tools-grid .tool-card p {
+    color: #6c757d;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+/* Enhanced Button Styles for SEO Tools */
+.seo-tools-grid .btn-ai,
+.seo-tools-grid .btn-primary,
+.seo-tools-grid .btn-secondary {
+    position: relative;
+    padding: 0.85rem 1.75rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 
+        0 4px 15px rgba(0,0,0,0.1),
+        inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.seo-tools-grid .btn-ai::before,
+.seo-tools-grid .btn-primary::before,
+.seo-tools-grid .btn-secondary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255,255,255,0.3), 
+        transparent);
+    transition: left 0.6s ease;
+}
+
+.seo-tools-grid .btn-ai:hover::before,
+.seo-tools-grid .btn-primary:hover::before,
+.seo-tools-grid .btn-secondary:hover::before {
+    left: 100%;
+}
+
+.seo-tools-grid .btn-ai {
+    background: linear-gradient(135deg, #6f42c1 0%, #8e44ad 50%, #9b59b6 100%);
+    border: 2px solid transparent;
+    color: white;
+}
+
+.seo-tools-grid .btn-ai:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 
+        0 8px 25px rgba(111, 66, 193, 0.3),
+        0 4px 15px rgba(0,0,0,0.1);
+    border-color: var(--secondary-color);
+}
+
+.seo-tools-grid .btn-primary:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 
+        0 8px 25px rgba(39, 83, 59, 0.3),
+        0 4px 15px rgba(0,0,0,0.1);
+}
+
+.seo-tools-grid .btn-secondary:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 
+        0 8px 25px rgba(224, 168, 0, 0.3),
+        0 4px 15px rgba(0,0,0,0.1);
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Special Icons for Different Tools */
+.tool-card[data-tool="keywords"] h3::before { content: '🔍'; }
+.tool-card[data-tool="sitemap"] h3::before { content: '🗺️'; }
+.tool-card[data-tool="schema"] h3::before { content: '📋'; }
+.tool-card[data-tool="speed"] h3::before { content: '⚡'; }
+.tool-card[data-tool="tips"] h3::before { content: '💡'; }
+.tool-card[data-tool="ai"] h3::before { content: '🤖'; }
+
+/* Glowing effect for AI-related tools */
+.tool-card[data-tool="ai"],
+.tool-card:has(.btn-ai) {
+    box-shadow: 
+        0 4px 15px rgba(0,0,0,0.08),
+        0 0 20px rgba(111, 66, 193, 0.1);
+}
+
+.tool-card[data-tool="ai"]:hover,
+.tool-card:has(.btn-ai):hover {
+    box-shadow: 
+        0 12px 30px rgba(39, 83, 59, 0.2),
+        0 0 30px rgba(111, 66, 193, 0.2);
+}
+
+/* Animated background for premium tools */
+.tool-card.premium {
+    background: linear-gradient(145deg, #ffffff, #f8f9fa);
+    background-size: 200% 200%;
+    animation: gradientShift 4s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Pulse animation for important buttons */
+.btn-ai.pulse {
+    animation: buttonPulse 2s infinite;
+}
+
+@keyframes buttonPulse {
+    0% { box-shadow: 0 4px 15px rgba(0,0,0,0.1), 0 0 0 0 rgba(111, 66, 193, 0.7); }
+    70% { box-shadow: 0 4px 15px rgba(0,0,0,0.1), 0 0 0 10px rgba(111, 66, 193, 0); }
+    100% { box-shadow: 0 4px 15px rgba(0,0,0,0.1), 0 0 0 0 rgba(111, 66, 193, 0); }
+}
+
+/* Loading States for SEO Tools */
+.tool-card.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.tool-card.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid var(--primary-color);
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ================================================
+   ENHANCED GEMINI 2.0 SEO TOOLS STYLING - PREMIUM
+   ================================================ */
+
+/* Premium Gradient Border Effects */
+.seo-tools-grid .tool-card.gemini {
+    position: relative !important;
+    background: linear-gradient(145deg, 
+        rgba(255, 107, 53, 0.02) 0%,
+        rgba(247, 147, 30, 0.02) 50%,
+        rgba(255, 255, 255, 1) 100%) !important;
+    border: 2px solid transparent !important;
+    background-clip: padding-box !important;
+    border-radius: 20px !important;
+    animation: premiumCardGlow 4s ease-in-out infinite !important;
+    box-shadow: 0 8px 32px rgba(255, 107, 53, 0.15), 
+                0 4px 16px rgba(247, 147, 30, 0.1) !important;
+}
+
+/* Animated Gradient Border */
+.seo-tools-grid .tool-card.gemini::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 20px;
+    padding: 2px;
+    background: linear-gradient(45deg, 
+        #ff6b35 0%, 
+        #f7931e 25%, 
+        #6f42c1 50%,
+        #ff6b35 75%,
+        #f7931e 100%);
+    background-size: 400% 400%;
+    animation: gradientBorder 3s ease infinite;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: xor;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    z-index: -1;
+}
+
+@keyframes gradientBorder {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+@keyframes premiumCardGlow {
+    0%, 100% { 
+        box-shadow: 
+            0 8px 32px rgba(255, 107, 53, 0.1),
+            0 2px 8px rgba(0,0,0,0.06);
+    }
+    50% { 
+        box-shadow: 
+            0 16px 48px rgba(255, 107, 53, 0.2),
+            0 4px 16px rgba(247, 147, 30, 0.1);
+    }
+}
+
+/* Enhanced Headers with Gradient Text */
+.seo-tools-grid .tool-card.gemini h3 {
+    background: linear-gradient(45deg, #ff6b35, #f7931e, #6f42c1) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    font-weight: 800 !important;
+    font-size: 1.4rem !important;
+    text-shadow: none !important;
+    animation: textShimmer 3s ease-in-out infinite !important;
+}
+
+@keyframes textShimmer {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+/* Ultra-Premium Button with Multiple Effects */
+.seo-tools-grid .btn-gemini {
+    position: relative !important;
+    background: linear-gradient(135deg, 
+        #ff6b35 0%, 
+        #f7931e 25%, 
+        #ff6b35 50%,
+        #f7931e 75%,
+        #ff6b35 100%) !important;
+    background-size: 400% 400% !important;
+    border: 2px solid transparent !important;
+    border-radius: 14px !important;
+    padding: 1rem 2.2rem !important;
+    font-weight: 800 !important;
+    font-size: 0.95rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1.2px !important;
+    color: white !important;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4) !important;
+    overflow: hidden !important;
+    animation: gradientFlow 4s ease infinite !important;
+    box-shadow: 
+        0 8px 25px rgba(255, 107, 53, 0.3),
+        inset 0 1px 0 rgba(255,255,255,0.4) !important;
+}
+
+@keyframes gradientFlow {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+/* Triple Shimmer Effect */
+.seo-tools-grid .btn-gemini::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255,255,255,0.6) 30%,
+        rgba(255,255,255,0.8) 50%, 
+        rgba(255,255,255,0.6) 70%,
+        transparent 100%);
+    transition: left 1s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.seo-tools-grid .btn-gemini:hover::before {
+    left: 100%;
+}
+
+/* Enhanced Hover Effects */
+.seo-tools-grid .btn-gemini:hover {
+    transform: translateY(-6px) scale(1.08) !important;
+    box-shadow: 
+        0 16px 40px rgba(255, 107, 53, 0.4),
+        0 8px 25px rgba(0,0,0,0.2),
+        inset 0 1px 0 rgba(255,255,255,0.6) !important;
+    filter: brightness(1.1) !important;
+}
+
+/* AI Button Enhanced */
+.seo-tools-grid .btn-ai {
+    background: linear-gradient(135deg, 
+        #6f42c1 0%, 
+        #8e44ad 25%, 
+        #9b59b6 50%,
+        #8e44ad 75%,
+        #6f42c1 100%);
+    background-size: 400% 400%;
+    animation: gradientFlow 4s ease infinite;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+.seo-tools-grid .btn-ai:hover {
+    transform: translateY(-6px) scale(1.08);
+    box-shadow: 
+        0 16px 40px rgba(111, 66, 193, 0.4),
+        0 8px 25px rgba(0,0,0,0.2);
+    filter: brightness(1.1);
+}
+
+/* Status Badge Premium Effects */
+.tool-status .status-gemini {
+    background: linear-gradient(90deg, #ff6b35, #f7931e);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    animation: statusPulse 2.5s ease-in-out infinite;
+    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+}
+
+@keyframes statusPulse {
+    0%, 100% { 
+        opacity: 1; 
+        transform: scale(1);
+    }
+    50% { 
+        opacity: 0.9; 
+        transform: scale(1.02);
+    }
+}
+
+/* Tool Card Icon Enhancements */
+.seo-tools-grid .tool-card.gemini h3::before {
+    content: '🚀';
+    font-size: 1.8rem;
+    filter: drop-shadow(0 3px 8px rgba(255, 107, 53, 0.4));
+    animation: iconFloat 3s ease-in-out infinite;
+}
+
+@keyframes iconFloat {
+    0%, 100% { 
+        transform: scale(1) rotate(0deg);
+    }
+    50% { 
+        transform: scale(1.2) rotate(10deg);
+    }
+}
+
+/* Premium Loading States */
+.tool-card.gemini.loading {
+    opacity: 0.9;
+    animation: none;
+}
+
+.tool-card.gemini.loading .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+    z-index: 100;
+}
+
+.gemini-loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 107, 53, 0.2);
+    border-top: 4px solid #ff6b35;
+    border-radius: 50%;
+    animation: premiumSpin 1.2s linear infinite;
+}
+
+@keyframes premiumSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Interactive Hover Enhancements */
+.seo-tools-grid .tool-card.gemini:hover {
+    transform: translateY(-12px) scale(1.03);
+    box-shadow: 
+        0 25px 60px rgba(255, 107, 53, 0.25),
+        0 12px 35px rgba(0,0,0,0.15);
+}
+
+/* Advanced Pulse for Important Tools */
+.btn-gemini.pulse {
+    animation: advancedGeminiPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes advancedGeminiPulse {
+    0% { 
+        box-shadow: 
+            0 8px 25px rgba(255, 107, 53, 0.3),
+            0 0 0 0 rgba(255, 107, 53, 0.7);
+    }
+    70% { 
+        box-shadow: 
+            0 8px 25px rgba(255, 107, 53, 0.3),
+            0 0 0 20px rgba(255, 107, 53, 0);
+    }
+    100% { 
+        box-shadow: 
+            0 8px 25px rgba(255, 107, 53, 0.3),
+            0 0 0 0 rgba(255, 107, 53, 0);
+    }
+}
+
+/* ADDITIONAL PREMIUM ENHANCEMENTS FOR GEMINI 2.0 SEO TOOLS */
+
+/* Enhanced Header Styling */
+.section-header.gemini-header {
+    background: linear-gradient(100deg, #ff6b35 0%, #f7931e 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 24px rgba(255, 107, 53, 0.2) !important;
+    padding: 40px 0 60px 0 !important;
+    border-radius: 15px !important;
+    margin-bottom: 30px !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.section-header.gemini-header::before {
+    content: '' !important;
+    position: absolute !important;
+    top: -50% !important;
+    left: -50% !important;
+    width: 200% !important;
+    height: 200% !important;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent) !important;
+    transform: rotate(45deg) !important;
+    animation: shimmerHeader 3s infinite !important;
+}
+
+.gemini-title {
+    font-size: 2.2em !important;
+    margin-bottom: 10px !important;
+    background: linear-gradient(45deg, #fff, #ffeb3b, #fff) !important;
+    background-size: 200% 200% !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    animation: gradientTitle 2s ease-in-out infinite alternate !important;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5) !important;
+}
+
+.gemini-header p {
+    font-size: 1.15em !important;
+    opacity: 0.95 !important;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
+}
+
+/* Gemini Status Card Premium */
+.gemini-status-card {
+    background: linear-gradient(135deg, #FF6B35, #F7931E) !important;
+    color: white !important;
+    padding: 30px 35px !important;
+    border-radius: 18px !important;
+    margin: 0 auto 36px auto !important;
+    max-width: 700px !important;
+    box-shadow: 0 6px 32px rgba(255, 107, 53, 0.2) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.gemini-status-card::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent) !important;
+    animation: slideStatus 2s infinite !important;
+}
+
+.gemini-status-card .status-flex {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+.gemini-status-title {
+    margin: 0 0 10px 0 !important;
+    font-size: 1.3em !important;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5) !important;
+}
+
+.gemini-status-text {
+    margin: 0 !important;
+    opacity: 0.9 !important;
+}
+
+.gemini-usage {
+    font-size: 1.3em !important;
+    font-weight: bold !important;
+    text-shadow: 0 0 15px rgba(255, 235, 59, 0.8) !important;
+    animation: pulseGlow 2s infinite !important;
+}
+
+.gemini-usage-label {
+    font-size: 0.95em !important;
+    opacity: 0.8 !important;
+}
+
+/* Tool Card Enhanced Styling */
+.tool-card.gemini-seo {
+    border: 2px solid #ff6b35 !important;
+    box-shadow: 0 4px 24px rgba(255, 107, 53, 0.2) !important;
+}
+
+.tool-card.gemini-keywords {
+    border: 2px solid #f7931e !important;
+    box-shadow: 0 4px 24px rgba(247, 147, 30, 0.2) !important;
+}
+
+.tool-card.gemini-backlinks {
+    border: 2px solid #7ee787 !important;
+    box-shadow: 0 4px 24px rgba(126, 231, 135, 0.2) !important;
+}
+
+.tool-header.gemini {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-bottom: 15px !important;
+}
+
+.tool-header.gemini i {
+    font-size: 1.5em !important;
+    color: #ff6b35 !important;
+    filter: drop-shadow(0 2px 4px rgba(255, 107, 53, 0.3)) !important;
+}
+
+.tool-header.gemini h3 {
+    margin: 0 !important;
+    font-weight: 800 !important;
+    font-size: 1.2em !important;
+}
+
+.tool-body p {
+    font-size: 1.07em !important;
+    line-height: 1.6 !important;
+    color: #6c757d !important;
+    margin-bottom: 15px !important;
+}
+
+.tool-status {
+    margin-bottom: 10px !important;
+}
+
+.quick-check, .keyword-input {
+    margin-bottom: 12px !important;
+}
+
+.tool-actions {
+    display: flex !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+}
+
+/* Header Title Section */
+.header-title-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.logout-btn {
+    margin-left: 15px !important;
+    padding: 8px 12px !important;
+}
+
+/* Form Helpers */
+.url-help-text {
+    color: #6c757d;
+    font-size: 0.85em;
+}
+
+.content-editor-area {
+    min-height: 300px;
+    border: 1px solid #232b36;
+    border-radius: 8px;
+    padding: 15px;
+    background: var(--color-surface);
+    color: var(--color-text);
+}
+
+.form-columns-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.article-idea-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* SEO Optimization Section */
+.seo-optimization-section {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+    border: 1px solid var(--border-color);
+}
+
+.seo-section-title {
+    color: #27533b;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+    font-weight: 600;
+}
+
+.seo-columns-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* Modal Enhancements */
+.modal-small {
+    max-width: 420px !important;
+}
+
+.api-key-input-group {
+    display: flex;
+    gap: 8px;
+}
+
+.api-key-status {
+    color: #6c757d;
+    font-size: 0.85em;
+}
+
+/* Responsive Grid Adjustments */
+@media (max-width: 768px) {
+    .form-columns-grid,
+    .seo-columns-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .article-idea-actions {
+        flex-direction: column;
+    }
+    
+    .api-key-input-group {
+        flex-direction: column;
+    }
+}

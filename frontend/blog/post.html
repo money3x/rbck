@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บทความ | ระเบียบการช่าง</title>
+    <meta name="description" content=""> <!-- จะถูก update ด้วย JS -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .post-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .post-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .post-title {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        .post-meta {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .post-content {
+            font-size: 1.1em;
+            margin-bottom: 40px;
+            line-height: 1.8;
+        }
+        .post-content img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 20px auto;
+            border-radius: 5px;
+        }
+        .post-tags {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .tag {
+            display: inline-block;
+            background: #f0f2f5;
+            padding: 5px 10px;
+            margin: 0 5px 5px 0;
+            border-radius: 3px;
+            color: #34495e;
+            font-size: 0.9em;
+        }
+        .back-button {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            transition: background 0.3s;
+        }
+        .back-button:hover {
+            background: #2980b9;
+        }
+        .error-container {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .post-container { padding: 20px; }
+            .post-title { font-size: 2em; }
+        }
+    </style>
+</head>
+<body>    <a href="/" class="back-button">← กลับหน้าหลัก</a>
+    <div class="loading" id="loading">
+        <div style="font-size: 3em; margin-bottom: 20px;">⏳</div>
+        <div>กำลังโหลดบทความ...</div>
+    </div>
+    <article id="post-content" class="post-container" style="display: none;">
+        <div class="post-header">
+            <h1 class="post-title"></h1>
+            <div class="post-meta">
+                <span class="author"></span>
+                <span class="date"></span>
+                <div class="category" style="margin-top: 10px;"></div>
+            </div>
+        </div>
+        <div class="post-content"></div>
+        <div class="post-tags"></div>
+    </article>
+    <div id="error-container" class="error-container" style="display: none;">
+        <div style="font-size: 3em; margin-bottom: 20px;">😢</div>        <h2>ไม่พบบทความ</h2>
+        <p>ขออภัย ไม่พบบทความที่คุณต้องการ</p>
+        <a href="/" class="back-button">กลับหน้าหลัก</a>
+    </div>    
+    <script>
+        // Smart API base URL detection
+        function getApiBase() {
+            const hostname = window.location.hostname;
+            const port = window.location.port;
+            const protocol = window.location.protocol;
+            
+            // Check if we're in development (localhost or local IP)
+            if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('192.168.')) {
+                // Development: use local backend
+                const backendPort = port === '8080' ? '10000' : '10000'; // Default backend port
+                return `${protocol}//${hostname}:${backendPort}/api`;
+            } else {
+                // Production: use deployed backend
+                return 'https://rbck.onrender.com/api';
+            }
+        }
+        
+        const API_BASE = getApiBase();
+        console.log('🔧 Blog Post API Base:', API_BASE);
+          async function loadPost() {
+        // Get slug from URL path (e.g., /blog/my-article-slug)
+        const path = window.location.pathname;
+        console.log('🔍 Current path:', path);
+        
+        // Extract slug from /blog/slug-name format
+        const pathParts = path.split('/').filter(part => part); // Remove empty parts
+        console.log('📝 Path parts:', pathParts);
+        
+        let slug;
+        if (pathParts.length >= 2 && pathParts[0] === 'blog') {
+            slug = pathParts[1]; // Get slug from /blog/slug-name
+        } else if (pathParts.length === 1 && pathParts[0] !== 'post.html') {
+            slug = pathParts[0]; // Fallback for direct slug
+        }
+        
+        console.log('🎯 Extracted slug:', slug);
+        
+        if (!slug || slug === 'post.html') {
+            showError();
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/posts/slug/${slug}`);
+            if (!response.ok) {
+                throw new Error('ไม่พบบทความ');
+            }
+            const post = await response.json();
+            if (!post) {
+                throw new Error('ไม่พบบทความ');
+            }
+
+            // Update metadata
+            document.title = post.metatitle || post.titleth || 'บทความ | ระเบียบการช่าง';
+            const metaDesc = document.querySelector('meta[name="description"]');
+            metaDesc.content = post.metadescription || post.excerpt || '';
+
+            // Update content
+            document.querySelector('.post-title').textContent = post.titleth;
+            document.querySelector('.post-content').innerHTML = post.content;
+            document.querySelector('.author').textContent = `โดย ${post.author || 'ระเบียบการช่าง'}`;
+            
+            // Format date
+            const postDate = new Date(post.created_at);
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            document.querySelector('.date').textContent = ` | ${postDate.toLocaleDateString('th-TH', options)}`;
+            
+            // Add category if exists
+            if (post.category) {
+                document.querySelector('.category').textContent = `หมวดหมู่: ${post.category}`;
+            }
+
+            // Add tags if exist
+            if (post.tags && post.tags.length > 0) {
+                const tagsHtml = post.tags.map(tag => `<span class="tag">${tag}</span>`).join('');
+                document.querySelector('.post-tags').innerHTML = tagsHtml;
+            }
+
+            // Show content, hide loading
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('post-content').style.display = 'block';
+
+        } catch (error) {
+            console.error('Error loading post:', error);
+            showError();
+        }
+    }
+
+    function showError() {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error-container').style.display = 'block';
+    }
+
+    loadPost();
+    </script>
+</body>
+</html>

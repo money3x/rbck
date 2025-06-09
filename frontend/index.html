@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com https://via.placeholder.com https://rbck.onrender.com https://flourishing-gumdrop-dffe7a.netlify.app http://localhost:3000; connect-src 'self' https://rbck.onrender.com https://flourishing-gumdrop-dffe7a.netlify.app http://localhost:3000; img-src 'self' data: https://via.placeholder.com https://picsum.photos https://images.unsplash.com https://*.icons8.com https://*.giphy.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ระเบียบการช่าง ผู้เชี่ยวชาญด้านรถเกี่ยวข้าว บริการซ่อม ขายรถเกี่ยวข้าวใหม่และมือสอง อะไหล่คุณภาพ และบทความน่ารู้เพื่อเกษตรกร">
+    <meta name="keywords" content="รถเกี่ยวข้าว, ซ่อมรถเกี่ยวข้าว, ขายรถเกี่ยวข้าว, รถเกี่ยวข้าวมือสอง, รถเกี่ยวข้าวใหม่, อะไหล่รถเกี่ยวข้าว, ระเบียบการช่าง, บทความรถเกี่ยวข้าว, SEO เกษตร, SGE เกษตร">
+    <title>ระเบียบการช่าง - รถเกี่ยวข้าว บริการครบวงจร และบทความเพื่อเกษตรกร</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700;800&amp;display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div id="welcomeScreen">
+        <h1 data-translate-key="welcome_title">ยินดีต้อนรับสู่ ระเบียบการช่าง</h1>
+        <p data-translate-key="welcome_subtitle">ผู้นำด้านรถเกี่ยวข้าวและบริการครบวงจรเพื่อเกษตรกรไทย</p>
+        <button id="enterWebsiteButton" data-translate-key="enter_website_btn">เข้าสู่เว็บไซต์</button>
+    </div>
+
+    <header id="mainHeader" style="display: none;">
+        <div class="container">
+            <a href="#hero" class="logo" data-translate-key="brand_name_short_html">ระเบียบ<span>การช่าง</span></a>
+            <nav id="mainNav">
+                <ul>
+                    <li><a href="#hero" class="active" data-translate-key="nav_home">หน้าแรก</a></li>
+                    <li><a href="#services" data-translate-key="nav_services">บริการ</a></li>
+                    <li><a href="#products" data-translate-key="nav_products">รถเกี่ยวข้าว</a></li>
+                    <li><a href="#why-choose-us" data-translate-key="nav_why_us">ทำไมต้องเลือกเรา</a></li>
+                    <li><a href="#blog" data-translate-key="nav_blog">บทความ</a></li>
+                    <li><a href="#about" data-translate-key="nav_about">เกี่ยวกับเรา</a></li>
+                    <li><a href="#testimonials" data-translate-key="nav_testimonials">ลูกค้าพูดถึง</a></li>
+                    <li><a href="#contact" data-translate-key="nav_contact">ติดต่อ</a></li>
+                </ul>
+            </nav>
+            <div id="languageSelectorDesktop" class="language-selector">
+                <button class="language-selector-toggle" aria-label="Change language" aria-haspopup="true" aria-expanded="false">
+                    <span class="world-icon">🌐</span>
+                    <span data-translate-key="change_language_label">เปลี่ยนภาษา</span>
+                    <span class="arrow-down">▼</span>
+                </button>
+                <div class="language-options">
+                    <button data-lang="th" class="lang-option active" data-translate-key="lang_option_thai">ไทย</button>
+                    <span class="lang-separator">|</span>
+                    <button data-lang="en" class="lang-option" data-translate-key="lang_option_eng">ENG</button>
+                </div>
+            </div>
+            <button class="menu-toggle" id="menuToggle" aria-label="เมนู" aria-expanded="false">☰</button>
+        </div>
+    </header>
+
+    <div class="mobile-nav-panel" id="mobileNavPanel">
+        <div class="mobile-nav-panel-content">
+            <div class="mobile-menu-header">
+                <div class="logo-mobile-menu" data-translate-key="brand_name_short_mobile_html">ระเบียบ<span>การช่าง</span></div>
+                <button class="close-menu-btn" id="closeMenuBtn" aria-label="ปิดเมนู">×</button>
+            </div>
+            <ul>
+                <li><a href="#hero" data-translate-key="nav_home_mobile"><span class="menu-icon">🏠</span><span data-translate-key="nav_home">หน้าแรก</span></a></li>
+                <li><a href="#services" data-translate-key="nav_services_mobile"><span class="menu-icon">🛠️</span><span data-translate-key="nav_services">บริการ</span></a></li>
+                <li><a href="#products" data-translate-key="nav_products_mobile"><span class="menu-icon">🌾</span><span data-translate-key="nav_products">รถเกี่ยวข้าว</span></a></li>
+                <li><a href="#why-choose-us" data-translate-key="nav_why_us_mobile"><span class="menu-icon">⭐</span><span data-translate-key="nav_why_us">ทำไมต้องเลือกเรา</span></a></li>
+                <li><a href="#blog" data-translate-key="nav_blog_mobile"><span class="menu-icon">📖</span><span data-translate-key="nav_blog">บทความ</span></a></li>
+                <li><a href="#about" data-translate-key="nav_about_mobile"><span class="menu-icon">🏢</span><span data-translate-key="nav_about">เกี่ยวกับเรา</span></a></li>
+                <li><a href="#testimonials" data-translate-key="nav_testimonials_mobile"><span class="menu-icon">💬</span><span data-translate-key="nav_testimonials">ลูกค้าพูดถึง</span></a></li>
+                <li><a href="#contact" data-translate-key="nav_contact_mobile"><span class="menu-icon">📞</span><span data-translate-key="nav_contact">ติดต่อ</span></a></li>
+            </ul>
+            <div id="languageSelectorMobile" class="language-selector">
+                <button class="language-selector-toggle" aria-label="Change language" aria-haspopup="true" aria-expanded="false">
+                    <span class="world-icon">🌐</span>
+                    <span data-translate-key="change_language_label">เปลี่ยนภาษา</span>
+                    <span class="arrow-down">▼</span>
+                </button>
+                <div class="language-options">
+                    <button data-lang="th" class="lang-option active" data-translate-key="lang_option_thai">ไทย</button>
+                    <span class="lang-separator">|</span>
+                    <button data-lang="en" class="lang-option" data-translate-key="lang_option_eng">ENG</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content-area" id="mainContentArea">
+        <main>
+            <section id="hero" class="hero">
+                 <div class="container">
+                    <h1 data-translate-key="hero_title">ผู้นำด้านรถเกี่ยวข้าว และบริการครบวงจร</h1>
+                    <p data-translate-key="hero_subtitle">ระเบียบการช่าง - พันธมิตรที่เกษตรกรไว้วางใจ จำหน่าย ซ่อมแซม และให้คำปรึกษาเรื่องรถเกี่ยวข้าว</p>
+                    <a href="#products" class="cta-button" data-translate-key="hero_cta_button">ดูรถเกี่ยวข้าวทั้งหมด</a>
+                </div>
+            </section>
+            <section id="services">
+                <div class="container">
+                    <h2 data-translate-key="services_title">บริการของเราเพื่อคุณ</h2>
+                    <div class="services-grid">
+                        <div class="service-item">
+                            <div class="icon-placeholder" data-translate-key="services_repair_icon">ซ่อม</div>
+                            <h3 data-translate-key="services_repair_title">รับซ่อมรถเกี่ยวข้าว</h3>
+                            <p data-translate-key="services_repair_desc">บริการซ่อมรถเกี่ยวข้าวทุกรุ่น ทุกยี่ห้อ ด้วยทีมช่างมืออาชีพ ประสบการณ์สูง พร้อมอะไหล่แท้ รับประกันคุณภาพงานซ่อม รวดเร็ว ทันใจ</p>
+                        </div>
+                        <div class="service-item">
+                            <div class="icon-placeholder" data-translate-key="services_new_icon">ใหม่</div>
+                            <h3 data-translate-key="services_new_title">จำหน่ายรถเกี่ยวข้าวใหม่</h3>
+                            <p data-translate-key="services_new_desc">คัดสรรรถเกี่ยวข้าวใหม่จากแบรนด์ชั้นนำ เทคโนโลยีล่าสุด ประสิทธิภาพเยี่ยม ตอบโจทย์ทุกการใช้งาน พร้อมข้อเสนอสุดพิเศษและบริการหลังการขาย</p>
+                        </div>
+                        <div class="service-item">
+                            <div class="icon-placeholder" data-translate-key="services_used_icon">มือ2</div>
+                            <h3 data-translate-key="services_used_title">จำหน่ายรถเกี่ยวข้าวมือสอง</h3>
+                            <p data-translate-key="services_used_desc">รถเกี่ยวข้าวมือสองคุณภาพดี ตรวจเช็คสภาพอย่างละเอียด ราคาคุ้มค่า พร้อมใช้งานทันที ตัวเลือกที่ชาญฉลาดสำหรับเกษตรกรยุคใหม่</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section id="products">
+                <div class="container">
+                    <h2 data-translate-key="products_title">รถเกี่ยวข้าวคุณภาพเพื่อผลผลิตที่เหนือกว่า</h2>
+                    <div class="services-grid product-grid">
+                        <article class="product-item">
+                            <div class="product-image-placeholder" data-translate-key="product1_img_alt">ภาพรถเกี่ยวข้าว รุ่น Titan X (ใหม่)</div>
+                            <h3 data-translate-key="product1_name">รถเกี่ยวข้าว รุ่น Titan X (ใหม่)</h3>
+                            <p class="description" data-translate-key="product1_desc">นวัตกรรมล่าสุด! เกี่ยวเร็ว เกี่ยวไว ลุยได้ทุกสภาพนา พร้อมเทคโนโลยีประหยัดน้ำมัน</p>
+                            <p class="price" data-translate-key="product1_price">ราคา: ติดต่อสอบถาม</p>
+                            <a href="#contact" class="cta-button" data-translate-key="product_cta">สนใจ/สอบถาม</a>
+                        </article>
+                        <article class="product-item">
+                            <div class="product-image-placeholder" data-translate-key="product2_img_alt">ภาพรถเกี่ยวข้าว รุ่น ProHarvest Z (มือสอง)</div>
+                            <h3 data-translate-key="product2_name">รถเกี่ยวข้าว รุ่น ProHarvest Z (มือสอง)</h3>
+                            <p class="description" data-translate-key="product2_desc">สภาพเยี่ยม ตรวจเช็คกว่า 50 รายการ ชั่วโมงการทำงานน้อย คุ้มค่าเกินราคา</p>
+                            <p class="price" data-translate-key="product2_price_val">ราคา: 750,000 บาท</p>
+                            <a href="#contact" class="cta-button" data-translate-key="product_cta">สนใจ/สอบถาม</a>
+                        </article>
+                        <article class="product-item">
+                            <div class="product-image-placeholder" data-translate-key="product3_img_alt">ภาพรถเกี่ยวข้าว รุ่น EcoCrop S (ใหม่)</div>
+                            <h3 data-translate-key="product3_name">รถเกี่ยวข้าว รุ่น EcoCrop S (ใหม่)</h3>
+                            <p class="description" data-translate-key="product3_desc">คล่องตัว ประหยัด เหมาะสำหรับแปลงนาขนาดกลางถึงเล็ก ทนทาน ดูแลรักษาง่าย</p>
+                            <p class="price" data-translate-key="product3_price">ราคา: ติดต่อสอบถาม</p>
+                            <a href="#contact" class="cta-button" data-translate-key="product_cta">สนใจ/สอบถาม</a>
+                        </article>
+                    </div>
+                    <p style="margin-top: 30px; font-size: 1em;" data-translate-key="products_note_contact_html"><em>เรามีรถเกี่ยวข้าวหลากหลายรุ่นให้เลือกสรร ตอบโจทย์ทุกความต้องการ <a href="#contact">ติดต่อเรา</a> เพื่อรับคำแนะนำเพิ่มเติม</em></p>
+                </div>
+            </section>
+            <section id="why-choose-us">
+                <div class="container">
+                    <h2 data-translate-key="why_us_title">ทำไมต้องเลือก ระเบียบการช่าง?</h2>
+                    <div class="choose-us-grid">
+                        <div class="choose-us-item">
+                            <div class="icon-placeholder">⭐</div>
+                            <h3 data-translate-key="why_us1_title">ประสบการณ์ยาวนาน</h3>
+                            <p data-translate-key="why_us1_desc">เราอยู่ในวงการรถเกี่ยวข้าวมานานกว่า 15 ปี เข้าใจทุกปัญหาและความต้องการของเกษตรกรไทย</p>
+                        </div>
+                        <div class="choose-us-item">
+                            <div class="icon-placeholder">🛠️</div>
+                            <h3 data-translate-key="why_us2_title">ทีมช่างมืออาชีพ</h3>
+                            <p data-translate-key="why_us2_desc">ช่างของเราผ่านการฝึกอบรมและมีประสบการณ์สูง สามารถวิเคราะห์และแก้ไขปัญหาได้อย่างแม่นยำ</p>
+                        </div>
+                        <div class="choose-us-item">
+                            <div class="icon-placeholder">✔️</div>
+                            <h3 data-translate-key="why_us3_title">สินค้าคุณภาพ</h3>
+                            <p data-translate-key="why_us3_desc">คัดสรรเฉพาะรถเกี่ยวข้าวและอะไหล่ที่มีคุณภาพมาตรฐานสากล มั่นใจได้ในประสิทธิภาพและความทนทาน</p>
+                        </div>
+                        <div class="choose-us-item">
+                            <div class="icon-placeholder">🤝</div>
+                            <h3 data-translate-key="why_us4_title">บริการด้วยใจ</h3>
+                            <p data-translate-key="why_us4_desc">เราให้ความสำคัญกับความพึงพอใจของลูกค้า พร้อมให้คำปรึกษาและบริการหลังการขายที่ดีเยี่ยม</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section id="blog">
+                <div class="container">
+                    <h2 data-translate-key="blog_title">บทความและสาระน่ารู้</h2>
+                    <div class="blog-grid">
+                        <!-- Dynamic content will be loaded here -->
+                        <div style="text-align: center; padding: 40px; color: #6c757d;">
+                            <p>กำลังโหลดบทความ...</p>
+                        </div>
+                    </div>
+                     <p style="margin-top: 30px; font-size: 1em;" data-translate-key="blog_note_contact_html"><em><a href="#contact">ติดต่อเรา</a> หากคุณมีคำถามหรือต้องการคำแนะนำเพิ่มเติมเกี่ยวกับรถเกี่ยวข้าว</em></p>
+                </div>
+            </section>
+            <section id="about">
+                <div class="container">
+                    <h2 data-translate-key="about_title">เกี่ยวกับเรา: ระเบียบการช่าง</h2>
+                    <p data-translate-key="about_text_html">
+                        ระเบียบการช่าง ก่อตั้งขึ้นจากความมุ่งมั่นที่จะเป็นส่วนหนึ่งในการขับเคลื่อนภาคเกษตรกรรมไทยให้ก้าวหน้า เราคือผู้เชี่ยวชาญด้านรถเกี่ยวข้าวตัวจริง ด้วยประสบการณ์ที่สั่งสมมายาวนาน เราเข้าใจถึงความต้องการของพี่น้องเกษตรกรเป็นอย่างดี<br><br>
+                        ภารกิจหลักของเราคือการจัดหาและจำหน่ายรถเกี่ยวข้าวคุณภาพสูง ทั้งรถใหม่เทคโนโลยีล้ำสมัย และรถมือสองสภาพดีที่ผ่านการคัดสรรและตรวจสอบอย่างเข้มงวด นอกจากนี้ เรายังมีบริการซ่อมบำรุงรถเกี่ยวข้าวทุกประเภทโดยทีมช่างผู้ชำนาญการ พร้อมด้วยอะไหล่แท้ครบครัน<br><br>
+                        เราเชื่อมั่นว่าเครื่องจักรกลการช่างที่มีประสิทธิภาพคือหัวใจสำคัญในการเพิ่มผลผลิตและลดต้นทุน ระเบียบการช่างจึงพร้อมเป็นเพื่อนคู่คิดและที่ปรึกษา ให้เกษตรกรทุกท่านมั่นใจได้ว่าจะได้รับการบริการที่ดีที่สุด สินค้าที่คุ้มค่าที่สุด เพื่อความสำเร็จที่ยั่งยืนในการทำเกษตรกรรม
+                    </p>
+                </div>
+            </section>
+            <section id="testimonials">
+                <div class="container">
+                    <h2 data-translate-key="testimonials_title">เสียงจากลูกค้าของเรา</h2>
+                    <div class="testimonial-grid">
+                        <div class="testimonial-item">
+                            <blockquote data-translate-key="testimonial1_quote">"ซ่อมรถเกี่ยวที่นี่จบจริงครับ ช่างเก่ง ให้คำแนะนำดีมาก รถกลับมาใช้งานได้เหมือนใหม่เลย ประทับใจครับ"</blockquote>
+                            <cite data-translate-key="testimonial1_cite">-- คุณสมชาย, เกษตรกร จ.สุพรรณบุรี</cite>
+                        </div>
+                        <div class="testimonial-item">
+                            <blockquote data-translate-key="testimonial2_quote">"ซื้อรถเกี่ยวข้าวมือสองจากระเบียบฯ ไป สภาพดีมากครับ ราคาไม่แพงด้วย คุ้มค่าจริงๆ บริการหลังการขายก็ดูแลดี"</blockquote>
+                            <cite data-translate-key="testimonial2_cite">-- คุณประนอม, เกษตรกร จ.นครสวรรค์</cite>
+                        </div>
+                        <div class="testimonial-item">
+                            <blockquote data-translate-key="testimonial3_quote">"พนักงานให้คำแนะนำดีมากครับ ช่วยเลือกรุ่นรถเกี่ยวข้าวใหม่ได้ตรงกับขนาดนาและการใช้งานของผมเลย ถูกใจมากครับ"</blockquote>
+                            <cite data-translate-key="testimonial3_cite">-- คุณวิรัช, เกษตรกร จ.พิจิตร</cite>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section id="contact">
+                <div class="container">
+                    <h2 data-translate-key="contact_title">ติดต่อเราเพื่อสอบถามหรือรับบริการ</h2>
+                    <div class="contact-content">
+                        <div class="contact-info">
+                            <h3 data-translate-key="contact_info_title">ข้อมูลการติดต่อ</h3>
+                            <p class="contact-detail-item">
+                                <span class="icon-placeholder">📍</span>
+                                <strong data-translate-key="contact_company_name">ระเบียบการช่าง</strong>
+                            </p>
+                            <p class="contact-detail-item">
+                                <span class="icon-placeholder">🏠</span>
+                                <strong data-translate-key="contact_address_label">ที่อยู่:</strong>
+                                <span class="address-details">
+                                    <span data-translate-key="contact_address_value">123 หมู่ 4 ถนนข้าวหอม ตำบลรุ่งเรือง อำเภอเมืองใหม่ จังหวัดเกษตรสมบูรณ์ 12345</span>
+                                    <span class="contact-note" data-translate-key="contact_address_note">(กรุณาใส่ที่อยู่จริง)</span>
+                                </span>
+                            </p>
+                            <p class="contact-detail-item">
+                                <span class="icon-placeholder">📞</span>
+                                <strong data-translate-key="contact_phone_label">โทรศัพท์:</strong>
+                                <span class="phone-details">
+                                    <a href="tel:0812345678">081-234-5678</a>,
+                                    <a href="tel:029876543">02-987-6543</a>
+                                    <span class="contact-note" data-translate-key="contact_phone_note">(กรุณาใส่เบอร์โทรศัพท์จริง)</span>
+                                </span>
+                            </p>
+                            <p class="contact-detail-item">
+                                <span class="icon-placeholder">📧</span>
+                                <strong data-translate-key="contact_email_label">อีเมล:</strong>
+                                <span class="email-details">
+                                    <a href="mailto:contact@kitrungruang.com" data-translate-key="contact_email_value">contact@kitrungruang.com</a>
+                                    <span class="contact-note" data-translate-key="contact_email_note">(กรุณาใส่อีเมลจริง)</span>
+                                </span>
+                            </p>
+                            <p class="contact-detail-item">
+                                <span class="icon-placeholder">📱</span>
+                                <strong data-translate-key="contact_line_label">Line ID:</strong>
+                                <span class="line-details">
+                                    <span data-translate-key="contact_line_value">@kitrungruang</span>
+                                    <span class="contact-note" data-translate-key="contact_line_note">(ตัวอย่าง)</span>
+                                </span>
+                            </p>
+                            <p class="contact-detail-item">
+                                <span class="icon-placeholder">🕒</span>
+                                <strong data-translate-key="contact_hours_label">เวลาทำการ:</strong>
+                                <span class="time-details" data-translate-key="contact_hours_value">
+                                    จันทร์ - เสาร์, 8:00 - 17:30 น. (อาทิตย์ ปิด)
+                                </span>
+                            </p>
+                        </div>
+                        <div class="contact-form-container">
+                            <h3 data-translate-key="contact_form_title">ส่งข้อความถึงเรา</h3>
+                            <form class="contact-form" id="contactForm">
+                                <div>
+                                    <label for="name" data-translate-key="form_name_label">ชื่อ-นามสกุล:</label>
+                                    <input type="text" id="name" name="name" required="" data-translate-placeholder-key="form_name_placeholder" placeholder="เช่น สมชาย ใจดี">
+                                </div>
+                                <div>
+                                    <label for="email" data-translate-key="form_email_label">อีเมล:</label>
+                                    <input type="email" id="email" name="email" required="" data-translate-placeholder-key="form_email_placeholder" placeholder="your@email.com">
+                                </div>
+                                <div>
+                                    <label for="phone" data-translate-key="form_phone_label">เบอร์โทรศัพท์:</label>
+                                    <input type="tel" id="phone" name="phone" data-translate-placeholder-key="form_phone_placeholder" placeholder="08xxxxxxxx">
+                                </div>
+                                 <div>
+                                    <label for="subject" data-translate-key="form_subject_label">หัวข้อเรื่อง:</label>
+                                    <input type="text" id="subject" name="subject" data-translate-placeholder-key="form_subject_placeholder" placeholder="เช่น สอบถามราคารถเกี่ยว, ปรึกษาปัญหา">
+                                </div>
+                                <div>
+                                    <label for="message" data-translate-key="form_message_label">ข้อความ:</label>
+                                    <textarea id="message" name="message" required="" data-translate-placeholder-key="form_message_placeholder" placeholder="รายละเอียดที่ต้องการสอบถาม..."></textarea>
+                                </div>
+                                <button type="submit" data-translate-key="form_submit_button">ส่งข้อความ</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        <footer>
+            <div class="container">
+                <p data-translate-key="footer_copyright_html">© <span id="currentYear"></span> ระเบียบการช่าง. สงวนลิขสิทธิ์.</p>
+                <p data-translate-key="footer_developed_by_html">พัฒนาเว็บไซต์โดย Beermaronz</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="/script/script.js"></script>
+</body>
+</html>
