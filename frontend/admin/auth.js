@@ -3,8 +3,8 @@
 
 // API Configuration
 const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000' 
-    : 'https://rbck-backend.onrender.com';
+    ? 'http://localhost:10000' 
+    : 'https://rbck.onrender.com';
 
 /**
  * Check if user is authenticated with valid JWT token
@@ -17,9 +17,8 @@ export async function isAuthenticated() {
         return false;
     }
 
-    try {
-        // Verify token with backend
-        const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+    try {        // Verify token with backend
+        const response = await fetch(`${API_BASE_URL}/api/auth/verify`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,

@@ -97,13 +97,12 @@ export function toggleSidebar() {
 export function logout() {
     if (confirm('คุณต้องการออกจากระบบใช่หรือไม่?')) {
         // Call backend logout endpoint
-        const token = localStorage.getItem('jwtToken');
-        if (token) {
+        const token = localStorage.getItem('jwtToken');        if (token) {
             const API_BASE_URL = window.location.hostname === 'localhost' 
-                ? 'http://localhost:3000' 
-                : 'https://rbck-backend.onrender.com';
+                ? 'http://localhost:10000' 
+                : 'https://rbck.onrender.com';
                 
-            fetch(`${API_BASE_URL}/auth/logout`, {
+            fetch(`${API_BASE_URL}/api/auth/logout`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
