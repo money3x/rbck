@@ -236,18 +236,17 @@ document.addEventListener('DOMContentLoaded', () => {
         aiBubble.className = 'chatbot-bubble ai';
         aiBubble.innerHTML = '<span style="opacity:0.7;"><i class="fas fa-spinner fa-spin"></i> Gemini กำลังตอบ...</span>';
         messagesDiv.appendChild(aiBubble);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
-        // Call Gemini API (only for Gemini model, others can be mocked)
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;        // Call Gemini API (only for Gemini model, others can be mocked)
         let aiReply = '';
         try {
             if (chatModel === 'gemini') {
                 let apiKey = '';
                 try {
-                    const resKey = await fetch(`${API_BASE}/apikey`);
+                    const { authenticatedFetch } = await import('./auth.js');
+                    const resKey = await authenticatedFetch(`${API_BASE}/apikey`);
                     if (resKey.ok) {
                         const data = await resKey.json();
-                        apiKey = data.geminiApiKey || '';
+                        apiKey = data.data?.geminiApiKey || '';
                     }
                 } catch {}
                 const prompt = userMsg;
@@ -347,15 +346,17 @@ window.generateArticleIdea = async function() {
 // แก้ไขเป็น async function (หรือในฟังก์ชัน async ที่คุณใช้งาน)
     let apiKey = '';
     try {
-        const resKey = await fetch(`${API_BASE}/apikey`);
+        const { authenticatedFetch } = await import('./auth.js');
+        const resKey = await authenticatedFetch(`${API_BASE}/apikey`);
         if (resKey.ok) {
             const data = await resKey.json();
-            apiKey = data.geminiApiKey || '';
+            apiKey = data.data?.geminiApiKey || '';
         }
     } catch (e) {
-    // error handling เผื่อ fetch ไม่สำเร็จ
-    apiKey = '';
-}
+        // error handling เผื่อ fetch ไม่สำเร็จ
+        console.error('Error fetching API key:', e);
+        apiKey = '';
+    }
 
     const gemini = new Gemini20FlashEngine({ apiKey });
 
@@ -479,10 +480,10 @@ window.closeAiSettingsModal = function() {
 };
 
 window.showAiSettingsModal = async function() {
-    // Load API keys from backend with authentication
+    // Load API keys from backend with authentication (masked for display)
     try {
         const { authenticatedFetch } = await import('./auth.js');
-        const response = await authenticatedFetch(`${API_BASE}/apikey`);
+        const response = await authenticatedFetch(`${API_BASE}/apikey/display`);
         if (response.ok) {
             const data = await response.json();
             const apiKeys = data.data || {};
@@ -1049,10 +1050,11 @@ async function initializeGeminiEngine() {
     try {
         let apiKey = '';
         try {
-            const resKey = await fetch(`${API_BASE}/apikey`);
+            const { authenticatedFetch } = await import('./auth.js');
+            const resKey = await authenticatedFetch(`${API_BASE}/apikey`);
             if (resKey.ok) {
                 const data = await resKey.json();
-                apiKey = data.geminiApiKey || '';
+                apiKey = data.data?.geminiApiKey || '';
             }
         } catch (error) {
             console.error('Error fetching API key:', error);

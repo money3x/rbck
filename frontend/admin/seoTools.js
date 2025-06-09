@@ -86,8 +86,7 @@ export async function researchKeywords() {
         }
 
         showNotification('🔄 กำลังวิเคราะห์ keywords ด้วย Flash AI...', 'info');
-        
-        // Get API key for Gemini
+          // Get API key for Gemini
         let apiKey = '';
         try {
             const { authenticatedFetch } = await import('./auth.js');
@@ -95,6 +94,7 @@ export async function researchKeywords() {
             if (resKey.ok) {
                 const data = await resKey.json();
                 apiKey = data.data?.geminiApiKey || '';
+                console.log('🔑 SEO Tools API Key length:', apiKey ? apiKey.length : 0);
             }
         } catch (error) {
             console.error('Error fetching API key:', error);

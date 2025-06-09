@@ -87,11 +87,34 @@ router.get('/apikey',
         try {
             const apiKeys = getAllApiKeys();
             
-            // ซ่อนส่วนหลังของ API Key เพื่อความปลอดภัย
-            const maskedKeys = maskApiKeys(apiKeys);
-            
             // Log admin action for security audit
             console.log(`🔍 API keys retrieved by admin: ${req.user.username} at ${new Date().toISOString()}`);
+            
+            res.json({
+                success: true,
+                data: apiKeys, // ส่ง API key จริงให้ frontend
+                message: 'API keys retrieved successfully',
+                timestamp: new Date().toISOString()
+            });        } catch (error) {
+            console.error('Error fetching API keys:', error);
+            res.status(500).json({ 
+                error: 'Internal server error',
+                message: 'Failed to retrieve API keys'
+            });
+        }
+    }
+);
+
+// GET /api/apikey/display - ดึง API Key แบบ masked สำหรับแสดงใน UI
+router.get('/apikey/display', 
+    apiKeyRateLimit,      
+    authenticateAdmin,    
+    (req, res) => {
+        try {
+            const apiKeys = getAllApiKeys();
+            const maskedKeys = maskApiKeys(apiKeys);
+            
+            console.log(`🔍 Masked API keys retrieved by admin: ${req.user.username} at ${new Date().toISOString()}`);
             
             res.json({
                 success: true,
@@ -100,7 +123,7 @@ router.get('/apikey',
                 timestamp: new Date().toISOString()
             });
         } catch (error) {
-            console.error('Error fetching API keys:', error);
+            console.error('Error fetching masked API keys:', error);
             res.status(500).json({ 
                 error: 'Internal server error',
                 message: 'Failed to retrieve API keys'

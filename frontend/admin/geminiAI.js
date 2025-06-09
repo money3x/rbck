@@ -126,6 +126,7 @@ export class Gemini20FlashEngine {
             if (resKey.ok) {
                 const data = await resKey.json();
                 apiKey = data.data?.geminiApiKey || '';
+                console.log('🔑 Gemini API Key length:', apiKey ? apiKey.length : 0);
             }
         } catch (error) {
             console.error('Failed to fetch API key:', error);
