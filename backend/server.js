@@ -39,20 +39,20 @@ app.use('/api/auth', authRoutes); // Authentication routes
 app.use('/api', apiKeyRoutes);    // Protected API key routes
 app.use('/api', postRoutes);
 
-// Static files - Serve frontend files
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
-app.use('/admin', express.static(path.join(__dirname, '..', 'frontend', 'admin')));
-app.use('/css', express.static(path.join(__dirname, '..', 'frontend', 'css')));
-app.use('/js', express.static(path.join(__dirname, '..', 'frontend', 'js')));
-app.use('/script', express.static(path.join(__dirname, '..', 'frontend', 'script')));
+// Static files - Serve frontend files (DISABLED - Frontend served by Netlify)
+// app.use(express.static(path.join(__dirname, '..', 'frontend')));
+// app.use('/admin', express.static(path.join(__dirname, '..', 'frontend', 'admin')));
+// app.use('/css', express.static(path.join(__dirname, '..', 'frontend', 'css')));
+// app.use('/js', express.static(path.join(__dirname, '..', 'frontend', 'js')));
+// app.use('/script', express.static(path.join(__dirname, '..', 'frontend', 'script')));
 
-// Debug middleware
-app.use((req, res, next) => {
-    if (req.url.includes('.css') || req.url.includes('.js')) {
-        console.log(`📁 Static file request: ${req.url}`);
-    }
-    next();
-});
+// Debug middleware (DISABLED - Not needed for API-only server)
+// app.use((req, res, next) => {
+//     if (req.url.includes('.css') || req.url.includes('.js')) {
+//         console.log(`📁 Static file request: ${req.url}`);
+//     }
+//     next();
+// });
 // Serve static files from frontend and admin directories
 //app.use(express.static('frontend'));
 //app.use('/admin', express.static('admin'));
@@ -419,7 +419,7 @@ app.get('/api/blog-html', async (req, res) => {
     }
 });
 
-// Individual blog post view
+// Individual blog post view (KEEP - This serves as API endpoint for Netlify frontend)
 app.get('/blog/:slug', (req, res) => {
     const post = posts.find(p => p.slug === req.params.slug && p.status === 'published');
     
@@ -546,35 +546,35 @@ app.get('/blog/:slug', (req, res) => {
       res.send(html);
 });
 
+// Frontend routes (DISABLED - Frontend served by Netlify)
 // Serve frontend - Main page
-app.get('/', (req, res) => {
-    console.log('🏠 [DEBUG] Serving main page');
-    res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
-});
+// app.get('/', (req, res) => {
+//     console.log('🏠 [DEBUG] Serving main page');
+//     res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
+// });
 
 // Admin panel route
-app.get('/admin', (req, res) => {
-    console.log('🔧 [DEBUG] Serving admin panel');
-    res.sendFile(path.join(__dirname, '..', 'frontend', 'admin', 'index.html'));
-});
+// app.get('/admin', (req, res) => {
+//     console.log('🔧 [DEBUG] Serving admin panel');
+//     res.sendFile(path.join(__dirname, '..', 'frontend', 'admin', 'index.html'));
+// });
 
 // Blog post page route (catch-all for frontend routing)
-app.get('/blog/post.html', (req, res) => {
-    console.log('📰 [DEBUG] Serving blog post page');
-    res.sendFile(path.join(__dirname, '..', 'frontend', 'blog', 'post.html'));
-});
+// app.get('/blog/post.html', (req, res) => {
+//     console.log('📰 [DEBUG] Serving blog post page');
+//     res.sendFile(path.join(__dirname, '..', 'frontend', 'blog', 'post.html'));
+// });
 
 // Start server
 async function startServer() {
     await loadInitialData();
-    
-    // Initialize CMS Dashboard
+      // Initialize CMS Dashboard
     const blogCMS = new BlogCMS();
     blogCMS.initializeRoutes(app);
     
-    // Static files for CMS
-    app.use('/cms-styles.css', express.static(path.join(__dirname, '..', 'frontend', 'css', 'cms-styles.css')));
-    app.use('/cms-script.js', express.static(path.join(__dirname, '..', 'frontend', 'js', 'cms-script.js')));
+    // CMS Static files (DISABLED - Frontend served by Netlify)
+    // app.use('/cms-styles.css', express.static(path.join(__dirname, '..', 'frontend', 'css', 'cms-styles.css')));
+    // app.use('/cms-script.js', express.static(path.join(__dirname, '..', 'frontend', 'js', 'cms-script.js')));
     
     app.listen(PORT, () => {
         console.log('🚀 ================================');
