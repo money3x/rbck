@@ -12,12 +12,10 @@ export async function isAuthenticated() {
     if (!token) {
         console.log('🚫 No JWT token found');
         return false;
-    }
-
-    try {
+    }    try {
         // Verify token with backend
         const response = await fetch(`${API_BASE}/auth/verify`, {
-            method: 'GET',
+            method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
