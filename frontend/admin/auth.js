@@ -15,9 +15,7 @@ export async function isAuthenticated() {
     if (!token) {
         console.log('🚫 No JWT token found');
         return false;
-    }
-
-    try {        // Verify token with backend
+    }    try {        // Verify token with backend
         const response = await fetch(`${API_BASE_URL}/api/auth/verify`, {
             method: 'GET',
             headers: {
@@ -38,8 +36,19 @@ export async function isAuthenticated() {
         }
     } catch (error) {
         console.error('🚫 Token verification error:', error);
-        clearAuthData();
-        return false;
+        // If it's a network error, don't clear auth data immediately
+        // Check if we have recent session data as fallback
+        const sessionValid = sessionStorage.getItem('isLoggedIn') === 'true';
+        const loginData = localStorage.getItem('loginData');
+        
+        if (sessionValid && loginData) {
+            console.log('⚠️ Using offline authentication fallback');
+            return true; // Allow offline access
+        } else {
+            console.log('🚫 No valid fallback authentication');
+            clearAuthData();
+            return false;
+        }
     }
 }
 

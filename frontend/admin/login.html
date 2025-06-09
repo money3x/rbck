@@ -337,10 +337,11 @@
         function hideAlerts() {
             alertError.style.display = 'none';
             alertSuccess.style.display = 'none';
-        }
-
-        function isLoggedIn() {
-            return sessionStorage.getItem('isLoggedIn') === 'true';
+        }        function isLoggedIn() {
+            // Check both session storage and JWT token
+            const hasSession = sessionStorage.getItem('isLoggedIn') === 'true';
+            const hasToken = localStorage.getItem('jwtToken');
+            return hasSession && hasToken;
         }
 
         // Enter key support
