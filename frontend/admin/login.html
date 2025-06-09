@@ -218,15 +218,13 @@
             <p>&copy; 2024 ระเบียบการช่าง</p>
             <p><a href="../">← กลับสู่หน้าหลัก</a></p>
         </div>
-    </div>
-
-    <script>
+    </div>    <script>
         console.log('🔐 Login page loaded - JWT Authentication System');
 
         // API Configuration
         const API_BASE_URL = window.location.hostname === 'localhost' 
-            ? 'http://localhost:3000' 
-            : 'https://rbck-backend.onrender.com';
+            ? 'http://localhost:10000' 
+            : 'https://rbck.onrender.com';
 
         // DOM elements
         const loginForm = document.getElementById('loginForm');
@@ -240,10 +238,10 @@
         const successMessage = document.getElementById('successMessage');
 
         // Check if already logged in
-        document.addEventListener('DOMContentLoaded', async function() {
+        document.addEventListener('DOMContentLoaded', function() {
             console.log('✅ DOM loaded');
             
-            if (await isLoggedIn()) {
+            if (isLoggedIn()) {
                 showSuccess('คุณเข้าสู่ระบบอยู่แล้ว กำลังเปลี่ยนหน้า...');
                 setTimeout(() => {
                     window.location.href = 'index.html';
@@ -258,7 +256,7 @@
         // Login form submit
         loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            console.log('🔄 JWT Login attempt');
+            console.log('🔄 Login attempt');
             
             const username = usernameInput.value.trim();
             const password = passwordInput.value;
@@ -266,18 +264,16 @@
             if (!username || !password) {
                 showError('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
                 return;
-            }
-
-            // Show loading
+            }            // Show loading
             setLoading(true);
             hideAlerts();
 
             try {
-                // Send login request to backend
-                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                // JWT Authentication
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         username: username,
@@ -292,46 +288,37 @@
                     showSuccess('เข้าสู่ระบบสำเร็จ! กำลังเปลี่ยนหน้า...');
                     
                     // Save JWT token and login data
-                    const loginData = {
-                        username: username,
-                        loginTime: new Date().toISOString(),
-                        tokenExpiry: data.expiresAt
-                    };
-                    
                     localStorage.setItem('jwtToken', data.token);
-                    localStorage.setItem('loginData', JSON.stringify(loginData));
+                    localStorage.setItem('loginData', JSON.stringify({
+                        username: data.user.username,
+                        loginTime: new Date().toISOString()
+                    }));
                     sessionStorage.setItem('isLoggedIn', 'true');
 
                     // Redirect
                     setTimeout(() => {
                         window.location.href = 'index.html';
                     }, 1500);
-                    
                 } else {
                     console.log('❌ JWT Login failed:', data.message);
                     showError(data.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
                 }
-                
             } catch (error) {
                 console.error('❌ Login error:', error);
-                showError('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
+                showError('เกิดข้อผิดพลาดในการเข้าสู่ระบบ กรุณาลองใหม่อีกครั้ง');
             } finally {
                 setLoading(false);
             }
         });
 
-        // Utility functions
+        // Helper functions
         function setLoading(loading) {
             if (loading) {
                 loginButton.disabled = true;
                 loginText.innerHTML = '<div class="loading"></div>กำลังเข้าสู่ระบบ...';
-                usernameInput.disabled = true;
-                passwordInput.disabled = true;
             } else {
                 loginButton.disabled = false;
                 loginText.textContent = 'เข้าสู่ระบบ';
-                usernameInput.disabled = false;
-                passwordInput.disabled = false;
             }
         }
 
@@ -352,36 +339,11 @@
             alertSuccess.style.display = 'none';
         }
 
-        async function isLoggedIn() {
-            const token = localStorage.getItem('jwtToken');
-            if (!token) return false;
-
-            try {
-                // Verify token with backend
-                const response = await fetch(`${API_BASE_URL}/auth/verify`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    return data.valid === true;
-                } else {
-                    // Token invalid, clear storage
-                    localStorage.removeItem('jwtToken');
-                    localStorage.removeItem('loginData');
-                    sessionStorage.removeItem('isLoggedIn');
-                    return false;
-                }
-            } catch (error) {
-                console.error('Token verification error:', error);
-                return false;
-            }
+        function isLoggedIn() {
+            return sessionStorage.getItem('isLoggedIn') === 'true';
         }
 
-        // Handle Enter key navigation
+        // Enter key support
         usernameInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 passwordInput.focus();
