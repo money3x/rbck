@@ -102,9 +102,11 @@ function setLanguage(lang) {
 // Function to load blog posts from API
 async function loadBlogPosts() {
     try {
-        console.log('Loading blog posts from API...');        const API_URL = window.location.hostname === 'localhost' 
-            ? 'http://localhost:10000/api/blog-html'
-            : 'https://rbck.onrender.com/api/blog-html';
+        console.log('Loading blog posts from API...');
+        
+        // Import API_BASE from config
+        const { API_BASE } = await import('../config.js');
+        const API_URL = `${API_BASE}/blog-html`;
             
         console.log('Fetching from:', API_URL);
         const response = await fetch(API_URL);
@@ -149,9 +151,11 @@ async function loadBlogPosts() {
 // Function to update translations from API
 async function loadTranslations() {
     try {
-        console.log('Loading translations from API...');        const API_URL = window.location.hostname === 'localhost' 
-            ? 'http://localhost:10000/api/translations'
-            : 'https://rbck.onrender.com/api/translations';
+        console.log('Loading translations from API...');
+        
+        // Import API_BASE from config
+        const { API_BASE } = await import('../config.js');
+        const API_URL = `${API_BASE}/translations`;
             
         console.log('Fetching translations from:', API_URL);
         const response = await fetch(API_URL);

@@ -1,10 +1,7 @@
 // Authentication utilities for RBCK Admin Dashboard
 // Handles JWT token verification and user session management
 
-// API Configuration
-const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:10000' 
-    : 'https://rbck.onrender.com';
+import { API_BASE } from '../config.js';
 
 /**
  * Check if user is authenticated with valid JWT token
@@ -15,8 +12,11 @@ export async function isAuthenticated() {
     if (!token) {
         console.log('🚫 No JWT token found');
         return false;
-    }    try {        // Verify token with backend
-        const response = await fetch(`${API_BASE_URL}/api/auth/verify`, {
+    }
+
+    try {
+        // Verify token with backend
+        const response = await fetch(`${API_BASE}/auth/verify`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
