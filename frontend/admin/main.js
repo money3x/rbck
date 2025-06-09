@@ -115,11 +115,10 @@ async function checkGeminiApiStatus() {
         if (resKey.ok) {
             const data = await resKey.json();
             apiKey = data.data?.geminiApiKey || '';
-        }
-    } catch (error) {
+        }    } catch (error) {
         console.error('Failed to fetch API key:', error);
     }
-    console.log('Gemini API Key for status check:', apiKey); // Debug log
+    // API key fetched for status check
     if (!apiKey) {
         return {
             isConnected: false,

@@ -94,7 +94,7 @@ export async function researchKeywords() {
             if (resKey.ok) {
                 const data = await resKey.json();
                 apiKey = data.data?.geminiApiKey || '';
-                console.log('🔑 SEO Tools API Key length:', apiKey ? apiKey.length : 0);
+                // API key fetched successfully
             }
         } catch (error) {
             console.error('Error fetching API key:', error);

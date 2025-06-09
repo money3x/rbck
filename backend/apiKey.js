@@ -161,9 +161,8 @@ router.post('/apikey',
             
             // Update API keys
             setAllApiKeys(newKeys);
-            
-            // Log admin action for security audit
-            console.log(`🔑 API keys updated by admin: ${req.user.username} - Keys: ${Object.keys(newKeys).join(', ')} at ${new Date().toISOString()}`);
+              // Log admin action for security audit (without sensitive data)
+            console.log(`🔑 API keys updated by admin: ${req.user.username} - Keys count: ${Object.keys(newKeys).length} at ${new Date().toISOString()}`);
             
             res.json({ 
                 success: true,
