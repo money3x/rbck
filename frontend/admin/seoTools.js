@@ -33,7 +33,25 @@ export async function runGeminiSeoCheck() {
             return;
         }
         showNotification('🔄 กำลังวิเคราะห์ SEO...', 'info');
-        const post = posts.find(p => p.id === parseInt(postId));
+        
+        // Get posts from API or global scope
+        let post = null;
+        if (window.posts && Array.isArray(window.posts)) {
+            post = window.posts.find(p => p.id === parseInt(postId));
+        } else {
+            // Try to fetch posts from API
+            try {
+                const { API_BASE } = await import('../config.js');
+                const response = await fetch(`${API_BASE}/posts`);
+                if (response.ok) {
+                    const postsData = await response.json();
+                    post = postsData.find(p => p.id === parseInt(postId));
+                }
+            } catch (fetchError) {
+                console.error('Error fetching posts:', fetchError);
+            }
+        }
+        
         if (!post) throw new Error('ไม่พบบทความที่เลือก');
         const analysis = seoAnalyzer.analyzePost(post);
         const aiResult = await geminiAI.generateRealAISuggestions(post, analysis);
