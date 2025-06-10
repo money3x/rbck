@@ -153,26 +153,246 @@ async function checkGeminiApiStatus() {
 async function loadDashboard() {
     const dashboardCards = document.getElementById('dashboardCards');
     if (!dashboardCards) return;
-    dashboardCards.innerHTML = `
-        <div class="analytics-card" id="geminiApiStatusCard">
-            <h3>🤖 Gemini API Status</h3>
-            <div class="analytics-value" id="geminiApiStatusValue">Loading...</div>
-            <div class="analytics-change" id="geminiApiStatusDetail"></div>
+      dashboardCards.innerHTML = `
+        <div class="dashboard-card ai" id="geminiApiStatusCard">
+            <div class="card-background"></div>
+            <div class="card-overlay"></div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-icon">⚡</div>
+                    <div class="card-text">
+                        <h3>Gemini 2.0 Flash</h3>
+                        <p>สถานะการเชื่อมต่อ Gemini API</p>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-stats">
+                        <i class="fas fa-plug"></i>
+                        <span id="geminiApiStatusValue">Loading...</span>
+                    </div>
+                    <div class="card-action" id="geminiApiStatusDetail">
+                        <span>Checking...</span>
+                    </div>
+                </div>
+            </div>
         </div>
-        <!-- ...you can add more dashboard cards here... -->
+
+        <div class="dashboard-card ai" id="openaiApiStatusCard">
+            <div class="card-background"></div>
+            <div class="card-overlay"></div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-icon">🧠</div>
+                    <div class="card-text">
+                        <h3>OpenAI GPT</h3>
+                        <p>สถานะการเชื่อมต่อ OpenAI API</p>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-stats">
+                        <i class="fas fa-robot"></i>
+                        <span id="openaiApiStatusValue">Loading...</span>
+                    </div>
+                    <div class="card-action" id="openaiApiStatusDetail">
+                        <span>Checking...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-card ai" id="claudeApiStatusCard">
+            <div class="card-background"></div>
+            <div class="card-overlay"></div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-icon">🎭</div>
+                    <div class="card-text">
+                        <h3>Claude AI</h3>
+                        <p>สถานะการเชื่อมต่อ Anthropic Claude</p>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-stats">
+                        <i class="fas fa-comments"></i>
+                        <span id="claudeApiStatusValue">Loading...</span>
+                    </div>
+                    <div class="card-action" id="claudeApiStatusDetail">
+                        <span>Checking...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-card ai" id="deepseekApiStatusCard">
+            <div class="card-background"></div>
+            <div class="card-overlay"></div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-icon">🔍</div>
+                    <div class="card-text">
+                        <h3>DeepSeek AI</h3>
+                        <p>สถานะการเชื่อมต่อ DeepSeek API</p>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-stats">
+                        <i class="fas fa-code"></i>
+                        <span id="deepseekApiStatusValue">Loading...</span>
+                    </div>
+                    <div class="card-action" id="deepseekApiStatusDetail">
+                        <span>Checking...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-card ai" id="qwenApiStatusCard">
+            <div class="card-background"></div>
+            <div class="card-overlay"></div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-icon">🌏</div>
+                    <div class="card-text">
+                        <h3>Qwen AI</h3>
+                        <p>สถานะการเชื่อมต่อ Alibaba Qwen</p>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-stats">
+                        <i class="fas fa-language"></i>
+                        <span id="qwenApiStatusValue">Loading...</span>
+                    </div>
+                    <div class="card-action" id="qwenApiStatusDetail">
+                        <span>Checking...</span>
+                    </div>
+                </div>
+            </div>
+        </div>        <div class="dashboard-card ai" onclick="showAiSettingsModal()">
+            <div class="card-background"></div>
+            <div class="card-overlay"></div>
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-icon">⚙️</div>
+                    <div class="card-text">
+                        <h3>AI Management</h3>
+                        <p>จัดการ API Keys และการตั้งค่า AI</p>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-stats">
+                        <i class="fas fa-cog"></i>
+                        <span>Configure</span>
+                    </div>
+                    <div class="card-action">
+                        <span>Settings</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
     `;
-    // Check API status and update card
-    const status = await checkGeminiApiStatus();
-    const valueEl = document.getElementById('geminiApiStatusValue');
-    const detailEl = document.getElementById('geminiApiStatusDetail');
-    if (status.isConnected) {
-        valueEl.textContent = 'Connected';
-        valueEl.style.color = '#28a745';
-        detailEl.textContent = 'Gemini API พร้อมใช้งาน (Status: ' + status.statusCode + ')';
-    } else {
-        valueEl.textContent = 'Disconnected';
-        valueEl.style.color = '#dc3545';
-        detailEl.textContent = 'Error: ' + (status.error || 'ไม่สามารถเชื่อมต่อ API');
+      // Check API status and update cards
+    try {
+        // Check all AI providers status
+        await checkAllAIProvidersStatus();
+    } catch (error) {
+        console.error('Dashboard load error:', error);
+    }
+}
+
+// Check all AI providers status
+async function checkAllAIProvidersStatus() {
+    const providers = [
+        { name: 'gemini', displayName: 'Gemini 2.0 Flash' },
+        { name: 'openai', displayName: 'OpenAI GPT' },
+        { name: 'claude', displayName: 'Claude AI' },
+        { name: 'deepseek', displayName: 'DeepSeek AI' },
+        { name: 'qwen', displayName: 'Qwen AI' }
+    ];
+
+    let connectedCount = 0;
+    const totalCount = providers.length;
+
+    for (const provider of providers) {
+        const isConnected = await checkSingleProviderStatus(provider.name, provider.displayName);
+        if (isConnected) connectedCount++;
+    }
+
+    // Update dashboard header with connection count
+    updateDashboardHeader(connectedCount, totalCount);
+}
+
+// Update dashboard header with AI provider count
+function updateDashboardHeader(connectedCount, totalCount) {
+    const header = document.querySelector('#dashboard .section-header h2');
+    if (header) {
+        const statusColor = connectedCount > 0 ? '#28a745' : '#dc3545';
+        header.innerHTML = `🤖 Multi-AI Provider Status <span style="color: ${statusColor}; font-size: 0.8em;">(${connectedCount}/${totalCount} Connected)</span>`;
+    }
+}
+
+// Check single AI provider status
+async function checkSingleProviderStatus(providerName, displayName) {
+    const valueEl = document.getElementById(`${providerName}ApiStatusValue`);
+    const detailEl = document.getElementById(`${providerName}ApiStatusDetail`);
+    
+    if (!valueEl || !detailEl) return false;
+
+    try {
+        let status = { isConnected: false };
+
+        if (providerName === 'gemini') {
+            status = await checkGeminiApiStatus();
+        } else {
+            // Check other providers via backend API
+            try {
+                const { authenticatedFetch } = await import('./auth.js');
+                const response = await authenticatedFetch(`${API_BASE}/ai/status/${providerName}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    status = data.status || { isConnected: false };
+                } else {
+                    status = { isConnected: false, error: 'API not available' };
+                }
+            } catch (error) {
+                status = { isConnected: false, error: 'Connection failed' };
+            }
+        }
+
+        // Update card based on status
+        const card = document.getElementById(`${providerName}ApiStatusCard`);
+        
+        if (status.isConnected) {
+            valueEl.textContent = 'Connected';
+            valueEl.style.color = '#28a745';
+            detailEl.innerHTML = '<span style="color: #28a745;">Ready</span>';
+            
+            // Add visual indicator for connected state
+            if (card) {
+                card.style.borderColor = '#28a745';
+                card.classList.remove('status-disconnected');
+                card.classList.add('status-connected');
+            }
+            return true;
+        } else {
+            valueEl.textContent = 'Disconnected';
+            valueEl.style.color = '#dc3545';
+            detailEl.innerHTML = '<span style="color: #dc3545;">Check Settings</span>';
+            
+            // Add visual indicator for disconnected state
+            if (card) {
+                card.style.borderColor = '#dc3545';
+                card.classList.remove('status-connected');
+                card.classList.add('status-disconnected');
+            }
+            return false;
+        }
+    } catch (error) {
+        console.error(`Error checking ${providerName} status:`, error);
+        valueEl.textContent = 'Error';
+        valueEl.style.color = '#ffc107';
+        detailEl.innerHTML = '<span style="color: #ffc107;">Check Later</span>';
+        return false;
     }
 }
 
@@ -199,6 +419,31 @@ function initializeApp() {
     // Load dashboard by default on first load
     loadDashboard();
 }
+
+// Manual refresh function for AI providers status
+window.refreshAIProvidersStatus = async function() {
+    try {
+        // Show loading state
+        const providers = ['gemini', 'openai', 'claude', 'deepseek', 'qwen'];
+        providers.forEach(provider => {
+            const valueEl = document.getElementById(`${provider}ApiStatusValue`);
+            const detailEl = document.getElementById(`${provider}ApiStatusDetail`);
+            if (valueEl) {
+                valueEl.textContent = 'Checking...';
+                valueEl.style.color = '#6c757d';
+            }
+            if (detailEl) {
+                detailEl.innerHTML = '<span style="color: #6c757d;"><i class="fas fa-spinner fa-spin"></i></span>';
+            }
+        });
+        
+        await checkAllAIProvidersStatus();
+        showNotification('✅ อัปเดตสถานะ AI Providers เรียบร้อย', 'success');
+    } catch (error) {
+        console.error('Error refreshing AI status:', error);
+        showNotification('❌ ไม่สามารถอัปเดตสถานะได้', 'error');
+    }
+};
 
 // เรียก initializeApp หลัง DOM พร้อม
 if (document.readyState === 'loading') {
