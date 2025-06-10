@@ -8,7 +8,7 @@ const fs = require('fs').promises;
 const apiKeyRoutes = require('./apiKey.js');
 const postRoutes = require('./posts.js');
 const authRoutes = require('./routes/auth.js');
-const aiRoutes = require('./routes/ai.js'); // Add AI routes
+//const aiRoutes = require('./routes/ai.js'); // Add AI routes
 const supabase = require('./supabaseClient');
 const { generalRateLimit } = require('./middleware/rateLimiter');
 
