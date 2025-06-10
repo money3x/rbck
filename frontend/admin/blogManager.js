@@ -62,6 +62,15 @@ export async function loadBlogPosts() {
                 return `<option value="${postId}">${post.titleTH || post.titleth || 'ไม่มีชื่อ'}</option>`;
             }).join('')}
         `;
+    }
+    
+    // Also call seoTools populateSEOArticleSelect if available
+    if (window.populateSEOArticleSelect) {
+        try {
+            window.populateSEOArticleSelect();
+        } catch (error) {
+            console.log('SEO Tools populate function not available yet');
+        }
     }// Display posts
     blogGrid.innerHTML = posts.map(post => {
         const analysis = seoAnalyzer.analyzePost(post);

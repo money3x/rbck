@@ -32,27 +32,49 @@ export async function runGeminiSeoCheck() {
             showNotification('❌ กรุณาเลือกบทความที่ต้องการวิเคราะห์', 'error');
             return;
         }
-        showNotification('🔄 กำลังวิเคราะห์ SEO...', 'info');
-        
-        // Get posts from API or global scope
+        showNotification('🔄 กำลังวิเคราะห์ SEO...', 'info');        // Get posts from API or global scope
         let post = null;
         if (window.posts && Array.isArray(window.posts)) {
-            post = window.posts.find(p => p.id === parseInt(postId));
-        } else {
-            // Try to fetch posts from API
+            // Try different ID matching strategies
+            post = window.posts.find(p => {
+                // Check multiple possible ID fields and data types
+                return p.id == postId || 
+                       p._id == postId || 
+                       p.postId == postId || 
+                       p.slug == postId ||
+                       String(p.id) === String(postId);
+            });
+        }
+        
+        // If post not found in window.posts, try to fetch from API
+        if (!post) {
             try {
                 const { API_BASE } = await import('../config.js');
                 const response = await fetch(`${API_BASE}/posts`);
                 if (response.ok) {
                     const postsData = await response.json();
-                    post = postsData.find(p => p.id === parseInt(postId));
+                    if (Array.isArray(postsData)) {
+                        post = postsData.find(p => {
+                            return p.id == postId || 
+                                   p._id == postId || 
+                                   p.postId == postId || 
+                                   p.slug == postId ||
+                                   String(p.id) === String(postId);
+                        });
+                        // Also update window.posts for future use
+                        window.posts = postsData;
+                    }
                 }
             } catch (fetchError) {
                 console.error('Error fetching posts:', fetchError);
             }
         }
         
-        if (!post) throw new Error('ไม่พบบทความที่เลือก');
+        if (!post) {
+            console.warn('Post not found. postId:', postId, 'Available posts:', window.posts?.length || 0);
+            console.warn('Available post IDs:', window.posts?.map(p => ({ id: p.id, _id: p._id, slug: p.slug })) || []);
+            throw new Error(`ไม่พบบทความที่เลือก (ID: ${postId})`);
+        }
         const analysis = seoAnalyzer.analyzePost(post);
         const aiResult = await geminiAI.generateRealAISuggestions(post, analysis);
 
@@ -496,6 +518,40 @@ function showReusableModal(modalId, htmlBody, title = '') {
     modal.style.display = 'flex';
 }
 
+/**
+ * Populate SEO article select dropdown
+ */
+export function populateSEOArticleSelect() {
+    const postSelect = document.getElementById('postSelectForSeo');
+    if (!postSelect) return;
+    
+    // Get posts from window.posts or fetch from API
+    let postsToUse = [];
+    if (window.posts && Array.isArray(window.posts)) {
+        postsToUse = window.posts;
+    } else if (posts && Array.isArray(posts)) {
+        postsToUse = posts;
+        window.posts = posts; // Also set window.posts for consistency
+    }
+    
+    if (postsToUse.length === 0) {
+        postSelect.innerHTML = '<option value="">ไม่มีบทความ</option>';
+        return;
+    }
+    
+    postSelect.innerHTML = `
+        <option value="">เลือกบทความเพื่อวิเคราะห์</option>
+        ${postsToUse.map(post => {
+            const postId = post.id || post._id || post.postId || post.slug;
+            const title = post.titleTH || post.titleth || post.title || 'ไม่มีชื่อ';
+            return `<option value="${postId}">${title}</option>`;
+        }).join('')}
+    `;
+}
+
+// Make function available globally
+window.populateSEOArticleSelect = populateSEOArticleSelect;
+
 // ===== MISSING SEO TOOLS FUNCTIONS =====
 
 /**
@@ -504,14 +560,19 @@ function showReusableModal(modalId, htmlBody, title = '') {
 export async function autoGenerateSEO() {
     try {
         showNotification('🔄 กำลังสร้าง SEO อัตโนมัติ...', 'info');
-        
-        const postId = document.getElementById('postSelectForSeo')?.value;
+          const postId = document.getElementById('postSelectForSeo')?.value;
         if (!postId) {
             showNotification('❌ กรุณาเลือกบทความที่ต้องการสร้าง SEO', 'error');
             return;
         }
 
-        const post = posts.find(p => p.id === parseInt(postId));
+        const post = posts.find(p => {
+            return p.id == postId || 
+                   p._id == postId || 
+                   p.postId == postId || 
+                   p.slug == postId ||
+                   String(p.id) === String(postId);
+        });
         if (!post) {
             showNotification('❌ ไม่พบบทความที่เลือก', 'error');
             return;
@@ -549,14 +610,19 @@ export async function autoGenerateSEO() {
 export async function runSEOCheck() {
     try {
         showNotification('🔄 กำลังตรวจสอบ SEO...', 'info');
-        
-        const postId = document.getElementById('postSelectForSeo')?.value;
+          const postId = document.getElementById('postSelectForSeo')?.value;
         if (!postId) {
             showNotification('❌ กรุณาเลือกบทความที่ต้องการตรวจสอบ', 'error');
             return;
         }
 
-        const post = posts.find(p => p.id === parseInt(postId));
+        const post = posts.find(p => {
+            return p.id == postId || 
+                   p._id == postId || 
+                   p.postId == postId || 
+                   p.slug == postId ||
+                   String(p.id) === String(postId);
+        });
         if (!post) {
             showNotification('❌ ไม่พบบทความที่เลือก', 'error');
             return;
@@ -598,14 +664,19 @@ export async function runSEOCheck() {
 export async function viewSEOReport() {
     try {
         showNotification('🔄 กำลังสร้างรายงาน SEO...', 'info');
-        
-        const postId = document.getElementById('postSelectForSeo')?.value;
+          const postId = document.getElementById('postSelectForSeo')?.value;
         if (!postId) {
             showNotification('❌ กรุณาเลือกบทความที่ต้องการดูรายงาน', 'error');
             return;
         }
 
-        const post = posts.find(p => p.id === parseInt(postId));
+        const post = posts.find(p => {
+            return p.id == postId || 
+                   p._id == postId || 
+                   p.postId == postId || 
+                   p.slug == postId ||
+                   String(p.id) === String(postId);
+        });
         if (!post) {
             showNotification('❌ ไม่พบบทความที่เลือก', 'error');
             return;
@@ -806,14 +877,19 @@ export async function generateBacklinks() {
 export async function generateSchema() {
     try {
         showNotification('🔄 กำลังสร้าง Schema Markup...', 'info');
-        
-        const postId = document.getElementById('postSelectForSeo')?.value;
+          const postId = document.getElementById('postSelectForSeo')?.value;
         if (!postId) {
             showNotification('❌ กรุณาเลือกบทความที่ต้องการสร้าง Schema', 'error');
             return;
         }
 
-        const post = posts.find(p => p.id === parseInt(postId));
+        const post = posts.find(p => {
+            return p.id == postId || 
+                   p._id == postId || 
+                   p.postId == postId || 
+                   p.slug == postId ||
+                   String(p.id) === String(postId);
+        });
         if (!post) {
             showNotification('❌ ไม่พบบทความที่เลือก', 'error');
             return;
