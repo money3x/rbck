@@ -38,7 +38,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes); // Authentication routes
-app.use('/api/ai', aiRoutes);     // AI provider routes
+//app.use('/api/ai', aiRoutes);     // AI provider routes
 app.use('/api', apiKeyRoutes);    // Protected API key routes
 app.use('/api', postRoutes);
 
