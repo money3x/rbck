@@ -9,7 +9,6 @@ const apiKeyRoutes = require('./apiKey.js');
 const postRoutes = require('./posts.js');
 const authRoutes = require('./routes/auth.js');
 const supabase = require('./supabaseClient');
-const BlogCMS = require('./cms-dashboard-production.js');
 const { generalRateLimit } = require('./middleware/rateLimiter');
 
 const app = express();
@@ -568,9 +567,6 @@ app.get('/blog/:slug', (req, res) => {
 // Start server
 async function startServer() {
     await loadInitialData();
-      // Initialize CMS Dashboard
-    const blogCMS = new BlogCMS();
-    blogCMS.initializeRoutes(app);
     
     // CMS Static files (DISABLED - Frontend served by Netlify)
     // app.use('/cms-styles.css', express.static(path.join(__dirname, '..', 'frontend', 'css', 'cms-styles.css')));
