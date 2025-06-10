@@ -8,6 +8,7 @@ const fs = require('fs').promises;
 const apiKeyRoutes = require('./apiKey.js');
 const postRoutes = require('./posts.js');
 const authRoutes = require('./routes/auth.js');
+const aiRoutes = require('./routes/ai.js'); // Add AI routes
 const supabase = require('./supabaseClient');
 const { generalRateLimit } = require('./middleware/rateLimiter');
 
@@ -22,12 +23,14 @@ app.use(generalRateLimit); // General rate limiting
 app.use(cors({
   origin: [
     'https://flourishing-gumdrop-dffe7a.netlify.app', // Netlify domain
-    //'http://localhost:3000', // Local dev
-    //'http://localhost:8080', // Local dev frontend
-    //'http://localhost:10000', // Local dev backend
-    //'http://127.0.0.1:3000', // Localhost แบบ IP
-    //'http://127.0.0.1:8080',
-    //'http://127.0.0.1:10000'
+    'http://localhost:3000', // Local dev
+    'http://localhost:8080', // Local dev frontend
+    'http://localhost:5500', // VS Code Live Server
+    'http://localhost:10000', // Local dev backend
+    'http://127.0.0.1:3000', // Localhost แบบ IP
+    'http://127.0.0.1:8080',
+    'http://127.0.0.1:5500', // VS Code Live Server IP
+    'http://127.0.0.1:10000'
   ],
   credentials: true
 }));
@@ -35,6 +38,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes); // Authentication routes
+app.use('/api/ai', aiRoutes);     // AI provider routes
 app.use('/api', apiKeyRoutes);    // Protected API key routes
 app.use('/api', postRoutes);
 
