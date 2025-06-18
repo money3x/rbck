@@ -185,15 +185,13 @@
 
             <div class="alert alert-success" id="alertSuccess">
                 ✅ <span id="successMessage">เข้าสู่ระบบสำเร็จ</span>
-            </div>
-
-            <div class="form-group">
+            </div>            <div class="form-group">
                 <label for="username">ชื่อผู้ใช้</label>
                 <input 
                     type="text" 
                     id="username" 
                     class="form-control" 
-                    placeholder="ใส่ชื่อผู้ใช้"
+                    placeholder="ใส่ชื่อผู้ใช้ (หรือ admin สำหรับ development)"
                     required
                 >
             </div>
@@ -204,7 +202,7 @@
                     type="password" 
                     id="password" 
                     class="form-control" 
-                    placeholder="ใส่รหัสผ่าน"
+                    placeholder="ใส่รหัสผ่าน (หรือ admin สำหรับ development)"
                     required
                 >
             </div>
@@ -212,11 +210,12 @@
             <button type="submit" class="btn-login" id="loginButton">
                 <span id="loginText">เข้าสู่ระบบ</span>
             </button>
-        </form>
-
-        <div class="footer">
+        </form>        <div class="footer">
             <p>&copy; 2024 ระเบียบการช่าง</p>
             <p><a href="../">← กลับสู่หน้าหลัก</a></p>
+            <p style="color: #007bff; font-size: 0.75em; margin-top: 10px;">
+                🔧 Development: ใช้ admin/admin เพื่อเข้าสู่ระบบ
+            </p>
         </div>
     </div>    <script>
         console.log('🔐 Login page loaded - JWT Authentication System');
@@ -266,10 +265,30 @@
                 return;
             }            // Show loading
             setLoading(true);
-            hideAlerts();
+            hideAlerts();            try {
+                // Development mode fallback
+                if (username === 'admin' && password === 'admin') {
+                    console.log('✅ [DEV] Development login successful');
+                    showSuccess('เข้าสู่ระบบสำเร็จ! (Development Mode)');
+                    
+                    // Save development session
+                    localStorage.setItem('jwtToken', 'development-token');
+                    localStorage.setItem('loginData', JSON.stringify({
+                        username: 'admin',
+                        email: 'admin@rbck.dev',
+                        role: 'admin',
+                        loginTime: new Date().toISOString()
+                    }));
+                    sessionStorage.setItem('isLoggedIn', 'true');
 
-            try {
-                // JWT Authentication
+                    // Redirect
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                    return;
+                }
+                
+                // Try JWT Authentication with backend
                 const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
                     method: 'POST',
                     headers: {
@@ -302,10 +321,31 @@
                 } else {
                     console.log('❌ JWT Login failed:', data.message);
                     showError(data.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
-                }
-            } catch (error) {
+                }            } catch (error) {
                 console.error('❌ Login error:', error);
-                showError('เกิดข้อผิดพลาดในการเข้าสู่ระบบ กรุณาลองใหม่อีกครั้ง');
+                
+                // If backend is unavailable and using development credentials
+                if (username === 'admin' && password === 'admin') {
+                    console.log('✅ [DEV] Backend unavailable, using development login');
+                    showSuccess('เข้าสู่ระบบสำเร็จ! (Development Mode - Backend Offline)');
+                    
+                    // Save development session
+                    localStorage.setItem('jwtToken', 'development-token');
+                    localStorage.setItem('loginData', JSON.stringify({
+                        username: 'admin',
+                        email: 'admin@rbck.dev',
+                        role: 'admin',
+                        loginTime: new Date().toISOString()
+                    }));
+                    sessionStorage.setItem('isLoggedIn', 'true');
+
+                    // Redirect
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                } else {
+                    showError('เกิดข้อผิดพลาดในการเข้าสู่ระบบ หรือ Backend ไม่พร้อมใช้งาน (ใช้ admin/admin สำหรับ Development)');
+                }
             } finally {
                 setLoading(false);
             }

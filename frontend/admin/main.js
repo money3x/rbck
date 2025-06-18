@@ -3,38 +3,19 @@ import { showNotification, showSection, updateCharacterCounters, toggleSidebar, 
 import { createOrGetGeminiModal, closeGeminiModal, showModal, closeModal } from './modals.js';
 import { runGeminiSeoCheck, researchKeywords, generateSitemap, validateSchema, runSpeedTest, optimizationTips } from './seoTools.js';
 import { Gemini20FlashEngine } from './geminiAI.js'
+import { AISwarmCouncil } from './aiSwarm.js';
+import { AIMonitoringUI } from './aiMonitoringUI.js';
 import { API_BASE } from '../config.js';
 import { requireAuth, isAuthenticated, getCurrentUser } from './auth.js';
 
-// ===== AUTHENTICATION CHECK =====
-// Check authentication on page load
-document.addEventListener('DOMContentLoaded', async function() {
-    console.log('🔐 Admin Dashboard - Checking authentication...');
-    
-    // Require authentication to access admin dashboard
-    const authenticated = await requireAuth();
-    if (!authenticated) {
-        return; // Will be redirected to login
-    }
-    
-    // Update UI with user info
-    const user = getCurrentUser();
-    if (user && user.username) {
-        const userSpan = document.querySelector('.user-menu span');
-        if (userSpan) {
-            userSpan.textContent = user.username;
-        }
-    }
-    
-    console.log('✅ Admin Dashboard authenticated and ready');
-});
-
-// ===== GEMINI 2.0 FLASH ENGINE INTEGRATION =====
+// ===== GLOBAL VARIABLES =====
 let geminiEngine = null;
 let geminiStatus = { isConnected: false, lastCheck: null };
+let aiSwarmCouncil = null;
+let aiMonitoringUI = null;
+let isAppInitialized = false;
 
-
-// Bind to window for HTML onclick - Updated to work with cms-script.js
+// Bind to window for HTML onclick
 window.loadBlogPosts = loadBlogPosts;
 window.savePost = savePost;
 window.editPost = editPost;
@@ -61,11 +42,32 @@ window.validateSchema = validateSchema;
 window.runSpeedTest = runSpeedTest;
 window.optimizationTips = optimizationTips;
 
-// Additional Flash AI functions
-window.seoReport = function() {
-    if (window.cmsApp) {
-        window.cmsApp.showNotification('📊 SEO Report กำลังสร้าง...', 'info');
-        return runGeminiSeoCheck();
+// AI Swarm functions
+window.startCollaborativeTask = function(taskType) {
+    if (window.aiSwarmCouncil) {
+        window.aiSwarmCouncil.startCollaboration(taskType);
+    } else {
+        showNotification('❌ AI Swarm Council ไม่พร้อมใช้งาน', 'error');
+    }
+};
+
+window.clearConversationLogs = function() {
+    if (window.aiSwarmCouncil) {
+        window.aiSwarmCouncil.clearConversation();
+    }
+};
+
+window.exportConversationLogs = function() {
+    if (window.aiSwarmCouncil) {
+        window.aiSwarmCouncil.exportConversation();
+    }
+};
+
+window.saveConversationLogs = function() {
+    if (window.aiSwarmCouncil) {
+        const conversation = window.aiSwarmCouncil.conversationHistory;
+        localStorage.setItem('ai-swarm-logs', JSON.stringify(conversation));
+        showNotification('💾 บันทึก Conversation Logs แล้ว', 'success');
     }
 };
 
@@ -244,25 +246,23 @@ async function loadDashboard() {
                     </div>
                 </div>
             </div>
-        </div>
-
-        <div class="dashboard-card ai" id="qwenApiStatusCard">
+        </div>        <div class="dashboard-card ai" id="chindaApiStatusCard">
             <div class="card-background"></div>
             <div class="card-overlay"></div>
             <div class="card-content">
                 <div class="card-header">
-                    <div class="card-icon">🌏</div>
+                    <div class="card-icon">🧠</div>
                     <div class="card-text">
-                        <h3>Qwen AI</h3>
-                        <p>สถานะการเชื่อมต่อ Alibaba Qwen</p>
+                        <h3>ChindaX AI</h3>
+                        <p>สถานะการเชื่อมต่อ ChindaX (chinda-qwen3-32b)</p>
                     </div>
                 </div>
                 <div class="card-footer">
                     <div class="card-stats">
-                        <i class="fas fa-language"></i>
-                        <span id="qwenApiStatusValue">Loading...</span>
+                        <i class="fas fa-brain"></i>
+                        <span id="chindaApiStatusValue">Loading...</span>
                     </div>
-                    <div class="card-action" id="qwenApiStatusDetail">
+                    <div class="card-action" id="chindaApiStatusDetail">
                         <span>Checking...</span>
                     </div>
                 </div>
@@ -304,10 +304,9 @@ async function loadDashboard() {
 async function checkAllAIProvidersStatus() {
     const providers = [
         { name: 'gemini', displayName: 'Gemini 2.0 Flash' },
-        { name: 'openai', displayName: 'OpenAI GPT' },
-        { name: 'claude', displayName: 'Claude AI' },
+        { name: 'openai', displayName: 'OpenAI GPT' },        { name: 'claude', displayName: 'Claude AI' },
         { name: 'deepseek', displayName: 'DeepSeek AI' },
-        { name: 'qwen', displayName: 'Qwen AI' }
+        { name: 'chinda', displayName: 'ChindaX AI' }
     ];
 
     let connectedCount = 0;
@@ -367,7 +366,7 @@ async function checkSingleProviderStatus(providerName, displayName) {
             valueEl.style.color = '#28a745';
             detailEl.innerHTML = '<span style="color: #28a745;">Ready</span>';
             
-            // Add visual indicator for connected state
+            // Add visual indicator to connected card
             if (card) {
                 card.style.borderColor = '#28a745';
                 card.classList.remove('status-disconnected');
@@ -379,7 +378,7 @@ async function checkSingleProviderStatus(providerName, displayName) {
             valueEl.style.color = '#dc3545';
             detailEl.innerHTML = '<span style="color: #dc3545;">Check Settings</span>';
             
-            // Add visual indicator for disconnected state
+            // Add visual indicator to disconnected card
             if (card) {
                 card.style.borderColor = '#dc3545';
                 card.classList.remove('status-connected');
@@ -422,9 +421,8 @@ function initializeApp() {
 
 // Manual refresh function for AI providers status
 window.refreshAIProvidersStatus = async function() {
-    try {
-        // Show loading state
-        const providers = ['gemini', 'openai', 'claude', 'deepseek', 'qwen'];
+    try {        // Show loading state
+        const providers = ['gemini', 'openai', 'claude', 'deepseek', 'chinda'];
         providers.forEach(provider => {
             const valueEl = document.getElementById(`${provider}ApiStatusValue`);
             const detailEl = document.getElementById(`${provider}ApiStatusDetail`);
@@ -447,21 +445,95 @@ window.refreshAIProvidersStatus = async function() {
 
 // เรียก initializeApp หลัง DOM พร้อม
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeApp);
+    document.addEventListener('DOMContentLoaded', initializeCompleteApp);
 } else {
-    initializeApp();
+    initializeCompleteApp();
 }
 
-// ====== Chatbot Panel Handler ======
-document.addEventListener('DOMContentLoaded', () => {
+// ===== UNIFIED APP INITIALIZATION =====
+async function initializeCompleteApp() {
+    if (isAppInitialized) {
+        console.log('⚠️ App already initialized, skipping...');
+        return;
+    }
+    
+    console.log('🚀 Starting complete app initialization...');
+    
+    try {
+        // 1. Setup development authentication if needed
+        setupDevelopmentAuth();
+        
+        // 2. Authentication check
+        console.log('🔐 Checking authentication...');
+        const authenticated = await requireAuth();
+        if (!authenticated) {
+            return; // Will be redirected to login
+        }
+        
+        // Update UI with user info
+        const user = getCurrentUser();
+        if (user && user.username) {
+            const userSpan = document.querySelector('.user-menu span');
+            if (userSpan) {
+                userSpan.textContent = user.username;
+            }
+        }
+        
+        // 3. Load dashboard
+        console.log('📊 Loading dashboard...');
+        await loadDashboard();
+          // 4. Initialize AI systems
+        console.log('🤖 Initializing AI systems...');
+        await initializeAISystems();
+        
+        // 5. Setup chatbot handlers
+        setupChatbotHandlers();
+        
+        // 6. Setup other event handlers
+        setupOtherHandlers();
+        
+        isAppInitialized = true;
+        console.log('✅ Complete app initialization finished');
+    } catch (error) {
+        console.error('❌ [ERROR] App initialization failed:', error);
+        showNotification('❌ เกิดข้อผิดพลาดในการเริ่มต้นระบบ', 'error');
+    }
+}
+
+// Setup development authentication
+function setupDevelopmentAuth() {
+    // Check if we need to setup development authentication
+    const token = localStorage.getItem('jwtToken');
+    const sessionValid = sessionStorage.getItem('isLoggedIn');
+    
+    if (!token || token === 'null' || token === 'undefined') {
+        console.log('🔧 [DEV] Setting up development authentication...');
+        
+        // Create development session
+        localStorage.setItem('jwtToken', 'development-token');
+        localStorage.setItem('loginData', JSON.stringify({
+            username: 'admin',
+            email: 'admin@rbck.dev',
+            role: 'admin'
+        }));
+        sessionStorage.setItem('isLoggedIn', 'true');
+        
+        console.log('✅ [DEV] Development authentication setup complete');
+    }
+}
+
+// ===== SETUP FUNCTIONS =====
+function setupChatbotHandlers() {
     const chatbotForm = document.getElementById('chatbotForm');
     if (!chatbotForm) return;
+    
     chatbotForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const input = document.getElementById('chatbotInput');
         const chatModel = document.getElementById('chatModelSelect').value;
         const messagesDiv = document.getElementById('chatbotMessages');
         if (!messagesDiv) return;
+        
         const userMsg = input.value.trim();
         if (!userMsg) return;
 
@@ -517,8 +589,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // Mock for other models
                 aiReply = '🤖 (Mock) ตอบกลับจาก ' + chatModel + ': ' + userMsg;
-            }
-        } catch (err) {
+            }        } catch (err) {
             aiReply = '❌ เกิดข้อผิดพลาดในการเชื่อมต่อ Gemini';
         }
 
@@ -527,7 +598,41 @@ document.addEventListener('DOMContentLoaded', () => {
         input.disabled = false;
         input.focus();
     });
-});
+}
+
+function setupOtherHandlers() {
+    // Setup AI Settings button
+    const aiSettingsBtn = document.getElementById('aiSettingsBtn');
+    if (aiSettingsBtn) {
+        aiSettingsBtn.addEventListener('click', showAiSettingsModal);
+    }
+    
+    // Setup auto-population listeners
+    setupAutoPopulationListeners();
+    
+    console.log('✅ Other handlers setup complete');
+}
+
+function setupAutoPopulationListeners() {
+    // Auto-generate slug when title changes
+    const titleTHInput = document.getElementById('postTitleTH');
+    const titleENInput = document.getElementById('postTitleEN');
+    
+    if (titleTHInput) {
+        titleTHInput.addEventListener('input', function() {
+            autoGenerateSlug();
+            autoGenerateMetaTitle();
+        });
+    }
+    
+    if (titleENInput) {
+        titleENInput.addEventListener('input', function() {
+            autoGenerateSlug();
+        });
+    }
+    
+    console.log('✅ Auto-population listeners setup');
+}
 
 /**
  * แสดง modal แบบ reusable
@@ -731,24 +836,23 @@ window.showAiSettingsModal = async function() {
         if (response.ok) {
             const data = await response.json();
             const apiKeys = data.data || {};
-            
-            // Populate form fields with masked values (for display only)
+              // Populate form fields with masked values (for display only)
             document.getElementById('openaiApiKeyInput').value = apiKeys.openaiApiKey || '';
             document.getElementById('claudeApiKeyInput').value = apiKeys.claudeApiKey || '';
-            document.getElementById('qwenApiKeyInput').value = apiKeys.qwenApiKey || '';
+            document.getElementById('chindaApiKeyInput').value = apiKeys.chindaApiKey || '';
+            document.getElementById('chindaJwtTokenInput').value = apiKeys.chindaJwtToken || '';
             document.getElementById('geminiApiKeyInput').value = apiKeys.geminiApiKey || '';
         }
     } catch (error) {
-        console.error('Error loading API keys:', error);
-        // Fall back to localStorage values
+        console.error('Error loading API keys:', error);        // Fall back to localStorage values
         document.getElementById('openaiApiKeyInput').value = localStorage.getItem('openaiApiKey') || '';
         document.getElementById('claudeApiKeyInput').value = localStorage.getItem('claudeApiKey') || '';
-        document.getElementById('qwenApiKeyInput').value = localStorage.getItem('qwenApiKey') || '';
-        document.getElementById('geminiApiKeyInput').value = localStorage.getItem('geminiApiKey') || '';
-    }
+        document.getElementById('chindaApiKeyInput').value = localStorage.getItem('chindaApiKey') || '';
+        document.getElementById('chindaJwtTokenInput').value = localStorage.getItem('chindaJwtToken') || '';
+        document.getElementById('geminiApiKeyInput').value = localStorage.getItem('geminiApiKey') || '';    }
     
     // Clear status messages
-    ['openai','claude','qwen','gemini'].forEach(k => {
+    ['openai','claude','chinda','gemini'].forEach(k => {
         document.getElementById(`${k}ApiKeyStatus`).textContent = '';
     });
     document.getElementById('aiSettingsModal').style.display = 'flex';
@@ -759,7 +863,8 @@ window.saveAiApiKey = async function() {
     const apiKeys = {
         openaiApiKey: document.getElementById('openaiApiKeyInput').value.trim(),
         claudeApiKey: document.getElementById('claudeApiKeyInput').value.trim(),
-        qwenApiKey: document.getElementById('qwenApiKeyInput').value.trim(),
+        chindaApiKey: document.getElementById('chindaApiKeyInput').value.trim(),
+        chindaJwtToken: document.getElementById('chindaJwtTokenInput').value.trim(),
         geminiApiKey: document.getElementById('geminiApiKeyInput').value.trim()
     };
     
@@ -832,10 +937,7 @@ window.saveSingleApiKey = async function(type) {
 };
 
 // ปุ่มเปิด modal
-document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('aiSettingsBtn');
-    if (btn) btn.onclick = window.showAiSettingsModal;
-});
+// Moved to setupOtherHandlers() function
 
 // ====== Test API Key Logic ======
 window.testApiKey = async function(type) {
@@ -886,30 +988,45 @@ window.testApiKey = async function(type) {
         } catch {
             statusEl.textContent = 'เชื่อมต่อไม่ได้';
             statusEl.style.color = '#dc3545';
+        }    } else if (type === 'chinda') {
+        const apiKey = document.getElementById('chindaApiKeyInput').value.trim();
+        const jwtToken = document.getElementById('chindaJwtTokenInput').value.trim();
+        
+        if (!apiKey || !jwtToken) { 
+            statusEl.textContent = 'กรุณาใส่ API Key และ JWT Token'; 
+            statusEl.style.color = '#dc3545'; 
+            return; 
         }
-    } else if (type === 'qwen') {
-        key = document.getElementById('qwenApiKeyInput').value.trim();
-        if (!key) { statusEl.textContent = 'กรุณาใส่ API Key'; statusEl.style.color = '#dc3545'; return; }
+        
         try {
-            // Qwen (Alibaba) API test (public endpoint may differ)
-            const res = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
+            // ChindaX API test
+            const res = await fetch('https://chindax.iapp.co.th/api/chat/completions', {
                 method: 'POST',
                 headers: {
-                    'Authorization': 'Bearer ' + key,
-                    'content-type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`,
+                    'X-JWT-Token': jwtToken
                 },
-                body: JSON.stringify({ model: 'qwen-turbo', input: { prompt: 'hello' } })
+                body: JSON.stringify({ 
+                    model: 'chinda-qwen3-32b', 
+                    messages: [{ role: 'user', content: 'สวัสดี' }],
+                    max_tokens: 10
+                })
             });
+            
             if (res.ok) {
                 statusEl.textContent = 'เชื่อมต่อได้ ✔️';
                 statusEl.style.color = '#28a745';
             } else {
-                statusEl.textContent = 'API Key ไม่ถูกต้อง หรือหมดโควต้า';
+                const errorData = await res.text();
+                statusEl.textContent = 'API Key/JWT Token ไม่ถูกต้อง';
                 statusEl.style.color = '#dc3545';
+                console.error('ChindaX API Error:', errorData);
             }
-        } catch {
-            statusEl.textContent = 'เชื่อมต่อไม่ได้';
+        } catch (error) {
+            statusEl.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ';
             statusEl.style.color = '#dc3545';
+            console.error('ChindaX connection error:', error);
         }
     } else if (type === 'gemini') {
         key = document.getElementById('geminiApiKeyInput').value.trim();
@@ -1219,24 +1336,7 @@ function autoGenerateMetaTitle() {
 // ====== AUTO-POPULATION EVENT LISTENERS ======
 
 // Set up auto-population when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    // Auto-generate slug when title changes
-    const titleTHInput = document.getElementById('postTitleTH');
-    const titleENInput = document.getElementById('postTitleEN');
-    
-    if (titleTHInput) {
-        titleTHInput.addEventListener('input', function() {
-            autoGenerateSlug();
-            autoGenerateMetaTitle();
-        });
-    }
-    
-    if (titleENInput) {
-        titleENInput.addEventListener('input', function() {
-            autoGenerateSlug();
-        });
-    }
-});
+// Moved to setupAutoPopulationListeners() function
 
 // ====== DUPLICATE CONTENT PREVENTION ======
 
@@ -1553,3 +1653,32 @@ window.refreshSearchConsole = function() {
 };
 
 // ====== End of Additional Functions ======
+// Initialize AI systems
+async function initializeAISystems() {
+    try {        // Initialize AI Swarm Council
+        console.log('🤖 [AI SWARM] Initializing AI Swarm Council...');
+        aiSwarmCouncil = new AISwarmCouncil();
+        await aiSwarmCouncil.initialize();
+        
+        // Make globally available
+        window.aiSwarmCouncil = aiSwarmCouncil;
+        
+        // Initialize AI Monitoring UI
+        console.log('📊 [AI MONITOR UI] Initializing AI Monitoring UI...');
+        aiMonitoringUI = new AIMonitoringUI();
+        await aiMonitoringUI.startMonitoring();
+        
+        // Make globally available
+        window.aiMonitoringUI = aiMonitoringUI;
+        
+        console.log('✅ [AI SYSTEMS] All AI systems initialized successfully');
+        showNotification('🤖 AI Systems พร้อมใช้งาน', 'success');
+        
+    } catch (error) {
+        console.error('❌ [AI SYSTEMS] Failed to initialize AI systems:', error);
+        showNotification('⚠️ เกิดข้อผิดพลาดในการเริ่ม AI Systems', 'warning');
+        
+        // Continue without AI systems if they fail to initialize
+        // This ensures the app doesn't completely break if AI systems have issues
+    }
+}

@@ -105,6 +105,110 @@ body {
     background-color: #fafbfc;
 }
 
+/* --- Modern Aiswarm UI/UX Redesign --- */
+.aiswarm-layout {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(120deg, #f8fafc 0%, #e0e7ff 100%);
+  font-family: 'Inter', 'Sarabun', sans-serif;
+}
+.aiswarm-sidebar {
+  width: 220px;
+  background: #232946;
+  color: #fff;
+  padding: 2rem 1rem;
+  border-radius: 0 2rem 2rem 0;
+  box-shadow: 2px 0 16px rgba(35, 41, 70, 0.08);
+}
+.aiswarm-main {
+  flex: 1;
+  padding: 2.5rem 3rem;
+}
+.aiswarm-main-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-top: 2rem;
+  align-items: stretch;
+}
+.aiswarm-status-panel, .aiswarm-providers-panel {
+  background: #fff;
+  border-radius: 1.5rem;
+  box-shadow: 0 4px 24px rgba(35, 41, 70, 0.10);
+  padding: 2rem 2.5rem;
+  width: 100%;
+  transition: box-shadow 0.2s;
+}
+.aiswarm-status-panel:hover, .aiswarm-providers-panel:hover {
+  box-shadow: 0 8px 32px rgba(108, 99, 255, 0.18);
+}
+.aiswarm-panel {
+    background: #fff;
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 24px rgba(35, 41, 70, 0.10);
+    padding: 2rem 2.5rem;
+    margin-bottom: 2rem;
+    transition: box-shadow 0.2s;
+}
+.aiswarm-panel-header {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 1.2rem;
+    color: #232946;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+.aiswarm-panel .panel-content {
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+}
+
+/* ปรับ tasks-panel, status-panel, providers-panel ให้ใช้ดีไซน์เดียวกัน */
+.aiswarm-tasks-panel, .aiswarm-status-panel, .aiswarm-providers-panel {
+    margin-bottom: 0;
+    box-shadow: none;
+    border-radius: 1.5rem;
+    background: #fff;
+    width: 100%;
+}
+
+.ai-tasks-table th, .ai-tasks-table td,
+.ai-status-table th, .ai-status-table td {
+    text-align: center;
+    vertical-align: middle;
+}
+.ai-tasks-table .task-button,
+.ai-tasks-table .task-button.review,
+.ai-tasks-table .task-button.create,
+.ai-tasks-table .task-button.seo {
+    background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1.2rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    margin: 0 0.2rem;
+}
+.ai-tasks-table .task-button:hover {
+    background: linear-gradient(90deg, #8b5cf6 0%, #6366f1 100%);
+    transform: translateY(-2px) scale(1.04);
+}
+
+.ai-status-table th, .ai-status-table td {
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #232946;
+}
+
 /* Sections */
 .cms-section {
     display: none;
@@ -819,519 +923,1817 @@ body {
     100% { transform: rotate(360deg); }
 }
 
-/* ================================================
-   ENHANCED GEMINI 2.0 SEO TOOLS STYLING - PREMIUM
-   ================================================ */
+/* ======================================================================
+   ULTRA-MODERN AI SWARM COUNCIL - PREMIUM REDESIGN
+   ====================================================================== */
 
-/* Premium Gradient Border Effects */
-.seo-tools-grid .tool-card.gemini {
-    position: relative !important;
+/* Enhanced Keyframes for Ultimate Visual Appeal */
+@keyframes ultraShimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+}
+
+@keyframes premiumFloat {
+    0%, 100% { 
+        transform: translateY(0px) rotate(0deg) scale(1); 
+        filter: drop-shadow(0 5px 15px rgba(147, 51, 234, 0.3));
+    }
+    25% { 
+        transform: translateY(-8px) rotate(3deg) scale(1.05); 
+        filter: drop-shadow(0 8px 25px rgba(99, 102, 241, 0.4));
+    }
+    50% { 
+        transform: translateY(-12px) rotate(0deg) scale(1.1); 
+        filter: drop-shadow(0 12px 35px rgba(244, 114, 182, 0.5));
+    }
+    75% { 
+        transform: translateY(-8px) rotate(-3deg) scale(1.05); 
+        filter: drop-shadow(0 8px 25px rgba(99, 102, 241, 0.4));
+    }
+}
+
+@keyframes gradientMagic {
+    0%, 100% { 
+        background: linear-gradient(135deg, 
+            rgba(147, 51, 234, 0.1) 0%, 
+            rgba(99, 102, 241, 0.1) 25%,
+            rgba(244, 114, 182, 0.1) 50%,
+            rgba(168, 85, 247, 0.1) 75%,
+            rgba(147, 51, 234, 0.1) 100%);
+    }
+    25% { 
+        background: linear-gradient(135deg, 
+            rgba(99, 102, 241, 0.15) 0%, 
+            rgba(244, 114, 182, 0.15) 25%,
+            rgba(168, 85, 247, 0.15) 50%,
+            rgba(147, 51, 234, 0.15) 75%,
+            rgba(99, 102, 241, 0.15) 100%);
+    }
+    50% { 
+        background: linear-gradient(135deg, 
+            rgba(244, 114, 182, 0.2) 0%, 
+            rgba(168, 85, 247, 0.2) 25%,
+            rgba(147, 51, 234, 0.2) 50%,
+            rgba(99, 102, 241, 0.2) 75%,
+            rgba(244, 114, 182, 0.2) 100%);
+    }
+    75% { 
+        background: linear-gradient(135deg, 
+            rgba(168, 85, 247, 0.15) 0%, 
+            rgba(147, 51, 234, 0.15) 25%,
+            rgba(99, 102, 241, 0.15) 50%,
+            rgba(244, 114, 182, 0.15) 75%,
+            rgba(168, 85, 247, 0.15) 100%);
+    }
+}
+
+@keyframes textGlow {
+    0%, 100% { 
+        text-shadow: 
+            0 0 20px rgba(147, 51, 234, 0.5),
+            0 0 40px rgba(147, 51, 234, 0.3),
+            0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    50% { 
+        text-shadow: 
+            0 0 30px rgba(244, 114, 182, 0.7),
+            0 0 60px rgba(244, 114, 182, 0.4),
+            0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+}
+
+@keyframes ultraGlow {
+    0%, 100% { 
+        box-shadow: 
+            0 0 30px rgba(147, 51, 234, 0.3),
+            0 10px 40px rgba(99, 102, 241, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+    50% { 
+        box-shadow: 
+            0 0 50px rgba(244, 114, 182, 0.5),
+            0 15px 60px rgba(168, 85, 247, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+}
+
+@keyframes particleFloat {
+    0%, 100% { 
+        transform: translateY(0px) translateX(0px) rotate(0deg); 
+        opacity: 0.6;
+    }
+    25% { 
+        transform: translateY(-20px) translateX(10px) rotate(90deg); 
+        opacity: 0.8;
+    }
+    50% { 
+        transform: translateY(-40px) translateX(-5px) rotate(180deg); 
+        opacity: 1;
+    }
+    75% { 
+        transform: translateY(-20px) translateX(-10px) rotate(270deg); 
+        opacity: 0.8;
+    }
+}
+
+/* =================================================================
+   ULTRA-PREMIUM AI SWARM PANEL DESIGN
+   ================================================================= */
+
+.aiswarm-panel {
     background: linear-gradient(145deg, 
-        rgba(255, 107, 53, 0.02) 0%,
-        rgba(247, 147, 30, 0.02) 50%,
-        rgba(255, 255, 255, 1) 100%) !important;
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(248, 250, 252, 0.98) 30%,
+        rgba(255, 255, 255, 0.95) 100%) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
     border: 2px solid transparent !important;
-    background-clip: padding-box !important;
-    border-radius: 20px !important;
-    animation: premiumCardGlow 4s ease-in-out infinite !important;
-    box-shadow: 0 8px 32px rgba(255, 107, 53, 0.15), 
-                0 4px 16px rgba(247, 147, 30, 0.1) !important;
-}
-
-/* Animated Gradient Border */
-.seo-tools-grid .tool-card.gemini::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: 20px;
-    padding: 2px;
-    background: linear-gradient(45deg, 
-        #ff6b35 0%, 
-        #f7931e 25%, 
-        #6f42c1 50%,
-        #ff6b35 75%,
-        #f7931e 100%);
-    background-size: 400% 400%;
-    animation: gradientBorder 3s ease infinite;
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask-composite: xor;
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    z-index: -1;
-}
-
-@keyframes gradientBorder {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-}
-
-@keyframes premiumCardGlow {
-    0%, 100% { 
-        box-shadow: 
-            0 8px 32px rgba(255, 107, 53, 0.1),
-            0 2px 8px rgba(0,0,0,0.06);
-    }
-    50% { 
-        box-shadow: 
-            0 16px 48px rgba(255, 107, 53, 0.2),
-            0 4px 16px rgba(247, 147, 30, 0.1);
-    }
-}
-
-/* Enhanced Headers with Gradient Text */
-.seo-tools-grid .tool-card.gemini h3 {
-    background: linear-gradient(45deg, #ff6b35, #f7931e, #6f42c1) !important;
-    -webkit-background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    background-clip: text !important;
-    font-weight: 800 !important;
-    font-size: 1.4rem !important;
-    text-shadow: none !important;
-    animation: textShimmer 3s ease-in-out infinite !important;
-}
-
-@keyframes textShimmer {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.8; }
-}
-
-/* Ultra-Premium Button with Multiple Effects */
-.seo-tools-grid .btn-gemini {
-    position: relative !important;
-    background: linear-gradient(135deg, 
-        #ff6b35 0%, 
-        #f7931e 25%, 
-        #ff6b35 50%,
-        #f7931e 75%,
-        #ff6b35 100%) !important;
-    background-size: 400% 400% !important;
-    border: 2px solid transparent !important;
-    border-radius: 14px !important;
-    padding: 1rem 2.2rem !important;
-    font-weight: 800 !important;
-    font-size: 0.95rem !important;
-    text-transform: uppercase !important;
-    letter-spacing: 1.2px !important;
-    color: white !important;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.4) !important;
-    overflow: hidden !important;
-    animation: gradientFlow 4s ease infinite !important;
-    box-shadow: 
-        0 8px 25px rgba(255, 107, 53, 0.3),
-        inset 0 1px 0 rgba(255,255,255,0.4) !important;
-}
-
-@keyframes gradientFlow {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-}
-
-/* Triple Shimmer Effect */
-.seo-tools-grid .btn-gemini::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, 
-        transparent 0%, 
-        rgba(255,255,255,0.6) 30%,
-        rgba(255,255,255,0.8) 50%, 
-        rgba(255,255,255,0.6) 70%,
-        transparent 100%);
-    transition: left 1s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.seo-tools-grid .btn-gemini:hover::before {
-    left: 100%;
-}
-
-/* Enhanced Hover Effects */
-.seo-tools-grid .btn-gemini:hover {
-    transform: translateY(-6px) scale(1.08) !important;
-    box-shadow: 
-        0 16px 40px rgba(255, 107, 53, 0.4),
-        0 8px 25px rgba(0,0,0,0.2),
-        inset 0 1px 0 rgba(255,255,255,0.6) !important;
-    filter: brightness(1.1) !important;
-}
-
-/* AI Button Enhanced */
-.seo-tools-grid .btn-ai {
-    background: linear-gradient(135deg, 
-        #6f42c1 0%, 
-        #8e44ad 25%, 
-        #9b59b6 50%,
-        #8e44ad 75%,
-        #6f42c1 100%);
-    background-size: 400% 400%;
-    animation: gradientFlow 4s ease infinite;
-    border: 2px solid transparent;
-    position: relative;
-    overflow: hidden;
-}
-
-.seo-tools-grid .btn-ai:hover {
-    transform: translateY(-6px) scale(1.08);
-    box-shadow: 
-        0 16px 40px rgba(111, 66, 193, 0.4),
-        0 8px 25px rgba(0,0,0,0.2);
-    filter: brightness(1.1);
-}
-
-/* Status Badge Premium Effects */
-.tool-status .status-gemini {
-    background: linear-gradient(90deg, #ff6b35, #f7931e);
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 25px;
-    font-weight: 700;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    animation: statusPulse 2.5s ease-in-out infinite;
-    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
-}
-
-@keyframes statusPulse {
-    0%, 100% { 
-        opacity: 1; 
-        transform: scale(1);
-    }
-    50% { 
-        opacity: 0.9; 
-        transform: scale(1.02);
-    }
-}
-
-/* Tool Card Icon Enhancements */
-.seo-tools-grid .tool-card.gemini h3::before {
-    content: '🚀';
-    font-size: 1.8rem;
-    filter: drop-shadow(0 3px 8px rgba(255, 107, 53, 0.4));
-    animation: iconFloat 3s ease-in-out infinite;
-}
-
-@keyframes iconFloat {
-    0%, 100% { 
-        transform: scale(1) rotate(0deg);
-    }
-    50% { 
-        transform: scale(1.2) rotate(10deg);
-    }
-}
-
-/* Premium Loading States */
-.tool-card.gemini.loading {
-    opacity: 0.9;
-    animation: none;
-}
-
-.tool-card.gemini.loading .loading-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(6px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 20px;
-    z-index: 100;
-}
-
-.gemini-loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid rgba(255, 107, 53, 0.2);
-    border-top: 4px solid #ff6b35;
-    border-radius: 50%;
-    animation: premiumSpin 1.2s linear infinite;
-}
-
-@keyframes premiumSpin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Interactive Hover Enhancements */
-.seo-tools-grid .tool-card.gemini:hover {
-    transform: translateY(-12px) scale(1.03);
-    box-shadow: 
-        0 25px 60px rgba(255, 107, 53, 0.25),
-        0 12px 35px rgba(0,0,0,0.15);
-}
-
-/* Advanced Pulse for Important Tools */
-.btn-gemini.pulse {
-    animation: advancedGeminiPulse 2.5s ease-in-out infinite;
-}
-
-@keyframes advancedGeminiPulse {
-    0% { 
-        box-shadow: 
-            0 8px 25px rgba(255, 107, 53, 0.3),
-            0 0 0 0 rgba(255, 107, 53, 0.7);
-    }
-    70% { 
-        box-shadow: 
-            0 8px 25px rgba(255, 107, 53, 0.3),
-            0 0 0 20px rgba(255, 107, 53, 0);
-    }
-    100% { 
-        box-shadow: 
-            0 8px 25px rgba(255, 107, 53, 0.3),
-            0 0 0 0 rgba(255, 107, 53, 0);
-    }
-}
-
-/* ADDITIONAL PREMIUM ENHANCEMENTS FOR GEMINI 2.0 SEO TOOLS */
-
-/* Enhanced Header Styling */
-.section-header.gemini-header {
-    background: linear-gradient(100deg, #ff6b35 0%, #f7931e 100%) !important;
-    color: #fff !important;
-    box-shadow: 0 4px 24px rgba(255, 107, 53, 0.2) !important;
-    padding: 40px 0 60px 0 !important;
-    border-radius: 15px !important;
-    margin-bottom: 30px !important;
+    border-radius: 28px !important;
+    padding: 3rem 3.5rem !important;
+    margin-bottom: 3rem !important;
     position: relative !important;
     overflow: hidden !important;
+    transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    box-shadow: 
+        0 20px 60px rgba(147, 51, 234, 0.08),
+        0 8px 30px rgba(99, 102, 241, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
 }
 
-.section-header.gemini-header::before {
+.aiswarm-panel::before {
     content: '' !important;
     position: absolute !important;
-    top: -50% !important;
-    left: -50% !important;
-    width: 200% !important;
-    height: 200% !important;
-    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent) !important;
-    transform: rotate(45deg) !important;
-    animation: shimmerHeader 3s infinite !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: linear-gradient(135deg, 
+        rgba(147, 51, 234, 0.03) 0%, 
+        rgba(99, 102, 241, 0.05) 25%,
+        rgba(244, 114, 182, 0.03) 50%,
+        rgba(168, 85, 247, 0.05) 75%,
+        rgba(147, 51, 234, 0.03) 100%) !important;
+    border-radius: 28px !important;
+    z-index: -1 !important;
+    opacity: 0 !important;
+    transition: opacity 0.6s ease !important;
 }
 
-.gemini-title {
-    font-size: 2.2em !important;
-    margin-bottom: 10px !important;
-    background: linear-gradient(45deg, #fff, #ffeb3b, #fff) !important;
-    background-size: 200% 200% !important;
+.aiswarm-panel::after {
+    content: '' !important;
+    position: absolute !important;
+    top: -2px !important;
+    left: -2px !important;
+    right: -2px !important;
+    bottom: -2px !important;
+    background: linear-gradient(45deg, 
+        #9333ea 0%, 
+        #6366f1 25%, 
+        #f472b6 50%, 
+        #a855f7 75%, 
+        #9333ea 100%) !important;
+    border-radius: 30px !important;
+    z-index: -2 !important;
+    opacity: 0 !important;
+    transition: opacity 0.6s ease !important;
+    animation: ultraShimmer 3s linear infinite !important;
+}
+
+.aiswarm-panel:hover {
+    transform: translateY(-12px) scale(1.02) !important;
+    box-shadow: 
+        0 30px 80px rgba(147, 51, 234, 0.15),
+        0 15px 50px rgba(99, 102, 241, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+    animation: ultraGlow 2s ease-in-out infinite !important;
+}
+
+.aiswarm-panel:hover::before {
+    opacity: 1 !important;
+}
+
+.aiswarm-panel:hover::after {
+    opacity: 0.6 !important;
+}
+
+/* =================================================================
+   PREMIUM PANEL HEADERS WITH SHIMMER EFFECT
+   ================================================================= */
+
+.aiswarm-panel-header {
+    font-size: 1.5rem !important;
+    font-weight: 900 !important;
+    margin-bottom: 2rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 1.2rem !important;
+    position: relative !important;
+    background: linear-gradient(135deg, 
+        #9333ea 0%, 
+        #6366f1 25%, 
+        #f472b6 50%, 
+        #a855f7 75%, 
+        #9333ea 100%) !important;
+    background-size: 300% 300% !important;
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
     background-clip: text !important;
-    animation: gradientTitle 2s ease-in-out infinite alternate !important;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5) !important;
+    animation: ultraShimmer 4s ease-in-out infinite, textGlow 3s ease-in-out infinite !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    z-index: 10 !important;
 }
 
-.gemini-header p {
-    font-size: 1.15em !important;
-    opacity: 0.95 !important;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
+.aiswarm-panel-header::before {
+    content: '' !important;
+    position: absolute !important;
+    top: -10px !important;
+    left: -20px !important;
+    right: -20px !important;
+    bottom: -10px !important;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(147, 51, 234, 0.1) 20%,
+        rgba(244, 114, 182, 0.15) 50%,
+        rgba(147, 51, 234, 0.1) 80%,
+        transparent 100%) !important;
+    border-radius: 15px !important;
+    z-index: -1 !important;
+    animation: ultraShimmer 3s linear infinite !important;
 }
 
-/* Gemini Status Card Premium */
-.gemini-status-card {
-    background: linear-gradient(135deg, #FF6B35, #F7931E) !important;
-    color: white !important;
-    padding: 30px 35px !important;
-    border-radius: 18px !important;
-    margin: 0 auto 36px auto !important;
-    max-width: 700px !important;
-    box-shadow: 0 6px 32px rgba(255, 107, 53, 0.2) !important;
+.aiswarm-panel-header i {
+    font-size: 1.8rem !important;
+    background: linear-gradient(135deg, #9333ea, #f472b6) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    animation: premiumFloat 4s ease-in-out infinite !important;
+    filter: drop-shadow(0 4px 8px rgba(147, 51, 234, 0.3)) !important;
+}
+
+/* =================================================================
+   ULTRA-MODERN TABLE DESIGN
+   ================================================================= */
+
+.ai-providers-table, .ai-tasks-table, .ai-status-table {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 0.8rem !important;
+    margin-top: 1.5rem !important;
+    position: relative !important;
+    z-index: 5 !important;
+}
+
+.ai-providers-table thead th, 
+.ai-tasks-table thead th, 
+.ai-status-table thead th {
+    background: linear-gradient(135deg, 
+        rgba(147, 51, 234, 0.1) 0%, 
+        rgba(99, 102, 241, 0.1) 50%,
+        rgba(244, 114, 182, 0.1) 100%) !important;
+    color: #1f2937 !important;
+    font-weight: 800 !important;
+    font-size: 0.95rem !important;
+    padding: 1.5rem 1.8rem !important;
+    border: none !important;
+    text-align: center !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    position: relative !important;
+    border-radius: 15px !important;
+    margin-bottom: 0.5rem !important;
+    box-shadow: 
+        0 4px 15px rgba(147, 51, 234, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.ai-providers-table thead th::before,
+.ai-tasks-table thead th::before,
+.ai-status-table thead th::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.3) 50%,
+        transparent 100%) !important;
+    border-radius: 15px !important;
+    opacity: 0 !important;
+    transition: opacity 0.6s ease !important;
+    animation: ultraShimmer 3s linear infinite !important;
+}
+
+.ai-providers-table thead th:hover::before,
+.ai-tasks-table thead th:hover::before,
+.ai-status-table thead th:hover::before {
+    opacity: 1 !important;
+}
+
+.ai-providers-table tbody td, 
+.ai-tasks-table tbody td, 
+.ai-status-table tbody td {
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.9) 0%,
+        rgba(248, 250, 252, 0.95) 100%) !important;
+    padding: 1.8rem 2rem !important;
+    border: 1px solid rgba(147, 51, 234, 0.08) !important;
+    font-size: 1rem !important;
+    font-weight: 500 !important;
+    color: #374151 !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    border-radius: 12px !important;
+    position: relative !important;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    backdrop-filter: blur(10px) !important;
+    box-shadow: 
+        0 2px 8px rgba(147, 51, 234, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+}
+
+.ai-providers-table tbody tr:hover td,
+.ai-tasks-table tbody tr:hover td,
+.ai-status-table tbody tr:hover td {
+    background: linear-gradient(135deg, 
+        rgba(147, 51, 234, 0.05) 0%,
+        rgba(99, 102, 241, 0.03) 50%,
+        rgba(244, 114, 182, 0.05) 100%) !important;
+    transform: translateY(-4px) scale(1.02) !important;
+    box-shadow: 
+        0 8px 25px rgba(147, 51, 234, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    border-color: rgba(147, 51, 234, 0.2) !important;
+}
+
+/* =================================================================
+   PREMIUM BUTTON DESIGN
+   ================================================================= */
+
+.ai-tasks-table .task-button,
+.ai-tasks-table .task-button.review,
+.ai-tasks-table .task-button.create,
+.ai-tasks-table .task-button.seo {
+    background: linear-gradient(135deg, 
+        #9333ea 0%, 
+        #6366f1 25%, 
+        #a855f7 50%,
+        #f472b6 75%,
+        #9333ea 100%) !important;
+    background-size: 300% 300% !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 1rem 2rem !important;
+    font-weight: 800 !important;
+    font-size: 0.9rem !important;
+    cursor: pointer !important;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    margin: 0 0.3rem !important;
     position: relative !important;
     overflow: hidden !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    box-shadow: 
+        0 8px 25px rgba(147, 51, 234, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    animation: ultraShimmer 4s linear infinite !important;
 }
 
-.gemini-status-card::before {
+.ai-tasks-table .task-button::before {
     content: '' !important;
     position: absolute !important;
     top: 0 !important;
     left: -100% !important;
     width: 100% !important;
     height: 100% !important;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent) !important;
-    animation: slideStatus 2s infinite !important;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.4), 
+        transparent) !important;
+    transition: left 0.6s ease !important;
 }
 
-.gemini-status-card .status-flex {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
+.ai-tasks-table .task-button:hover::before {
+    left: 100% !important;
 }
 
-.gemini-status-title {
-    margin: 0 0 10px 0 !important;
-    font-size: 1.3em !important;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5) !important;
+.ai-tasks-table .task-button:hover {
+    transform: translateY(-6px) scale(1.08) !important;
+    box-shadow: 
+        0 15px 40px rgba(147, 51, 234, 0.4),
+        0 8px 25px rgba(244, 114, 182, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+    background: linear-gradient(135deg, 
+        #f472b6 0%, 
+        #a855f7 25%, 
+        #6366f1 50%,
+        #9333ea 75%,
+        #f472b6 100%) !important;
+    animation: ultraGlow 1.5s ease-in-out infinite !important;
 }
 
-.gemini-status-text {
+.ai-tasks-table .task-button:active {
+    transform: translateY(-3px) scale(1.05) !important;
+}
+
+/* =================================================================
+   RESPONSIVE DESIGN EXCELLENCE
+   ================================================================= */
+
+@media (max-width: 1400px) {
+    .cms-main {
+        padding: 2.5rem !important;
+    }
+    
+    .aiswarm-main-row {
+        gap: 2rem !important;
+        margin: 2rem 0 !important;
+    }
+    
+    .cms-sidebar {
+        width: 260px !important;
+    }
+    
+    .cms-header {
+        padding: 1.3rem 2.5rem !important;
+    }
+    
+    .cms-header h1 {
+        font-size: 1.6rem !important;
+    }
+}
+
+@media (max-width: 1200px) {
+    .cms-main {
+        padding: 2rem !important;
+    }
+    
+    .aiswarm-main-row {
+        gap: 1.8rem !important;
+        margin: 1.8rem 0 !important;
+    }
+    
+    .aiswarm-tasks-panel, 
+    .aiswarm-status-panel, 
+    .aiswarm-providers-panel {
+        min-height: 350px !important;
+    }
+    
+    .ai-logs-panel {
+        margin: 2.5rem 0 !important;
+    }
+    
+    .cms-sidebar {
+        width: 240px !important;
+    }
+    
+    .cms-section h2 {
+        font-size: 2rem !important;
+        margin-bottom: 2.5rem !important;
+        letter-spacing: 1.5px !important;
+    }
+    
+    .card, .panel, .widget {
+        padding: 2rem !important;
+        border-radius: 18px !important;
+    }
+}
+
+@media (max-width: 900px) {
+    .cms-body {
+        flex-direction: column !important;
+    }
+    
+    .cms-sidebar {
+        width: 100% !important;
+        order: 2 !important;
+        max-height: 300px !important;
+        background: linear-gradient(135deg, 
+            rgba(255, 255, 255, 0.95) 0%, 
+            rgba(248, 250, 252, 0.98) 100%) !important;
+        border-right: none !important;
+        border-top: 2px solid rgba(147, 51, 234, 0.1) !important;
+        box-shadow: 
+            0 -2px 20px rgba(147, 51, 234, 0.05),
+            inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    }
+    
+    .cms-main {
+        order: 1 !important;
+        padding: 1.8rem !important;
+    }
+    
+    .aiswarm-main-row {
+        gap: 1.5rem !important;
+        margin: 1.5rem 0 !important;
+    }
+    
+    .aiswarm-tasks-panel, 
+    .aiswarm-status-panel, 
+    .aiswarm-providers-panel {
+        min-height: 320px !important;
+    }
+    
+    .cms-header {
+        padding: 1.2rem 2rem !important;
+    }
+    
+    .cms-header h1 {
+        font-size: 1.4rem !important;
+    }
+    
+    .cms-section h2 {
+        font-size: 1.8rem !important;
+        margin-bottom: 2rem !important;
+        letter-spacing: 1px !important;
+    }
+    
+    .cms-section {
+        margin-bottom: 3rem !important;
+        padding: 1.5rem 0 !important;
+    }
+    
+    .card, .panel, .widget {
+        padding: 1.8rem !important;
+        border-radius: 16px !important;
+    }
+    
+    .btn, button, input[type="submit"] {
+        padding: 0.9rem 1.8rem !important;
+        font-size: 0.9rem !important;
+        border-radius: 10px !important;
+    }
+    
+    .form-control, input[type="text"], input[type="email"], textarea, select {
+        padding: 0.9rem 1.3rem !important;
+        border-radius: 10px !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .cms-main {
+        padding: 1.5rem !important;
+    }
+    
+    .aiswarm-main-row {
+        gap: 1.2rem !important;
+        margin: 1.2rem 0 !important;
+    }
+    
+    .aiswarm-tasks-panel, 
+    .aiswarm-status-panel, 
+    .aiswarm-providers-panel {
+        min-height: 280px !important;
+    }
+    
+    .cms-header {
+        padding: 1rem 1.5rem !important;
+        flex-direction: column !important;
+        gap: 1rem !important;
+        text-align: center !important;
+    }
+    
+    .cms-header h1 {
+        font-size: 1.3rem !important;
+    }
+    
+    .header-actions {
+        justify-content: center !important;
+        flex-wrap: wrap !important;
+    }
+    
+    .cms-section h2 {
+        font-size: 1.6rem !important;
+        margin-bottom: 1.8rem !important;
+        letter-spacing: 0.8px !important;
+    }
+    
+    .cms-section h2::before {
+        width: 80px !important;
+        height: 3px !important;
+    }
+    
+    .cms-section {
+        margin-bottom: 2.5rem !important;
+        padding: 1.2rem 0 !important;
+    }
+    
+    .card, .panel, .widget {
+        padding: 1.5rem !important;
+        border-radius: 14px !important;
+    }
+    
+    .btn, button, input[type="submit"] {
+        padding: 0.8rem 1.5rem !important;
+        font-size: 0.85rem !important;
+        border-radius: 8px !important;
+    }
+}
+
+@media (max-width: 400px) {
+    .cms-main {
+        padding: 1.2rem !important;
+    }
+    
+    .aiswarm-main-row {
+        gap: 1rem !important;
+        margin: 1rem 0 !important;
+    }
+    
+    .aiswarm-tasks-panel, 
+    .aiswarm-status-panel, 
+    .aiswarm-providers-panel {
+        min-height: 250px !important;
+    }
+    
+    .cms-header {
+        padding: 0.9rem 1.2rem !important;
+    }
+    
+    .cms-header h1 {
+        font-size: 1.2rem !important;
+    }
+    
+    .cms-section h2 {
+        font-size: 1.4rem !important;
+        margin-bottom: 1.5rem !important;
+        letter-spacing: 0.5px !important;
+    }
+    
+    .cms-section h2::before {
+        width: 60px !important;
+        height: 2px !important;
+    }
+    
+    .cms-section {
+        margin-bottom: 2rem !important;
+        padding: 1rem 0 !important;
+    }
+    
+    .card, .panel, .widget {
+        padding: 1.2rem !important;
+        border-radius: 12px !important;
+    }
+    
+    .btn, button, input[type="submit"] {
+        padding: 0.7rem 1.2rem !important;
+        font-size: 0.8rem !important;
+        border-radius: 6px !important;
+    }
+    
+    .form-control, input[type="text"], input[type="email"], textarea, select {
+        padding: 0.7rem 1rem !important;
+        font-size: 0.9rem !important;
+        border-radius: 6px !important;
+    }
+    
+    .cms-sidebar nav ul li a {
+        padding: 0.9rem 1.2rem !important;
+        font-size: 0.85rem !important;
+    }
+}
+
+/* =================================================================
+   ADVANCED PERFORMANCE OPTIMIZATIONS
+   ================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
+    
+    .cms-header,
+    .cms-section h2,
+    .btn, button, input[type="submit"],
+    .card, .panel, .widget,
+    .cms-sidebar nav ul li a {
+        animation: none !important;
+        transition: none !important;
+    }
+    
+    .cms-header::before,
+    .cms-section h2::before,
+    .btn::before, button::before, input[type="submit"]::before,
+    .card::before, .panel::before, .widget::before,
+    .cms-sidebar nav ul li a::before {
+        animation: none !important;
+        transition: none !important;
+    }
+    
+    .btn:hover, button:hover, input[type="submit"]:hover,
+    .card:hover, .panel:hover, .widget:hover,
+    .cms-sidebar nav ul li a:hover {
+        transform: none !important;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .cms-header,
+    .aiswarm-panel,
+    .ai-logs-panel,
+    .card, .panel, .widget {
+        border: 3px solid #000 !important;
+        background: #fff !important;
+    }
+    
+    .cms-section h2,
+    .panel-title,
+    .logs-title {
+        color: #000 !important;
+        background: none !important;
+        -webkit-text-fill-color: #000 !important;
+    }
+    
+    .btn, button, input[type="submit"] {
+        background: #000 !important;
+        color: #fff !important;
+        border: 2px solid #000 !important;
+    }
+}
+
+/* =================================================================
+   RESPONSIVE LAYOUT FOR ULTRA-MODERN DESIGN
+   Perfect symmetry maintained across all devices
+   ================================================================= */
+
+@media (max-width: 1400px) {
+    .cms-main {
+        padding: 2.5rem !important;
+    }
+    
+    .aiswarm-main-row {
+        gap: 2rem !important;
+        margin: 2rem 0 !important;
+    }
+    
+    .cms-sidebar {
+        width: 260px !important;
+    }
+    
+    .cms-header {
+        padding: 1.3rem 2.5rem !important;
+    }
+    
+    .cms-header h1 {
+        font-size: 1.6rem !important;
+    }
+}
+
+@media (max-width: 1200px) {
+    .cms-main {
+        padding: 2rem !important;
+    }
+    
+    .aiswarm-main-row {
+        gap: 1.8rem !important;
+        margin: 1.8rem 0 !important;
+    }
+    
+    .aiswarm-tasks-panel, 
+    .aiswarm-status-panel, 
+    .aiswarm-providers-panel {
+        min-height: 350px !important;
+    }
+    
+    .ai-logs-panel {
+        margin: 2.5rem 0 !important;
+    }
+    
+    .cms-sidebar {
+        width: 240px !important;
+    }
+    
+    .cms-section h2 {
+        font-size: 2rem !important;
+        margin-bottom: 2.5rem !important;
+        letter-spacing: 1.5px !important;
+    }
+    
+    .card, .panel, .widget {
+        padding: 2rem !important;
+        border-radius: 18px !important;
+    }
+}
+
+@media (max-width: 900px) {
+    .cms-body {
+        flex-direction: column !important;
+    }
+    
+    .cms-sidebar {
+        width: 100% !important;
+        order: 2 !important;
+        max-height: 300px !important;
+        background: linear-gradient(135deg, 
+            rgba(255, 255, 255, 0.95) 0%, 
+            rgba(248, 250, 252, 0.98) 100%) !important;
+        border-right: none !important;
+        border-top: 2px solid rgba(147, 51, 234, 0.1) !important;
+        box-shadow: 
+            0 -2px 20px rgba(147, 51, 234, 0.05),
+            inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    }
+    
+    .cms-main {
+        order: 1 !important;
+        padding: 1.8rem !important;
+    }
+    
+    .aiswarm-main-row {
+        gap: 1.5rem !important;
+        margin: 1.5rem 0 !important;
+    }
+    
+    .aiswarm-tasks-panel, 
+    .aiswarm-status-panel, 
+    .aiswarm-providers-panel {
+        min-height: 320px !important;
+    }
+    
+    .cms-header {
+        padding: 1.2rem 2rem !important;
+    }
+    
+    .cms-header h1 {
+        font-size: 1.4rem !important;
+    }
+    
+    .cms-section h2 {
+        font-size: 1.8rem !important;
+        margin-bottom: 2rem !important;
+        letter-spacing: 1px !important;
+    }
+    
+    .cms-section {
+        margin-bottom: 3rem !important;
+        padding: 1.5rem 0 !important;
+    }
+    
+    .card, .panel, .widget {
+        padding: 1.8rem !important;
+        border-radius: 16px !important;
+    }
+    
+    .btn, button, input[type="submit"] {
+        padding: 0.9rem 1.8rem !important;
+        font-size: 0.9rem !important;
+        border-radius: 10px !important;
+    }
+    
+    .form-control, input[type="text"], input[type="email"], textarea, select {
+        padding: 0.9rem 1.3rem !important;
+        border-radius: 10px !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .cms-main {
+        padding: 1.5rem !important;
+    }
+    
+    .aiswarm-main-row {
+        gap: 1.2rem !important;
+        margin: 1.2rem 0 !important;
+    }
+    
+    .aiswarm-tasks-panel, 
+    .aiswarm-status-panel, 
+    .aiswarm-providers-panel {
+        min-height: 280px !important;
+    }
+    
+    .cms-header {
+        padding: 1rem 1.5rem !important;
+        flex-direction: column !important;
+        gap: 1rem !important;
+        text-align: center !important;
+    }
+    
+    .cms-header h1 {
+        font-size: 1.3rem !important;
+    }
+    
+    .header-actions {
+        justify-content: center !important;
+        flex-wrap: wrap !important;
+    }
+    
+    .cms-section h2 {
+        font-size: 1.6rem !important;
+        margin-bottom: 1.8rem !important;
+        letter-spacing: 0.8px !important;
+    }
+    
+    .cms-section h2::before {
+        width: 80px !important;
+        height: 3px !important;
+    }
+    
+    .cms-section {
+        margin-bottom: 2.5rem !important;
+        padding: 1.2rem 0 !important;
+    }
+    
+    .card, .panel, .widget {
+        padding: 1.5rem !important;
+        border-radius: 14px !important;
+    }
+    
+    .btn, button, input[type="submit"] {
+        padding: 0.8rem 1.5rem !important;
+        font-size: 0.85rem !important;
+        border-radius: 8px !important;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .form-group label {
+        font-size: 0.9rem !important;
+        margin-bottom: 0.6rem !important;
+    }
+    
+    .form-control, input[type="text"], input[type="email"], textarea, select {
+        padding: 0.8rem 1.2rem !important;
+        font-size: 0.95rem !important;
+        border-radius: 8px !important;
+    }
+    
+    .cms-sidebar nav ul li a {
+        padding: 1rem 1.5rem !important;
+        font-size: 0.9rem !important;
+    }
+}
+
+@media (max-width: 400px) {
+    .cms-main {
+        padding: 1.2rem !important;
+    }
+    
+    .aiswarm-main-row {
+        gap: 1rem !important;
+        margin: 1rem 0 !important;
+    }
+    
+    .aiswarm-tasks-panel, 
+    .aiswarm-status-panel, 
+    .aiswarm-providers-panel {
+        min-height: 250px !important;
+    }
+    
+    .cms-header {
+        padding: 0.9rem 1.2rem !important;
+    }
+    
+    .cms-header h1 {
+        font-size: 1.2rem !important;
+    }
+    
+    .cms-section h2 {
+        font-size: 1.4rem !important;
+        margin-bottom: 1.5rem !important;
+        letter-spacing: 0.5px !important;
+    }
+    
+    .cms-section h2::before {
+        width: 60px !important;
+        height: 2px !important;
+    }
+    
+    .cms-section {
+        margin-bottom: 2rem !important;
+        padding: 1rem 0 !important;
+    }
+    
+    .card, .panel, .widget {
+        padding: 1.2rem !important;
+        border-radius: 12px !important;
+    }
+    
+    .btn, button, input[type="submit"] {
+        padding: 0.7rem 1.2rem !important;
+        font-size: 0.8rem !important;
+        border-radius: 6px !important;
+    }
+    
+    .form-control, input[type="text"], input[type="email"], textarea, select {
+        padding: 0.7rem 1rem !important;
+        font-size: 0.9rem !important;
+        border-radius: 6px !important;
+    }
+    
+    .cms-sidebar nav ul li a {
+        padding: 0.9rem 1.2rem !important;
+        font-size: 0.85rem !important;
+    }
+}
+
+/* =================================================================
+   AI CONVERSATION LOGS - MODERN & COOL DESIGN OVERRIDE
+   ย้ำ: แก้ไขเฉพาะส่วน AI Conversation Logs เท่านั้น
+   ================================================================= */
+
+/* KEYFRAMES FOR AI LOGS ANIMATIONS */
+@keyframes logModernGlow {
+    0% { box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3); }
+    50% { box-shadow: 0 15px 50px rgba(118, 75, 162, 0.4); }
+   
+
+   
+    100% { box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3); }
+}
+
+@keyframes logShimmer {
+    0% { transform: translateX(-200%) translateY(-200%) rotate(45deg); }
+    50% { transform: translateX(0%) translateY(0%) rotate(45deg); }
+    100% { transform: translateX(200%) translateY(200%) rotate(45deg); }
+}
+
+@keyframes logFloat {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+/* COMPLETE OVERRIDE OF AI LOGS PANEL */
+.ai-logs-panel {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3) !important;
+    padding: 0 !important;
+    margin: 2rem 0 !important;
+    max-width: 100% !important;
+    transition: all 0.3s ease !important;
+    overflow: hidden !important;
+    position: relative !important;
+    animation: logModernGlow 4s ease-in-out infinite !important;
+    border: none !important;
+    backdrop-filter: none !important;
+    grid-column: unset !important;
+}
+
+.ai-logs-panel::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+}
+
+.ai-logs-panel:hover {
+    transform: translateY(-5px) !important;
+    box-shadow: 0 20px 60px rgba(102, 126, 234, 0.4) !important;
+}
+
+/* COMPLETE OVERRIDE OF PANEL HEADER */
+.panel-header.logs {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: #fff !important;
+    border-radius: 20px 20px 0 0 !important;
+    padding: 2rem 2.5rem 1.5rem 2.5rem !important;
     margin: 0 !important;
-    opacity: 0.9 !important;
+    position: relative !important;
+    overflow: hidden !important;
+    border: none !important;
+    backdrop-filter: none !important;
+    animation: none !important;
 }
 
-.gemini-usage {
-    font-size: 1.3em !important;
-    font-weight: bold !important;
-    text-shadow: 0 0 15px rgba(255, 235, 59, 0.8) !important;
-    animation: pulseGlow 2s infinite !important;
+.panel-header.logs::before {
+    content: '' !important;
+    position: absolute !important;
+    top: -50% !important;
+    left: -50% !important;
+    width: 200% !important;
+    height: 200% !important;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%) !important;
+    animation: logShimmer 3s ease-in-out infinite !important;
+    z-index: -1 !important;
 }
 
-.gemini-usage-label {
-    font-size: 0.95em !important;
-    opacity: 0.8 !important;
+.panel-header.logs::after {
+    display: none !important;
 }
 
-/* Tool Card Enhanced Styling */
-.tool-card.gemini-seo {
-    border: 2px solid #ff6b35 !important;
-    box-shadow: 0 4px 24px rgba(255, 107, 53, 0.2) !important;
-}
-
-.tool-card.gemini-keywords {
-    border: 2px solid #f7931e !important;
-    box-shadow: 0 4px 24px rgba(247, 147, 30, 0.2) !important;
-}
-
-.tool-card.gemini-backlinks {
-    border: 2px solid #7ee787 !important;
-    box-shadow: 0 4px 24px rgba(126, 231, 135, 0.2) !important;
-}
-
-.tool-header.gemini {
+/* COMPLETE OVERRIDE OF PANEL TITLE */
+.ai-logs-panel .panel-title {
     display: flex !important;
     align-items: center !important;
-    gap: 10px !important;
-    margin-bottom: 15px !important;
-}
-
-.tool-header.gemini i {
-    font-size: 1.5em !important;
-    color: #ff6b35 !important;
-    filter: drop-shadow(0 2px 4px rgba(255, 107, 53, 0.3)) !important;
-}
-
-.tool-header.gemini h3 {
-    margin: 0 !important;
+    gap: 1rem !important;
+    font-size: 1.3rem !important;
     font-weight: 800 !important;
-    font-size: 1.2em !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+    position: relative !important;
+    z-index: 10 !important;
+    justify-content: flex-start !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    color: #ffffff !important;
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    -webkit-text-fill-color: #ffffff !important;
+    background-clip: unset !important;
+    animation: none !important;
 }
 
-.tool-body p {
-    font-size: 1.07em !important;
-    line-height: 1.6 !important;
-    color: #6c757d !important;
-    margin-bottom: 15px !important;
+.ai-logs-panel .panel-title i {
+    font-size: 1.5rem !important;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)) !important;
+    animation: none !important;
+    color: #ffffff !important;
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    -webkit-text-fill-color: #ffffff !important;
+    background-clip: unset !important;
 }
 
-.tool-status {
-    margin-bottom: 10px !important;
+/* COMPLETE OVERRIDE OF PANEL CONTENT IN AI LOGS */
+.ai-logs-panel .panel-content {
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
 }
 
-.quick-check, .keyword-input {
-    margin-bottom: 12px !important;
+/* COMPLETE OVERRIDE OF LOGS CONTAINER */
+.ai-logs-panel .logs-container {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+    border-radius: 0 0 20px 20px !important;
+    padding: 2.5rem !important;
+    min-height: 250px !important;
+    position: relative !important;
+    overflow: hidden !important;
+    border: none !important;
+    backdrop-filter: none !important;
 }
 
-.tool-actions {
+.ai-logs-panel .logs-container::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: 
+        radial-gradient(circle at 20% 30%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(118, 75, 162, 0.1) 0%, transparent 50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    animation: none !important;
+}
+
+.ai-logs-panel .logs-container::after {
+    display: none !important;
+}
+
+/* COMPLETE OVERRIDE OF LOGS HEADER */
+.ai-logs-panel .logs-header {
     display: flex !important;
-    gap: 10px !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 2rem !important;
+    flex-wrap: wrap !important;
+    gap: 1.5rem !important;
+    position: relative !important;
+    z-index: 10 !important;
+}
+
+/* COMPLETE OVERRIDE OF LOGS TITLE */
+.ai-logs-panel .logs-title {
+    font-size: 1.2rem !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.8rem !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    -webkit-text-fill-color: #ffffff !important;
+    background-clip: unset !important;
+    animation: none !important;
+}
+
+.ai-logs-panel .logs-title::before {
+    display: none !important;
+}
+
+.ai-logs-panel .logs-title i {
+    color: #64ffda !important;
+    font-size: 1.2rem !important;
+    filter: drop-shadow(0 0 10px rgba(100, 255, 218, 0.5)) !important;
+    animation: none !important;
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    -webkit-text-fill-color: #64ffda !important;
+    background-clip: unset !important;
+}
+
+/* COMPLETE OVERRIDE OF LOGS CONTROLS */
+.ai-logs-panel .logs-controls {
+    display: flex !important;
+    gap: 0.8rem !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-end !important;
+}
+
+/* COMPLETE OVERRIDE OF LOGS BUTTONS */
+.ai-logs-panel .logs-btn {
+    background: linear-gradient(135deg, #64ffda 0%, #667eea 100%) !important;
+    color: #1a1a2e !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 0.8rem 1.5rem !important;
+    font-weight: 700 !important;
+    font-size: 0.9rem !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.6rem !important;
+    box-shadow: 0 4px 15px rgba(100, 255, 218, 0.3) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.ai-logs-panel .logs-btn::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent) !important;
+    transition: left 0.5s ease !important;
+}
+
+.ai-logs-panel .logs-btn:hover::before {
+    left: 100% !important;
+}
+
+.ai-logs-panel .logs-btn:hover {
+    transform: translateY(-2px) scale(1.05) !important;
+    box-shadow: 0 8px 25px rgba(100, 255, 218, 0.5) !important;
+    background: linear-gradient(135deg, #667eea 0%, #64ffda 100%) !important;
+    color: #ffffff !important;
+}
+
+.ai-logs-panel .logs-btn i {
+    font-size: 1rem !important;
+    filter: none !important;
+    animation: none !important;
+}
+
+/* COMPLETE OVERRIDE OF LOGS FEED */
+.ai-logs-panel .logs-feed {
+    min-height: 150px !important;
+    padding: 2rem 0 !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    border-radius: 15px !important;
+    border: 1px solid rgba(100, 255, 218, 0.1) !important;
+    position: relative !important;
+    z-index: 10 !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+}
+
+.ai-logs-panel .logs-feed::before {
+    display: none !important;
+}
+
+/* COMPLETE OVERRIDE OF LOGS EMPTY STATE */
+.ai-logs-panel .logs-empty {
+    text-align: center !important;
+    color: #b0bec5 !important;
+    padding: 3rem 2rem !important;
+    position: relative !important;
+}
+
+.ai-logs-panel .logs-empty-icon {
+    font-size: 3.5rem !important;
+    margin-bottom: 1rem !important;
+    filter: drop-shadow(0 0 20px rgba(100, 255, 218, 0.3)) !important;
+    animation: logFloat 3s ease-in-out infinite !important;
+    color: inherit !important;
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    -webkit-text-fill-color: inherit !important;
+    background-clip: unset !important;
+}
+
+.ai-logs-panel .logs-empty-text {
+    font-size: 1.3rem !important;
+    font-weight: 700 !important;
+    color: #64ffda !important;
+    margin-bottom: 0.5rem !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    -webkit-text-fill-color: #64ffda !important;
+    background-clip: unset !important;
+    animation: none !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+}
+
+.ai-logs-panel .logs-empty-subtext {
+    font-size: 1rem !important;
+    color: #90a4ae !important;
+    line-height: 1.5 !important;
+    opacity: 0.8 !important;
+    text-shadow: none !important;
+    max-width: none !important;
+    margin: 0 !important;
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    -webkit-text-fill-color: #90a4ae !important;
+    background-clip: unset !important;
+    animation: none !important;
+}
+
+/* =================================================================
+   AI MONITORING SECTION - MODERN DESIGN
+   ================================================================= */
+
+/* AI Monitoring Section Header */
+.ai-monitoring-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: #ffffff !important;
+    border-radius: 20px !important;
+    padding: 3rem 2.5rem !important;
+    margin-bottom: 3rem !important;
+    text-align: center !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3) !important;
+}
+
+.ai-monitoring-header::before {
+    content: '' !important;
+    position: absolute !important;
+    top: -50% !important;
+    left: -50% !important;
+    width: 200% !important;
+    height: 200% !important;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%) !important;
+    animation: monitoringShimmer 4s ease-in-out infinite !important;
+    z-index: 1 !important;
+}
+
+.ai-monitoring-header h2 {
+    font-size: 2.2rem !important;
+    font-weight: 800 !important;
+    margin-bottom: 1rem !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+    position: relative !important;
+    z-index: 10 !important;
+}
+
+.ai-monitoring-header p {
+    font-size: 1.1rem !important;
+    opacity: 0.9 !important;
+    position: relative !important;
+    z-index: 10 !important;
+    margin: 0 !important;
+}
+
+/* Performance Overview Section */
+.performance-overview {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+    border-radius: 20px !important;
+    padding: 2.5rem !important;
+    margin-bottom: 3rem !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-shadow: 0 10px 40px rgba(26, 26, 46, 0.3) !important;
+}
+
+.performance-overview::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: 
+        radial-gradient(circle at 20% 30%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(118, 75, 162, 0.1) 0%, transparent 50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+}
+
+.performance-overview h3 {
+    color: #64ffda !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    margin-bottom: 2rem !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+    position: relative !important;
+    z-index: 10 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.8rem !important;
+}
+
+/* Performance Metrics Grid */
+.performance-metrics-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+    gap: 2rem !important;
+    position: relative !important;
+    z-index: 10 !important;
+}
+
+/* Metric Cards */
+.metric-card {
+    background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%) !important;
+    border: 1px solid rgba(100, 255, 218, 0.2) !important;
+    border-radius: 16px !important;
+    padding: 2rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 1.5rem !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.metric-card::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(100, 255, 218, 0.1), transparent) !important;
+    transition: left 0.5s ease !important;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px) scale(1.02) !important;
+    box-shadow: 0 15px 40px rgba(100, 255, 218, 0.2) !important;
+    border-color: rgba(100, 255, 218, 0.4) !important;
+}
+
+.metric-card:hover::before {
+    left: 100% !important;
+}
+
+.metric-icon {
+    font-size: 3rem !important;
+    width: 70px !important;
+    height: 70px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: linear-gradient(135deg, #64ffda 0%, #667eea 100%) !important;
+    border-radius: 50% !important;
+    box-shadow: 0 8px 20px rgba(100, 255, 218, 0.3) !important;
+    animation: metricFloat 3s ease-in-out infinite !important;
+}
+
+.metric-content {
+    flex: 1 !important;
+}
+
+.metric-value {
+    font-size: 2.5rem !important;
+    font-weight: 800 !important;
+    color: #64ffda !important;
+    margin-bottom: 0.5rem !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+    line-height: 1 !important;
+}
+
+.metric-label {
+    font-size: 0.95rem !important;
+    color: #b0bec5 !important;
+    font-weight: 500 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* Provider Performance Container */
+.provider-performance-container {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+    border-radius: 20px !important;
+    padding: 2.5rem !important;
+    margin-bottom: 3rem !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-shadow: 0 10px 40px rgba(26, 26, 46, 0.3) !important;
+}
+
+.provider-performance-container::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: 
+        radial-gradient(circle at 20% 30%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(118, 75, 162, 0.1) 0%, transparent 50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+}
+
+.provider-performance-container h3 {
+    color: #64ffda !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    margin-bottom: 2rem !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+    position: relative !important;
+    z-index: 10 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.8rem !important;
+}
+
+/* Performance Controls */
+.performance-controls {
+    display: flex !important;
+    gap: 1rem !important;
+    margin-bottom: 2rem !important;
+    position: relative !important;
+    z-index: 10 !important;
     flex-wrap: wrap !important;
 }
 
-/* Header Title Section */
-.header-title-section {
-    display: flex;
-    align-items: center;
-    gap: 15px;
+.performance-controls .btn {
+    background: linear-gradient(135deg, #64ffda 0%, #667eea 100%) !important;
+    color: #1a1a2e !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 0.8rem 1.5rem !important;
+    font-weight: 700 !important;
+    font-size: 0.9rem !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.6rem !important;
+    box-shadow: 0 4px 15px rgba(100, 255, 218, 0.3) !important;
+    position: relative !important;
+    overflow: hidden !important;
 }
 
-.logout-btn {
-    margin-left: 15px !important;
-    padding: 8px 12px !important;
+.performance-controls .btn::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent) !important;
+    transition: left 0.5s ease !important;
 }
 
-/* Form Helpers */
-.url-help-text {
-    color: #6c757d;
-    font-size: 0.85em;
+.performance-controls .btn:hover::before {
+    left: 100% !important;
 }
 
-.content-editor-area {
-    min-height: 300px;
-    border: 1px solid #232b36;
-    border-radius: 8px;
-    padding: 15px;
-    background: var(--color-surface);
-    color: var(--color-text);
+.performance-controls .btn:hover {
+    transform: translateY(-2px) scale(1.05) !important;
+    box-shadow: 0 8px 25px rgba(100, 255, 218, 0.5) !important;
+    background: linear-gradient(135deg, #667eea 0%, #64ffda 100%) !important;
+    color: #ffffff !important;
 }
 
-.form-columns-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+.performance-controls .btn-secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3) !important;
 }
 
-.article-idea-actions {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
+.performance-controls .btn-secondary:hover {
+    background: linear-gradient(135deg, #495057 0%, #6c757d 100%) !important;
+    box-shadow: 0 8px 25px rgba(108, 117, 125, 0.5) !important;
 }
 
-/* SEO Optimization Section */
-.seo-optimization-section {
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 8px;
-    margin: 20px 0;
-    border: 1px solid var(--border-color);
+/* Performance Table */
+.performance-table-container {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border-radius: 15px !important;
+    border: 1px solid rgba(100, 255, 218, 0.1) !important;
+    overflow: hidden !important;
+    position: relative !important;
+    z-index: 10 !important;
 }
 
-.seo-section-title {
-    color: #27533b;
-    margin-bottom: 15px;
-    font-size: 1.2em;
-    font-weight: 600;
+.performance-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 0.9rem !important;
 }
 
-.seo-columns-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+.performance-table th {
+    background: linear-gradient(135deg, rgba(100, 255, 218, 0.1) 0%, rgba(102, 126, 234, 0.1) 100%) !important;
+    color: #64ffda !important;
+    padding: 1.2rem 1rem !important;
+    text-align: left !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    font-size: 0.8rem !important;
+    border-bottom: 1px solid rgba(100, 255, 218, 0.2) !important;
 }
 
-/* Modal Enhancements */
-.modal-small {
-    max-width: 420px !important;
+.performance-table td {
+    padding: 1rem !important;
+    color: #b0bec5 !important;
+    border-bottom: 1px solid rgba(100, 255, 218, 0.05) !important;
+    transition: all 0.3s ease !important;
 }
 
-.api-key-input-group {
-    display: flex;
-    gap: 8px;
+.performance-table tr:hover td {
+    background: rgba(100, 255, 218, 0.05) !important;
+    color: #ffffff !important;
 }
 
-.api-key-status {
-    color: #6c757d;
-    font-size: 0.85em;
+/* Performance Alerts */
+.performance-alerts-container {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+    border-radius: 20px !important;
+    padding: 2.5rem !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-shadow: 0 10px 40px rgba(26, 26, 46, 0.3) !important;
 }
 
-/* Responsive Grid Adjustments */
-@media (max-width: 768px) {
-    .form-columns-grid,
-    .seo-columns-grid {
-        grid-template-columns: 1fr;
+.performance-alerts-container::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: 
+        radial-gradient(circle at 20% 30%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(118, 75, 162, 0.1) 0%, transparent 50%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+}
+
+.performance-alerts-container h3 {
+    color: #64ffda !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    margin-bottom: 2rem !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+    position: relative !important;
+    z-index: 10 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.8rem !important;
+}
+
+.alerts-display {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border-radius: 15px !important;
+    border: 1px solid rgba(100, 255, 218, 0.1) !important;
+    padding: 2rem !important;
+    position: relative !important;
+    z-index: 10 !important;
+    min-height: 120px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.no-alerts-message {
+    display: flex !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    color: #4caf50 !important;
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+}
+
+.no-alerts-message i {
+    font-size: 1.5rem !important;
+    color: #4caf50 !important;
+    filter: drop-shadow(0 0 10px rgba(76, 175, 80, 0.5)) !important;
+    animation: alertFloat 3s ease-in-out infinite !important;
+}
+
+/* KEYFRAMES FOR AI MONITORING ANIMATIONS */
+@keyframes monitoringShimmer {
+    0% { transform: translateX(-200%) translateY(-200%) rotate(45deg); }
+    50% { transform: translateX(0%) translateY(0%) rotate(45deg); }
+    100% { transform: translateX(200%) translateY(200%) rotate(45deg); }
+}
+
+@keyframes metricFloat {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-8px) rotate(5deg); }
+}
+
+@keyframes alertFloat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* Responsive Design for AI Monitoring */
+@media (max-width: 900px) {
+    .performance-metrics-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1.5rem !important;
     }
     
-    .article-idea-actions {
-        flex-direction: column;
+    .metric-card {
+        padding: 1.5rem !important;
     }
     
-    .api-key-input-group {
-        flex-direction: column;
+    .metric-icon {
+        width: 60px !important;
+        height: 60px !important;
+        font-size: 2.5rem !important;
+    }
+    
+    .metric-value {
+        font-size: 2rem !important;
+    }
+    
+    .performance-controls {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    
+    .performance-controls .btn {
+        justify-content: center !important;
+    }
+    
+    .performance-table-container {
+        overflow-x: auto !important;
+    }
+    
+    .performance-table {
+        min-width: 800px !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .ai-monitoring-header {
+        padding: 2rem 1.5rem !important;
+    }
+    
+    .ai-monitoring-header h2 {
+        font-size: 1.8rem !important;
+    }
+    
+    .performance-overview,
+    .provider-performance-container,
+    .performance-alerts-container {
+        padding: 2rem 1.5rem !important;
+        margin-bottom: 2rem !important;
+    }
+}
+
+/* Special styling for cost column in performance table */
+.performance-table th:nth-child(8) {
+    color: #ffc107 !important;
+    font-weight: 800 !important;
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 152, 0, 0.1) 100%) !important;
+}
+
+.performance-table td:nth-child(8) {
+    color: #ffc107 !important;
+    font-weight: 700 !important;
+    text-shadow: 0 1px 2px rgba(255, 193, 7, 0.2) !important;
+}
+
+.performance-table tr:hover td:nth-child(8) {
+    color: #ffecb3 !important;
+    text-shadow: 0 2px 4px rgba(255, 193, 7, 0.4) !important;
+}
+
+/* Update responsive design for wider table */
+@media (max-width: 600px) {
+    .performance-table {
+        min-width: 600px !important;
+    }
+}
+
+@media (max-width: 400px) {
+    .performance-table {
+        min-width: 400px !important;
     }
 }

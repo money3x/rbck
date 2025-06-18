@@ -5,42 +5,139 @@ const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
 const fs = require('fs').promises;
+
+// Import configuration
+const config = require('./config/config');
+
+// Validate configuration on startup
+config.validateConfig();
+
+// Import routes
 const apiKeyRoutes = require('./apiKey.js');
 const postRoutes = require('./posts.js');
 const authRoutes = require('./routes/auth.js');
-//const aiRoutes = require('./routes/ai.js'); // Add AI routes
+const aiRoutes = require('./routes/ai.js');
+const migrationRoutes = require('./routes/migration.js');
 const supabase = require('./supabaseClient');
+
+// Import middleware
 const { generalRateLimit } = require('./middleware/rateLimiter');
+const { logger, errorHandler, requestLogger, handleNotFound } = require('./middleware/errorHandler');
+const { 
+  cacheMiddleware, 
+  clearCache, 
+  getCacheStats, 
+  initializeCacheMonitoring,
+  isCacheHealthy,
+  apiCache
+} = require('./middleware/cache');
+const { metricsMiddleware, healthCheck, getMetrics } = require('./middleware/metrics');
+const { validatePost, validateAuth, sanitizeInput } = require('./middleware/validation');
+const { authenticateAdmin } = require('./middleware/auth');
+
+// Import Swagger config
+const { setupSwagger } = require('./config/swagger');
 
 const app = express();
-const PORT = process.env.PORT || 10000;
+const PORT = config.server.port;
+
+// Initialize logger
+logger.info('🚀 Starting RBCK CMS Server...', {
+  version: config.api.version,
+  environment: config.server.env,
+  port: PORT
+});
+
+// Initialize cache monitoring
+initializeCacheMonitoring();
 
 // Security middleware
-app.use(helmet()); // Basic security headers
-app.use(generalRateLimit); // General rate limiting
-
-// Middleware
-app.use(cors({
-  origin: [
-    'https://flourishing-gumdrop-dffe7a.netlify.app', // Netlify domain
-    'http://localhost:3000', // Local dev
-    'http://localhost:8080', // Local dev frontend
-    'http://localhost:5500', // VS Code Live Server
-    'http://localhost:10000', // Local dev backend
-    'http://127.0.0.1:3000', // Localhost แบบ IP
-    'http://127.0.0.1:8080',
-    'http://127.0.0.1:5500', // VS Code Live Server IP
-    'http://127.0.0.1:10000'
-  ],
-  credentials: true
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
 }));
-app.use(express.json());
 
-// Routes
-app.use('/api/auth', authRoutes); // Authentication routes
-//app.use('/api/ai', aiRoutes);     // AI provider routes
-app.use('/api', apiKeyRoutes);    // Protected API key routes
-app.use('/api', postRoutes);
+// Request logging and metrics
+app.use(requestLogger);
+app.use(metricsMiddleware);
+
+// Rate limiting
+app.use(generalRateLimit);
+
+// CORS configuration for Netlify frontend
+app.use(cors({
+  origin: config.frontend.allowedOrigins,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
+// Body parsing with validation
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Input sanitization middleware for all requests
+app.use(sanitizeInput);
+
+// Setup Swagger documentation
+setupSwagger(app);
+
+// API Routes with enhanced middleware
+app.use('/api/auth', validateAuth, authRoutes); // Authentication routes
+app.use('/api/ai', aiRoutes);                   // AI provider routes  
+app.use('/api/migration', authenticateAdmin, migrationRoutes); // Database migration routes (admin only)
+app.use('/api', apiKeyRoutes);                  // Protected API key routes
+app.use('/api', postRoutes);                    // Post management routes
+
+// Health and monitoring endpoints
+app.get('/health', healthCheck);
+app.get('/api/health', healthCheck);
+app.get('/api/metrics', getMetrics);
+app.get('/api/cache/stats', (req, res) => {
+  try {
+    const stats = getCacheStats();
+    const health = isCacheHealthy();
+    res.json({
+      success: true,
+      data: {
+        ...stats,
+        healthy: health,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    logger.error('Cache stats error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get cache stats'
+    });
+  }
+});
+
+app.delete('/api/cache/clear', (req, res) => {
+  try {
+    clearCache.all();
+    logger.info('Cache cleared via API');
+    res.json({ 
+      success: true,
+      message: 'Cache cleared successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Cache clear error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to clear cache'
+    });
+  }
+});
 
 // Static files - Serve frontend files (DISABLED - Frontend served by Netlify)
 // app.use(express.static(path.join(__dirname, '..', 'frontend')));
@@ -49,13 +146,13 @@ app.use('/api', postRoutes);
 // app.use('/js', express.static(path.join(__dirname, '..', 'frontend', 'js')));
 // app.use('/script', express.static(path.join(__dirname, '..', 'frontend', 'script')));
 
-// Debug middleware (DISABLED - Not needed for API-only server)
-// app.use((req, res, next) => {
-//     if (req.url.includes('.css') || req.url.includes('.js')) {
-//         console.log(`📁 Static file request: ${req.url}`);
-//     }
-//     next();
-// });
+// Debug middleware for static file requests
+app.use((req, res, next) => {
+    if (req.url.includes('.css') || req.url.includes('.js') || req.url.includes('.html')) {
+        logger.debug(`📁 Static file request: ${req.url}`);
+    }
+    next();
+});
 // Serve static files from frontend and admin directories
 //app.use(express.static('frontend'));
 //app.use('/admin', express.static('admin'));
@@ -72,9 +169,9 @@ async function loadInitialData() {
         const parsed = JSON.parse(data);
         posts = parsed.posts || [];
         nextId = parsed.nextId || 1;
-        console.log(`📊 Loaded ${posts.length} posts from data.json`);
+        logger.info(`📊 Loaded ${posts.length} posts from data.json`);
     } catch (error) {
-        console.log('📊 No existing data file, starting fresh');
+        logger.info('📊 No existing data file, starting fresh');
         // เพิ่มข้อมูลตัวอย่าง
         posts = [
             {
@@ -143,85 +240,247 @@ async function saveData() {
             lastUpdated: new Date().toISOString()
         };
         await fs.writeFile(dataPath, JSON.stringify(data, null, 2));
-        console.log('💾 Data saved successfully');
+        logger.debug('💾 Data saved successfully');
     } catch (error) {
-        console.error('❌ Error saving data:', error);
+        logger.error('❌ Error saving data:', error);
     }
 }
 
-// API Routes
+// Enhanced API Routes with caching and validation
 
-// Test endpoint
-app.get('/api/test', (req, res) => {
+/**
+ * @swagger
+ * /api/test:
+ *   get:
+ *     summary: Test API connectivity
+ *     tags: [System]
+ *     responses:
+ *       200:
+ *         description: API is working
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 timestamp:
+ *                   type: string
+ *                 version:
+ *                   type: string
+ *                 status:
+ *                   type: string
+ */
+app.get('/api/test', cacheMiddleware(300), (req, res) => {
     res.json({ 
         message: 'API is working!', 
         timestamp: new Date().toISOString(),
-        version: '1.0.0',
-        status: 'ok'
+        version: '2.0.0',
+        status: 'ok',
+        environment: process.env.NODE_ENV || 'development'
     });
 });
 
-// Analytics endpoint
-app.get('/api/analytics', (req, res) => {
-    const publishedPosts = posts.filter(post => post.status === 'published');
-    const draftPosts = posts.filter(post => post.status === 'draft');
-    const totalViews = posts.reduce((sum, post) => sum + (post.views || 0), 0);
-    
-    res.json({
-        totalPosts: posts.length,
-        publishedPosts: publishedPosts.length,
-        draftPosts: draftPosts.length,
-        pageViews: totalViews,
-        trafficSources: {
-            organic: 65,
-            direct: 20,
-            social: 10,
-            referral: 5
-        },
-        topKeywords: [
-            { keyword: 'รถเกี่ยวข้าว', count: 1234 },
-            { keyword: 'ซ่อมรถเกี่ยวข้าว', count: 892 },
-            { keyword: 'ดูแลรักษารถเกี่ยวข้าว', count: 567 },
-            { keyword: 'อะไหล่รถเกี่ยวข้าว', count: 445 }
-        ],
-        popularPosts: publishedPosts.slice(0, 5).map(post => ({
-            title: post.titleTH,
-            views: post.views || 0,
-            slug: post.slug
-        }))
-    });
-});
-
-// Get all posts
-app.get('/api/posts', (req, res) => {
-    const sortedPosts = posts.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-    res.json(sortedPosts);
-});
-
-// Get single post
-app.get('/api/posts/:id', (req, res) => {
-    const postId = parseInt(req.params.id);
-    const post = posts.find(p => p.id === postId);
-    
-    if (!post) {
-        return res.status(404).json({ error: 'Post not found' });
+/**
+ * @swagger
+ * /api/analytics:
+ *   get:
+ *     summary: Get site analytics
+ *     tags: [Analytics]
+ *     responses:
+ *       200:
+ *         description: Analytics data
+ */
+app.get('/api/analytics', cacheMiddleware(600), (req, res) => {
+    try {
+        const publishedPosts = posts.filter(post => post.status === 'published');
+        const draftPosts = posts.filter(post => post.status === 'draft');
+        const totalViews = posts.reduce((sum, post) => sum + (post.views || 0), 0);
+        
+        res.json({
+            totalPosts: posts.length,
+            publishedPosts: publishedPosts.length,
+            draftPosts: draftPosts.length,
+            pageViews: totalViews,
+            trafficSources: {
+                organic: 65,
+                direct: 20,
+                social: 10,
+                referral: 5
+            },
+            topKeywords: [
+                { keyword: 'รถเกี่ยวข้าว', count: 1234 },
+                { keyword: 'ซ่อมรถเกี่ยวข้าว', count: 892 },
+                { keyword: 'ดูแลรักษารถเกี่ยวข้าว', count: 567 },
+                { keyword: 'อะไหล่รถเกี่ยวข้าว', count: 445 }
+            ],
+            popularPosts: publishedPosts.slice(0, 5).map(post => ({
+                title: post.titleTH,
+                views: post.views || 0,
+                slug: post.slug
+            })),
+            generatedAt: new Date().toISOString()
+        });
+    } catch (error) {
+        logger.error('Error generating analytics:', error);
+        res.status(500).json({ 
+            error: 'Failed to generate analytics',
+            message: error.message 
+        });
     }
-    
-    res.json(post);
 });
 
-// Create new post
-app.post('/api/posts', async (req, res) => {
+/**
+ * @swagger
+ * /api/posts:
+ *   get:
+ *     summary: Get all posts
+ *     tags: [Posts]
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: Filter by post status
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Limit number of results
+ *     responses:
+ *       200:
+ *         description: List of posts
+ */
+app.get('/api/posts', cacheMiddleware(300), (req, res) => {
+    try {
+        let filteredPosts = [...posts];
+        
+        // Filter by status if provided
+        if (req.query.status) {
+            filteredPosts = filteredPosts.filter(post => post.status === req.query.status);
+        }
+        
+        // Sort by update date
+        filteredPosts.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+        
+        // Apply limit if provided
+        if (req.query.limit) {
+            const limit = parseInt(req.query.limit);
+            if (!isNaN(limit) && limit > 0) {
+                filteredPosts = filteredPosts.slice(0, limit);
+            }
+        }
+        
+        res.json({
+            posts: filteredPosts,
+            total: filteredPosts.length,
+            query: req.query
+        });
+    } catch (error) {
+        logger.error('Error fetching posts:', error);
+        res.status(500).json({ 
+            error: 'Failed to fetch posts',
+            message: error.message 
+        });
+    }
+});
+
+/**
+ * @swagger
+ * /api/posts/{id}:
+ *   get:
+ *     summary: Get single post by ID
+ *     tags: [Posts]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Post ID
+ *     responses:
+ *       200:
+ *         description: Post details
+ *       404:
+ *         description: Post not found
+ */
+app.get('/api/posts/:id', cacheMiddleware(600), (req, res) => {
+    try {
+        const postId = parseInt(req.params.id);
+        
+        if (isNaN(postId)) {
+            return res.status(400).json({ 
+                error: 'Invalid post ID',
+                message: 'Post ID must be a number' 
+            });
+        }
+        
+        const post = posts.find(p => p.id === postId);
+        
+        if (!post) {
+            return res.status(404).json({ 
+                error: 'Post not found',
+                postId: postId 
+            });
+        }
+        
+        res.json(post);
+    } catch (error) {
+        logger.error('Error fetching post:', error);
+        res.status(500).json({ 
+            error: 'Failed to fetch post',
+            message: error.message 
+        });
+    }
+});
+
+/**
+ * @swagger
+ * /api/posts:
+ *   post:
+ *     summary: Create a new post
+ *     tags: [Posts]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - titleTH
+ *               - excerpt
+ *             properties:
+ *               titleTH:
+ *                 type: string
+ *               titleEN:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *               excerpt:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               status:
+ *                 type: string
+ *                 enum: [draft, published]
+ *               author:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Post created successfully
+ *       400:
+ *         description: Validation error
+ */
+app.post('/api/posts', validatePost, async (req, res) => {
     try {
         const postData = req.body;
         
-        // Validation
-        if (!postData.titleTH || !postData.excerpt) {
-            return res.status(400).json({ error: 'Title and excerpt are required' });
-        }
-        
         // Auto-generate slug if not provided
-        if (!postData.slug) {
+        if (!postData.slug && postData.titleTH) {
             postData.slug = postData.titleTH
                 .toLowerCase()
                 .replace(/[^\w\s-]/g, '')
@@ -240,22 +499,64 @@ app.post('/api/posts', async (req, res) => {
         posts.push(newPost);
         await saveData();
         
-        console.log(`📝 Created new post: ${newPost.titleTH}`);
+        // Clear cache for posts endpoints
+        clearCache('/api/posts');
+        clearCache('/api/analytics');
+        
+        logger.info(`📝 Created new post: ${newPost.titleTH}`, { postId: newPost.id });
         res.status(201).json(newPost);
     } catch (error) {
-        console.error('Error creating post:', error);
-        res.status(500).json({ error: 'Failed to create post' });
+        logger.error('Error creating post:', error);
+        res.status(500).json({ 
+            error: 'Failed to create post',
+            message: error.message 
+        });
     }
 });
 
-// Update post
-app.put('/api/posts/:id', async (req, res) => {
+/**
+ * @swagger
+ * /api/posts/{id}:
+ *   put:
+ *     summary: Update an existing post
+ *     tags: [Posts]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Post ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Post updated successfully
+ *       404:
+ *         description: Post not found
+ */
+app.put('/api/posts/:id', validatePost, async (req, res) => {
     try {
         const postId = parseInt(req.params.id);
+        
+        if (isNaN(postId)) {
+            return res.status(400).json({ 
+                error: 'Invalid post ID',
+                message: 'Post ID must be a number' 
+            });
+        }
+        
         const postIndex = posts.findIndex(p => p.id === postId);
         
         if (postIndex === -1) {
-            return res.status(404).json({ error: 'Post not found' });
+            return res.status(404).json({ 
+                error: 'Post not found',
+                postId: postId 
+            });
         }
         
         const updatedPost = {
@@ -268,43 +569,101 @@ app.put('/api/posts/:id', async (req, res) => {
         posts[postIndex] = updatedPost;
         await saveData();
         
-        console.log(`📝 Updated post: ${updatedPost.titleTH}`);
+        // Clear cache for posts endpoints
+        clearCache('/api/posts');
+        clearCache('/api/analytics');
+        
+        logger.info(`📝 Updated post: ${updatedPost.titleTH}`, { postId });
         res.json(updatedPost);
     } catch (error) {
-        console.error('Error updating post:', error);
-        res.status(500).json({ error: 'Failed to update post' });
+        logger.error('Error updating post:', error);
+        res.status(500).json({ 
+            error: 'Failed to update post',
+            message: error.message 
+        });
     }
 });
 
-// Delete post
+/**
+ * @swagger
+ * /api/posts/{id}:
+ *   delete:
+ *     summary: Delete a post
+ *     tags: [Posts]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Post ID
+ *     responses:
+ *       200:
+ *         description: Post deleted successfully
+ *       404:
+ *         description: Post not found
+ */
 app.delete('/api/posts/:id', async (req, res) => {
     try {
         const postId = parseInt(req.params.id);
+        
+        if (isNaN(postId)) {
+            return res.status(400).json({ 
+                error: 'Invalid post ID',
+                message: 'Post ID must be a number' 
+            });
+        }
+        
         const postIndex = posts.findIndex(p => p.id === postId);
         
         if (postIndex === -1) {
-            return res.status(404).json({ error: 'Post not found' });
+            return res.status(404).json({ 
+                error: 'Post not found',
+                postId: postId 
+            });
         }
         
         const deletedPost = posts.splice(postIndex, 1)[0];
         await saveData();
         
-        console.log(`🗑️ Deleted post: ${deletedPost.titleTH}`);
-        res.json({ message: 'Post deleted successfully' });
+        // Clear cache for posts endpoints
+        clearCache('/api/posts');
+        clearCache('/api/analytics');
+        
+        logger.info(`🗑️ Deleted post: ${deletedPost.titleTH}`, { postId });
+        res.json({ 
+            message: 'Post deleted successfully',
+            deletedPost: {
+                id: deletedPost.id,
+                title: deletedPost.titleTH
+            }
+        });
     } catch (error) {
-        console.error('Error deleting post:', error);
-        res.status(500).json({ error: 'Failed to delete post' });
+        logger.error('Error deleting post:', error);
+        res.status(500).json({ 
+            error: 'Failed to delete post',
+            message: error.message 
+        });
     }
 });
 
-// Get blog HTML for frontend
-app.get('/api/blog-html', async (req, res) => {
+/**
+ * @swagger
+ * /api/blog-html:
+ *   get:
+ *     summary: Get blog HTML for frontend
+ *     tags: [Blog]
+ *     responses:
+ *       200:
+ *         description: Generated blog HTML
+ */
+app.get('/api/blog-html', cacheMiddleware(300), async (req, res) => {
     try {
-        console.log('[DEBUG] Starting blog-html request...');
+        logger.debug('Starting blog-html request...');
         
         // Get local published posts first (always available)
         const localPublishedPosts = posts.filter(post => post.status === 'published');
-        console.log('[DEBUG] Local published posts found:', localPublishedPosts.length);
+        logger.debug(`Local published posts found: ${localPublishedPosts.length}`);
         
         let finalPosts = [];
         let source = 'local';
@@ -317,7 +676,7 @@ app.get('/api/blog-html', async (req, res) => {
                 .eq('status', 'published')
                 .order('created_at', { ascending: false });
             
-            console.log('[DEBUG] Supabase response:', {
+            logger.debug('Supabase response:', {
                 posts: supabasePosts?.length || 0,
                 error: error?.message || 'none'
             });
@@ -325,14 +684,14 @@ app.get('/api/blog-html', async (req, res) => {
             if (!error && supabasePosts && supabasePosts.length > 0) {
                 finalPosts = supabasePosts;
                 source = 'supabase';
-                console.log('[DEBUG] Using Supabase data:', finalPosts.length, 'posts');
+                logger.debug(`Using Supabase data: ${finalPosts.length} posts`);
             } else {
                 finalPosts = localPublishedPosts;
                 source = 'local_fallback';
-                console.log('[DEBUG] Using local fallback data:', finalPosts.length, 'posts');
+                logger.debug(`Using local fallback data: ${finalPosts.length} posts`);
             }
         } catch (supabaseError) {
-            console.error('[DEBUG] Supabase connection error:', supabaseError);
+            logger.error('Supabase connection error:', supabaseError);
             finalPosts = localPublishedPosts;
             source = 'local_error_fallback';
         }
@@ -372,10 +731,9 @@ app.get('/api/blog-html', async (req, res) => {
                         <p class="ai-generated-notice">*บทความจากระบบ CMS</p>
                     </div>
                 </article>
-            `;
-        }).join('');
+            `;        }).join('');
         
-        console.log('[DEBUG] Generated HTML for', finalPosts.length, 'posts from', source);
+        logger.debug(`Generated HTML for ${finalPosts.length} posts from ${source}`);
         
         res.json({
             html: blogHTML,
@@ -390,7 +748,7 @@ app.get('/api/blog-html', async (req, res) => {
         });
         
     } catch (err) {
-        console.error('[ERROR] /api/blog-html failed:', err);
+        logger.error('/api/blog-html failed:', err);
         
         // Final fallback - always use local data
         const localPublishedPosts = posts.filter(post => post.status === 'published');
@@ -422,172 +780,298 @@ app.get('/api/blog-html', async (req, res) => {
     }
 });
 
-// Individual blog post view (KEEP - This serves as API endpoint for Netlify frontend)
-app.get('/blog/:slug', (req, res) => {
-    const post = posts.find(p => p.slug === req.params.slug && p.status === 'published');
-    
-    if (!post) {
-        return res.status(404).send('Post not found');
-    }
-    
-    // Increment view count
-    post.views = (post.views || 0) + 1;
-    saveData();
-    
-    // Return HTML page
-    const html = `
-    <!DOCTYPE html>
-    <html lang="th">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${post.metaTitle || post.titleTH}</title>
-        <meta name="description" content="${post.metaDescription || post.excerpt}">
-        <meta name="keywords" content="${Array.isArray(post.tags) ? post.tags.join(', ') : ''}">
-        <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap" rel="stylesheet">
-        <style>
-            body { 
-                font-family: 'Sarabun', sans-serif; 
-                max-width: 800px; 
-                margin: 0 auto; 
-                padding: 20px; 
-                line-height: 1.6; 
-                color: #333;
-            }
-            .header { 
-                text-align: center; 
-                margin-bottom: 40px; 
-                padding-bottom: 20px; 
-                border-bottom: 2px solid #27533b; 
-            }
-            .header h1 { 
-                color: #27533b; 
-                font-size: 2.2em; 
-                margin-bottom: 10px;
-            }
-            .meta { 
-                color: #6c757d; 
-                margin-bottom: 30px; 
-                font-size: 0.95em;
-            }
-            .content { 
-                line-height: 1.8; 
-                font-size: 1.1em;
-            }
-            .content h3 { 
-                color: #27533b; 
-                margin: 30px 0 15px 0; 
-                font-size: 1.4em;
-            }
-            .content h4 { 
-                color: #27533b; 
-                margin: 25px 0 10px 0; 
-                font-size: 1.2em;
-            }
-            .content ol, .content ul { 
-                margin: 15px 0; 
-                padding-left: 30px; 
-            }
-            .content li { 
-                margin-bottom: 10px; 
-            }
-            .back-link { 
-                display: inline-block; 
-                margin-top: 40px; 
-                padding: 10px 20px; 
-                background: #27533b; 
-                color: white; 
-                text-decoration: none; 
-                border-radius: 5px; 
-            }
-            .back-link:hover { 
-                background: #1e3d2b; 
-            }
-            .tags {
-                margin: 30px 0;
-                padding: 20px;
-                background: #f8f9fa;
-                border-radius: 8px;
-            }
-            .tag {
-                display: inline-block;
-                background: #e0a800;
-                color: #27533b;
-                padding: 4px 12px;
-                margin: 2px;
-                border-radius: 15px;
-                font-size: 0.9em;
-                font-weight: 500;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="header">
-            <h1>${post.titleTH}</h1>
-            <div class="meta">
-                เผยแพร่เมื่อ: ${new Date(post.publishDate).toLocaleDateString('th-TH')} | 
-                โดย: ${post.author} | 
-                ดู: ${post.views} ครั้ง
+// Individual blog post view (Enhanced with caching and error handling)
+app.get('/blog/:slug', cacheMiddleware(1800), (req, res) => {
+    try {
+        const post = posts.find(p => p.slug === req.params.slug && p.status === 'published');
+        
+        if (!post) {
+            logger.warn(`Blog post not found: ${req.params.slug}`, { 
+                ip: req.ip, 
+                userAgent: req.get('User-Agent') 
+            });
+            return res.status(404).send(`
+                <!DOCTYPE html>
+                <html lang="th">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>ไม่พบบทความ | ระเบียบการช่าง</title>
+                </head>
+                <body>
+                    <h1>ไม่พบบทความที่ต้องการ</h1>
+                    <p>ขออภัย บทความที่คุณต้องการไม่พบในระบบ</p>
+                    <a href="/">← กลับสู่หน้าหลัก</a>
+                </body>
+                </html>
+            `);
+        }
+        
+        // Increment view count safely
+        post.views = (post.views || 0) + 1;
+        saveData().catch(error => logger.error('Error saving view count:', error));
+        
+        logger.info(`Blog post viewed: ${post.titleTH}`, { 
+            slug: req.params.slug,
+            views: post.views,
+            ip: req.ip 
+        });        // Return HTML page
+        const html = `
+        <!DOCTYPE html>
+        <html lang="th">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${post.metaTitle || post.titleTH}</title>
+            <meta name="description" content="${post.metaDescription || post.excerpt}">
+            <meta name="keywords" content="${Array.isArray(post.tags) ? post.tags.join(', ') : ''}">
+            <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap" rel="stylesheet">
+            <style>
+                body { 
+                    font-family: 'Sarabun', sans-serif; 
+                    max-width: 800px; 
+                    margin: 0 auto; 
+                    padding: 20px; 
+                    line-height: 1.6; 
+                    color: #333;
+                }
+                .header { 
+                    text-align: center; 
+                    margin-bottom: 40px; 
+                    padding-bottom: 20px; 
+                    border-bottom: 2px solid #27533b; 
+                }
+                .header h1 { 
+                    color: #27533b; 
+                    font-size: 2.2em; 
+                    margin-bottom: 10px;
+                }
+                .meta { 
+                    color: #6c757d; 
+                    margin-bottom: 30px; 
+                    font-size: 0.95em;
+                }
+                .content { 
+                    line-height: 1.8; 
+                    font-size: 1.1em;
+                }
+                .content h3 { 
+                    color: #27533b; 
+                    margin: 30px 0 15px 0; 
+                    font-size: 1.4em;
+                }
+                .content h4 { 
+                    color: #27533b; 
+                    margin: 25px 0 10px 0; 
+                    font-size: 1.2em;
+                }
+                .content ol, .content ul { 
+                    margin: 15px 0; 
+                    padding-left: 30px; 
+                }
+                .content li { 
+                    margin-bottom: 10px; 
+                }
+                .back-link { 
+                    display: inline-block; 
+                    margin-top: 40px; 
+                    padding: 10px 20px; 
+                    background: #27533b; 
+                    color: white; 
+                    text-decoration: none; 
+                    border-radius: 5px; 
+                }
+                .back-link:hover { 
+                    background: #1e3d2b; 
+                }
+                .tags {
+                    margin: 30px 0;
+                    padding: 20px;
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                }
+                .tag {
+                    display: inline-block;
+                    background: #e0a800;
+                    color: #27533b;
+                    padding: 4px 12px;
+                    margin: 2px;
+                    border-radius: 15px;
+                    font-size: 0.9em;
+                    font-weight: 500;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>${post.titleTH}</h1>
+                <div class="meta">
+                    เผยแพร่เมื่อ: ${new Date(post.publishDate).toLocaleDateString('th-TH')} | 
+                    โดย: ${post.author} | 
+                    ดู: ${post.views} ครั้ง
+                </div>
             </div>
-        </div>
+            
+            <div class="content">
+                ${post.content}
+            </div>
+            
+            ${post.tags && post.tags.length > 0 ? `
+            <div class="tags">
+                <strong>แท็ก:</strong> 
+                ${post.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+            </div>
+            ` : ''}
+            
+            <a href="/" class="back-link">← กลับสู่หน้าหลัก</a>
+        </body>
+        </html>
+        `;
         
-        <div class="content">
-            ${post.content}
-        </div>
-        
-        ${post.tags && post.tags.length > 0 ? `
-        <div class="tags">
-            <strong>แท็ก:</strong> 
-            ${post.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
-        </div>
-        ` : ''}
-        
-        <a href="/" class="back-link">← กลับสู่หน้าหลัก</a>
-    </body>
-    </html>
-    `;
-      res.send(html);
+        res.send(html);
+    } catch (error) {
+        logger.error('Error serving blog post:', error);
+        res.status(500).send(`
+            <!DOCTYPE html>
+            <html lang="th">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>เกิดข้อผิดพลาด | ระเบียบการช่าง</title>
+            </head>
+            <body>
+                <h1>เกิดข้อผิดพลาด</h1>
+                <p>ขออภัย เกิดข้อผิดพลาดในการแสดงบทความ</p>
+                <a href="/">← กลับสู่หน้าหลัก</a>
+            </body>
+            </html>
+        `);
+    }
 });
 
-// Frontend routes (DISABLED - Frontend served by Netlify)
-// Serve frontend - Main page
-// app.get('/', (req, res) => {
-//     console.log('🏠 [DEBUG] Serving main page');
-//     res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
-// });
+// Root endpoint for API-only backend
+app.get('/', (req, res) => {
+    try {
+        res.json({
+            name: config.api.title,
+            version: config.api.version,
+            description: config.api.description,
+            status: 'operational',
+            timestamp: new Date().toISOString(),
+            endpoints: {
+                documentation: '/api-docs',
+                health: '/health',
+                test: '/api/test',
+                metrics: '/api/metrics',
+                auth: '/api/auth',
+                ai: '/api/ai',
+                posts: '/api/posts'
+            },
+            frontend: config.frontend.url,
+            environment: config.server.env,
+            enabledAIProviders: config.getEnabledAIProviders()
+        });
+    } catch (error) {
+        logger.error('Error serving root endpoint:', error);
+        res.status(500).json({ 
+            error: 'Internal server error',
+            message: error.message 
+        });
+    }
+});
 
-// Admin panel route
-// app.get('/admin', (req, res) => {
-//     console.log('🔧 [DEBUG] Serving admin panel');
-//     res.sendFile(path.join(__dirname, '..', 'frontend', 'admin', 'index.html'));
-// });
-
-// Blog post page route (catch-all for frontend routing)
-// app.get('/blog/post.html', (req, res) => {
-//     console.log('📰 [DEBUG] Serving blog post page');
-//     res.sendFile(path.join(__dirname, '..', 'frontend', 'blog', 'post.html'));
-// });
-
-// Start server
-async function startServer() {
-    await loadInitialData();
-    
-    // CMS Static files (DISABLED - Frontend served by Netlify)
-    // app.use('/cms-styles.css', express.static(path.join(__dirname, '..', 'frontend', 'css', 'cms-styles.css')));
-    // app.use('/cms-script.js', express.static(path.join(__dirname, '..', 'frontend', 'js', 'cms-script.js')));
-    
-    app.listen(PORT, () => {
-        console.log('🚀 ================================');
-        console.log('🚀   Rabeab Kanchang CMS Server');
-        console.log('🚀 ================================');
-        console.log(`🌐 Frontend: http://localhost:${PORT}`);
-        console.log(`⚙️  CMS Admin: http://localhost:${PORT}/admin`);
-        console.log(`🔧 CMS Dashboard: http://localhost:${PORT}/cms`);
-        console.log(`🔧 API: http://localhost:${PORT}/api/test`);
-        console.log('🚀 ================================');
-        console.log(`📊 Loaded ${posts.length} posts`);
-        console.log('✅ Server is ready!');
+// 404 handler for undefined API routes
+app.use('/api/*', (req, res) => {
+    res.status(404).json({
+        success: false,
+        error: 'API endpoint not found',
+        path: req.originalUrl,
+        method: req.method,
+        availableEndpoints: {
+            auth: '/api/auth',
+            ai: '/api/ai', 
+            posts: '/api/posts',
+            test: '/api/test',
+            health: '/health',
+            docs: '/api-docs'
+        }
     });
+});
+
+// Static file routes - REMOVED (Frontend served by Netlify)
+// Static file serving is now handled by Netlify for better performance and CDN
+// app.use('/cms-styles.css', express.static(path.join(__dirname, '..', 'frontend', 'css', 'cms-styles.css')));
+// app.use('/cms-script.js', express.static(path.join(__dirname, '..', 'frontend', 'js', 'cms-script.js')));
+
+// Error handling middleware (must be last)
+app.use(handleNotFound);
+app.use(errorHandler);
+
+// Enhanced server startup
+async function startServer() {
+    try {
+        await loadInitialData();
+          const server = app.listen(PORT, () => {            logger.info('🚀 ================================');
+            logger.info(`🚀   ${config.api.title} v${config.api.version}`);
+            logger.info('🚀 ================================');
+            logger.info(`🌐 API Server: http://localhost:${PORT}`);
+            logger.info(`📖 API Docs: http://localhost:${PORT}/api-docs`);
+            logger.info(`🔧 Health Check: http://localhost:${PORT}/health`);
+            logger.info(`📊 Metrics: http://localhost:${PORT}/api/metrics`);
+            logger.info(`🧪 API Test: http://localhost:${PORT}/api/test`);
+            logger.info('🚀 ================================');
+            logger.info(`📊 Loaded ${posts.length} posts`);
+            logger.info(`🌍 Environment: ${config.server.env}`);
+            logger.info(`🌐 Frontend URL: ${config.frontend.url}`);
+            logger.info(`🤖 AI Providers: ${config.getEnabledAIProviders().map(p => p.name).join(', ') || 'None'}`);
+            logger.info('✅ API Server is ready and operational!');
+        });
+
+        // Graceful shutdown handling
+        const gracefulShutdown = (signal) => {
+            logger.info(`📢 Received ${signal}. Starting graceful shutdown...`);
+            
+            server.close((err) => {
+                if (err) {
+                    logger.error('❌ Error during server shutdown:', err);
+                    process.exit(1);
+                }
+                
+                logger.info('✅ Server closed successfully');
+                process.exit(0);
+            });
+            
+            // Force close after 30 seconds
+            setTimeout(() => {
+                logger.error('❌ Forced shutdown after timeout');
+                process.exit(1);
+            }, 30000);
+        };
+
+        process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+        process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+        // Handle uncaught exceptions
+        process.on('uncaughtException', (error) => {
+            logger.error('❌ Uncaught Exception:', error);
+            gracefulShutdown('uncaughtException');
+        });
+
+        process.on('unhandledRejection', (reason, promise) => {
+            logger.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+            gracefulShutdown('unhandledRejection');
+        });
+        
+    } catch (error) {
+        logger.error('❌ Failed to start server:', error);
+        process.exit(1);
+    }
 }
 
-startServer().catch(console.error);
+// Export app for testing
+module.exports = app;
+
+// Only start server if this file is run directly (not in tests)
+if (require.main === module) {
+    startServer();
+}
