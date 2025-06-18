@@ -15,9 +15,9 @@ const config = {
 
   // Database Configuration (Supabase)
   database: {
-    supabaseUrl: process.env.SUPABASE_URL || 'https://placeholder.supabase.co',
-    supabaseKey: process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || 'placeholder-key',
-    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || 'placeholder-anon-key'
+    supabaseUrl: process.env.SUPABASE_URL,
+    supabaseKey: process.env.SUPABASE_SERVICE_KEY,
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY 
   },
 
   // Frontend Configuration
@@ -47,7 +47,7 @@ const config = {
 
   // Security Configuration
   security: {
-    jwtSecret: process.env.JWT_SECRET || 'your-default-jwt-secret-change-this',
+    jwtSecret: process.env.JWT_SECRET,
     jwtExpiration: process.env.JWT_EXPIRATION || '24h',
     bcryptRounds: parseInt(process.env.BCRYPT_ROUNDS) || 12,
     rateLimitWindowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
@@ -108,8 +108,8 @@ const config = {
 
   // Admin Configuration
   admin: {
-    username: process.env.ADMIN_USERNAME || 'admin',
-    password: process.env.ADMIN_PASSWORD || 'change-this-password',
+    username: process.env.ADMIN_USERNAME,
+    password: process.env.ADMIN_PASSWORD,
     email: process.env.ADMIN_EMAIL || 'admin@rbck.com'
   }
 };
