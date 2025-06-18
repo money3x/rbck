@@ -5,8 +5,9 @@ import { runGeminiSeoCheck, researchKeywords, generateSitemap, validateSchema, r
 import { Gemini20FlashEngine } from './geminiAI.js'
 import { AISwarmCouncil } from './aiSwarm.js';
 import { AIMonitoringUI } from './aiMonitoringUI.js';
-import { API_BASE } from '../config.js';
+import { API_BASE, CONFIG } from '../config.js';
 import { requireAuth, isAuthenticated, getCurrentUser } from './auth.js';
+import { api, handleApiError, initNetworkMonitoring } from '../js/apiUtils.js';
 
 // ===== GLOBAL VARIABLES =====
 let geminiEngine = null;
@@ -462,8 +463,21 @@ async function initializeCompleteApp() {
     try {
         // 1. Setup development authentication if needed
         setupDevelopmentAuth();
+          // 2. Initialize network monitoring
+        console.log('🌐 Initializing network monitoring...');
+        initNetworkMonitoring();
         
-        // 2. Authentication check
+        // 3. Test API connection
+        console.log('🔗 Testing API connection...');
+        try {
+            const apiTest = await api.test();
+            console.log('✅ API connection test:', apiTest);
+        } catch (error) {
+            console.warn('⚠️ API connection test failed:', error);
+            handleApiError(error, 'API connection test');
+        }
+        
+        // 4. Authentication check
         console.log('🔐 Checking authentication...');
         const authenticated = await requireAuth();
         if (!authenticated) {

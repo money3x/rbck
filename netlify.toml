@@ -3,6 +3,28 @@
   publish = "."
   command = "echo 'Static site deployment'"
 
+[build.environment]
+  NODE_VERSION = "18"
+
+# Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://rbck.onrender.com https://api.openai.com https://generativelanguage.googleapis.com;"
+
+# API proxy to avoid CORS issues
+[[redirects]]
+  from = "/api/*"
+  to = "https://rbck.onrender.com/api/:splat"
+  status = 200
+  force = true
+  headers = {X-From = "Netlify"}
+
 [[redirects]]
   from = "/blog/*"
   to = "/blog/post.html"

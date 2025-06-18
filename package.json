@@ -1,0 +1,41 @@
+{
+  "name": "rbck-cms",
+  "version": "1.0.0",
+  "description": "Rice Harvester Content Management System - Full Stack CMS with AI Integration",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "dev": "cd backend && npm run dev",
+    "test": "cd backend && npm test",
+    "install-backend": "cd backend && npm install",
+    "install-all": "npm run install-backend",
+    "health-check": "cd backend && npm run health-check",
+    "build": "cd backend && npm run build"
+  },
+  "keywords": [
+    "cms",
+    "rice-harvester",
+    "agriculture",
+    "ai-integration", 
+    "nodejs",
+    "express",
+    "content-management"
+  ],
+  "author": "Rabeab Kanchang",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-username/rbck-cms.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/rbck-cms/issues"
+  },
+  "homepage": "https://github.com/your-username/rbck-cms#readme"
+}

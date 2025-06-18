@@ -15,8 +15,8 @@ function getApiBase() {
         const backendPort = port === '8080' ? '10000' : '10000'; // Default backend port
         return `${protocol}//${hostname}:${backendPort}/api`;
     } else {
-        // Production: use deployed backend
-        return 'https://rbck.onrender.com/api';
+        // Production: use Netlify proxy to avoid CORS issues
+        return '/api'; // This will be proxied to https://rbck.onrender.com/api by Netlify
     }
 }
 
@@ -27,5 +27,15 @@ export const GEMINI_MODEL = 'gemini-2.0-flash';
 console.log('🔧 Frontend Config:', {
     hostname: window.location.hostname,
     port: window.location.port,
-    API_BASE: API_BASE
+    API_BASE: API_BASE,
+    protocol: window.location.protocol
 });
+
+// Additional config for production
+export const CONFIG = {
+    isDevelopment: window.location.hostname.includes('localhost'),
+    isProduction: !window.location.hostname.includes('localhost'),
+    version: '1.0.0',
+    apiTimeout: 30000, // 30 seconds
+    retryAttempts: 3
+};

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RBCK CMS - Connection Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .status {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.5);
+        }
+        .status.error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+        }
+        .status.loading {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.5);
+        }
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .log {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .endpoint-list {
+            display: grid;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .endpoint {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌾 RBCK CMS - การทดสอบการเชื่อมต่อ</h1>
+        
+        <div id="connection-status" class="status loading">
+            <span>⏳ กำลังทดสอบการเชื่อมต่อ...</span>
+        </div>
+        
+        <div class="endpoint-list">
+            <div class="endpoint">
+                <span>🏥 Health Check</span>
+                <button onclick="testEndpoint('/api/health')">Test</button>
+            </div>
+            <div class="endpoint">
+                <span>🧪 API Test</span>
+                <button onclick="testEndpoint('/api/test')">Test</button>
+            </div>
+            <div class="endpoint">
+                <span>📊 Metrics</span>
+                <button onclick="testEndpoint('/api/metrics')">Test</button>
+            </div>
+            <div class="endpoint">
+                <span>💾 Cache Stats</span>
+                <button onclick="testEndpoint('/api/cache/stats')">Test</button>
+            </div>
+            <div class="endpoint">
+                <span>🤖 AI Providers</span>
+                <button onclick="testEndpoint('/api/ai/providers')">Test</button>
+            </div>
+            <div class="endpoint">
+                <span>📝 Posts</span>
+                <button onclick="testEndpoint('/api/posts')">Test</button>
+            </div>
+        </div>
+        
+        <button onclick="runAllTests()">🔄 รันการทดสอบทั้งหมด</button>
+        <button onclick="clearLog()">🗑️ ล้าง Log</button>
+        
+        <div id="log" class="log"></div>
+    </div>
+
+    <script type="module">
+        // Import config
+        import { API_BASE, CONFIG } from './config.js';
+        
+        let logElement = document.getElementById('log');
+        let statusElement = document.getElementById('connection-status');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString('th-TH');
+            const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
+            logElement.innerHTML += `<div>[${timestamp}] ${icon} ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`[${type}]`, message);
+        }
+        
+        function updateStatus(message, type) {
+            statusElement.className = `status ${type}`;
+            statusElement.innerHTML = `<span>${message}</span>`;
+        }
+        
+        async function testEndpoint(endpoint) {
+            const url = `${API_BASE}${endpoint}`;
+            log(`🔄 กำลังทดสอบ: ${endpoint}`);
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    timeout: 10000
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ ${endpoint} - สำเร็จ (${response.status})`, 'success');
+                    log(`📄 Response: ${JSON.stringify(data, null, 2).substring(0, 200)}...`);
+                } else {
+                    log(`❌ ${endpoint} - ล้มเหลว (${response.status} ${response.statusText})`, 'error');
+                }
+            } catch (error) {
+                log(`❌ ${endpoint} - ข้อผิดพลาด: ${error.message}`, 'error');
+            }
+        }
+        
+        async function runAllTests() {
+            updateStatus('⏳ กำลังรันการทดสอบทั้งหมด...', 'loading');
+            log('🚀 เริ่มการทดสอบทั้งหมด');
+            
+            const endpoints = [
+                '/api/health',
+                '/api/test',
+                '/api/metrics',
+                '/api/cache/stats',
+                '/api/ai/providers',
+                '/api/posts'
+            ];
+            
+            let successCount = 0;
+            let totalCount = endpoints.length;
+            
+            for (const endpoint of endpoints) {
+                try {
+                    await testEndpoint(endpoint);
+                    successCount++;
+                } catch (error) {
+                    // Error already logged in testEndpoint
+                }
+                
+                // Wait a bit between requests
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            if (successCount === totalCount) {
+                updateStatus(`✅ การทดสอบเสร็จสิ้น: ${successCount}/${totalCount} สำเร็จ`, 'success');
+                log(`🎉 การทดสอบเสร็จสิ้น: ${successCount}/${totalCount} endpoint ทำงานปกติ`, 'success');
+            } else {
+                updateStatus(`⚠️ การทดสอบเสร็จสิ้น: ${successCount}/${totalCount} สำเร็จ`, 'error');
+                log(`⚠️ การทดสอบเสร็จสิ้น: มี ${totalCount - successCount} endpoint ที่มีปัญหา`, 'error');
+            }
+        }
+        
+        function clearLog() {
+            logElement.innerHTML = '';
+        }
+        
+        // Make functions global for onclick handlers
+        window.testEndpoint = testEndpoint;
+        window.runAllTests = runAllTests;
+        window.clearLog = clearLog;
+        
+        // Initial log
+        log(`🔧 API Base: ${API_BASE}`);
+        log(`🌐 Environment: ${CONFIG.isDevelopment ? 'Development' : 'Production'}`);
+        log(`📍 Current URL: ${window.location.href}`);
+        
+        // Auto-run health check on load
+        setTimeout(() => {
+            testEndpoint('/api/health');
+        }, 1000);
+    </script>
+</body>
+</html>
