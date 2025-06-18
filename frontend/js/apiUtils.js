@@ -10,6 +10,8 @@ export async function apiCall(endpoint, options = {}) {
     const url = `${API_BASE}${endpoint}`;
     const defaultOptions = {
         method: 'GET',
+        mode: 'cors',
+        credentials: 'omit',
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
@@ -19,9 +21,9 @@ export async function apiCall(endpoint, options = {}) {
 
     const finalOptions = { ...defaultOptions, ...options };
 
-    // Add Authorization header if token exists
+    // Add Authorization header if token exists (only for authenticated requests)
     const token = localStorage.getItem('jwtToken');
-    if (token) {
+    if (token && !endpoint.includes('/health') && !endpoint.includes('/test')) {
         finalOptions.headers.Authorization = `Bearer ${token}`;
     }
 
@@ -53,6 +55,12 @@ export async function apiCall(endpoint, options = {}) {
                 } else {
                     const text = await response.text();
                     console.log(`✅ API Success (Text): ${finalOptions.method} ${url}`);
+                    
+                    // Check if we got HTML instead of expected response
+                    if (text.startsWith('<!DOCTYPE') || text.startsWith('<html')) {
+                        throw new Error('API returned HTML instead of JSON - possible proxy/routing issue');
+                    }
+                    
                     return text;
                 }
             } else {
@@ -78,8 +86,13 @@ export async function apiCall(endpoint, options = {}) {
                 break;
             }
             
-            // Don't retry on client errors (4xx)
+            // Don't retry on client errors (4xx) except timeouts
             if (error.message.includes('400') && !error.message.includes('timeout')) {
+                break;
+            }
+            
+            // Don't retry on HTML response errors (proxy issues)
+            if (error.message.includes('HTML instead of JSON')) {
                 break;
             }
             

@@ -137,14 +137,16 @@
             statusElement.className = `status ${type}`;
             statusElement.innerHTML = `<span>${message}</span>`;
         }
-        
-        async function testEndpoint(endpoint) {
+          async function testEndpoint(endpoint) {
             const url = `${API_BASE}${endpoint}`;
             log(`🔄 กำลังทดสอบ: ${endpoint}`);
+            log(`📍 Full URL: ${url}`);
             
             try {
                 const response = await fetch(url, {
                     method: 'GET',
+                    mode: 'cors',
+                    credentials: 'omit',
                     headers: {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json'
@@ -152,15 +154,34 @@
                     timeout: 10000
                 });
                 
+                log(`📊 Response Status: ${response.status} ${response.statusText}`);
+                log(`📋 Response Headers: ${JSON.stringify([...response.headers])}`);
+                
                 if (response.ok) {
-                    const data = await response.json();
-                    log(`✅ ${endpoint} - สำเร็จ (${response.status})`, 'success');
-                    log(`📄 Response: ${JSON.stringify(data, null, 2).substring(0, 200)}...`);
+                    const contentType = response.headers.get('content-type');
+                    log(`📄 Content-Type: ${contentType}`);
+                    
+                    if (contentType && contentType.includes('application/json')) {
+                        const data = await response.json();
+                        log(`✅ ${endpoint} - สำเร็จ (${response.status})`, 'success');
+                        log(`📄 Response: ${JSON.stringify(data, null, 2).substring(0, 200)}...`);
+                        return true;
+                    } else {
+                        const text = await response.text();
+                        log(`⚠️ ${endpoint} - ได้รับ text แทน JSON`, 'error');
+                        log(`📄 Response: ${text.substring(0, 200)}...`);
+                        return false;
+                    }
                 } else {
                     log(`❌ ${endpoint} - ล้มเหลว (${response.status} ${response.statusText})`, 'error');
+                    const text = await response.text();
+                    log(`📄 Error Response: ${text.substring(0, 200)}...`);
+                    return false;
                 }
             } catch (error) {
                 log(`❌ ${endpoint} - ข้อผิดพลาด: ${error.message}`, 'error');
+                log(`🔍 Error Type: ${error.name}`);
+                return false;
             }
         }
         
@@ -209,15 +230,23 @@
         window.testEndpoint = testEndpoint;
         window.runAllTests = runAllTests;
         window.clearLog = clearLog;
-        
-        // Initial log
+          // Initial log
         log(`🔧 API Base: ${API_BASE}`);
         log(`🌐 Environment: ${CONFIG.isDevelopment ? 'Development' : 'Production'}`);
         log(`📍 Current URL: ${window.location.href}`);
+        log(`🔗 Using Direct Connection: ${!API_BASE.startsWith('/api')}`);
+        
+        // Test if we can reach the backend directly
+        if (API_BASE.startsWith('/api')) {
+            log('⚠️ WARNING: Still using proxy endpoint, this will likely fail!', 'error');
+            log('🔧 Expected: API_BASE should be "https://rbck.onrender.com/api"', 'info');
+        } else {
+            log('✅ Using direct backend connection', 'success');
+        }
         
         // Auto-run health check on load
         setTimeout(() => {
-            testEndpoint('/api/health');
+            testEndpoint('/health');
         }, 1000);
     </script>
 </body>

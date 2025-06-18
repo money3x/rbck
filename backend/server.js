@@ -73,10 +73,28 @@ app.use(generalRateLimit);
 
 // CORS configuration for Netlify frontend
 app.use(cors({
-  origin: config.frontend.allowedOrigins,
-  credentials: true,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is in allowed list
+    if (config.frontend.allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // Allow any Netlify app domain for development
+    if (origin.includes('.netlify.app')) {
+      return callback(null, true);
+    }
+    
+    // Log rejected origins for debugging
+    console.warn('⚠️ CORS rejected origin:', origin);
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: false, // Set to false for better CORS compatibility
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-From'],
+  exposedHeaders: ['X-Cache', 'X-Cache-Key']
 }));
 
 // Body parsing with validation
