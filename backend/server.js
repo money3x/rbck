@@ -112,7 +112,7 @@ app.use('/api/auth', validateAuth, authRoutes); // Authentication routes
 app.use('/api/ai', aiRoutes);                   // AI provider routes  
 app.use('/api/migration', authenticateAdmin, migrationRoutes); // Database migration routes (admin only)
 app.use('/api', apiKeyRoutes);                  // Protected API key routes
-app.use('/api', postRoutes);                    // Post management routes
+app.use('/api', postRoutes);                    // Post management routes (re-enabled with improved error handling)
 
 // Health and monitoring endpoints
 app.get('/health', healthCheck);

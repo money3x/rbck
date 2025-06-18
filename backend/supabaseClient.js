@@ -13,11 +13,20 @@ let isConnected = false;
 try {
     // Try to create real Supabase client if environment variables are provided
     if (SUPABASE_URL && SUPABASE_KEY && !SUPABASE_URL.includes('placeholder')) {
-        supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+        supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+            auth: {
+                autoRefreshToken: false,
+                persistSession: false
+            },
+            // เพิ่ม options เพื่อป้องกัน syntax error
+            db: {
+                schema: 'public'
+            }
+        });
         isConnected = true;
         console.log('✅ Supabase client initialized successfully');
         
-        // Test connection
+        // Test connection ด้วย query ที่ปลอดภัย
         testConnection();
     } else {
         console.log('⚠️ Supabase environment variables not found - using mock client for development');
@@ -30,12 +39,13 @@ try {
     isConnected = false;
 }
 
-// Test database connection
+// Test database connection ด้วย query ที่ปลอดภัย
 async function testConnection() {
     try {
+        // ใช้ query ง่ายๆ แทน count(*) เพื่อป้องกัน parse error
         const { data, error } = await supabase
             .from('posts')
-            .select('count(*)')
+            .select('id')
             .limit(1);
             
         if (error) {
@@ -319,9 +329,32 @@ const db = {
     }
 };
 
+// Export health check function
+const checkSupabaseHealth = async () => {
+    try {
+        const { data, error } = await supabase
+            .from('posts')
+            .select('id')
+            .limit(1);
+            
+        return {
+            status: error ? 'unhealthy' : 'healthy',
+            error: error?.message || null,
+            connected: !error
+        };
+    } catch (error) {
+        return {
+            status: 'unhealthy', 
+            error: error.message,
+            connected: false
+        };
+    }
+};
+
 module.exports = {
     supabase,
     db,
     isConnected,
-    testConnection
+    testConnection,
+    checkSupabaseHealth
 };

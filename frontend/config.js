@@ -1,7 +1,7 @@
 /**
  * Config สำหรับ frontend (ไม่ควรใส่ API Key จริง)
  * Auto-detects environment and uses appropriate API endpoint
- * Updated: 2025-06-18 - Force direct connection
+ * Updated: 2025-06-19 - Disabled Supabase routes, using fallback posts
  */
 
 // Smart environment detection
@@ -39,7 +39,7 @@ console.log(`🔧 Frontend Config [${cacheBuster}]:`, {
     API_BASE: API_BASE,
     protocol: window.location.protocol,
     usingDirectConnection: !API_BASE.startsWith('/api'),
-    configVersion: '2025-06-18-v2'
+    configVersion: '2025-06-19-v1-supabase-fix'
 });
 
 // Verify config is correct
@@ -59,7 +59,7 @@ export const CONFIG = {
     version: '1.0.0',
     apiTimeout: 30000, // 30 seconds
     retryAttempts: 3,
-    configVersion: '2025-06-18-v2',
+    configVersion: '2025-06-19-v1-supabase-fix',
     
     // CORS settings for direct connection
     corsSettings: {

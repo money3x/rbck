@@ -103,7 +103,7 @@
             </div>
             <div class="endpoint">
                 <span>🤖 AI Providers</span>
-                <button onclick="testEndpoint('/ai/providers')">Test</button>
+                <button onclick="testEndpoint('/ai/status')">Test</button>
             </div>
             <div class="endpoint">
                 <span>📝 Posts</span>
@@ -115,11 +115,10 @@
         <button onclick="clearLog()">🗑️ ล้าง Log</button>
         
         <div id="log" class="log"></div>
-    </div>
-
-    <script type="module">
-        // Import config
-        import { API_BASE, CONFIG } from './config.js';
+    </div>    <script type="module">        // Import config with cache busting to ensure latest backend changes are loaded
+        const configVersion = '2.2.0'; // Updated: Fixed Supabase posts routes with proper error handling
+        const configImport = await import(`./config.js?v=${configVersion}&t=${Date.now()}`);
+        const { API_BASE, CONFIG } = configImport;
         
         let logElement = document.getElementById('log');
         let statusElement = document.getElementById('connection-status');
@@ -196,13 +195,12 @@
           async function runAllTests() {
             updateStatus('⏳ กำลังรันการทดสอบทั้งหมด...', 'loading');
             log('🚀 เริ่มการทดสอบทั้งหมด');
-            
-            const endpoints = [
+              const endpoints = [
                 '/health',
                 '/test',
                 '/metrics',
                 '/cache/stats',
-                '/ai/providers',
+                '/ai/status',
                 '/posts'
             ];
             
