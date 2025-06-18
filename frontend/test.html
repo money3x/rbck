@@ -84,31 +84,30 @@
         <div id="connection-status" class="status loading">
             <span>⏳ กำลังทดสอบการเชื่อมต่อ...</span>
         </div>
-        
-        <div class="endpoint-list">
+          <div class="endpoint-list">
             <div class="endpoint">
                 <span>🏥 Health Check</span>
-                <button onclick="testEndpoint('/api/health')">Test</button>
+                <button onclick="testEndpoint('/health')">Test</button>
             </div>
             <div class="endpoint">
                 <span>🧪 API Test</span>
-                <button onclick="testEndpoint('/api/test')">Test</button>
+                <button onclick="testEndpoint('/test')">Test</button>
             </div>
             <div class="endpoint">
                 <span>📊 Metrics</span>
-                <button onclick="testEndpoint('/api/metrics')">Test</button>
+                <button onclick="testEndpoint('/metrics')">Test</button>
             </div>
             <div class="endpoint">
                 <span>💾 Cache Stats</span>
-                <button onclick="testEndpoint('/api/cache/stats')">Test</button>
+                <button onclick="testEndpoint('/cache/stats')">Test</button>
             </div>
             <div class="endpoint">
                 <span>🤖 AI Providers</span>
-                <button onclick="testEndpoint('/api/ai/providers')">Test</button>
+                <button onclick="testEndpoint('/ai/providers')">Test</button>
             </div>
             <div class="endpoint">
                 <span>📝 Posts</span>
-                <button onclick="testEndpoint('/api/posts')">Test</button>
+                <button onclick="testEndpoint('/posts')">Test</button>
             </div>
         </div>
         
@@ -136,11 +135,21 @@
         function updateStatus(message, type) {
             statusElement.className = `status ${type}`;
             statusElement.innerHTML = `<span>${message}</span>`;
-        }
-          async function testEndpoint(endpoint) {
+        }        async function testEndpoint(endpoint) {
+            // Debug URL construction
+            log(`🔧 API_BASE: "${API_BASE}"`);
+            log(`🔧 Endpoint: "${endpoint}"`);
+            
             const url = `${API_BASE}${endpoint}`;
             log(`🔄 กำลังทดสอบ: ${endpoint}`);
             log(`📍 Full URL: ${url}`);
+            
+            // Validate URL
+            if (url.includes('/api/api/')) {
+                log('❌ DETECTED DOUBLE /api/ IN URL!', 'error');
+                log('🔧 This indicates API_BASE already contains /api', 'error');
+                return false;
+            }
             
             try {
                 const response = await fetch(url, {
@@ -184,18 +193,17 @@
                 return false;
             }
         }
-        
-        async function runAllTests() {
+          async function runAllTests() {
             updateStatus('⏳ กำลังรันการทดสอบทั้งหมด...', 'loading');
             log('🚀 เริ่มการทดสอบทั้งหมด');
             
             const endpoints = [
-                '/api/health',
-                '/api/test',
-                '/api/metrics',
-                '/api/cache/stats',
-                '/api/ai/providers',
-                '/api/posts'
+                '/health',
+                '/test',
+                '/metrics',
+                '/cache/stats',
+                '/ai/providers',
+                '/posts'
             ];
             
             let successCount = 0;
