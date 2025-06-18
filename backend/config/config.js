@@ -40,7 +40,7 @@ const config = {
   // API Configuration
   api: {
     baseUrl: process.env.API_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || 10000}`,
-    version: '2.0.0',
+    version: '2.2.0', // Fixed Supabase client and cache middleware issues
     title: 'RBCK CMS API',
     description: 'Rice Harvester Content Management System API'
   },

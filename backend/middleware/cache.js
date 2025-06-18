@@ -16,37 +16,58 @@ const caches = {
 };
 
 // Cache middleware factory
-const createCacheMiddleware = (cacheType = 'api', keyGenerator = null) => {
+const createCacheMiddleware = (ttlOrType = 'api', keyGenerator = null) => {
   return (req, res, next) => {
     // Skip caching for POST, PUT, DELETE requests
     if (req.method !== 'GET') {
       return next();
     }
 
-    // Validate cache type exists
-    if (!caches[cacheType]) {
-      console.warn(`❌ Invalid cache type: ${cacheType}, using default 'api' cache`);
-      cacheType = 'api';
+    // Skip caching for admin routes
+    if (req.path.startsWith('/api/admin')) {
+      return next();
     }
 
     try {
+      // Determine cache type and TTL
+      let cacheType = 'api';
+      let ttl = 300; // default 5 minutes
+
+      if (typeof ttlOrType === 'string') {
+        cacheType = ttlOrType;
+        // Validate cache type exists
+        if (!caches[cacheType]) {
+          console.warn(`❌ Invalid cache type: ${cacheType}, using default 'api' cache`);
+          cacheType = 'api';
+        }
+        ttl = caches[cacheType].options.stdTTL || 300;
+      } else if (typeof ttlOrType === 'number') {
+        // If a number is passed, use it as custom TTL with api cache
+        ttl = ttlOrType;
+        cacheType = 'api';
+      }
+
+      console.log(`🔧 Using cache: type="${cacheType}", ttl=${ttl}s for ${req.method} ${req.originalUrl}`);
+
       // Generate cache key
       const key = keyGenerator 
         ? keyGenerator(req) 
-        : `${req.method}:${req.originalUrl}`;      // Try to get cached response
+        : `${req.method}:${req.originalUrl}`;
+
+      // Try to get cached response
       const cachedResponse = caches[cacheType].get(key);
       
       if (cachedResponse) {
+        console.log(`🎯 Cache HIT for: ${key}`);
         // Add cache headers
         res.set({
           'X-Cache': 'HIT',
           'X-Cache-Key': key,
-          'X-Cache-TTL': caches[cacheType].ttl || 300
+          'X-Cache-TTL': ttl
         });
         
         return res.json(cachedResponse);
-      }
-
+      }      console.log(`📝 Cache MISS for: ${key}`);
       // Store original res.json function
       const originalJson = res.json;
       
@@ -55,13 +76,20 @@ const createCacheMiddleware = (cacheType = 'api', keyGenerator = null) => {
         try {
           // Only cache successful responses
           if (res.statusCode >= 200 && res.statusCode < 300) {
-            caches[cacheType].set(key, data);
+            // Use custom TTL if number was passed, otherwise use cache default
+            if (typeof ttlOrType === 'number') {
+              caches[cacheType].set(key, data, ttl);
+            } else {
+              caches[cacheType].set(key, data);
+            }
+            console.log(`💾 Cached response for: ${key} (TTL: ${ttl}s)`);
           }
           
           // Add cache headers
           res.set({
             'X-Cache': 'MISS',
-            'X-Cache-Key': key
+            'X-Cache-Key': key,
+            'X-Cache-TTL': ttl
           });
           
           // Call original json method

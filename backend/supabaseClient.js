@@ -1,63 +1,177 @@
 // backend/supabaseClient.js
 const { createClient } = require('@supabase/supabase-js');
-const { User, Post, AIUsage, AIConversation, AIMessage } = require('./models/database');
 const config = require('./config/config');
 
 // Use configuration from config.js
-const SUPABASE_URL = config.database.supabaseUrl;
-const SUPABASE_KEY = config.database.supabaseKey;
+const supabaseUrl = config.database.supabaseUrl;
+const supabaseKey = config.database.supabaseKey;
 
 let supabase;
-let isConnected = false;
+let isSupabaseConnected = false;
 
-try {
-    // Try to create real Supabase client if environment variables are provided
-    if (SUPABASE_URL && SUPABASE_KEY && !SUPABASE_URL.includes('placeholder')) {
-        supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+// Mock client for when Supabase is not available
+function createMockClient() {
+    console.log('🔄 Creating mock Supabase client');
+    return {
+        from: (table) => ({
+            select: (columns = '*') => {
+                const query = {
+                    data: [],
+                    error: null,
+                    count: 0,
+                    eq: function(column, value) { return this; },
+                    neq: function(column, value) { return this; },
+                    gt: function(column, value) { return this; },
+                    lt: function(column, value) { return this; },
+                    gte: function(column, value) { return this; },
+                    lte: function(column, value) { return this; },
+                    like: function(column, value) { return this; },
+                    ilike: function(column, value) { return this; },
+                    is: function(column, value) { return this; },
+                    in: function(column, values) { return this; },
+                    order: function(column, options) { return this; },
+                    limit: function(count) { return this; },
+                    range: function(from, to) { return this; },
+                    single: function() { 
+                        return Promise.resolve({ 
+                            data: null, 
+                            error: { message: 'Mock client - no data available' } 
+                        }); 
+                    },
+                    then: function(callback) { 
+                        return callback({ data: [], error: null, count: 0 }); 
+                    }
+                };
+                // Make it thenable for async/await
+                query.then = function(callback) { 
+                    return Promise.resolve({ data: [], error: null, count: 0 }).then(callback); 
+                };
+                return query;
+            },
+            insert: (data) => ({
+                data: null, 
+                error: { message: 'Mock client - database not configured' },
+                select: function() { return this; },
+                single: function() { 
+                    return Promise.resolve({ 
+                        data: null, 
+                        error: { message: 'Mock client - database not configured' } 
+                    }); 
+                }
+            }),
+            update: (data) => ({
+                data: null, 
+                error: { message: 'Mock client - database not configured' },
+                eq: function(column, value) { return this; },
+                select: function() { return this; },
+                single: function() { 
+                    return Promise.resolve({ 
+                        data: null, 
+                        error: { message: 'Mock client - database not configured' } 
+                    }); 
+                }
+            }),
+            delete: () => ({
+                error: { message: 'Mock client - database not configured' },
+                eq: function(column, value) { 
+                    return Promise.resolve({ 
+                        error: { message: 'Mock client - database not configured' } 
+                    }); 
+                }
+            })
+        }),
+        // Add other Supabase methods that might be used
+        auth: {
+            getUser: () => Promise.resolve({ 
+                data: { user: null }, 
+                error: { message: 'Mock client - auth not available' } 
+            }),
+            signInWithPassword: () => Promise.resolve({ 
+                data: { user: null, session: null }, 
+                error: { message: 'Mock client - auth not available' } 
+            }),
+            signOut: () => Promise.resolve({ error: null })
+        }
+    };
+}
+
+// Initialize Supabase client
+if (supabaseUrl && supabaseKey && !supabaseUrl.includes('placeholder')) {
+    try {
+        console.log('🔄 Initializing Supabase client...');
+        console.log(`📍 URL: ${supabaseUrl}`);
+        console.log(`🔑 Key: ${supabaseKey.substring(0, 20)}...`);
+
+        supabase = createClient(supabaseUrl, supabaseKey, {
             auth: {
                 autoRefreshToken: false,
                 persistSession: false
             },
-            // เพิ่ม options เพื่อป้องกัน syntax error
             db: {
                 schema: 'public'
+            },
+            global: {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             }
         });
-        isConnected = true;
-        console.log('✅ Supabase client initialized successfully');
         
-        // Test connection ด้วย query ที่ปลอดภัย
-        testConnection();
-    } else {
-        console.log('⚠️ Supabase environment variables not found - using mock client for development');
+        console.log('✅ Supabase client created successfully');
+        
+        // Test the connection immediately
+        testSupabaseConnection().then(connected => {
+            isSupabaseConnected = connected;
+            if (connected) {
+                console.log('✅ Supabase connection verified on startup');
+            } else {
+                console.warn('⚠️ Supabase connection failed on startup - will use fallback data');
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Supabase initialization failed:', error.message);
         supabase = createMockClient();
-        isConnected = false;
+        isSupabaseConnected = false;
     }
-} catch (error) {
-    console.error('❌ Supabase initialization error:', error);
+} else {
+    console.warn('⚠️ Supabase credentials missing or invalid:');
+    console.warn(`   SUPABASE_URL: ${supabaseUrl ? (supabaseUrl.includes('placeholder') ? 'Placeholder' : 'Set') : 'Missing'}`);
+    console.warn(`   SUPABASE_KEY: ${supabaseKey ? 'Set' : 'Missing'}`);
     supabase = createMockClient();
-    isConnected = false;
+    isSupabaseConnected = false;
 }
 
-// Test database connection ด้วย query ที่ปลอดภัย
-async function testConnection() {
+// Test Supabase connection function
+async function testSupabaseConnection() {
     try {
-        // ใช้ query ง่ายๆ แทน count(*) เพื่อป้องกัน parse error
+        console.log('🔍 Testing Supabase connection...');
+        
+        // Check if supabase client exists and has the from method
+        if (!supabase || typeof supabase.from !== 'function') {
+            console.warn('⚠️ Supabase client not properly initialized');
+            return false;
+        }
+
+        // Simple test query - just check if we can access the posts table
         const { data, error } = await supabase
             .from('posts')
             .select('id')
             .limit(1);
             
         if (error) {
-            console.log('⚠️ Supabase connection test failed:', error.message);
-            isConnected = false;
-        } else {
-            console.log('✅ Supabase database connection verified');
-            isConnected = true;
+            console.warn('⚠️ Supabase connection test failed:', error.message);
+            return false;
         }
+        
+        console.log(`✅ Supabase connected successfully - Posts table accessible`);
+        return true;
+        
     } catch (error) {
-        console.log('⚠️ Supabase connection test error:', error.message);
-        isConnected = false;
+        console.error('❌ Supabase connection test error:', error.message);
+        return false;
+    }
+}
     }
 }
 

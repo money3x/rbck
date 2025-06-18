@@ -14,7 +14,7 @@ config.validateConfig();
 
 // Import routes
 const apiKeyRoutes = require('./apiKey.js');
-const postRoutes = require('./posts.js');
+const postRoutes = require('./routes/posts');
 const authRoutes = require('./routes/auth.js');
 const aiRoutes = require('./routes/ai.js');
 const migrationRoutes = require('./routes/migration.js');

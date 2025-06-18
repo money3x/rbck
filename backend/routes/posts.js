@@ -1,50 +1,68 @@
 // backend/posts.js
-// REST API สำหรับบทความ (posts) เชื่อมต่อ Supabase
+// REST API for posts with comprehensive Supabase error handling
 const express = require('express');
 const router = express.Router();
 const supabase = require('./supabaseClient');
 const { authenticateAdmin } = require('./middleware/auth');
 
-// ฟังก์ชันตรวจสอบ Supabase connection
+// Test Supabase connection function
 const testSupabaseConnection = async () => {
     try {
-        // ใช้ query ง่ายๆ แทน count(*)
+        console.log('🔍 Testing Supabase connection in posts route...');
+        
+        // Check if supabase client exists and has the from method
+        if (!supabase || typeof supabase.from !== 'function') {
+            console.warn('⚠️ Supabase client not properly initialized');
+            return false;
+        }
+
+        // Simple test query
         const { data, error } = await supabase
             .from('posts')
             .select('id')
             .limit(1);
             
         if (error) {
-            console.warn('Supabase test query failed:', error.message);
+            console.warn('⚠️ Supabase test query failed:', error.message);
             return false;
         }
         
-        console.log('✅ Supabase connection successful');
+        console.log('✅ Supabase connection test successful in posts route');
         return true;
     } catch (error) {
-        console.warn('⚠️ Supabase connection test failed:', error.message);
+        console.warn('⚠️ Supabase connection test error:', error.message);
         return false;
     }
 };
 
-// Middleware เพื่อตรวจสอบ Supabase ก่อนใช้งาน
+// Middleware to check Supabase connection before using
 const checkSupabaseConnection = async (req, res, next) => {
     const isConnected = await testSupabaseConnection();
     req.supabaseAvailable = isConnected;
     next();
 };
 
-// GET /api/posts - ดึงรายการโพสต์ทั้งหมด
-router.get('/posts', checkSupabaseConnection, async (req, res) => {
+// GET /api/posts - Get all posts
+router.get('/', checkSupabaseConnection, async (req, res) => {
     try {
+        console.log('📋 GET /api/posts called');
+        
         if (!req.supabaseAvailable) {
-            // ถ้า Supabase ไม่พร้อม ใช้ fallback data
             console.log('📋 Using fallback posts data');
             const fallbackPosts = [
                 {
                     id: 1,
                     title: "Welcome to RBCK CMS",
-                    content: "This is a sample post from fallback data.",
+                    content: "This is a sample post from fallback data. Your Supabase database is not connected yet.",
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    published: true,
+                    author: "System"
+                },
+                {
+                    id: 2,
+                    title: "Getting Started",
+                    content: "To connect your Supabase database, make sure to set the SUPABASE_URL and SUPABASE_ANON_KEY environment variables.",
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
                     published: true,
@@ -60,7 +78,7 @@ router.get('/posts', checkSupabaseConnection, async (req, res) => {
             });
         }
 
-        // ใช้ Supabase query ที่ปลอดภัย
+        // Use Supabase query
         const { data, error } = await supabase
             .from('posts')
             .select('*')
@@ -70,6 +88,8 @@ router.get('/posts', checkSupabaseConnection, async (req, res) => {
             console.error('Supabase query error:', error);
             throw new Error(`Database query failed: ${error.message}`);
         }
+
+        console.log(`✅ Successfully fetched ${data?.length || 0} posts from Supabase`);
 
         res.json({
             success: true,
@@ -89,27 +109,11 @@ router.get('/posts', checkSupabaseConnection, async (req, res) => {
     }
 });
 
-// GET /api/posts/slug/:slug - ดึงบทความตาม slug
-router.get('/posts/slug/:slug', async (req, res) => {
-    try {
-        const { slug } = req.params;
-        const { data, error } = await supabase
-            .from('posts')
-            .select('*')
-            .eq('slug', slug)
-            .single();
-        if (error) return res.status(404).json({ error: error.message });
-        res.json(data);
-    } catch (err) {
-        console.error('Posts slug endpoint error:', err);
-        res.status(500).json({ error: 'Internal server error while fetching post by slug' });
-    }
-});
-
-// GET /api/posts/:id - ดึงโพสต์เฉพาะ
-router.get('/posts/:id', checkSupabaseConnection, async (req, res) => {
+// GET /api/posts/:id - Get specific post
+router.get('/:id', checkSupabaseConnection, async (req, res) => {
     try {
         const { id } = req.params;
+        console.log(`📋 GET /api/posts/${id} called`);
 
         if (!req.supabaseAvailable) {
             return res.status(503).json({
@@ -119,7 +123,7 @@ router.get('/posts/:id', checkSupabaseConnection, async (req, res) => {
             });
         }
 
-        // ตรวจสอบว่า id เป็นตัวเลข
+        // Validate ID
         if (isNaN(parseInt(id))) {
             return res.status(400).json({
                 success: false,
@@ -159,9 +163,11 @@ router.get('/posts/:id', checkSupabaseConnection, async (req, res) => {
     }
 });
 
-// POST /api/posts - สร้างโพสต์ใหม่ (Admin only)
-router.post('/posts', authenticateAdmin, checkSupabaseConnection, async (req, res) => {
+// POST /api/posts - Create new post (Admin only)
+router.post('/', authenticateAdmin, checkSupabaseConnection, async (req, res) => {
     try {
+        console.log('📝 POST /api/posts called');
+        
         if (!req.supabaseAvailable) {
             return res.status(503).json({
                 success: false,
@@ -207,6 +213,8 @@ router.post('/posts', authenticateAdmin, checkSupabaseConnection, async (req, re
             throw new Error(`Failed to create post: ${error.message}`);
         }
 
+        console.log('✅ Post created successfully:', data.id);
+
         res.status(201).json({
             success: true,
             data: data,
@@ -224,9 +232,12 @@ router.post('/posts', authenticateAdmin, checkSupabaseConnection, async (req, re
     }
 });
 
-// PUT /api/posts/:id - อัพเดตโพสต์ (Admin only)
-router.put('/posts/:id', authenticateAdmin, checkSupabaseConnection, async (req, res) => {
+// PUT /api/posts/:id - Update post (Admin only)
+router.put('/:id', authenticateAdmin, checkSupabaseConnection, async (req, res) => {
     try {
+        const { id } = req.params;
+        console.log(`✏️ PUT /api/posts/${id} called`);
+        
         if (!req.supabaseAvailable) {
             return res.status(503).json({
                 success: false,
@@ -234,7 +245,6 @@ router.put('/posts/:id', authenticateAdmin, checkSupabaseConnection, async (req,
             });
         }
 
-        const { id } = req.params;
         const { title, content, published } = req.body;
 
         if (isNaN(parseInt(id))) {
@@ -269,6 +279,8 @@ router.put('/posts/:id', authenticateAdmin, checkSupabaseConnection, async (req,
             throw new Error(`Failed to update post: ${error.message}`);
         }
 
+        console.log('✅ Post updated successfully:', data.id);
+
         res.json({
             success: true,
             data: data,
@@ -286,17 +298,18 @@ router.put('/posts/:id', authenticateAdmin, checkSupabaseConnection, async (req,
     }
 });
 
-// DELETE /api/posts/:id - ลบโพสต์ (Admin only)
-router.delete('/posts/:id', authenticateAdmin, checkSupabaseConnection, async (req, res) => {
+// DELETE /api/posts/:id - Delete post (Admin only)
+router.delete('/:id', authenticateAdmin, checkSupabaseConnection, async (req, res) => {
     try {
+        const { id } = req.params;
+        console.log(`🗑️ DELETE /api/posts/${id} called`);
+        
         if (!req.supabaseAvailable) {
             return res.status(503).json({
                 success: false,
                 error: 'Database temporarily unavailable - cannot delete posts'
             });
         }
-
-        const { id } = req.params;
 
         if (isNaN(parseInt(id))) {
             return res.status(400).json({
@@ -314,6 +327,8 @@ router.delete('/posts/:id', authenticateAdmin, checkSupabaseConnection, async (r
             console.error('Supabase delete error:', error);
             throw new Error(`Failed to delete post: ${error.message}`);
         }
+
+        console.log('✅ Post deleted successfully:', id);
 
         res.json({
             success: true,
