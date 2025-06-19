@@ -172,8 +172,6 @@ async function testSupabaseConnection() {
         return false;
     }
 }
-    }
-}
 
 // Create mock client for development
 function createMockClient() {
