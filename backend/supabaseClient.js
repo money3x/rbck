@@ -463,6 +463,46 @@ const checkSupabaseHealth = async () => {
     }
 };
 
+// Test connection function
+const testConnection = async () => {
+    try {
+        console.log('🔍 Testing Supabase connection...');
+        
+        // Check if supabase client exists and has the from method
+        if (!supabase || typeof supabase.from !== 'function') {
+            console.warn('⚠️ Supabase client not properly initialized');
+            isSupabaseConnected = false;
+            return false;
+        }
+
+        // Simple test query - just check if we can access the posts table
+        const { data, error } = await supabase
+            .from('posts')
+            .select('id')
+            .limit(1);
+            
+        if (error) {
+            console.warn('⚠️ Supabase connection test failed:', error.message);
+            isSupabaseConnected = false;
+            return false;
+        }
+        
+        console.log(`✅ Supabase connected successfully - Posts table accessible`);
+        isSupabaseConnected = true;
+        return true;
+        
+    } catch (error) {
+        console.error('❌ Supabase connection test error:', error.message);
+        isSupabaseConnected = false;
+        return false;
+    }
+};
+
+// Get connection status function
+const isConnected = () => {
+    return isSupabaseConnected;
+};
+
 module.exports = {
     supabase,
     db,
