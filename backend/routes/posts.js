@@ -1,9 +1,9 @@
-// backend/posts.js
+// backend/routes/posts.js
 // REST API for posts with comprehensive Supabase error handling
 const express = require('express');
 const router = express.Router();
-const supabase = require('./supabaseClient');
-const { authenticateAdmin } = require('./middleware/auth');
+const supabase = require('../supabaseClient');
+const { authenticateAdmin } = require('../middleware/auth');
 
 // Test Supabase connection function
 const testSupabaseConnection = async () => {
