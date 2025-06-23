@@ -9,6 +9,113 @@
     <link rel="stylesheet" href="../css/beautiful-gemini-styles.css">
     <link rel="stylesheet" href="../css/cms-styles.css">
     <meta name="description" content="Advanced CMS powered by Google i 2.0 Flash AI for intelligent content creation and SEO optimization">
+    <style>
+        /* AI Providers Table Styles */
+        .provider-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .provider-icon {
+            font-size: 1.5em;
+            width: 30px;
+            text-align: center;
+        }
+        .provider-name {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+        .provider-role {
+            font-size: 12px;
+            color: #666;
+            font-style: italic;
+        }
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+        .status-connected {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            color: #166534;
+            border-color: #22c55e;
+            box-shadow: 0 2px 8px rgba(34, 197, 94, 0.2);
+        }
+        .status-disconnected {
+            background: linear-gradient(135deg, #fef2f2, #fecaca);
+            color: #991b1b;
+            border-color: #ef4444;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+        }
+        .status-checking {
+            background: linear-gradient(135deg, #fefbeb, #fde68a);
+            color: #92400e;
+            border-color: #f59e0b;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+            animation: pulse 2s infinite;
+        }
+        .provider-status-container {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 50px;
+            width: 100%;
+        }
+        .provider-specialties {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .specialty-tag {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 17px;
+            white-space: nowrap;
+        }
+        .provider-description {
+            font-size: 13px;
+            color: #555;
+            line-height: 1.3;
+        }
+        .provider-row {
+            transition: background-color 0.2s ease;
+        }
+        .provider-row:hover {
+            background-color: #f5f5f5;
+        }
+        .ai-providers-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .ai-providers-table th,
+        .ai-providers-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+            vertical-align: middle; /* Ensure vertical centering */
+        }
+        .ai-providers-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+        /* Specific styling for status column */
+        .ai-providers-table td[data-type="status"] {
+            text-align: center;
+            padding: 8px 12px;
+        }
+    </style>
 </head>
 <body>
     <!-- Sidebar -->
@@ -26,7 +133,7 @@
                 <i class="fas fa-users"></i>
                 <span>🤖 AI Swarm Council</span>
             </a>
-            <a href="#" class="nav-link" onclick="showSection('ai-monitoring')">
+            <a href="#" class="nav-link" onclick="showSection('ai-monitoring'); setTimeout(initAIMonitoring, 100);">
                 <i class="fas fa-chart-line"></i>
                 <span>📊 AI Monitoring</span>
             </a>
@@ -87,16 +194,16 @@
                     <!-- Dashboard cards will be loaded here -->
                 </div>
             </div>
-            <!-- Chatbot Panel with improved width -->
+            <!-- Premium Chatbot Panel with Long Context Support -->
             <div class="chatbot-panel-wide" id="chatbotPanel">
                 <div class="chatbot-header">
                     <div>
-                        <h4>🤖 Multi-AI Assistant</h4>
+                        <h4>Multi-AI Assistant</h4>
                         <select id="chatModelSelect">
                             <option value="openai">OpenAI (GPT-4/3.5)</option>
                             <option value="anthropic">Anthropic (Claude)</option>
                             <option value="chinda">ChindaX (chinda-qwen3-32b)</option>
-                            <option value="gemini">Gemini</option>
+                            <option value="gemini">Gemini 2.0 Flash</option>
                         </select>
                     </div>
                     <button class="btn btn-secondary" type="button" id="aiSettingsBtn">
@@ -105,11 +212,11 @@
                 </div>
                 <div class="chatbot-messages" id="chatbotMessages">
                     <div class="welcome-message">
-                        <p>สวัสดีครับ! ผมพร้อมช่วยเหลือคุณในการจัดการเนื้อหาและ SEO</p>
+                        <p>สวัสดีครับ! ผมพร้อมช่วยเหลือคุณในการจัดการเนื้อหาและ SEO พร้อมรองรับบทสนทนาแบบ Long Context สำหรับการทำงานที่ซับซ้อน</p>
                     </div>
                 </div>
                 <form class="chatbot-input-row" id="chatbotForm">
-                    <input type="text" id="chatbotInput" placeholder="พิมพ์ข้อความของคุณที่นี่..." autocomplete="off" />
+                    <textarea id="chatbotInput" placeholder="พิมพ์ข้อความของคุณที่นี่... (รองรับข้อความยาวสำหรับการสนทนาที่ซับซ้อน)" autocomplete="off" rows="1"></textarea>
                     <button type="submit"><i class="fas fa-paper-plane"></i></button>
                 </form>
             </div>
@@ -564,12 +671,199 @@
 
         <!-- Analytics Section -->
         <section id="analytics" class="content-section">
-            <div class="section-header gemini-header">
-                <h2 class="gemini-title">📊 Flash Analytics Dashboard</h2>
-                <p>สถิติและการวิเคราะห์เชิงลึกพร้อม Gemini 2.0 Flash Insights</p>
+            <div class="section-header">
+                <!-- Header text removed for cleaner UI -->
             </div>
-            <div class="seo-tools-grid premium-grid" id="analyticsDetailedGrid">
-                <!-- Analytics data will be loaded here -->
+            
+            <div class="analytics-dashboard">
+                <!-- System Metrics Overview -->
+                <div class="analytics-overview">
+                    <h3>⚡ ภาพรวมสถานะระบบ</h3>
+                    <div class="analytics-metrics-grid">
+                        <div class="metric-card system-status">
+                            <div class="metric-icon">🖥️</div>
+                            <div class="metric-content">
+                                <div class="metric-value" id="systemStatus">กำลังโหลด...</div>
+                                <div class="metric-label">สถานะระบบ</div>
+                            </div>
+                        </div>
+                        <div class="metric-card uptime-metric">
+                            <div class="metric-icon">⏱️</div>
+                            <div class="metric-content">
+                                <div class="metric-value" id="uptime">กำลังโหลด...</div>
+                                <div class="metric-label">เวลาทำงาน</div>
+                            </div>
+                        </div>
+                        <div class="metric-card memory-metric">
+                            <div class="metric-icon">💾</div>
+                            <div class="metric-content">
+                                <div class="metric-value" id="memoryUsage">กำลังโหลด...</div>
+                                <div class="metric-label">การใช้หน่วยความจำ</div>
+                            </div>
+                        </div>
+                        <div class="metric-card database-metric">
+                            <div class="metric-icon">🗄️</div>
+                            <div class="metric-content">
+                                <div class="metric-value" id="databaseStatus">กำลังโหลด...</div>
+                                <div class="metric-label">สถานะฐานข้อมูล</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Analytics -->
+                <div class="content-analytics-container">
+                    <h3>📊 สถิติเนื้อหาและการจัดการ</h3>
+                    <div class="analytics-controls">
+                        <button class="btn btn-primary" onclick="refreshContentMetrics()">
+                            <i class="fas fa-sync"></i> รีเฟรชข้อมูล
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportContentReport()">
+                            <i class="fas fa-download"></i> Export รายงาน
+                        </button>
+                    </div>
+                    
+                    <div class="content-metrics-grid">
+                        <div class="metric-card content-total">
+                            <div class="metric-icon">📝</div>
+                            <div class="metric-content">
+                                <div class="metric-value" id="totalPosts">กำลังโหลด...</div>
+                                <div class="metric-label">โพสต์ทั้งหมด</div>
+                            </div>
+                        </div>
+                        <div class="metric-card content-published">
+                            <div class="metric-icon">✅</div>
+                            <div class="metric-content">
+                                <div class="metric-value" id="publishedPosts">กำลังโหลด...</div>
+                                <div class="metric-label">โพสต์ที่เผยแพร่</div>
+                            </div>
+                        </div>
+                        <div class="metric-card content-draft">
+                            <div class="metric-icon">📄</div>
+                            <div class="metric-content">
+                                <div class="metric-value" id="draftPosts">กำลังโหลด...</div>
+                                <div class="metric-label">โพสต์ร่าง</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance & Cache Analytics -->
+                <div class="performance-analytics-container">
+                    <h3>🚀 ประสิทธิภาพและแคช</h3>
+                    <div class="performance-metrics-grid">
+                        <div class="metric-card cache-hit">
+                            <div class="metric-icon">🎯</div>
+                            <div class="metric-content">
+                                <div class="metric-value" id="cacheHitRate">กำลังโหลด...</div>
+                                <div class="metric-label">อัตราการใช้แคช (%)</div>
+                            </div>
+                        </div>
+                        <div class="metric-card cache-size">
+                            <div class="metric-icon">📦</div>
+                            <div class="metric-content">
+                                <div class="metric-value" id="cacheSize">กำลังโหลด...</div>
+                                <div class="metric-label">ขนาดแคช</div>
+                            </div>
+                        </div>
+                        <div class="metric-card cache-keys">
+                            <div class="metric-icon">🔑</div>
+                            <div class="metric-content">
+                                <div class="metric-value" id="cacheKeys">กำลังโหลด...</div>
+                                <div class="metric-label">จำนวนคีย์แคช</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Analytics -->
+                <div class="ai-analytics-container">
+                    <h3>🤖 สถิติ AI และประสิทธิภาพ</h3>
+                    <div class="ai-metrics-grid">
+                        <div class="metric-card ai-providers">
+                            <div class="metric-icon">🔗</div>
+                            <div class="metric-content">
+                                <div class="metric-value" id="aiProviders">กำลังโหลด...</div>
+                                <div class="metric-label">AI Providers ที่ใช้งานได้</div>
+                            </div>
+                        </div>
+                        <div class="metric-card ai-requests">
+                            <div class="metric-icon">📞</div>
+                            <div class="metric-content">
+                                <div class="metric-value" id="aiRequests">กำลังโหลด...</div>
+                                <div class="metric-label">คำขอ AI วันนี้</div>
+                            </div>
+                        </div>
+                        <div class="metric-card ai-errors">
+                            <div class="metric-icon">⚠️</div>
+                            <div class="metric-content">
+                                <div class="metric-value" id="aiErrors">กำลังโหลด...</div>
+                                <div class="metric-label">ข้อผิดพลาด AI</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- External Analytics Dashboard -->
+                <div class="external-analytics-container">
+                    <h3>📈 Analytics ภายนอกและข้อมูลเชิงลึก</h3>
+                    <div class="external-analytics-card">
+                        <div class="analytics-header">
+                            <div class="analytics-title">
+                                <i class="fas fa-chart-bar"></i>
+                                <span>Google Analytics Dashboard</span>
+                            </div>
+                            <div class="analytics-status">
+                                <span class="status-indicator active"></span>
+                                <span>เชื่อมต่อแล้ว</span>
+                            </div>
+                        </div>
+                        <div class="analytics-body">
+                            <div class="analytics-quick-stats">
+                                <div class="quick-stat">
+                                    <div class="stat-icon">👥</div>
+                                    <div class="stat-content">
+                                        <div class="stat-value" id="totalUsers">กำลังโหลด...</div>
+                                        <div class="stat-label">ผู้เยี่ยมชม</div>
+                                    </div>
+                                </div>
+                                <div class="quick-stat">
+                                    <div class="stat-icon">👀</div>
+                                    <div class="stat-content">
+                                        <div class="stat-value" id="pageViews">กำลังโหลด...</div>
+                                        <div class="stat-label">การดูหน้า</div>
+                                    </div>
+                                </div>
+                                <div class="quick-stat">
+                                    <div class="stat-icon">⏰</div>
+                                    <div class="stat-content">
+                                        <div class="stat-value" id="sessionDuration">กำลังโหลด...</div>
+                                        <div class="stat-label">ระยะเวลาเซสชัน</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="analytics-actions">
+                                <button class="btn btn-primary" onclick="refreshAnalyticsData()">
+                                    <i class="fas fa-sync"></i> รีเฟรชข้อมูล
+                                </button>
+                                <a href="https://analytics.google.com/" target="_blank" class="btn btn-secondary">
+                                    <i class="fas fa-external-link-alt"></i> เปิด Analytics
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Alerts -->
+                <div class="analytics-alerts-container">
+                    <h3>🚨 การแจ้งเตือนระบบ</h3>
+                    <div class="alerts-display" id="analyticsAlertsDisplay">
+                        <div class="no-alerts-message">
+                            <i class="fas fa-check-circle"></i>
+                            <span>ไม่มีการแจ้งเตือน - ระบบทำงานปกติ</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -591,18 +885,18 @@
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <td>วิเคราะห์เนื้อหา</td>
-                                            <td>AI จะรีวิวและสอบทานคุณภาพเนื้อหา</td>
+                                            <td data-type="task" data-importance="high">วิเคราะห์เนื้อหา</td>
+                                            <td class="description-cell" data-type="task">AI จะรีวิวและสอบทานคุณภาพเนื้อหา</td>
                                             <td><button class="task-button review"><i class="fas fa-search"></i> เริ่มวิเคราะห์</button></td>
                                         </tr>
                                         <tr>
-                                            <td>สร้างเนื้อหาร่วมกัน</td>
-                                            <td>AI ทำงานร่วมกันเพื่อสร้างเนื้อหาใหม่</td>
+                                            <td data-type="task" data-importance="high">สร้างเนื้อหาร่วมกัน</td>
+                                            <td class="description-cell" data-type="task">AI ทำงานร่วมกันเพื่อสร้างเนื้อหาใหม่</td>
                                             <td><button class="task-button create"><i class="fas fa-magic"></i> สร้างเนื้อหา</button></td>
                                         </tr>
                                         <tr>
-                                            <td>ปรับปรุง SEO</td>
-                                            <td>AI ช่วยเพิ่มประสิทธิภาพ SEO ของเนื้อหา</td>
+                                            <td data-type="task" data-importance="high">ปรับปรุง SEO</td>
+                                            <td class="description-cell" data-type="task">AI ช่วยเพิ่มประสิทธิภาพ SEO ของเนื้อหา</td>
                                             <td><button class="task-button seo"><i class="fas fa-chart-line"></i> ปรับปรุง SEO</button></td>
                                         </tr>
                                     </tbody>
@@ -622,16 +916,29 @@
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <td id="activeProvidersCount">0</td>
-                                            <td>ว่าง</td>
-                                            <td id="currentTaskStatus">-</td>
+                                            <td id="activeProvidersCount" data-type="status" data-status="active">0</td>
+                                            <td data-type="status">ว่าง</td>
+                                            <td id="currentTaskStatus" data-type="status">-</td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
                         </section>
                         <section class="aiswarm-providers-panel aiswarm-panel">
-                            <div class="aiswarm-panel-header"><i class="fas fa-robot"></i> สถานะ AI Providers</div>
+                            <div class="aiswarm-panel-header">
+                                <i class="fas fa-robot"></i> สถานะ AI Providers
+                                <div style="margin-left: auto; display: flex; gap: 5px;">
+                                    <button onclick="forceRenderAIProviders()" class="btn btn-small btn-primary" title="แสดง AI Providers">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button onclick="refreshAISwarmProviders()" class="btn btn-small btn-secondary" title="รีเฟรชสถานะ">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                    <button onclick="debugAISwarm()" class="btn btn-small btn-warning" title="Debug">
+                                        <i class="fas fa-bug"></i>
+                                    </button>
+                                </div>
+                            </div>
                             <div class="panel-content">
                                 <table class="ai-providers-table" id="aiProvidersTable">
                                     <thead>
@@ -651,51 +958,12 @@
                     </div>
                 </main>
             </div>
-
-            <!-- AI Conversation Logs Panel (show only in AI Swarm Council) -->
-            <div class="ai-logs-panel">
-                <div class="panel-header logs">
-                    <h3 class="panel-title">
-                        <i class="fas fa-comments"></i>
-                        AI Conversation Logs
-                    </h3>
-                </div>
-                <div class="panel-content">
-                    <div class="logs-container">
-                        <div class="logs-header">
-                            <h4 class="logs-title">
-                                <i class="fas fa-terminal"></i>
-                                การสนทนาระหว่าง AI
-                            </h4>
-                            <div class="logs-controls">
-                                <button class="logs-btn save" onclick="saveConversationLogs()" id="saveLogsBtn">
-                                    <i class="fas fa-save"></i> บันทึก
-                                </button>
-                                <button class="logs-btn export" onclick="exportConversationLogs()" id="exportLogsBtn">
-                                    <i class="fas fa-download"></i> Export
-                                </button>
-                                <button class="logs-btn clear" onclick="clearConversationLogs()" id="clearLogsBtn">
-                                    <i class="fas fa-trash"></i> ล้าง
-                                </button>
-                            </div>
-                        </div>
-                        <div class="logs-feed" id="aiConversationLogs">
-                            <div class="logs-empty">
-                                <div class="logs-empty-icon">💬</div>
-                                <div class="logs-empty-text">รอการสนทนาของ AI</div>
-                                <div class="logs-empty-subtext">เริ่มงานใดๆ เพื่อดูการทำงานร่วมกันของ AI</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </section>
 
         <!-- AI Monitoring Section -->
         <section id="ai-monitoring" class="content-section">
-            <div class="section-header ai-monitoring-header">
-                <h2>📊 AI Performance Monitoring</h2>
-                <p>ติดตามประสิทธิภาพและการทำงานของ AI Providers แบบ Real-time</p>
+            <div class="section-header">
+                <!-- Header text removed for cleaner UI -->
             </div>
 
             <!-- Performance Overview -->
@@ -784,73 +1052,187 @@
                     </div>
                 </div>
             </div>
+
+            <!-- AI Conversation Logs Panel (relocated from AI Swarm Council) -->
+            <div class="ai-logs-panel monitoring-logs">
+                <div class="panel-header logs">
+                    <h3 class="panel-title">
+                        <i class="fas fa-comments"></i>
+                        AI Conversation Logs & Real-time Monitoring
+                    </h3>
+                </div>
+                <div class="panel-content">
+                    <div class="logs-container">
+                        <div class="logs-header">
+                            <h4 class="logs-title">
+                                <i class="fas fa-terminal"></i>
+                                การสนทนาและกิจกรรมของ AI แบบ Real-time
+                            </h4>
+                            <div class="logs-controls">
+                                <button class="logs-btn save" onclick="saveConversationLogs()" id="saveLogsBtn">
+                                    <i class="fas fa-save"></i> บันทึก
+                                </button>
+                                <button class="logs-btn export" onclick="exportConversationLogs()" id="exportLogsBtn">
+                                    <i class="fas fa-download"></i> Export
+                                </button>
+                                <button class="logs-btn clear" onclick="clearConversationLogs()" id="clearLogsBtn">
+                                    <i class="fas fa-trash"></i> ล้าง
+                                </button>
+                                <button class="logs-btn refresh" onclick="refreshMonitoringLogs()" id="refreshLogsBtn">
+                                    <i class="fas fa-sync-alt"></i> รีเฟรช
+                                </button>
+                            </div>
+                        </div>
+                        <div class="logs-feed" id="aiConversationLogs">
+                            <div class="logs-empty">
+                                <div class="logs-empty-icon">📊</div>
+                                <div class="logs-empty-text">รอข้อมูล AI Monitoring</div>
+                                <div class="logs-empty-subtext">ข้อมูลการทำงานและการสนทนาของ AI จะแสดงที่นี่</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- Database Migration Section -->
         <section id="migration" class="content-section">
             <div class="section-header">
-                <h2>🗄️ Database Migration</h2>
-                <p>Manage database schema and migrations via Render backend</p>
+                <!-- Header text removed for cleaner UI -->
             </div>
             
-            <!-- Migration Status Card -->
-            <div class="card">
-                <div class="card-header">
-                    <h3>📊 Migration Status</h3>
-                    <button id="refresh-status-btn" class="btn btn-secondary btn-sm">
-                        🔄 Refresh
-                    </button>
-                </div>
-                <div class="card-body" id="migration-status">
-                    <div class="loading">🔄 Checking migration status...</div>
-                </div>
-            </div>
-            
-            <!-- Migration Actions Card -->
-            <div class="card">
-                <div class="card-header">
-                    <h3>⚡ Migration Actions</h3>
-                </div>
-                <div class="card-body">
-                    <div class="action-buttons">
-                        <button id="check-migration-btn" class="btn btn-info">
-                            🔍 Check Status
-                        </button>
-                        <button id="run-migration-btn" class="btn btn-primary">
-                            🚀 Run Migration
-                        </button>
-                        <button id="health-check-btn" class="btn btn-success">
-                            🏥 Health Check
-                        </button>
+            <!-- Migration Status Overview -->
+            <div class="migration-overview">
+                <h3>⚡ ภาพรวมสถานะฐานข้อมูล</h3>
+                <div class="migration-metrics-grid">
+                    <div class="metric-card migration-status">
+                        <div class="metric-icon">🗄️</div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="migrationStatusDisplay">กำลังตรวจสอบ...</div>
+                            <div class="metric-label">สถานะฐานข้อมูล</div>
+                        </div>
                     </div>
-                    
-                    <div class="migration-warning">
-                        ⚠️ <strong>Warning:</strong> Migration will create/update database tables in Supabase. 
-                        Make sure you have admin privileges and understand the changes.
+                    <div class="metric-card pending-migrations">
+                        <div class="metric-icon">⏳</div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="pendingMigrationsDisplay">--</div>
+                            <div class="metric-label">Migration ที่รอ</div>
+                        </div>
+                    </div>
+                    <div class="metric-card applied-migrations">
+                        <div class="metric-icon">✅</div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="appliedMigrationsDisplay">--</div>
+                            <div class="metric-label">Migration ที่เสร็จสิ้น</div>
+                        </div>
+                    </div>
+                    <div class="metric-card last-migration">
+                        <div class="metric-icon">�</div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="lastMigrationDisplay">--</div>
+                            <div class="metric-label">Migration ล่าสุด</div>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Migration Results Card -->
-            <div class="card" id="migration-results-card" style="display: none;">
-                <div class="card-header">
-                    <h3>📋 Migration Results</h3>
+
+            <!-- Migration Actions Panel -->
+            <div class="migration-actions-container">
+                <h3>🚀 การจัดการ Migration</h3>
+                <div class="migration-controls">
+                    <button class="btn btn-primary" onclick="refreshMigrationStatus()">
+                        <i class="fas fa-sync"></i> รีเฟรชสถานะ
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportMigrationReport()">
+                        <i class="fas fa-download"></i> Export รายงาน
+                    </button>
                 </div>
-                <div class="card-body" id="migration-results">
-                    <!-- Results will be displayed here -->
+                
+                <div class="migration-action-buttons">
+                    <button class="btn btn-success migration-action-btn" onclick="runPendingMigrations()">
+                        <i class="fas fa-play"></i>
+                        <span>รัน Migration ทั้งหมด</span>
+                        <small>Apply all pending migrations</small>
+                    </button>
+                    <button class="btn btn-warning migration-action-btn" onclick="rollbackLastMigration()">
+                        <i class="fas fa-undo"></i>
+                        <span>Rollback Migration ล่าสุด</span>
+                        <small>Revert the last applied migration</small>
+                    </button>
+                    <button class="btn btn-info migration-action-btn" onclick="checkDatabaseHealth()">
+                        <i class="fas fa-heartbeat"></i>
+                        <span>ตรวจสอบสุขภาพฐานข้อมูล</span>
+                        <small>Run database health check</small>
+                    </button>
+                </div>
+
+                <div class="migration-warning-panel">
+                    <div class="warning-content">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div>
+                            <strong>คำเตือน:</strong> การดำเนินการ Migration จะส่งผลต่อโครงสร้างฐานข้อมูล
+                            <br>กรุณาตรวจสอบให้แน่ใจก่อนดำเนินการ
+                        </div>
+                    </div>
                 </div>
             </div>
             
-            <!-- Migration Logs Card -->
-            <div class="card" id="migration-logs-card" style="display: none;">
-                <div class="card-header">
-                    <h3>📝 Migration Logs</h3>
-                    <button id="clear-logs-btn" class="btn btn-secondary btn-sm">
-                        🗑️ Clear Logs
-                    </button>
+            <!-- Migration List Table -->
+            <div class="migration-list-container">
+                <h3>📋 รายการ Migration</h3>
+                <div class="migration-table-container">
+                    <table class="migration-table" id="migrationListTable">
+                        <thead>
+                            <tr>
+                                <th>Migration ID</th>
+                                <th>ชื่อไฟล์</th>
+                                <th>สถานะ</th>
+                                <th>Applied At</th>
+                                <th>คำอธิบาย</th>
+                                <th>การดำเนินการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="migrationListTableBody">
+                            <!-- Migration data will be loaded here -->
+                        </tbody>
+                    </table>
                 </div>
-                <div class="card-body">
-                    <pre id="migration-logs" class="logs-container"></pre>
+            </div>
+
+            <!-- Migration Console Output -->
+            <div class="migration-console-container">
+                <h3>🖥️ Console Output & Logs</h3>
+                <div class="console-header">
+                    <div class="console-title">
+                        <i class="fas fa-terminal"></i>
+                        <span>Migration Command Output</span>
+                    </div>
+                    <div class="console-controls">
+                        <button class="console-btn clear" onclick="clearMigrationConsole()">
+                            <i class="fas fa-eraser"></i> ล้าง Console
+                        </button>
+                        <button class="console-btn export" onclick="exportConsoleLogs()">
+                            <i class="fas fa-download"></i> Export Logs
+                        </button>
+                    </div>
+                </div>
+                <div class="console-output" id="migrationConsoleOutput">
+                    <div class="console-welcome">
+                        <div class="console-welcome-icon">🔧</div>
+                        <div class="console-welcome-text">Migration Console พร้อมใช้งาน</div>
+                        <div class="console-welcome-subtext">ผลลัพธ์ของคำสั่ง Migration จะแสดงที่นี่</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Migration Alerts -->
+            <div class="migration-alerts-container">
+                <h3>🚨 การแจ้งเตือน Migration</h3>
+                <div class="alerts-display" id="migrationAlertsDisplay">
+                    <div class="no-alerts-message">
+                        <i class="fas fa-check-circle"></i>
+                        <span>ไม่มีการแจ้งเตือน - ฐานข้อมูลทำงานปกติ</span>
+                    </div>
                 </div>
             </div>
         </section>
@@ -884,61 +1266,92 @@
     </div>
 
     <!-- AI Settings Modal -->
-    <div id="aiSettingsModal" class="modal">
-        <div class="modal-content modal-small">
-            <div class="modal-header">
-                <h3><i class="fas fa-cog"></i> AI Settings / ตั้งค่า API Key</h3>
-                <button class="modal-close" onclick="closeAiSettingsModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="openaiApiKeyInput">OpenAI API Key</label>
-                    <div class="api-key-input-group">
-                        <input type="text" id="openaiApiKeyInput" class="form-control" placeholder="sk-..." autocomplete="off">
-                        <button class="btn btn-secondary" type="button" onclick="testApiKey('openai')">ทดสอบ</button>
-                    </div>
-                    <small id="openaiApiKeyStatus" class="api-key-status"></small>
-                </div>
-                <div class="form-group">
-                    <label for="claudeApiKeyInput">Claude API Key</label>
-                    <div class="api-key-input-group">
-                        <input type="text" id="claudeApiKeyInput" class="form-control" placeholder="Claude API Key" autocomplete="off">
-                        <button class="btn btn-secondary" type="button" onclick="testApiKey('claude')">ทดสอบ</button>
-                    </div>
-                    <small id="claudeApiKeyStatus" class="api-key-status"></small>
-                </div>
-                <div class="form-group">
-                    <label for="chindaApiKeyInput">ChindaX API Key</label>
-                    <div class="api-key-input-group">
-                        <input type="text" id="chindaApiKeyInput" class="form-control" placeholder="ChindaX API Key" autocomplete="off">
-                        <button class="btn btn-secondary" type="button" onclick="testApiKey('chinda')">ทดสอบ</button>
-                    </div>
-                    <small id="chindaApiKeyStatus" class="api-key-status"></small>
-                </div>
-                <div class="form-group">
-                    <label for="chindaJwtTokenInput">ChindaX JWT Token</label>
-                    <div class="api-key-input-group">
-                        <input type="text" id="chindaJwtTokenInput" class="form-control" placeholder="ChindaX JWT Token" autocomplete="off">
-                    </div>
-                    <small class="form-text text-muted">JWT Token สำหรับ ChindaX API</small>
-                </div>
-                <div class="form-group">
-                    <label for="geminiApiKeyInput">Gemini API Key</label>
-                    <div class="api-key-input-group">
-                        <input type="text" id="geminiApiKeyInput" class="form-control" placeholder="Gemini API Key" autocomplete="off">
-                        <button class="btn btn-secondary" type="button" onclick="testApiKey('gemini')">ทดสอบ</button>
-                    </div>
-                    <small id="geminiApiKeyStatus" class="api-key-status"></small>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeAiSettingsModal()">ยกเลิก</button>
-                <button class="btn btn-gemini" onclick="saveAiApiKey()">
-                    <i class="fas fa-save"></i> บันทึก API Key
-                </button>
-            </div>
+    <div id="aiSettingsModal" class="ai-modal-overlay" style="display:none;">
+      <div class="ai-modal">
+        <div class="ai-modal-header">
+          <h3><i class="fas fa-cog"></i> AI API Key Settings</h3>
+          <button class="ai-modal-close" id="closeAiSettingsModal" aria-label="Close">&times;</button>
         </div>
-    </div>    
-    <script type="module" src="main.js"></script>
+        <div class="ai-modal-body">
+          <!-- OpenAI Section -->
+          <div class="ai-provider-section">
+            <div class="ai-provider-title">OpenAI</div>
+            <input type="text" id="openaiApiKey" class="ai-api-input" placeholder="Enter OpenAI API Key">
+            <button class="btn ai-test-btn" id="testOpenaiApi">Test API</button>
+            <span class="ai-test-feedback" id="openaiApiFeedback"></span>
+          </div>
+          <!-- Claude Section -->
+          <div class="ai-provider-section">
+            <div class="ai-provider-title">Claude</div>
+            <input type="text" id="claudeApiKey" class="ai-api-input" placeholder="Enter Claude API Key">
+            <button class="btn ai-test-btn" id="testClaudeApi">Test API</button>
+            <span class="ai-test-feedback" id="claudeApiFeedback"></span>
+          </div>
+          <!-- Google AI Section -->
+          <div class="ai-provider-section">
+            <div class="ai-provider-title">Google AI (Gemini)</div>
+            <input type="text" id="googleApiKey" class="ai-api-input" placeholder="Enter Google AI API Key">
+            <button class="btn ai-test-btn" id="testGoogleApi">Test API</button>
+            <span class="ai-test-feedback" id="googleApiFeedback"></span>
+          </div>
+        </div>
+        <div class="ai-modal-footer">
+          <button class="btn btn-primary" id="confirmAiSettings">Confirm Settings</button>
+        </div>
+      </div>
+    </div>
+    <!-- Emergency debug fix for showSection ReferenceError -->
+    <!-- Production-ready JavaScript -->
+    <script src="main-production.js"></script>
+    
+    <!-- Debug Script for Function Availability -->
+    <script>
+        // Wait for module to load and check function availability
+        window.addEventListener('load', function() {
+            console.log('🔍 [DEBUG] Page loaded, checking functions...');
+            
+            const criticalFunctions = [
+                'showSection', 'showNotification', 'loadBlogPosts', 
+                'savePost', 'editPost', 'deletePost', 'clearForm'
+            ];
+            
+            let missingFunctions = [];
+            criticalFunctions.forEach(fn => {
+                if (typeof window[fn] !== 'function') {
+                    missingFunctions.push(fn);
+                }
+            });
+            
+            if (missingFunctions.length > 0) {
+                console.error('❌ [DEBUG] Missing functions:', missingFunctions);
+                console.log('🔧 [DEBUG] Attempting to reload module...');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 300000);
+            } else {
+                console.log('✅ [DEBUG] All critical functions available');
+                console.log('✅ [DEBUG] showSection type:', typeof window.showSection);
+                
+                // Test showSection specifically
+                if (typeof window.showSection === 'function') {
+                    console.log('✅ [DEBUG] showSection is ready for onclick handlers');
+                } else {
+                    console.error('❌ [DEBUG] showSection is not a function!');
+                }
+            }
+        });
+        
+        // Fallback showSection function in case module fails to load
+        if (typeof window.showSection === 'undefined') {
+            console.warn('⚠️ [FALLBACK] Module not loaded yet, creating fallback showSection');
+            window.showSection = function(sectionId) {
+                console.log('🔄 [FALLBACK] Showing section:', sectionId);
+                alert('กำลังโหลดระบบ กรุณารอสักครู่...');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            };
+        }
+    </script>
 </body>
 </html>

@@ -1,23 +1,42 @@
-require('dotenv').config();
+// AI Providers Configuration
+// Environment variables are loaded by server.js
 
 const providersConfig = {
+    claude: {
+        name: 'Anthropic Claude',
+        provider: 'ClaudeProvider',
+        apiKey: process.env.CLAUDE_API_KEY,
+        baseURL: process.env.CLAUDE_BASE_URL || 'https://api.anthropic.com/v1',
+        defaultModel: 'claude-3-sonnet-20240229',
+        enabled: process.env.CLAUDE_ENABLED === 'true',
+        models: ['claude-3-sonnet-20240229', 'claude-3-opus-20240229', 'claude-3-haiku-20240307'],
+        role: 'Chief E-E-A-T Content Specialist',
+        specialties: ['trustworthiness', 'experience integration', 'factual accuracy', 'content quality'],
+        priority: 1,
+        eatCapabilities: {
+            expertise: 90,
+            experience: 85,
+            authoritativeness: 88,
+            trustworthiness: 95
+        }
+    },
     openai: {
         name: 'OpenAI',
         provider: 'OpenAIProvider',
         apiKey: process.env.OPENAI_API_KEY,
         baseURL: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
-        defaultModel: 'gpt-3.5-turbo',
+        defaultModel: 'gpt-4',
         enabled: process.env.OPENAI_ENABLED === 'true',
-        models: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo']
-    },
-    gemini: {
-        name: 'Google Gemini',
-        provider: 'GeminiProvider',
-        apiKey: process.env.GEMINI_API_KEY,
-        baseURL: process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta',
-        defaultModel: 'gemini-pro',
-        enabled: process.env.GEMINI_ENABLED === 'true',
-        models: ['gemini-pro', 'gemini-pro-vision']
+        models: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo'],
+        role: 'Authority & SEO Structure Optimizer',
+        specialties: ['seo optimization', 'meta tags', 'heading structure', 'authority building'],
+        priority: 2,
+        eatCapabilities: {
+            expertise: 85,
+            experience: 75,
+            authoritativeness: 90,
+            trustworthiness: 80
+        }
     },
     deepseek: {
         name: 'DeepSeek',
@@ -26,25 +45,56 @@ const providersConfig = {
         baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
         defaultModel: 'deepseek-chat',
         enabled: process.env.DEEPSEEK_ENABLED === 'true',
-        models: ['deepseek-chat', 'deepseek-coder']
+        models: ['deepseek-chat', 'deepseek-coder'],
+        role: 'Technical Expertise Validator',
+        specialties: ['technical accuracy', 'expertise validation', 'depth analysis', 'schema markup'],
+        priority: 3,
+        eatCapabilities: {
+            expertise: 95,
+            experience: 80,
+            authoritativeness: 85,
+            trustworthiness: 85
+        }
     },
-    claude: {
-        name: 'Anthropic Claude',
-        provider: 'ClaudeProvider',
-        apiKey: process.env.CLAUDE_API_KEY,
-        baseURL: process.env.CLAUDE_BASE_URL || 'https://api.anthropic.com/v1',
-        defaultModel: 'claude-3-sonnet-20240229',
-        enabled: process.env.CLAUDE_ENABLED === 'true',
-        models: ['claude-3-sonnet-20240229', 'claude-3-opus-20240229', 'claude-3-haiku-20240307']
-    },    
+    gemini: {
+        name: 'Google Gemini',
+        provider: 'GeminiProvider',
+        apiKey: process.env.GEMINI_API_KEY,
+        baseURL: process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta',
+        defaultModel: 'gemini-2.0-flash-exp',
+        enabled: process.env.GEMINI_ENABLED === 'true',
+        models: ['gemini-pro', 'gemini-pro-vision', 'gemini-2.0-flash-exp'],
+        role: 'Content Comprehensiveness Enhancer',
+        specialties: ['content breadth', 'comprehensive coverage', 'engaging elements', 'multimodal content'],
+        priority: 4,
+        eatCapabilities: {
+            expertise: 75,
+            experience: 60,
+            authoritativeness: 70,
+            trustworthiness: 65
+        }
+    },
     chinda: {
+        name: 'ChindaX AI',
+        provider: 'ChindaAIProvider',
         apiKey: process.env.CHINDA_API_KEY,
         jwtToken: process.env.CHINDA_JWT_TOKEN,
         baseURL: process.env.CHINDA_BASE_URL || 'https://chindax.iapp.co.th/api',
-        model: process.env.CHINDA_MODEL || 'chinda-qwen3-32b', // ✅ อัพเดท model name
+        defaultModel: 'chinda-qwen3-32b',
+        model: process.env.CHINDA_MODEL || 'chinda-qwen3-32b',
         maxTokens: parseInt(process.env.CHINDA_MAX_TOKENS) || 2000,
         temperature: parseFloat(process.env.CHINDA_TEMPERATURE) || 0.7,
-        enabled: !!(process.env.CHINDA_API_KEY && process.env.CHINDA_JWT_TOKEN)
+        enabled: process.env.CHINDA_ENABLED === 'true',
+        models: ['chinda-qwen3-32b'],
+        role: 'Local Authority & Cultural Expert',
+        specialties: ['local expertise', 'cultural authority', 'thai context', 'local seo'],
+        priority: 5,
+        eatCapabilities: {
+            expertise: 80,
+            experience: 85,
+            authoritativeness: 75,
+            trustworthiness: 80
+        }
     }
 };
 
@@ -83,12 +133,28 @@ const validateConfig = (providerName, config) => {
 };
 
 const getEnabledProviders = () => {
-    const enabled = {};
+    const enabled = [];
     
     Object.keys(providersConfig).forEach(providerName => {
         const config = providersConfig[providerName];
         if (validateConfig(providerName, config)) {
-            enabled[providerName] = config;
+            enabled.push(providerName); // Return just the name string
+        }
+    });
+
+    return enabled;
+};
+
+const getEnabledProvidersWithConfig = () => {
+    const enabled = [];
+    
+    Object.keys(providersConfig).forEach(providerName => {
+        const config = providersConfig[providerName];
+        if (validateConfig(providerName, config)) {
+            enabled.push({
+                name: providerName,
+                ...config
+            });
         }
     });
 
@@ -111,13 +177,13 @@ const getProviderConfig = (providerName) => {
 
 const getDefaultProvider = () => {
     const enabled = getEnabledProviders();
-    const providerKeys = Object.keys(enabled);
-    return providerKeys.length > 0 ? providerKeys[0] : null;
+    return enabled.length > 0 ? enabled[0] : null;
 };
 
 module.exports = {
     providersConfig,
     getEnabledProviders,
+    getEnabledProvidersWithConfig,
     getProviderConfig,
     getDefaultProvider,
     jwtConfig,

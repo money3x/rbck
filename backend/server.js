@@ -18,7 +18,11 @@ const postRoutes = require('./routes/posts');
 const authRoutes = require('./routes/auth.js');
 const aiRoutes = require('./routes/ai.js');
 const migrationRoutes = require('./routes/migration.js');
+const securityRoutes = require('./routes/security.js');
 const supabase = require('./supabaseClient');
+
+// Import secure API key manager
+const apiKeyManager = require('./models/apiKeys');
 
 // Import middleware
 const { generalRateLimit } = require('./middleware/rateLimiter');
@@ -51,17 +55,34 @@ logger.info('🚀 Starting RBCK CMS Server...', {
 // Initialize cache monitoring
 initializeCacheMonitoring();
 
-// Security middleware
+// Enhanced security middleware with production-grade settings
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
       scriptSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      connectSrc: ["'self'", "https://api.openai.com", "https://api.anthropic.com", "https://generativelanguage.googleapis.com"],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+      frameAncestors: ["'none'"],
+      upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null
     },
   },
+  crossOriginEmbedderPolicy: false, // Allow embedding for development
+  hsts: {
+    maxAge: 31536000, // 1 year
+    includeSubDomains: true,
+    preload: true
+  },
+  noSniff: true,
+  frameguard: { action: 'deny' },
+  xssFilter: true,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
 }));
 
 // Request logging and metrics
@@ -107,14 +128,7 @@ app.use(sanitizeInput);
 // Setup Swagger documentation
 setupSwagger(app);
 
-// API Routes with enhanced middleware
-app.use('/api/auth', validateAuth, authRoutes); // Authentication routes
-app.use('/api/ai', aiRoutes);                   // AI provider routes  
-app.use('/api/migration', authenticateAdmin, migrationRoutes); // Database migration routes (admin only)
-app.use('/api', apiKeyRoutes);                  // Protected API key routes
-app.use('/api', postRoutes);                    // Post management routes (re-enabled with improved error handling)
-
-// Health and monitoring endpoints
+// Health and monitoring endpoints (must be BEFORE generic routes)
 app.get('/health', healthCheck);
 app.get('/api/health', healthCheck);
 app.get('/api/metrics', getMetrics);
@@ -138,6 +152,32 @@ app.get('/api/cache/stats', (req, res) => {
     });
   }
 });
+
+app.delete('/api/cache/clear', (req, res) => {
+  try {
+    clearCache.all();
+    logger.info('Cache cleared via API');
+    res.json({ 
+      success: true,
+      message: 'Cache cleared successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Cache clear error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to clear cache'
+    });
+  }
+});
+
+// API Routes with enhanced middleware
+app.use('/api/auth', validateAuth, authRoutes); // Authentication routes
+app.use('/api/security', securityRoutes);       // Security monitoring routes (admin only)
+app.use('/api/ai', aiRoutes);                   // AI provider routes  
+app.use('/api/migration', authenticateAdmin, migrationRoutes); // Database migration routes (admin only)
+app.use('/api', apiKeyRoutes);                  // Protected API key routes
+app.use('/api/posts', postRoutes);              // Post management routes (mount on /api/posts to avoid conflicts)
 
 app.delete('/api/cache/clear', (req, res) => {
   try {
@@ -684,29 +724,33 @@ app.get('/api/blog-html', cacheMiddleware(300), async (req, res) => {
         logger.debug(`Local published posts found: ${localPublishedPosts.length}`);
         
         let finalPosts = [];
-        let source = 'local';
-        
-        try {
-            // Try to fetch from Supabase
-            const { data: supabasePosts, error } = await supabase
-                .from('posts')
-                .select('*')
-                .eq('status', 'published')
-                .order('created_at', { ascending: false });
-            
-            logger.debug('Supabase response:', {
-                posts: supabasePosts?.length || 0,
-                error: error?.message || 'none'
-            });
-            
-            if (!error && supabasePosts && supabasePosts.length > 0) {
-                finalPosts = supabasePosts;
-                source = 'supabase';
-                logger.debug(`Using Supabase data: ${finalPosts.length} posts`);
+        let source = 'local';        try {
+            // Try to fetch from Supabase (only if properly initialized)
+            if (supabase && typeof supabase.from === 'function') {
+                const { data: supabasePosts, error } = await supabase
+                    .from('posts')
+                    .select('*')
+                    .eq('status', 'published')
+                    .order('created_at', { ascending: false });
+                
+                logger.debug('Supabase response:', {
+                    posts: supabasePosts?.length || 0,
+                    error: error?.message || 'none'
+                });
+                
+                if (!error && supabasePosts && supabasePosts.length > 0) {
+                    finalPosts = supabasePosts;
+                    source = 'supabase';
+                    logger.debug(`Using Supabase data: ${finalPosts.length} posts`);
+                } else {
+                    finalPosts = localPublishedPosts;
+                    source = 'local_fallback';
+                    logger.debug(`Using local fallback data: ${finalPosts.length} posts`);
+                }
             } else {
                 finalPosts = localPublishedPosts;
-                source = 'local_fallback';
-                logger.debug(`Using local fallback data: ${finalPosts.length} posts`);
+                source = 'local_no_supabase';
+                logger.debug(`No Supabase connection, using local data: ${finalPosts.length} posts`);
             }
         } catch (supabaseError) {
             logger.error('Supabase connection error:', supabaseError);

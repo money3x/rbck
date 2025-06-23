@@ -86,21 +86,24 @@ export class AISwarmCouncil {
             console.error('❌ [AI SWARM] Initialization failed:', error);
             showNotification('❌ AI Swarm initialization failed', 'error');
         }
-    }
-
-    /**
+    }    /**
      * Update status of all AI providers
      */
     async updateProviderStatus() {
+        console.log('🔄 [AI SWARM] Updating provider status...');
         const connectedProviders = [];
         
         for (const [key, provider] of Object.entries(this.providers)) {
             try {
+                console.log(`🔍 [AI SWARM] Checking ${key} status...`);
                 const isConnected = await this.checkProviderStatus(key);
                 this.providers[key].status = isConnected;
                 
                 if (isConnected) {
                     connectedProviders.push(key);
+                    console.log(`✅ [AI SWARM] ${key} is connected`);
+                } else {
+                    console.log(`❌ [AI SWARM] ${key} is disconnected`);
                 }
             } catch (error) {
                 console.error(`[AI SWARM] Error checking ${key} status:`, error);
@@ -109,6 +112,10 @@ export class AISwarmCouncil {
         }
         
         console.log(`🔗 [AI SWARM] Connected providers: ${connectedProviders.length}/5`);
+        
+        // Always render the providers table regardless of connection status
+        this.renderProviders();
+        
         this.updateSwarmStatusDisplay(connectedProviders.length);
         return connectedProviders;
     }
@@ -141,13 +148,12 @@ export class AISwarmCouncil {
             console.error('[AI SWARM] Gemini check failed:', error);
             return false;
         }
-    }
-
-    /**
+    }    /**
      * Check external provider status
      */
     async checkExternalProviderStatus(providerKey) {
         try {
+            console.log(`🔍 [AI SWARM] Checking ${providerKey} via API...`);
             const response = await fetch(`${API_BASE}/ai/status/${providerKey}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
@@ -155,13 +161,18 @@ export class AISwarmCouncil {
             
             if (response.ok) {
                 const data = await response.json();
-                return data.connected || false;
+                console.log(`✅ [AI SWARM] ${providerKey} API response:`, data);
+                return data.connected || data.available || false;
+            } else {
+                console.warn(`⚠️ [AI SWARM] ${providerKey} API returned ${response.status}`);
             }
         } catch (error) {
-            console.error(`[AI SWARM] ${providerKey} check failed:`, error);
+            console.error(`❌ [AI SWARM] ${providerKey} check failed:`, error);
         }
         
-        return false; // Default to disconnected if check fails
+        // Default to disconnected if check fails, but still show the provider
+        console.log(`📊 [AI SWARM] ${providerKey} defaulting to disconnected state`);
+        return false;
     }
 
     /**
@@ -182,7 +193,7 @@ export class AISwarmCouncil {
      * Setup Swarm UI components
      */
     setupSwarmUI() {
-        console.log('[AI SWARM] Setting up UI components...');
+        console.log('🎨 [AI SWARM] Setting up UI components...');
         
         // Setup providers grid
         this.setupProvidersGrid();
@@ -195,7 +206,9 @@ export class AISwarmCouncil {
         
         // Update initial display
         this.updateSwarmDisplay();
-    }    /**
+        
+        console.log('✅ [AI SWARM] UI components setup completed');
+    }/**
      * Setup providers grid
      */
     setupProvidersGrid() {
@@ -396,16 +409,25 @@ export class AISwarmCouncil {
      * Render AI providers table
      */
     renderProviders() {
+        console.log('🔄 [AI SWARM] Rendering providers table...');
         const providersTableBody = document.getElementById('aiProvidersTableBody');
-        if (!providersTableBody) return;
+        
+        if (!providersTableBody) {
+            console.error('❌ [AI SWARM] aiProvidersTableBody element not found!');
+            return;
+        }
 
+        console.log('📊 [AI SWARM] Providers data:', this.providers);
         providersTableBody.innerHTML = '';
         
         Object.entries(this.providers).forEach(([key, provider]) => {
+            console.log(`🤖 [AI SWARM] Creating row for ${key}:`, provider);
             const providerRow = this.createProviderRow(key, provider);
             providersTableBody.appendChild(providerRow);
         });
-    }    /**
+        
+        console.log('✅ [AI SWARM] Providers table rendered successfully');
+    }/**
      * Create provider row element
      */
     createProviderRow(key, provider) {
@@ -569,15 +591,22 @@ export class AISwarmCouncil {
                 button.classList.add('processing');
             }
         });
-    }
-
-    /**
+    }    /**
      * Execute collaborative task
      */
     async executeCollaborativeTask(taskType, connectedProviders) {
         console.log(`[AI SWARM] Executing ${taskType} with providers:`, connectedProviders.map(p => p.key));
         
-        // Sort providers by priority for this task type
+        // Try enhanced backend integration first
+        try {
+            await this.executeEnhancedCollaborativeTask(taskType, connectedProviders);
+            return; // Success with backend integration
+        } catch (backendError) {
+            console.warn('[AI SWARM] Backend integration failed, falling back to frontend simulation:', backendError.message);
+            this.addConversationMessage('system', '⚠️ Using frontend simulation mode...');
+        }
+        
+        // Fallback to original frontend simulation
         const sortedProviders = this.sortProvidersByTaskType(taskType, connectedProviders);
         
         try {
@@ -1089,4 +1118,241 @@ export class AISwarmCouncil {
         URL.revokeObjectURL(url);
         showNotification('💾 Conversation exported', 'success');
     }
+
+    /**
+     * ===== NEW BACKEND SWARM COUNCIL INTEGRATION =====
+     */
+
+    /**
+     * Process content using the backend Swarm Council
+     */
+    async processWithSwarmCouncil(prompt, workflow = 'full', options = {}) {
+        try {
+            console.log('🎯 [AI SWARM] Processing with backend Swarm Council...');
+            
+            const response = await fetch(`${API_BASE}/api/ai/swarm/process`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({
+                    prompt,
+                    workflow,
+                    options
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Backend Swarm Council request failed: ${response.status}`);
+            }
+
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.error || 'Swarm Council processing failed');
+            }
+
+            console.log('✅ [AI SWARM] Backend processing completed:', result);
+            return result.result;
+
+        } catch (error) {
+            console.error('❌ [AI SWARM] Backend processing error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Process content with E-A-T optimization using backend
+     */
+    async processWithEATOptimization(prompt, workflow = 'full', contentType = 'article', options = {}) {
+        try {
+            console.log('🎯 [E-A-T SWARM] Processing with E-A-T optimization...');
+            
+            const response = await fetch(`${API_BASE}/api/ai/swarm/eat-process`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({
+                    prompt,
+                    workflow,
+                    contentType,
+                    options
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`E-A-T Swarm Council request failed: ${response.status}`);
+            }
+
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.error || 'E-A-T optimization failed');
+            }
+
+            console.log('✅ [E-A-T SWARM] Backend processing completed:', result);
+            return result.result;
+
+        } catch (error) {
+            console.error('❌ [E-A-T SWARM] Backend processing error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get backend Swarm Council status
+     */
+    async getBackendSwarmStatus() {
+        try {
+            const response = await fetch(`${API_BASE}/api/ai/swarm/status`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Backend status request failed: ${response.status}`);
+            }
+
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to get backend status');
+            }
+
+            return {
+                swarmCouncil: result.swarmCouncil,
+                eatSwarmCouncil: result.eatSwarmCouncil
+            };
+
+        } catch (error) {
+            console.error('❌ [AI SWARM] Backend status error:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Get E-A-T guidelines from backend
+     */
+    async getEATGuidelines() {
+        try {
+            const response = await fetch(`${API_BASE}/api/ai/swarm/eat-guidelines`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`E-A-T guidelines request failed: ${response.status}`);
+            }
+
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to get E-A-T guidelines');
+            }
+
+            return {
+                eatGuidelines: result.eatGuidelines,
+                seoGuidelines: result.seoGuidelines
+            };
+
+        } catch (error) {
+            console.error('❌ [E-A-T GUIDELINES] Backend error:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Enhanced collaborative task execution using backend Swarm Council
+     */
+    async executeEnhancedCollaborativeTask(taskType, connectedProviders) {
+        console.log(`[AI SWARM] Executing enhanced ${taskType} with backend integration...`);
+        
+        // Get current content if available
+        const currentContent = this.getCurrentContent();
+        
+        // Create comprehensive prompt based on task type
+        let prompt = '';
+        let workflow = 'full';
+        let contentType = 'article';
+        
+        switch (taskType) {
+            case 'content_review':
+                if (!currentContent) {
+                    throw new Error('No content available for review');
+                }
+                prompt = `Please perform a comprehensive review of the following content:\n\n${currentContent}`;
+                workflow = 'review';
+                break;
+                
+            case 'content_creation':
+                const title = document.getElementById('postTitle')?.value || 'New Content';
+                prompt = `Create high-quality, E-A-T optimized content with the title: "${title}". Focus on expertise, authoritativeness, and trustworthiness.`;
+                workflow = 'full';
+                contentType = 'article';
+                break;
+                
+            case 'seo_optimization':
+                if (!currentContent) {
+                    throw new Error('No content available for SEO optimization');
+                }
+                prompt = `Optimize the following content for SEO, focusing on E-A-T compliance and search engine guidelines:\n\n${currentContent}`;
+                workflow = 'seo';
+                break;
+                
+            default:
+                prompt = `Process the following request: ${taskType}`;
+        }
+        
+        try {
+            // Use E-A-T optimization for better results
+            this.addConversationMessage('system', '🎯 Connecting to backend E-A-T Swarm Council...');
+            
+            const result = await this.processWithEATOptimization(prompt, workflow, contentType);
+            
+            this.addConversationMessage('system', '✅ Backend processing completed successfully!');
+            
+            // Display results
+            if (result.finalContent) {
+                this.addConversationMessage('claude', `Content optimized with E-A-T score: ${result.eatScore || 'N/A'}`);
+                
+                // Update content if we're in content creation/optimization mode
+                if (taskType === 'content_creation' || taskType === 'seo_optimization') {
+                    const contentField = document.getElementById('postContent');
+                    if (contentField) {
+                        contentField.value = result.finalContent;
+                        this.addConversationMessage('system', '📝 Content updated in editor');
+                    }
+                }
+            }
+            
+            // Display analysis results
+            if (result.analysis) {
+                this.addConversationMessage('gemini', `Analysis: ${result.analysis}`);
+            }
+            
+            if (result.improvements && result.improvements.length > 0) {
+                const improvementsText = result.improvements.join(', ');
+                this.addConversationMessage('openai', `Suggested improvements: ${improvementsText}`);
+            }
+            
+            this.addConversationMessage('system', '🎉 Enhanced collaborative task completed!');
+            showNotification('✨ Content processed with E-A-T optimization', 'success');
+            
+        } catch (error) {
+            console.error('[AI SWARM] Enhanced task execution error:', error);
+            this.addConversationMessage('system', `❌ Backend processing failed: ${error.message}`);
+            throw error;
+        }
+    }
+
+    /**
+     * ===== END BACKEND INTEGRATION =====
+     */
 }

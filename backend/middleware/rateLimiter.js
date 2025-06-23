@@ -120,9 +120,87 @@ const createCustomRateLimit = (windowMs, max, identifier) => {
     });
 };
 
+/**
+ * Enhanced production rate limiter for API Key management
+ * Strict limits for production security
+ */
+const productionApiKeyRateLimit = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10, // Maximum 10 requests per 15 minutes in production
+    message: {
+        error: 'API Key rate limit exceeded',
+        message: 'You have exceeded the limit for API key operations. Please wait before trying again.',
+        retryAfter: 15 * 60,
+        currentLimit: 10,
+        timeWindow: '15 minutes',
+        timestamp: new Date().toISOString()
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => {
+        return req.ip + ':prod:apikey:' + (req.user?.username || 'anonymous');
+    },
+    handler: (req, res) => {
+        console.log(`🚨 [PROD] API Key rate limit exceeded for IP: ${req.ip}, User: ${req.user?.username || 'anonymous'} at ${new Date().toISOString()}`);
+        res.status(429).json({
+            success: false,
+            error: 'API Key rate limit exceeded',
+            message: 'You have exceeded the limit for API key operations. Please wait before trying again.',
+            retryAfter: 15 * 60,
+            code: 'RATE_LIMIT_EXCEEDED'
+        });
+    }
+});
+
+/**
+ * Enhanced production login rate limiter
+ * More strict for production security
+ */
+const productionLoginRateLimit = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // Maximum 5 login attempts per 15 minutes
+    message: {
+        error: 'Too many login attempts',
+        message: 'You have exceeded the login attempt limit. Please wait before trying again.',
+        retryAfter: 15 * 60,
+        timestamp: new Date().toISOString()
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    skipSuccessfulRequests: true,
+    keyGenerator: (req) => {
+        return req.ip + ':prod:login';
+    },
+    handler: (req, res) => {
+        console.log(`🚨 [PROD] Login rate limit exceeded for IP: ${req.ip} at ${new Date().toISOString()}`);
+        res.status(429).json({
+            success: false,
+            error: 'Too many login attempts',
+            message: 'You have exceeded the login attempt limit. Please wait before trying again.',
+            retryAfter: 15 * 60,
+            code: 'LOGIN_RATE_LIMIT_EXCEEDED'
+        });
+    }
+});
+
+/**
+ * Adaptive rate limiter that switches based on environment
+ */
+const adaptiveApiKeyRateLimit = process.env.NODE_ENV === 'production' 
+    ? productionApiKeyRateLimit 
+    : apiKeyRateLimit;
+
+const adaptiveLoginRateLimit = process.env.NODE_ENV === 'production' 
+    ? productionLoginRateLimit 
+    : loginRateLimit;
+
 module.exports = {
     apiKeyRateLimit,
     loginRateLimit,
     generalRateLimit,
-    createCustomRateLimit
+    createCustomRateLimit,
+    productionApiKeyRateLimit,
+    productionLoginRateLimit,
+    adaptiveApiKeyRateLimit,
+    adaptiveLoginRateLimit
 };

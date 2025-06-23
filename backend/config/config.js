@@ -1,9 +1,8 @@
 /**
  * Application Configuration
  * Central configuration management for all environment variables
+ * Environment variables are loaded by server.js
  */
-
-require('dotenv').config();
 
 const config = {
   // Server Configuration
@@ -80,7 +79,7 @@ const config = {
       chinda: {
         apiKey: process.env.CHINDA_API_KEY,
         jwtToken: process.env.CHINDA_JWT_TOKEN,
-        baseUrl: process.env.CHINDA_BASE_URL || 'https://chindax.iapp.co.th',
+        baseURL: process.env.CHINDA_BASE_URL,
         model: process.env.CHINDA_MODEL || 'chinda-qwen3-32b',
         enabled: !!(process.env.CHINDA_API_KEY && process.env.CHINDA_JWT_TOKEN)
       }

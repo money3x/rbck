@@ -1,14 +1,15 @@
 // Authentication Routes for RBCK CMS
-// Handles admin login and token management
+// Enhanced with secure session management and brute force protection
 
 const express = require('express');
 const router = express.Router();
-const { generateAdminToken, validateAdminCredentials } = require('../middleware/auth');
+const { generateAdminToken, validateAdminCredentials, getActiveSessions, invalidateSession } = require('../middleware/auth');
 const { loginRateLimit } = require('../middleware/rateLimiter');
+const { logger } = require('../middleware/errorHandler');
 
 /**
  * POST /api/auth/login
- * Authenticate admin user and return JWT token
+ * Enhanced authentication with secure session management
  */
 router.post('/login', 
     express.json(), 
@@ -16,20 +17,27 @@ router.post('/login',
     async (req, res) => {
         try {
             const { username, password } = req.body;
+            const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
             
             // Validate input
             if (!username || !password) {
+                logger.warn(`🚨 Login attempt with missing credentials from ${clientIp}`);
                 return res.status(400).json({ 
+                    success: false,
                     error: 'Missing credentials',
-                    message: 'Username and password are required'
+                    message: 'Username and password are required',
+                    code: 'MISSING_CREDENTIALS'
                 });
             }
             
             // Validate string types and basic format
             if (typeof username !== 'string' || typeof password !== 'string') {
+                logger.warn(`🚨 Login attempt with invalid credential format from ${clientIp}`);
                 return res.status(400).json({ 
+                    success: false,
                     error: 'Invalid credential format',
-                    message: 'Username and password must be strings'
+                    message: 'Username and password must be strings',
+                    code: 'INVALID_FORMAT'
                 });
             }
             
@@ -38,51 +46,61 @@ router.post('/login',
             const trimmedPassword = password.trim();
             
             if (!trimmedUsername || !trimmedPassword) {
+                logger.warn(`🚨 Login attempt with empty credentials from ${clientIp}`);
                 return res.status(400).json({ 
+                    success: false,
                     error: 'Empty credentials',
-                    message: 'Username and password cannot be empty'
+                    message: 'Username and password cannot be empty',
+                    code: 'EMPTY_CREDENTIALS'
                 });
             }
             
-            // Validate admin credentials
-            const isValidCredentials = validateAdminCredentials(trimmedUsername, trimmedPassword);
+            // Validate admin credentials with enhanced security
+            const authResult = validateAdminCredentials(trimmedUsername, trimmedPassword, clientIp);
             
-            if (!isValidCredentials) {
-                // Log failed attempt
-                console.log(`🚫 Failed login attempt - Username: ${trimmedUsername}, IP: ${req.ip}, Time: ${new Date().toISOString()}`);
+            if (!authResult.valid) {
+                if (authResult.blocked) {
+                    return res.status(429).json({
+                        success: false,
+                        error: 'Too many failed attempts',
+                        message: authResult.error,
+                        code: 'ACCOUNT_LOCKED'
+                    });
+                }
                 
-                return res.status(401).json({ 
-                    error: 'Invalid credentials',
-                    message: 'Username or password is incorrect'
+                return res.status(401).json({
+                    success: false,
+                    error: 'Authentication failed',
+                    message: authResult.error,
+                    code: 'INVALID_CREDENTIALS'
                 });
             }
             
-            // Generate JWT token for successful login
-            const token = generateAdminToken(trimmedUsername);
+            // Generate JWT token with session information
+            const token = generateAdminToken(authResult.username, authResult.sessionId, authResult.userId);
             
-            // Log successful login
-            console.log(`✅ Successful admin login - Username: ${trimmedUsername}, IP: ${req.ip}, Time: ${new Date().toISOString()}`);
-            
-            // Return token and success info
-            res.json({
+            logger.info(`✅ Successful admin login: ${authResult.username} from ${clientIp}`);
+              res.json({
                 success: true,
                 message: 'Login successful',
-                token: token,
-                expiresIn: '24h',
-                user: {
-                    username: trimmedUsername,
-                    isAdmin: true,
-                    loginTime: new Date().toISOString()
+                data: {
+                    token,
+                    username: authResult.username,
+                    sessionId: authResult.sessionId.substring(0, 8) + '...', // Masked session ID
+                    loginTime: new Date().toISOString(),
+                    expiresIn: process.env.JWT_EXPIRATION || '24h'
                 }
             });
             
         } catch (error) {
-            console.error('Login error:', error);
+            logger.error('Login error:', error);
             
             // Don't expose internal errors to client
             res.status(500).json({ 
+                success: false,
                 error: 'Internal server error',
-                message: 'Unable to process login request. Please try again later.'
+                message: 'Unable to process login request. Please try again later.',
+                code: 'SERVER_ERROR'
             });
         }
     }
@@ -150,30 +168,103 @@ router.post('/verify',
 );
 
 /**
- * POST /api/auth/logout
- * Logout endpoint (client-side token removal)
+ * GET /api/auth/sessions
+ * Get all active sessions (admin only)
  */
-router.post('/logout', (req, res) => {
-    // Since we're using stateless JWT, logout is handled client-side
-    // This endpoint is mainly for logging purposes
-    const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1];
-    
-    if (token) {
+router.get('/sessions',
+    require('../middleware/auth').authenticateAdmin,
+    (req, res) => {
         try {
-            const jwt = require('jsonwebtoken');
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            console.log(`👋 Admin logout - Username: ${decoded.username}, IP: ${req.ip}, Time: ${new Date().toISOString()}`);
+            const sessions = getActiveSessions();
+            
+            logger.info(`Admin ${req.user.username} requested active sessions list`);
+            
+            res.json({
+                success: true,
+                data: {
+                    sessions,
+                    total: sessions.length,
+                    timestamp: new Date().toISOString()
+                }
+            });
         } catch (error) {
-            // Token might be expired or invalid, but still log the logout attempt
-            console.log(`👋 Logout attempt with invalid token - IP: ${req.ip}, Time: ${new Date().toISOString()}`);
+            logger.error('Sessions listing error:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to retrieve sessions',
+                code: 'SERVER_ERROR'
+            });
         }
     }
-    
-    res.json({
-        success: true,
-        message: 'Logged out successfully'
-    });
-});
+);
+
+/**
+ * DELETE /api/auth/sessions/:sessionId
+ * Invalidate a specific session (admin only)
+ */
+router.delete('/sessions/:sessionId',
+    require('../middleware/auth').authenticateAdmin,
+    (req, res) => {
+        try {
+            const { sessionId } = req.params;
+            
+            if (!sessionId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Session ID required',
+                    code: 'MISSING_SESSION_ID'
+                });
+            }
+            
+            invalidateSession(sessionId);
+            
+            logger.info(`Admin ${req.user.username} invalidated session ${sessionId.substring(0, 8)}...`);
+            
+            res.json({
+                success: true,
+                message: 'Session invalidated successfully',
+                timestamp: new Date().toISOString()
+            });
+        } catch (error) {
+            logger.error('Session invalidation error:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to invalidate session',
+                code: 'SERVER_ERROR'
+            });
+        }
+    }
+);
+
+/**
+ * POST /api/auth/logout
+ * Logout and invalidate current session
+ */
+router.post('/logout',
+    require('../middleware/auth').authenticateAdmin,
+    (req, res) => {
+        try {
+            const sessionId = req.user.sessionId;
+            
+            if (sessionId) {
+                invalidateSession(sessionId);
+                logger.info(`User ${req.user.username} logged out and session invalidated`);
+            }
+            
+            res.json({
+                success: true,
+                message: 'Logout successful',
+                timestamp: new Date().toISOString()
+            });
+        } catch (error) {
+            logger.error('Logout error:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to logout',
+                code: 'SERVER_ERROR'
+            });
+        }
+    }
+);
 
 module.exports = router;

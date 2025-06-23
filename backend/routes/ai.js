@@ -4,6 +4,12 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateAdmin } = require('../middleware/auth');
+const SwarmCouncil = require('../ai/swarm/SwarmCouncil');
+const EATOptimizedSwarmCouncil = require('../ai/swarm/EATOptimizedSwarmCouncil');
+
+// Initialize AI Swarm Councils
+const swarmCouncil = new SwarmCouncil();
+const eatSwarmCouncil = new EATOptimizedSwarmCouncil();
 
 // Real AI provider configurations with environment variables
 const AI_PROVIDERS = {
@@ -607,6 +613,149 @@ router.get('/costs', authenticateAdmin, async (req, res) => {
     }
 });
 
+/**
+ * Get list of available AI providers
+ * GET /api/ai/providers
+ */
+router.get('/providers', async (req, res) => {
+    try {
+        const providers = Object.keys(AI_PROVIDERS).map(key => ({
+            id: key,
+            name: AI_PROVIDERS[key].name,
+            status: AI_PROVIDERS[key].status,
+            features: AI_PROVIDERS[key].features || [],
+            responseTime: AI_PROVIDERS[key].responseTime,
+            successRate: AI_PROVIDERS[key].successRate
+        }));
+
+        res.json({
+            success: true,
+            providers,
+            total: providers.length,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('[AI ROUTES] Error fetching providers:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch AI providers'
+        });
+    }
+});
+
+/**
+ * Generate content using AI provider
+ * POST /api/ai/generate
+ */
+router.post('/generate', async (req, res) => {
+    try {
+        const { provider, prompt, options = {} } = req.body;
+
+        // Validate request
+        if (!provider) {
+            return res.status(400).json({
+                success: false,
+                error: 'Provider is required'
+            });
+        }
+
+        if (!prompt) {
+            return res.status(400).json({
+                success: false,
+                error: 'Prompt is required'
+            });
+        }
+
+        // Check if provider exists
+        if (!AI_PROVIDERS[provider]) {
+            return res.status(400).json({
+                success: false,
+                error: `Provider '${provider}' not found`
+            });
+        }
+
+        // Simulate AI generation (replace with actual provider integration)
+        const response = {
+            success: true,
+            provider,
+            content: `Generated response from ${AI_PROVIDERS[provider].name} for: "${prompt.substring(0, 50)}..."`,
+            tokens: Math.floor(Math.random() * 500) + 100,
+            model: options.model || 'default',
+            timestamp: new Date().toISOString()
+        };
+
+        // Update cost tracking
+        const tokenCost = response.tokens * AI_PROVIDERS[provider].costPerToken;
+        costTracking.totalCost += tokenCost;
+        costTracking.dailyCost += tokenCost;
+        costTracking.monthlyCost += tokenCost;
+        
+        if (!costTracking.providers[provider]) {
+            costTracking.providers[provider] = {
+                totalRequests: 0,
+                totalTokens: 0,
+                totalCost: 0,
+                lastUsed: null
+            };
+        }
+        
+        costTracking.providers[provider].totalRequests += 1;
+        costTracking.providers[provider].totalTokens += response.tokens;
+        costTracking.providers[provider].totalCost += tokenCost;
+        costTracking.providers[provider].lastUsed = new Date().toISOString();
+
+        res.json(response);
+    } catch (error) {
+        console.error('[AI ROUTES] Error generating content:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to generate content'
+        });
+    }
+});
+
+/**
+ * Test provider connection
+ * POST /api/ai/test-connection
+ */
+router.post('/test-connection', async (req, res) => {
+    try {
+        const { provider } = req.body;
+
+        if (!provider) {
+            return res.status(400).json({
+                success: false,
+                error: 'Provider is required'
+            });
+        }
+
+        if (!AI_PROVIDERS[provider]) {
+            return res.status(400).json({
+                success: false,
+                error: `Provider '${provider}' not found`
+            });
+        }
+
+        // Simulate connection test
+        const connectionTest = {
+            success: true,
+            provider,
+            name: AI_PROVIDERS[provider].name,
+            status: AI_PROVIDERS[provider].status,
+            responseTime: AI_PROVIDERS[provider].responseTime + (Math.random() * 100 - 50),
+            timestamp: new Date().toISOString()
+        };
+
+        res.json(connectionTest);
+    } catch (error) {
+        console.error('[AI ROUTES] Error testing connection:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to test provider connection'
+        });
+    }
+});
+
 // Helper functions for different AI providers
 async function callGeminiAPI(config, message, model = 'gemini-2.0-flash-exp') {
     // Mock implementation - replace with real Gemini API call
@@ -668,5 +817,126 @@ function generateAnalysisPrompt(analysisType, content) {
     
     return prompts[analysisType] || prompts['content-quality'];
 }
+
+/**
+ * AI Swarm Council - Process Content with Full Council
+ * POST /api/ai/swarm/process
+ */
+router.post('/swarm/process', authenticateAdmin, async (req, res) => {
+    try {
+        const { prompt, workflow = 'full', options = {} } = req.body;
+        
+        if (!prompt) {
+            return res.status(400).json({
+                success: false,
+                error: 'Prompt is required'
+            });
+        }
+        
+        console.log(`🤖 [Swarm API] Processing content with workflow: ${workflow}`);
+        
+        const result = await swarmCouncil.processContent(prompt, workflow);
+        
+        res.json({
+            success: true,
+            result,
+            workflow,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('[SWARM API] Error processing content:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to process content with Swarm Council'
+        });
+    }
+});
+
+/**
+ * E-A-T Optimized Swarm Council - Process Content with E-A-T Focus
+ * POST /api/ai/swarm/eat-process
+ */
+router.post('/swarm/eat-process', authenticateAdmin, async (req, res) => {
+    try {
+        const { prompt, workflow = 'full', contentType = 'article', options = {} } = req.body;
+        
+        if (!prompt) {
+            return res.status(400).json({
+                success: false,
+                error: 'Prompt is required'
+            });
+        }
+        
+        console.log(`🎯 [E-A-T Swarm API] Processing content with E-A-T optimization: ${workflow}`);
+        
+        const result = await eatSwarmCouncil.processEATContent(prompt, workflow, contentType);
+        
+        res.json({
+            success: true,
+            result,
+            workflow,
+            contentType,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('[E-A-T SWARM API] Error processing content:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to process content with E-A-T Swarm Council'
+        });
+    }
+});
+
+/**
+ * Get Swarm Council Status
+ * GET /api/ai/swarm/status
+ */
+router.get('/swarm/status', async (req, res) => {
+    try {
+        const swarmStatus = swarmCouncil.getCouncilStatus();
+        const eatSwarmStatus = eatSwarmCouncil.getCouncilStatus();
+        
+        res.json({
+            success: true,
+            swarmCouncil: swarmStatus,
+            eatSwarmCouncil: eatSwarmStatus,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('[SWARM STATUS API] Error getting status:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to get Swarm Council status'
+        });
+    }
+});
+
+/**
+ * Get E-A-T Guidelines and Scoring
+ * GET /api/ai/swarm/eat-guidelines
+ */
+router.get('/swarm/eat-guidelines', async (req, res) => {
+    try {
+        const guidelines = eatSwarmCouncil.getEATGuidelines();
+        const seoGuidelines = eatSwarmCouncil.getSEOGuidelines();
+        
+        res.json({
+            success: true,
+            eatGuidelines: guidelines,
+            seoGuidelines: seoGuidelines,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('[E-A-T GUIDELINES API] Error getting guidelines:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to get E-A-T guidelines'
+        });
+    }
+});
 
 module.exports = router;

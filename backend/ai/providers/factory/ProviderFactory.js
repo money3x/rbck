@@ -5,7 +5,7 @@ const OpenAIProvider = require('../openai/OpenAIProvider');
 const GeminiProvider = require('../gemini/GeminiProvider');
 const DeepSeekProvider = require('../deepseek/DeepSeekProvider');
 const ClaudeProvider = require('../claude/ClaudeProvider');
-const ZhipuProvider = require('../chinda/ChindaAIProvider');
+const ChindaAIProvider = require('../chinda/ChindaAIProvider');
 
 class ProviderFactory {
     static providerClasses = {
@@ -13,7 +13,7 @@ class ProviderFactory {
         GeminiProvider,
         DeepSeekProvider,
         ClaudeProvider,
-        ZhipuProvider
+        ChindaAIProvider
     };
 
     static createProvider(providerName) {

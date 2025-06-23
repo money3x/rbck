@@ -287,8 +287,150 @@ export async function publishPost(id) {
     }
 }
 
-// Example: set the post in the select and run Gemini SEO check
-export function processAISuggestions(postId) {
+/**
+ * Save post with E-A-T optimization
+ */
+export async function savePostWithEATOptimization() {
+    console.log('🎯 [E-A-T] Saving post with E-A-T optimization...');
+    try {
+        // Get post data
+        let slug = getInputValue('postSlug').trim();
+        if (!slug) {
+            slug = generateSlug(getInputValue('postTitleTH'));
+        }
+        let tags = getInputValue('postTags');
+        if (typeof tags === 'string') {
+            tags = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+        }
+
+        const postData = {
+            title: getInputValue('postTitleTH') || getInputValue('postTitleEN'),
+            content: getContentValue('postContent'),
+            published: false, // Draft by default
+            contentType: 'article',
+            eatOptimization: true // Enable E-A-T optimization
+        };
+
+        if (!postData.title || !postData.content) {
+            showNotification('กรุณากรอกชื่อบทความและเนื้อหา', 'error');
+            return;
+        }
+
+        showNotification('🎯 กำลังปรับปรุงเนื้อหาด้วย E-A-T...', 'info');
+
+        // Use the new E-A-T optimized endpoint
+        const response = await fetch(`${API_BASE}/api/posts/ai-create`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(postData)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to create E-A-T optimized post: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.error || 'E-A-T optimization failed');
+        }
+
+        // Update the form with optimized content
+        if (result.data && result.data.content) {
+            document.getElementById('postContent').innerHTML = result.data.content;
+        }
+
+        currentEditingPostId = result.data.id;
+
+        // Show optimization results
+        if (result.optimization) {
+            const eatScore = result.optimization.eatScore || 'N/A';
+            const seoScore = result.optimization.seoScore || 'N/A';
+            showNotification(`✅ บทความสร้างสำเร็จด้วย E-A-T! คะแนน: ${eatScore}`, 'success');
+            
+            // Display improvements if available
+            if (result.optimization.improvements && result.optimization.improvements.length > 0) {
+                console.log('E-A-T Improvements:', result.optimization.improvements);
+            }
+        } else {
+            showNotification('✅ บทความสร้างสำเร็จ', 'success');
+        }
+
+        // Refresh posts list
+        await loadBlogPosts();
+
+    } catch (error) {
+        console.error('E-A-T optimization error:', error);
+        showNotification(`❌ เกิดข้อผิดพลาด: ${error.message}`, 'error');
+    }
+}
+
+/**
+ * Optimize existing post with E-A-T
+ */
+export async function optimizePostWithEAT(postId) {
+    console.log(`🎯 [E-A-T] Optimizing post ${postId} with E-A-T...`);
+    try {
+        if (!postId) {
+            showNotification('ไม่พบ ID ของบทความ', 'error');
+            return;
+        }
+
+        showNotification('🎯 กำลังปรับปรุงเนื้อหาด้วย E-A-T...', 'info');
+
+        const response = await fetch(`${API_BASE}/api/posts/${postId}/optimize`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+                contentType: 'article',
+                workflow: 'full'
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to optimize post: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.error || 'Post optimization failed');
+        }
+
+        // Update the form with optimized content if we're editing this post
+        if (currentEditingPostId === postId && result.data && result.data.content) {
+            document.getElementById('postContent').innerHTML = result.data.content;
+        }
+
+        // Show optimization results
+        if (result.optimization) {
+            const eatScore = result.optimization.eatScore || 'N/A';
+            const previousScore = result.optimization.previousEatScore || 'N/A';
+            showNotification(`✅ บทความปรับปรุงสำเร็จ! คะแนน E-A-T: ${previousScore} → ${eatScore}`, 'success');
+        } else {
+            showNotification('✅ บทความปรับปรุงสำเร็จ', 'success');
+        }
+
+        // Refresh posts list
+        await loadBlogPosts();
+
+    } catch (error) {
+        console.error('Post optimization error:', error);
+        showNotification(`❌ เกิดข้อผิดพลาด: ${error.message}`, 'error');
+    }
+}
+
+// Export the new functions globally
+window.savePostWithEATOptimization = savePostWithEATOptimization;
+window.optimizePostWithEAT = optimizePostWithEAT;
+
+export async function processAISuggestions(post) {
     console.log('🤖 [DEBUG] Processing AI suggestions for post ID:', postId);
     const select = document.getElementById('postSelectForSeo');
     if (select) {

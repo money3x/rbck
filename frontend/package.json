@@ -1,0 +1,47 @@
+{
+  "name": "rbck-cms-frontend",
+  "version": "1.0.0",
+  "description": "RBCK CMS Frontend - Rice Harvester Content Management System",
+  "type": "module",
+  "main": "index.html",
+  "scripts": {
+    "dev": "http-server . -p 5500 -c-1",
+    "build": "echo 'Static frontend build'",
+    "start": "http-server . -p 5500",
+    "test": "echo 'Frontend tests not configured yet'",
+    "lint": "eslint js/**/*.js admin/**/*.js",
+    "format": "prettier --write js/**/*.js admin/**/*.js"
+  },
+  "keywords": [
+    "cms",
+    "rice-harvester",
+    "frontend",
+    "vanilla-js",
+    "admin-panel"
+  ],
+  "author": "Rabeab Kanchang",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "eslint": "^8.56.0",
+    "prettier": "^3.0.0"
+  },
+  "dependencies": {},
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ],
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-username/rbck-cms.git",
+    "directory": "frontend"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/rbck-cms/issues"
+  },
+  "homepage": "https://rbck-cms.netlify.app"
+}

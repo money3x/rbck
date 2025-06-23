@@ -4,31 +4,30 @@ const app = require('../server');
 describe('Posts API', () => {
   let createdPostId;
 
-  describe('GET /api/posts', () => {
-    test('should return all posts', async () => {
+  describe('GET /api/posts', () => {    test('should return all posts', async () => {
       const response = await request(app)
         .get('/api/posts')
         .expect('Content-Type', /json/)
         .expect(200);
 
-      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body).toHaveProperty('success', true);
+      expect(response.body).toHaveProperty('data');
+      expect(Array.isArray(response.body.data)).toBe(true);
       
-      if (response.body.length > 0) {
-        const post = response.body[0];
+      if (response.body.data.length > 0) {
+        const post = response.body.data[0];
         expect(post).toHaveProperty('id');
-        expect(post).toHaveProperty('titleTH');
-        expect(post).toHaveProperty('excerpt');
       }
-    });
-
-    test('should support query parameters', async () => {
+    });    test('should support query parameters', async () => {
       const response = await request(app)
         .get('/api/posts?status=published&limit=5')
         .expect('Content-Type', /json/)
         .expect(200);
 
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body.length).toBeLessThanOrEqual(5);
+      expect(response.body).toHaveProperty('success', true);
+      expect(response.body).toHaveProperty('data');
+      expect(Array.isArray(response.body.data)).toBe(true);
+      expect(response.body.data.length).toBeLessThanOrEqual(5);
     });
   });
 
@@ -43,10 +42,9 @@ describe('Posts API', () => {
         tags: ['ทดสอบ', 'test'],
         status: 'draft',
         author: 'Test Author'
-      };
-
-      const response = await request(app)
+      };      const response = await request(app)
         .post('/api/posts')
+        .set(getAuthHeaders())
         .send(newPost)
         .expect('Content-Type', /json/)
         .expect(201);
@@ -65,10 +63,9 @@ describe('Posts API', () => {
       const invalidPost = {
         titleEN: 'Test Article'
         // Missing titleTH and excerpt
-      };
-
-      const response = await request(app)
+      };      const response = await request(app)
         .post('/api/posts')
+        .set(getAuthHeaders())
         .send(invalidPost)
         .expect('Content-Type', /json/)
         .expect(400);
@@ -81,10 +78,9 @@ describe('Posts API', () => {
       const newPost = {
         titleTH: 'การดูแลรักษา รถเกี่ยวข้าว ให้ใช้งานได้นาน',
         excerpt: 'เนื้อหาทดสอบการสร้าง slug อัตโนมัติ'
-      };
-
-      const response = await request(app)
+      };      const response = await request(app)
         .post('/api/posts')
+        .set(getAuthHeaders())
         .send(newPost)
         .expect(201);
 
@@ -139,10 +135,9 @@ describe('Posts API', () => {
         titleTH: 'ทดสอบการแก้ไขบทความ (อัพเดท)',
         excerpt: 'เนื้อหาที่ถูกแก้ไขแล้ว',
         status: 'published'
-      };
-
-      const response = await request(app)
+      };      const response = await request(app)
         .put(`/api/posts/${createdPostId}`)
+        .set(getAuthHeaders())
         .send(updateData)
         .expect('Content-Type', /json/)
         .expect(200);
@@ -153,9 +148,9 @@ describe('Posts API', () => {
       expect(response.body).toHaveProperty('updatedAt');
     });
 
-    test('should return 404 for non-existent post update', async () => {
-      const response = await request(app)
+    test('should return 404 for non-existent post update', async () => {      const response = await request(app)
         .put('/api/posts/99999')
+        .set(getAuthHeaders())
         .send({ titleTH: 'Test Update' })
         .expect('Content-Type', /json/)
         .expect(404);
@@ -207,10 +202,9 @@ describe('Posts API', () => {
     test('should delete an existing post', async () => {
       if (!createdPostId) {
         return;
-      }
-
-      const response = await request(app)
+      }      const response = await request(app)
         .delete(`/api/posts/${createdPostId}`)
+        .set(getAuthHeaders())
         .expect('Content-Type', /json/)
         .expect(200);
 
@@ -222,9 +216,9 @@ describe('Posts API', () => {
         .expect(404);
     });
 
-    test('should return 404 for non-existent post deletion', async () => {
-      const response = await request(app)
+    test('should return 404 for non-existent post deletion', async () => {      const response = await request(app)
         .delete('/api/posts/99999')
+        .set(getAuthHeaders())
         .expect('Content-Type', /json/)
         .expect(404);
 

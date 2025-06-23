@@ -40,8 +40,7 @@ export function showSection(sectionId) {
     if (navLink) {
         navLink.classList.add('active');
     }
-    
-    // Update page title
+      // Update page title and handle section-specific actions
     const pageTitle = document.getElementById('pageTitle');
     if (pageTitle) {
         let title = '';
@@ -57,9 +56,25 @@ export function showSection(sectionId) {
                 break;
             case 'seo-tools':
                 title = '🚀 Gemini 2.0 SEO Tools';
-                break;
-            case 'analytics':
+                break;            case 'analytics':
                 title = '📊 Flash Analytics';
+                // Load analytics data when analytics section is shown
+                if (typeof window.loadAnalytics === 'function') {
+                    window.loadAnalytics();
+                }
+                break;            case 'ai-swarm':
+                title = '🤖 AI Swarm Council';
+                // Load AI Swarm data when section is shown
+                console.log('🔄 Loading AI Swarm Council section...');
+                if (typeof window.loadAISwarmData === 'function') {
+                    window.loadAISwarmData();
+                } else if (window.aiSwarmCouncil && typeof window.aiSwarmCouncil.renderProviders === 'function') {
+                    console.log('🔄 Direct call to renderProviders...');
+                    window.aiSwarmCouncil.renderProviders();
+                    window.aiSwarmCouncil.updateSwarmDisplay();
+                } else {
+                    console.warn('⚠️ AI Swarm Council not available');
+                }
                 break;
             default:
                 title = 'Dashboard';
