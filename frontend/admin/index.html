@@ -5,11 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🚀 Gemini 2.0 Flash CMS - ระเบียบการช่าง AI-Powered Content Management</title>
     
-    <!-- ⚡ PERFORMANCE: Resource preloading -->
-    <link rel="preload" href="main-production.js" as="script">
+    <!-- ⚡ PERFORMANCE: Critical resource preloading -->
+    <link rel="modulepreload" href="core/bootstrap.js">
+    <link rel="modulepreload" href="core/auth.js">
+    <link rel="modulepreload" href="core/api-client.js">
     <link rel="preload" href="css/luxury-sidebar.css" as="style">
     <link rel="dns-prefetch" href="https://rbck.onrender.com">
     <link rel="preconnect" href="https://rbck.onrender.com" crossorigin>
+    
+    <!-- ⚡ PERFORMANCE: Critical CSS inlined for faster rendering -->
+    <style>
+        /* Critical CSS for above-the-fold content */
+        .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999; }
+        .hidden { display: none !important; }
+        .loading { opacity: 0.5; pointer-events: none; }
+        .sidebar { width: 280px; transition: transform 0.3s ease; }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="../css/beautiful-gemini-styles.css">
@@ -4877,7 +4892,7 @@
                 </p>
             </div>
             
-            <div id="backendProviderStatus" style="space-y:15px;">
+            <div id="backendProviderStatus" style="display: flex; flex-direction: column; gap: 15px;">
                 <!-- Loading state -->
                 <div class="loading-providers" style="text-align:center; padding:40px; color:#666;">
                     <i class="fas fa-spinner fa-spin" style="font-size:24px; margin-bottom:10px;"></i>
@@ -5779,7 +5794,7 @@
                 }
                 
                 // Fetch provider status
-                const response = await fetch(`${config.apiBase}/ai/providers/status`, {
+                const response = await fetch(`${window.rbckConfig.apiBase}/ai/providers/status`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -5879,7 +5894,7 @@
             console.log('🔄 [AI Settings] Loading current provider status...');
             
             try {
-                const response = await fetch(`${config.apiBase}/ai/providers/status`, {
+                const response = await fetch(`${window.rbckConfig.apiBase}/ai/providers/status`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -5954,7 +5969,7 @@
                     configData.jwtToken = jwtToken;
                 }
                 
-                const response = await fetch(`${config.apiBase}/ai/providers/configure`, {
+                const response = await fetch(`${window.rbckConfig.apiBase}/ai/providers/configure`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -6380,7 +6395,7 @@
             
             try {
                 // Make API call to backend to get provider status
-                const response = await fetch(`${config.apiBase}/ai/providers/status`, {
+                const response = await fetch(`${window.rbckConfig.apiBase}/ai/providers/status`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -6604,7 +6619,7 @@
             console.log(`🔍 [BACKEND] Testing ${providerId} connection...`);
             
             try {
-                const response = await fetch(`${config.apiBase}/ai/providers/${providerId}/test`, {
+                const response = await fetch(`${window.rbckConfig.apiBase}/ai/providers/${providerId}/test`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -6774,7 +6789,7 @@
                 let providersData = {};
                 
                 try {
-                    const response = await fetch(`${config.apiBase}/ai/providers/status`, {
+                    const response = await fetch(`${window.rbckConfig.apiBase}/ai/providers/status`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
@@ -6999,7 +7014,7 @@
                         let metricsData = null;
                         
                         try {
-                            const metricsResponse = await fetch(`${config.apiBase}/ai/metrics`, {
+                            const metricsResponse = await fetch(`${window.rbckConfig.apiBase}/ai/metrics`, {
                                 method: 'GET',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -7023,55 +7038,60 @@
                         
                         for (const provider of providers) {
                             const performance = await generateProviderPerformanceData(provider, metricsData);
-                            tableHTML += `
-                                <tr class="provider-row" data-provider="${provider.id}">
-                                    <td class="provider-cell">
-                                        <div class="provider-info-cell">
-                                            <span class="provider-icon">${provider.icon}</span>
-                                            <div class="provider-details">
-                                                <div class="provider-name">${provider.name}</div>
-                                                <div class="provider-model">${provider.model}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="status-cell">
-                                        <div class="status-indicator ${performance.status.class}">
-                                            <span class="status-dot"></span>
-                                            <span>${performance.status.text}</span>
-                                        </div>
-                                    </td>
-                                    <td class="requests-cell">
-                                        <div class="metric-value">${performance.requests.toLocaleString()}</div>
-                                        <div class="metric-sub">Today</div>
-                                    </td>
-                                    <td class="success-rate-cell">
-                                        <div class="metric-value ${performance.successRate >= 95 ? 'good' : performance.successRate >= 85 ? 'warning' : 'danger'}">${performance.successRate}%</div>
-                                        <div class="metric-sub">${performance.successful}/${performance.total}</div>
-                                    </td>
-                                    <td class="response-time-cell">
-                                        <div class="metric-value ${performance.responseTime <= 1000 ? 'good' : performance.responseTime <= 3000 ? 'warning' : 'danger'}">${performance.responseTime}ms</div>
-                                        <div class="metric-sub">Avg</div>
-                                    </td>
-                                    <td class="quality-cell">
-                                        <div class="metric-value ${performance.qualityScore >= 4.5 ? 'good' : performance.qualityScore >= 3.5 ? 'warning' : 'danger'}">${performance.qualityScore}/5.0</div>
-                                        <div class="metric-sub">Rating</div>
-                                    </td>
-                                    <td class="uptime-cell">
-                                        <div class="metric-value ${performance.uptime >= 99 ? 'good' : performance.uptime >= 95 ? 'warning' : 'danger'}">${performance.uptime}%</div>
-                                        <div class="metric-sub">${performance.uptimeHours}h</div>
-                                    </td>
-                                    <td class="cost-cell">
-                                        <div class="metric-value">฿${performance.cost.toFixed(2)}</div>
-                                        <div class="metric-sub">Today</div>
-                                    </td>
-                                    <td class="activity-cell">
-                                        <div class="last-activity">
-                                            <div class="activity-text">${performance.lastActivity.action}</div>
-                                            <div class="activity-time">${performance.lastActivity.time}</div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `;
+                            
+                            // ✅ Fixed: Simplified template to avoid nested template literal issues
+                            const successRateClass = performance.successRate >= 95 ? 'good' : performance.successRate >= 85 ? 'warning' : 'danger';
+                            const responseTimeClass = performance.responseTime <= 1000 ? 'good' : performance.responseTime <= 3000 ? 'warning' : 'danger';
+                            const qualityClass = performance.qualityScore >= 4.5 ? 'good' : performance.qualityScore >= 3.5 ? 'warning' : 'danger';
+                            const uptimeClass = performance.uptime >= 99 ? 'good' : performance.uptime >= 95 ? 'warning' : 'danger';
+                            
+                            tableHTML += '<tr class="provider-row" data-provider="' + provider.id + '">' +
+                                '<td class="provider-cell">' +
+                                    '<div class="provider-info-cell">' +
+                                        '<span class="provider-icon">' + provider.icon + '</span>' +
+                                        '<div class="provider-details">' +
+                                            '<div class="provider-name">' + provider.name + '</div>' +
+                                            '<div class="provider-model">' + provider.model + '</div>' +
+                                        '</div>' +
+                                    '</div>' +
+                                '</td>' +
+                                '<td class="status-cell">' +
+                                    '<div class="status-indicator ' + performance.status.class + '">' +
+                                        '<span class="status-dot"></span>' +
+                                        '<span>' + performance.status.text + '</span>' +
+                                    '</div>' +
+                                '</td>' +
+                                '<td class="requests-cell">' +
+                                    '<div class="metric-value">' + performance.requests.toLocaleString() + '</div>' +
+                                    '<div class="metric-sub">Today</div>' +
+                                '</td>' +
+                                '<td class="success-rate-cell">' +
+                                    '<div class="metric-value ' + successRateClass + '">' + performance.successRate + '%</div>' +
+                                    '<div class="metric-sub">' + performance.successful + '/' + performance.total + '</div>' +
+                                '</td>' +
+                                '<td class="response-time-cell">' +
+                                    '<div class="metric-value ' + responseTimeClass + '">' + performance.responseTime + 'ms</div>' +
+                                    '<div class="metric-sub">Avg</div>' +
+                                '</td>' +
+                                '<td class="quality-cell">' +
+                                    '<div class="metric-value ' + qualityClass + '">' + performance.qualityScore + '/5.0</div>' +
+                                    '<div class="metric-sub">Rating</div>' +
+                                '</td>' +
+                                '<td class="uptime-cell">' +
+                                    '<div class="metric-value ' + uptimeClass + '">' + performance.uptime + '%</div>' +
+                                    '<div class="metric-sub">' + performance.uptimeHours + 'h</div>' +
+                                '</td>' +
+                                '<td class="cost-cell">' +
+                                    '<div class="metric-value">฿' + performance.cost.toFixed(2) + '</div>' +
+                                    '<div class="metric-sub">Today</div>' +
+                                '</td>' +
+                                '<td class="activity-cell">' +
+                                    '<div class="last-activity">' +
+                                        '<div class="activity-text">' + performance.lastActivity.action + '</div>' +
+                                        '<div class="activity-time">' + performance.lastActivity.time + '</div>' +
+                                    '</div>' +
+                                '</td>' +
+                            '</tr>';
                         });
                         
                         tableBody.innerHTML = tableHTML;
@@ -7082,22 +7102,22 @@
                 } catch (error) {
                     console.error('❌ [AI MONITORING] Error loading performance data:', error);
                     
-                    tableBody.innerHTML = `
-                        <tr class="error-row">
-                            <td colspan="9" class="error-cell">
-                                <div class="error-message-inline">
-                                    <div class="error-icon">⚠️</div>
-                                    <div class="error-text">
-                                        <strong>Error loading performance data</strong>
-                                        <p>Please try refreshing or check your connection</p>
-                                        <button class="btn btn-sm btn-secondary" onclick="refreshAllProviderMetrics()">
-                                            <i class="fas fa-sync"></i> Try Again
-                                        </button>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
+                    // ✅ Fixed: Simplified error template
+                    tableBody.innerHTML = 
+                        '<tr class="error-row">' +
+                            '<td colspan="9" class="error-cell">' +
+                                '<div class="error-message-inline">' +
+                                    '<div class="error-icon">⚠️</div>' +
+                                    '<div class="error-text">' +
+                                        '<strong>Error loading performance data</strong>' +
+                                        '<p>Please try refreshing or check your connection</p>' +
+                                        '<button class="btn btn-sm btn-secondary" onclick="refreshAllProviderMetrics()">' +
+                                            '<i class="fas fa-sync"></i> Try Again' +
+                                        '</button>' +
+                                    '</div>' +
+                                '</div>' +
+                            '</td>' +
+                        '</tr>';
                 }
             }, 1500);
         }
@@ -7106,7 +7126,7 @@
             // Get provider status from backend if not provided
             if (!providersData) {
                 try {
-                    const response = await fetch(`${config.apiBase}/ai/providers/status`, {
+                    const response = await fetch(`${window.rbckConfig.apiBase}/ai/providers/status`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
@@ -7323,7 +7343,7 @@
                     // Fetch metrics data first
                     let metricsData = null;
                     try {
-                        const metricsResponse = await fetch(`${config.apiBase}/ai/metrics`, {
+                        const metricsResponse = await fetch(`${window.rbckConfig.apiBase}/ai/metrics`, {
                             method: 'GET',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -7489,7 +7509,7 @@
             
             try {
                 // Send message to backend AI endpoint
-                const response = await fetch(`${config.apiBase}/ai/chat`, {
+                const response = await fetch(`${window.rbckConfig.apiBase}/ai/chat`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -7628,7 +7648,7 @@
             
             try {
                 // Get provider status from backend
-                const response = await fetch(`${config.apiBase}/ai/providers/status`, {
+                const response = await fetch(`${window.rbckConfig.apiBase}/ai/providers/status`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -8268,41 +8288,71 @@
             };
         }
     </script>
-    <!-- Luxury Sidebar Interactive Behavior -->
-    <script src="js/luxury-sidebar.js"></script>
-    <!-- AI Integration for Luxury Sidebar -->
-    <script src="js/luxury-sidebar-ai-integration.js"></script>
-    <!-- Dropdown System for Luxury Sidebar -->
-    <script src="js/luxury-sidebar-dropdown.js"></script>
-    <!-- Debug Tools for Luxury Sidebar -->
-    <script src="js/debug-luxury-sidebar.js" async></script>
-    <!-- Demo Tools for Dropdown (remove in production) -->
-    <script src="js/dropdown-demo.js" async></script>
-    <!-- Database Migration System -->
-    <script src="migration.js" defer></script>
-    
-    <script>
-        console.log('🔍 [INDEX] Page loaded, authentication status will be checked by main-production.js');
-        console.log('🔍 [INDEX] Current JWT Token:', localStorage.getItem('jwtToken'));
-        console.log('🔍 [INDEX] Session Status:', sessionStorage.getItem('isLoggedIn'));
-        console.log('🔍 [INDEX] Login Data:', localStorage.getItem('loginData'));
-        
-        // Wait for main-production.js to load and then check auth
-        setTimeout(() => {
-            if (typeof window.checkAuthentication === 'function') {
-                console.log('✅ [INDEX] main-production.js loaded, auth check will run automatically');
-                
-                // ✅ IMMEDIATE DEBUG: Check if user has valid token
-                const token = localStorage.getItem('jwtToken');
-                if (token && token !== 'development-token') {
-                    console.log('✅ [INDEX] Valid token found, authentication should succeed');
-                } else {
-                    console.log('❌ [INDEX] No valid token found, will redirect to login');
+    <!-- ⚡ PERFORMANCE: High-performance module system -->
+    <script type="module">
+        // ⚡ Global configuration for modules
+        window.rbckConfig = {
+            apiBase: (() => {
+                const hostname = window.location.hostname;
+                if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('192.168.')) {
+                    return 'http://localhost:10000/api';
                 }
-            } else {
-                console.error('❌ [INDEX] main-production.js not loaded properly!');
+                return 'https://rbck.onrender.com/api';
+            })(),
+            isDevelopment: window.location.hostname.includes('localhost'),
+            isProduction: !window.location.hostname.includes('localhost'),
+            version: '2025-07-05-performance-optimized'
+        };
+
+        console.log('⚡ [PERFORMANCE] Starting optimized RBCK CMS...');
+        console.log('⚡ [CONFIG] Environment:', window.rbckConfig.isDevelopment ? 'Development' : 'Production');
+        console.log('⚡ [CONFIG] API Base:', window.rbckConfig.apiBase);
+        
+        // ⚡ Load bootstrap module (this will load other modules as needed)
+        import('./core/bootstrap.js').then(() => {
+            console.log('⚡ [PERFORMANCE] Bootstrap initialization complete');
+        }).catch(error => {
+            console.error('❌ [PERFORMANCE] Bootstrap failed:', error);
+            
+            // ⚡ Fallback to loading main-production.js if modules fail
+            console.warn('⚠️ [FALLBACK] Loading main-production.js as fallback...');
+            const script = document.createElement('script');
+            script.src = 'main-production.js';
+            script.onerror = () => {
+                console.error('❌ [FALLBACK] Complete failure - please check network connectivity');
+            };
+            document.head.appendChild(script);
+        });
+        
+        // ⚡ Performance debugging tools
+        window.getPerformanceMetrics = () => {
+            return {
+                navigation: performance.getEntriesByType('navigation')[0],
+                resources: performance.getEntriesByType('resource'),
+                measures: performance.getEntriesByType('measure'),
+                memory: performance.memory ? {
+                    used: `${(performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(1)}MB`,
+                    total: `${(performance.memory.totalJSHeapSize / 1024 / 1024).toFixed(1)}MB`,
+                    limit: `${(performance.memory.jsHeapSizeLimit / 1024 / 1024).toFixed(1)}MB`
+                } : 'Not available'
+            };
+        };
+        
+        // ⚡ Load deferred scripts after critical path
+        setTimeout(() => {
+            // ⚡ Load migration system if needed
+            if (window.rbckConfig.isDevelopment) {
+                import('./migration.js').catch(() => console.warn('Migration script not available'));
             }
-        }, 1000);
+        }, 2000);
+    </script>
+    
+    <!-- ⚡ PERFORMANCE: Fallback for non-module browsers -->
+    <script nomodule>
+        console.warn('⚠️ [COMPATIBILITY] Browser does not support ES modules, loading fallback...');
+        const script = document.createElement('script');
+        script.src = 'main-production.js';
+        document.head.appendChild(script);
     </script>
 </body>
 </html>
