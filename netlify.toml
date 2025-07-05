@@ -10,28 +10,25 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Frame-Options = "DENY"
+    X-Frame-Options = "SAMEORIGIN"
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://rbck.onrender.com https://api.openai.com https://generativelanguage.googleapis.com;"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    # ✅ CSP ที่ทำงานได้กับ JWT
+    Content-Security-Policy = "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data:; img-src 'self' data: https:; connect-src 'self' https: wss:; font-src 'self' https: data:; style-src 'self' 'unsafe-inline' https:;"
 
-# API proxy - Must be FIRST and more specific
+# ✅ API proxy (ลบ conditions ออก)
 [[redirects]]
   from = "/api/*"
   to = "https://rbck.onrender.com/api/:splat"
   status = 200
   force = true
+  # ✅ เก็บ custom header ได้
   headers = {X-From = "Netlify"}
-  conditions = {Role = ["admin"], Country = ["*"]}
+  # ❌ ลบ conditions ออก - ให้ backend จัดการ JWT เอง
 
-# SPA redirects - Less specific, comes after API proxy
-[[redirects]]
-  from = "/blog/*"
-  to = "/blog/post.html"
-  status = 200
-
+# Admin redirects
 [[redirects]]
   from = "/admin/*"
   to = "/admin/index.html"
@@ -40,6 +37,12 @@
 [[redirects]]
   from = "/admin"
   to = "/admin/index.html"
+  status = 200
+
+# Blog redirects
+[[redirects]]
+  from = "/blog/*"
+  to = "/index.html"
   status = 200
 
 # Catch-all redirect - MUST be last
