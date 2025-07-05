@@ -61,10 +61,9 @@ class EnvironmentValidator {
         
         // Production-specific validations
         if (nodeEnv === 'production') {
-            if (!process.env.FRONTEND_URL) {
-                errors.push('FRONTEND_URL is required in production');
-            } else if (!process.env.FRONTEND_URL.startsWith('https://')) {
-                errors.push('FRONTEND_URL must use HTTPS in production');
+            // FRONTEND_URL is optional - can be set for CORS configuration
+            if (process.env.FRONTEND_URL && !process.env.FRONTEND_URL.startsWith('https://')) {
+                errors.push('FRONTEND_URL must use HTTPS in production if provided');
             }
             
             if (jwtSecret && jwtSecret.length < 64) {
