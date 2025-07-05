@@ -240,7 +240,7 @@ setInterval(async () => {
     } catch (e) {
         // Silent fail - just warming
     }
-}, 14 * 60 * 1000); // Every 14 minutes
+}, 25 * 60 * 1000); // Every 25 minutes (reduced frequency to avoid 429 errors)
 
 // ===== AI PROVIDERS DATA =====
 const AI_PROVIDERS = [
@@ -380,6 +380,19 @@ async function apiRequest(endpoint, options = {}) {
         return data;
     } catch (error) {
         console.error(`❌ [API] Error:`, error);
+        
+        // ✅ Specific handling for CORS errors
+        if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+            console.error('🚨 [CORS] CORS policy error detected!');
+            console.error('🔧 [CORS] Please set FRONTEND_URL=https://flourishing-gumdrop-dffe7a.netlify.app in Render');
+            console.error('🔧 [CORS] Then redeploy the backend service');
+        }
+        
+        // ✅ Specific handling for rate limiting
+        if (error.message.includes('429')) {
+            console.error('⚠️ [RATE LIMIT] Too many requests - reducing frequency');
+        }
+        
         throw error;
     }
 }
