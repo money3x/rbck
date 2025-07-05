@@ -84,6 +84,15 @@ window.checkAuthentication = async function() {
     console.log('🔒 [AUTH] Checking JWT authentication...');
     
     const authOverlay = document.getElementById('authCheckOverlay');
+    const authCheckingState = document.getElementById('authCheckingState');
+    const authRequiredState = document.getElementById('authRequiredState');
+    
+    // ✅ Show loading state while checking
+    if (authOverlay) {
+        authOverlay.style.display = 'flex';
+        if (authCheckingState) authCheckingState.style.display = 'block';
+        if (authRequiredState) authRequiredState.style.display = 'none';
+    }
     
     // ✅ Debug: Show all storage values
     console.log('🔍 [AUTH] localStorage.jwtToken:', localStorage.getItem('jwtToken'));
@@ -94,16 +103,21 @@ window.checkAuthentication = async function() {
     // ✅ Get JWT token from localStorage (matching login.html)
     const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
     
-    if (!token || token === 'development-token') {
-        console.error('❌ [AUTH] No valid auth token found');
+    // ✅ Handle development token separately
+    if (token === 'development-token') {
+        console.log('✅ [AUTH] Development token found - allowing access');
+        if (authOverlay) {
+            authOverlay.style.display = 'none';
+        }
+        return true;
+    }
+    
+    // ✅ Check for missing or invalid token
+    if (!token) {
+        console.error('❌ [AUTH] No auth token found');
         console.log('🔧 [AUTH] Redirecting to login page...');
         
-        // ✅ Show overlay briefly then redirect
-        if (authOverlay) {
-            authOverlay.style.display = 'flex';
-        }
-        
-        // ✅ Immediate redirect - no delay to prevent race condition
+        // ✅ Immediate redirect without showing overlay (prevent double login screen)
         window.location.href = 'login.html';
         
         return false;
