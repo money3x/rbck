@@ -369,9 +369,9 @@ class PerformanceOptimizer {
 // Initialize performance optimizer
 window.performanceOptimizer = new PerformanceOptimizer();
 
-// Export for use in other modules
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = PerformanceOptimizer;
+// ✅ Browser-compatible export
+if (typeof window !== 'undefined') {
+    window.PerformanceOptimizer = PerformanceOptimizer;
 }
 
 console.log('⚡ [PERFORMANCE OPTIMIZER] Performance optimization system activated');

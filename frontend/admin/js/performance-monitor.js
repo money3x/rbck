@@ -451,9 +451,9 @@ window.addEventListener('componentLoaded', (event) => {
     window.performanceMonitor.trackComponentLoad(event.detail.componentPath, loadTime);
 });
 
-// Export for use in other modules
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = PerformanceMonitor;
+// ✅ Browser-compatible export
+if (typeof window !== 'undefined') {
+    window.PerformanceMonitor = PerformanceMonitor;
 }
 
 console.log('✅ [PERFORMANCE MONITOR] Performance monitoring system initialized');

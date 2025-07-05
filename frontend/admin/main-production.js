@@ -30,7 +30,7 @@ if (typeof window !== 'undefined') {
 console.log('🚀 [MAIN] Loading RBCK CMS Admin Panel v2025-07-04-v3-secure...');
 
 // ===== CONFIGURATION =====
-// Smart configuration ที่ตรวจจับ environment อัตโนมัติ
+// ✅ Unified configuration system (browser-compatible)
 const rbckConfig = {
     apiBase: (() => {
         const hostname = window.location.hostname;
@@ -41,23 +41,34 @@ const rbckConfig = {
         console.log('🔍 [CONFIG] Hostname:', hostname);
         console.log('🔍 [CONFIG] Port:', port);
         console.log('🔍 [CONFIG] Protocol:', protocol);
-          // Local development (localhost with any port)
-        if (hostname === 'localhost' || hostname === '127.0.0.1') {
-            console.log('🏠 [CONFIG] Local development detected');
-            return 'http://localhost:10000/api';  // ✅ ใช้ port 10000 ตาม backend
+        
+        // ✅ Standardized environment detection (matching config.js)
+        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('192.168.')) {
+            console.log('🏠 [CONFIG] Development mode detected');
+            return 'http://localhost:10000/api';
         }
         
-        // Check if we're on Netlify (frontend) calling Render (backend)
-        if (hostname.includes('netlify.app') || hostname.includes('rbck')) {
-            console.log('☁️ [CONFIG] Production (Netlify->Render) detected');
-            return 'https://rbck.onrender.com/api';
-        }
-        
-        // Fallback for production
-        console.log('🌐 [CONFIG] Production fallback');
+        // ✅ Production: Always use direct connection (no proxy)
+        console.log('🌐 [CONFIG] Production mode - direct connection to Render');
         return 'https://rbck.onrender.com/api';
     })(),
-    version: '2025-06-19-production-v2'
+    
+    // ✅ Additional browser-compatible config
+    isDevelopment: window.location.hostname.includes('localhost'),
+    isProduction: !window.location.hostname.includes('localhost'),
+    version: '2025-07-05-v1-unified',
+    apiTimeout: 30000,
+    retryAttempts: 3,
+    
+    // ✅ CORS settings for production
+    corsSettings: {
+        mode: 'cors',
+        credentials: 'omit',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    }
 };
 
 console.log('🔧 [CONFIG] API Base:', rbckConfig.apiBase);
@@ -92,10 +103,8 @@ window.checkAuthentication = async function() {
             authOverlay.style.display = 'flex';
         }
         
-        // Redirect to login after showing message
-        setTimeout(() => {
-            window.location.href = 'login.html';
-        }, 2000);
+        // ✅ Immediate redirect - no delay to prevent race condition
+        window.location.href = 'login.html';
         
         return false;
     }
@@ -191,9 +200,19 @@ window.logout = function() {
     }, 1000);
 };
 
-// ✅ Check authentication on page load
-document.addEventListener('DOMContentLoaded', function() {
+// ✅ Check authentication after page is fully loaded (prevent race condition)
+window.addEventListener('load', function() {
+    console.log('🔒 [AUTH] Page fully loaded, starting authentication check...');
     checkAuthentication();
+});
+
+// ✅ Fallback: Also check on DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔒 [AUTH] DOM loaded, scheduling authentication check...');
+    // Delay slightly to ensure all scripts are loaded
+    setTimeout(() => {
+        checkAuthentication();
+    }, 500);
 });
 
 // ⚡ PERFORMANCE: Keep Render backend warm (prevent cold starts)
