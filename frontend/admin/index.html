@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🚀 Gemini 2.0 Flash CMS - ระเบียบการช่าง AI-Powered Content Management</title>
+    
+    <!-- ⚡ PERFORMANCE: Resource preloading -->
+    <link rel="preload" href="main-production.js" as="script">
+    <link rel="preload" href="css/luxury-sidebar.css" as="style">
+    <link rel="dns-prefetch" href="https://rbck.onrender.com">
+    <link rel="preconnect" href="https://rbck.onrender.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="../css/beautiful-gemini-styles.css">
@@ -8255,11 +8261,11 @@
     <!-- Dropdown System for Luxury Sidebar -->
     <script src="js/luxury-sidebar-dropdown.js"></script>
     <!-- Debug Tools for Luxury Sidebar -->
-    <script src="js/debug-luxury-sidebar.js"></script>
+    <script src="js/debug-luxury-sidebar.js" async></script>
     <!-- Demo Tools for Dropdown (remove in production) -->
-    <script src="js/dropdown-demo.js"></script>
+    <script src="js/dropdown-demo.js" async></script>
     <!-- Database Migration System -->
-    <script src="migration.js"></script>
+    <script src="migration.js" defer></script>
     
     <script>
         console.log('🔍 [INDEX] Page loaded, authentication status will be checked by main-production.js');

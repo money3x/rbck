@@ -181,6 +181,19 @@ document.addEventListener('DOMContentLoaded', function() {
     checkAuthentication();
 });
 
+// ⚡ PERFORMANCE: Keep Render backend warm (prevent cold starts)
+setInterval(async () => {
+    try {
+        await fetch(`${rbckConfig.apiBase}/ai/status`, { 
+            method: 'GET',
+            mode: 'no-cors' // Avoid CORS preflight for warming
+        });
+        console.log('🔥 [WARMING] Backend kept warm');
+    } catch (e) {
+        // Silent fail - just warming
+    }
+}, 14 * 60 * 1000); // Every 14 minutes
+
 // ===== AI PROVIDERS DATA =====
 const AI_PROVIDERS = [
     {
