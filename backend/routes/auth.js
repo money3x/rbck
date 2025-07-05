@@ -80,16 +80,20 @@ router.post('/login',
             const token = generateAdminToken(authResult.username, authResult.sessionId, authResult.userId);
             
             logger.info(`✅ Successful admin login: ${authResult.username} from ${clientIp}`);
-              res.json({
+            
+            // ✅ Response format matching login.html expectations
+            res.json({
                 success: true,
                 message: 'Login successful',
-                data: {
-                    token,
+                token: token, // ✅ Direct token field (login.html expects data.token)
+                user: {
+                    id: authResult.userId,
                     username: authResult.username,
-                    sessionId: authResult.sessionId.substring(0, 8) + '...', // Masked session ID
-                    loginTime: new Date().toISOString(),
-                    expiresIn: process.env.JWT_EXPIRATION || '24h'
-                }
+                    isAdmin: true,
+                    loginTime: new Date().toISOString()
+                },
+                sessionId: authResult.sessionId.substring(0, 8) + '...', // Masked session ID
+                expiresIn: process.env.JWT_EXPIRATION || '24h'
             });
             
         } catch (error) {

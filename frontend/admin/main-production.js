@@ -74,11 +74,11 @@ window.checkAuthentication = async function() {
     
     const authOverlay = document.getElementById('authCheckOverlay');
     
-    // ✅ Get token from sessionStorage (safer than localStorage)
-    const token = sessionStorage.getItem('authToken');
+    // ✅ Get JWT token from localStorage (matching login.html)
+    const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
     
-    if (!token) {
-        console.error('❌ [AUTH] No auth token found');
+    if (!token || token === 'development-token') {
+        console.error('❌ [AUTH] No valid auth token found');
         if (authOverlay) {
             authOverlay.style.display = 'flex';
         }
@@ -116,10 +116,13 @@ window.checkAuthentication = async function() {
             }
         }
         
-        // ❌ Authentication failed - clear invalid token
+        // ❌ Authentication failed - clear invalid tokens
         console.error('❌ [AUTH] JWT/ENCRYPTION_KEY verification failed');
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('loginData');
         sessionStorage.removeItem('authToken');
         sessionStorage.removeItem('currentUser');
+        sessionStorage.removeItem('isLoggedIn');
         
         if (authOverlay) {
             authOverlay.style.display = 'flex';
@@ -129,9 +132,12 @@ window.checkAuthentication = async function() {
     } catch (error) {
         console.error('❌ [AUTH] Authentication check error:', error);
         
-        // Clear potentially corrupted token
+        // Clear potentially corrupted tokens
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('loginData');
         sessionStorage.removeItem('authToken');
         sessionStorage.removeItem('currentUser');
+        sessionStorage.removeItem('isLoggedIn');
         
         if (authOverlay) {
             authOverlay.style.display = 'flex';
@@ -150,9 +156,12 @@ window.redirectToLogin = function() {
 window.logout = function() {
     console.log('🚪 [AUTH] Logging out...');
     
-    // ✅ Clear sessionStorage (safer than localStorage)
+    // ✅ Clear both localStorage and sessionStorage (matching login.html)
+    localStorage.removeItem('jwtToken');
+    localStorage.removeItem('loginData');
     sessionStorage.removeItem('authToken');
     sessionStorage.removeItem('currentUser');
+    sessionStorage.removeItem('isLoggedIn');
     
     // Reset global variables
     authToken = null;
@@ -2644,9 +2653,35 @@ document.addEventListener('DOMContentLoaded', function() {
     startSecurityAutoRefresh();
 });
 
+// ✅ PRODUCTION FIX: Add missing functions to prevent ReferenceErrors
+window.seoReport = function() { showNotification('SEO Report feature coming soon', 'info'); };
+window.analyzeBacklinks = function() { showNotification('Backlink analysis coming soon', 'info'); };
+window.generateBacklinks = function() { showNotification('Backlink generation coming soon', 'info'); };
+window.generateSchema = function() { showNotification('Schema generation coming soon', 'info'); };
+window.autoGenerateSchema = function() { showNotification('Auto schema generation coming soon', 'info'); };
+window.checkPerformance = function() { showNotification('Performance check coming soon', 'info'); };
+window.generateSitemap = function() { showNotification('Sitemap generation coming soon', 'info'); };
+window.viewSitemap = function() { showNotification('Sitemap viewer coming soon', 'info'); };
+window.initAIMonitoring = function() { showNotification('AI monitoring coming soon', 'info'); };
+window.loadBlogPosts = window.loadPosts; // Alias for loadPosts
+window.editPost = function(id) { showNotification('Edit post feature coming soon', 'info'); };
+window.deletePost = function(id) { showNotification('Delete post feature coming soon', 'info'); };
+
+// ✅ Debug function for token checking
+window.debugAuth = function() {
+    console.log('🔍 [DEBUG] Authentication Debug:');
+    console.log('  localStorage.jwtToken:', localStorage.getItem('jwtToken'));
+    console.log('  localStorage.loginData:', localStorage.getItem('loginData'));
+    console.log('  sessionStorage.authToken:', sessionStorage.getItem('authToken'));
+    console.log('  sessionStorage.isLoggedIn:', sessionStorage.getItem('isLoggedIn'));
+    console.log('  currentUser:', currentUser);
+    console.log('  authToken:', authToken);
+};
+
 console.log('✅ [MAIN] Production-ready RBCK CMS loaded successfully');
 console.log('🧪 [DEBUG] Use window.testAIModalTabs() to test tab switching');
 console.log('🔍 [DEBUG] Use window.verifyTabContent() to check tab content visibility');
+console.log('🔑 [DEBUG] Use window.debugAuth() to check authentication status');
 
 // ✅ Debug function for testing API connections
 window.testSecurityAPI = async function() {

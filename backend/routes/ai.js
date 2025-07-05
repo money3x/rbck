@@ -16,6 +16,44 @@ const eatSwarmCouncil = new EATOptimizedSwarmCouncil();
 // ✅ REMOVED: AI_PROVIDERS object that exposed API keys
 // Now using SecureConfigService.getProviderConfig() instead
 
+/**
+ * ✅ PRODUCTION FIX: GET /api/ai/status  
+ * General AI system status (missing endpoint)
+ */
+router.get('/status', async (req, res) => {
+    try {
+        const providers = ['gemini', 'openai', 'claude', 'deepseek', 'chinda'];
+        const status = {
+            system: 'operational',
+            timestamp: new Date().toISOString(),
+            providers: {}
+        };
+        
+        // Quick status check for each provider
+        for (const provider of providers) {
+            const config = SecureConfigService.getProviderConfig(provider);
+            status.providers[provider] = {
+                enabled: config && config.enabled,
+                configured: !!SecureConfigService.getApiKey(provider),
+                status: 'ready'
+            };
+        }
+        
+        res.json({
+            success: true,
+            data: status
+        });
+        
+    } catch (error) {
+        console.error('AI status check error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get AI status',
+            code: 'STATUS_ERROR'
+        });
+    }
+});
+
 // Cost tracking storage (in production, use database)
 let costTracking = {
     totalCost: 0,

@@ -38,13 +38,13 @@ const analyzeIPBehavior = (ip, endpoint) => {
     
     // Check for sustained high volume
     const duration = now - data.firstSeen;
-    if (duration < 60000 && data.requests > 50) { // 50+ requests in 1 minute
+    if (duration < 60000 && data.requests > 200) { // 200+ requests in 1 minute (more lenient)
         data.violations++;
         data.patterns.push('high_volume');
     }
     
-    // Block if too many violations
-    if (data.violations >= 3) {
+    // ✅ PRODUCTION FIX: Less aggressive blocking
+    if (data.violations >= 10) { // Increased threshold
         blockedIPs.add(ip);
         console.warn(`🔒 [SECURITY] IP ${ip} blocked due to suspicious behavior:`, data.patterns);
         return true;
