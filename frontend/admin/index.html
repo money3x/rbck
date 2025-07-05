@@ -8263,5 +8263,23 @@
     <script src="js/dropdown-demo.js"></script>
     <!-- Database Migration System -->
     <script src="migration.js"></script>
+    
+    <!-- ✅ CRITICAL: Main Production Script with Authentication -->
+    <script src="main-production.js"></script>
+    
+    <script>
+        console.log('🔍 [INDEX] Page loaded, authentication status will be checked by main-production.js');
+        console.log('🔍 [INDEX] Current JWT Token:', localStorage.getItem('jwtToken'));
+        console.log('🔍 [INDEX] Session Status:', sessionStorage.getItem('isLoggedIn'));
+        
+        // Wait for main-production.js to load and then check auth
+        setTimeout(() => {
+            if (typeof window.checkAuthentication === 'function') {
+                console.log('✅ [INDEX] main-production.js loaded, auth check will run automatically');
+            } else {
+                console.error('❌ [INDEX] main-production.js not loaded properly!');
+            }
+        }, 1000);
+    </script>
 </body>
 </html>
