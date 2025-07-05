@@ -3,7 +3,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { generateAdminToken, validateAdminCredentials, getActiveSessions, invalidateSession } = require('../middleware/auth');
+const { generateAdminToken, validateAdminCredentials, getActiveSessions, invalidateSession, authenticateAdmin } = require('../middleware/auth');
 const { loginRateLimit } = require('../middleware/rateLimiter');
 const { logger } = require('../middleware/errorHandler');
 
@@ -266,5 +266,135 @@ router.post('/logout',
         }
     }
 );
+
+/**
+ * ✅ PRODUCTION: GET /api/auth/verify-session  
+ * Verify JWT token with ENCRYPTION_KEY validation
+ */
+router.get('/verify-session', (req, res) => {
+    try {
+        // Get token from Authorization header
+        const authHeader = req.headers.authorization;
+        const token = authHeader && authHeader.split(' ')[1];
+        
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                authenticated: false,
+                error: 'No authentication token provided',
+                code: 'NO_TOKEN'
+            });
+        }
+        
+        // Verify JWT token
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        // ✅ Check ENCRYPTION_KEY if provided
+        if (process.env.ENCRYPTION_KEY && decoded.encryptionKey !== process.env.ENCRYPTION_KEY) {
+            logger.warn('Authentication failed: Invalid ENCRYPTION_KEY');
+            return res.status(401).json({
+                success: false,
+                authenticated: false,
+                error: 'Invalid encryption key',
+                code: 'INVALID_ENCRYPTION_KEY'
+            });
+        }
+        
+        // ✅ Verify admin privileges
+        if (!decoded.isAdmin) {
+            return res.status(403).json({
+                success: false,
+                authenticated: false,
+                error: 'Admin privileges required',
+                code: 'INSUFFICIENT_PRIVILEGES'
+            });
+        }
+        
+        logger.info(`✅ Session verified for user: ${decoded.username}`);
+        
+        res.json({
+            success: true,
+            authenticated: true,
+            user: {
+                id: decoded.id,
+                username: decoded.username,
+                isAdmin: decoded.isAdmin,
+                loginTime: decoded.loginTime,
+                encryptionVerified: true
+            },
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+            logger.warn('Authentication failed: Token expired');
+            return res.status(401).json({
+                success: false,
+                authenticated: false,
+                error: 'Authentication token has expired',
+                code: 'TOKEN_EXPIRED'
+            });
+        }
+        
+        if (error.name === 'JsonWebTokenError') {
+            logger.warn('Authentication failed: Invalid token');
+            return res.status(401).json({
+                success: false,
+                authenticated: false,
+                error: 'Invalid authentication token',
+                code: 'INVALID_TOKEN'
+            });
+        }
+        
+        logger.error('Session verification error:', error);
+        res.status(401).json({
+            success: false,
+            authenticated: false,
+            error: 'Session verification failed',
+            code: 'SESSION_INVALID'
+        });
+    }
+});
+
+/**
+ * ✅ PRODUCTION: POST /api/auth/logout
+ * Server-side logout with session destruction
+ */
+router.post('/logout', (req, res) => {
+    try {
+        // Clear HTTP-only cookie if using cookies
+        res.clearCookie('authToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
+        });
+        
+        // Clear session if using session store
+        if (req.session) {
+            req.session.destroy((err) => {
+                if (err) {
+                    logger.error('Session destruction error:', err);
+                }
+            });
+        }
+        
+        logger.info('User logged out successfully');
+        
+        res.json({
+            success: true,
+            message: 'Logged out successfully',
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        logger.error('Logout error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to logout',
+            code: 'SERVER_ERROR'
+        });
+    }
+});
 
 module.exports = router;

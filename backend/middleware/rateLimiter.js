@@ -59,6 +59,20 @@ const analyzeIPBehavior = (ip, endpoint) => {
 const blockSuspiciousIPs = (req, res, next) => {
     const ip = req.ip || req.connection.remoteAddress;
     
+    // ✅ Development IP whitelist - bypass blocking for these IPs
+    const developmentWhitelist = [
+        '127.0.0.1',
+        'localhost',
+        '::1',
+        '::ffff:127.0.0.1'
+    ];
+    
+    // Skip blocking for development IPs
+    if (process.env.NODE_ENV !== 'production' && 
+        (developmentWhitelist.includes(ip) || ip.startsWith('192.168.') || ip.startsWith('10.0.'))) {
+        return next();
+    }
+    
     if (blockedIPs.has(ip)) {
         console.warn(`🚫 [SECURITY] Blocked IP ${ip} attempted access to ${req.path}`);
         return res.status(429).json({
@@ -363,5 +377,8 @@ module.exports = {
     aiEndpointRateLimit,
     migrationRateLimit,
     getRateLimitStats,
-    analyzeIPBehavior
+    analyzeIPBehavior,
+    // ✅ Export blocked IPs for manual management
+    blockedIPs,
+    suspiciousIPs
 };

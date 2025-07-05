@@ -122,7 +122,12 @@ router.post('/unblock-ip', authenticateAdmin, requireAdmin, async (req, res) => 
             });
         }
 
-        // TODO: Implement IP unblocking logic
+        // ✅ Implement IP unblocking logic
+        const { blockedIPs } = require('../middleware/rateLimiter');
+        if (blockedIPs && blockedIPs.has(ip)) {
+            blockedIPs.delete(ip);
+        }
+        
         SecurityLogger.logData('IP_UNBLOCKED', {
             unblockedIP: ip,
             adminUser: req.user.username,
@@ -234,26 +239,67 @@ async function getAuthenticationLogs(page = 1, limit = 50) {
  */
 async function getBlockedIPs() {
     try {
-        // TODO: Implement actual blocked IPs retrieval from rate limiter
-        return [
-            {
-                ip: '192.168.1.100',
-                reason: 'Multiple failed login attempts',
-                blockedAt: new Date(Date.now() - 3600000).toISOString(),
-                attempts: 15,
-                lastAttempt: new Date(Date.now() - 1800000).toISOString()
-            },
-            {
-                ip: '10.0.0.50',
-                reason: 'Suspicious activity detected',
-                blockedAt: new Date(Date.now() - 7200000).toISOString(),
-                attempts: 8,
-                lastAttempt: new Date(Date.now() - 3600000).toISOString()
+        // ✅ Get real blocked IPs from rate limiter
+        const { blockedIPs, suspiciousIPs } = require('../middleware/rateLimiter');
+        const result = [];
+        
+        // Add actually blocked IPs
+        if (blockedIPs && blockedIPs.size > 0) {
+            for (const ip of blockedIPs) {
+                result.push({
+                    ip: ip,
+                    reason: 'Suspicious activity detected',
+                    blockedAt: new Date().toISOString(),
+                    attempts: 'Unknown',
+                    lastAttempt: new Date().toISOString(),
+                    status: 'blocked'
+                });
             }
-        ];
+        }
+        
+        // Add suspicious IPs that are being monitored
+        if (suspiciousIPs && suspiciousIPs.size > 0) {
+            for (const [ip, data] of suspiciousIPs) {
+                if (!blockedIPs.has(ip)) { // Don't duplicate blocked IPs
+                    result.push({
+                        ip: ip,
+                        reason: `Suspicious patterns: ${data.patterns.join(', ')}`,
+                        blockedAt: 'Monitoring',
+                        attempts: data.requests || 0,
+                        lastAttempt: new Date(data.lastSeen).toISOString(),
+                        status: 'monitoring'
+                    });
+                }
+            }
+        }
+        
+        // If no real data, show sample data for demo
+        if (result.length === 0) {
+            return [
+                {
+                    ip: 'No blocked IPs',
+                    reason: 'System is secure - no IPs currently blocked',
+                    blockedAt: 'N/A',
+                    attempts: 0,
+                    lastAttempt: 'N/A',
+                    status: 'clean'
+                }
+            ];
+        }
+        
+        return result;
     } catch (error) {
         console.error('Error getting blocked IPs:', error);
-        return [];
+        return [
+            {
+                ip: 'Error',
+                reason: 'Failed to load blocked IPs data',
+                blockedAt: new Date().toISOString(),
+                attempts: 'N/A',
+                lastAttempt: 'N/A',
+                status: 'error'
+            }
+        ];
     }
 }
 

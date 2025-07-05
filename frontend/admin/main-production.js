@@ -64,9 +64,113 @@ console.log('🔧 [CONFIG] API Base:', config.apiBase);
 
 // ===== GLOBAL VARIABLES =====
 let currentUser = null;
-let authToken = localStorage.getItem('authToken');
+let authToken = null; // ✅ No localStorage - server manages sessions
 let aiSwarmCouncil = null;
 let isAppInitialized = false;
+
+// ✅ PRODUCTION: JWT + ENCRYPTION_KEY Authentication Check
+window.checkAuthentication = async function() {
+    console.log('🔒 [AUTH] Checking JWT authentication...');
+    
+    const authOverlay = document.getElementById('authCheckOverlay');
+    
+    // ✅ Get token from sessionStorage (safer than localStorage)
+    const token = sessionStorage.getItem('authToken');
+    
+    if (!token) {
+        console.error('❌ [AUTH] No auth token found');
+        if (authOverlay) {
+            authOverlay.style.display = 'flex';
+        }
+        return false;
+    }
+    
+    try {
+        // ✅ Call backend to verify JWT + ENCRYPTION_KEY
+        const response = await fetch(`${config.apiBase}/auth/verify-session`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        console.log('📡 [AUTH] Server response status:', response.status);
+        
+        if (response.status === 200) {
+            const result = await response.json();
+            
+            if (result.success && result.user && result.user.encryptionVerified) {
+                // ✅ Authentication valid with ENCRYPTION_KEY verified
+                currentUser = result.user;
+                authToken = token;
+                
+                console.log('✅ [AUTH] JWT + ENCRYPTION_KEY verified:', result.user.username);
+                
+                // Hide auth overlay and show main content
+                if (authOverlay) {
+                    authOverlay.style.display = 'none';
+                }
+                
+                return true;
+            }
+        }
+        
+        // ❌ Authentication failed - clear invalid token
+        console.error('❌ [AUTH] JWT/ENCRYPTION_KEY verification failed');
+        sessionStorage.removeItem('authToken');
+        sessionStorage.removeItem('currentUser');
+        
+        if (authOverlay) {
+            authOverlay.style.display = 'flex';
+        }
+        return false;
+        
+    } catch (error) {
+        console.error('❌ [AUTH] Authentication check error:', error);
+        
+        // Clear potentially corrupted token
+        sessionStorage.removeItem('authToken');
+        sessionStorage.removeItem('currentUser');
+        
+        if (authOverlay) {
+            authOverlay.style.display = 'flex';
+        }
+        return false;
+    }
+};
+
+// ✅ Redirect to login page
+window.redirectToLogin = function() {
+    console.log('🔑 [AUTH] Redirecting to login...');
+    window.location.href = '/admin/login.html';
+};
+
+// ✅ PRODUCTION: JWT Logout (clear sessionStorage)
+window.logout = function() {
+    console.log('🚪 [AUTH] Logging out...');
+    
+    // ✅ Clear sessionStorage (safer than localStorage)
+    sessionStorage.removeItem('authToken');
+    sessionStorage.removeItem('currentUser');
+    
+    // Reset global variables
+    authToken = null;
+    currentUser = null;
+    
+    // Show notification
+    showNotification('ออกจากระบบสำเร็จ', 'success');
+    
+    // Redirect to login
+    setTimeout(() => {
+        window.location.href = '/admin/login.html';
+    }, 1000);
+};
+
+// ✅ Check authentication on page load
+document.addEventListener('DOMContentLoaded', function() {
+    checkAuthentication();
+});
 
 // ===== AI PROVIDERS DATA =====
 const AI_PROVIDERS = [
@@ -2350,7 +2454,16 @@ function populateAuthLogs(logs) {
 window.loadBlockedIPs = async function() {
     console.log('🚫 [BLOCKED] Loading blocked IPs...');
     
+    // Check if user is authenticated
+    if (!authToken) {
+        console.error('❌ [BLOCKED] No auth token available');
+        showNotification('กรุณาเข้าสู่ระบบก่อนดูข้อมูล', 'error');
+        return;
+    }
+    
     try {
+        console.log('🔗 [BLOCKED] Fetching from:', `${config.apiBase}/security/blocked-ips`);
+        
         const response = await fetch(`${config.apiBase}/security/blocked-ips`, {
             method: 'GET',
             headers: {
@@ -2359,22 +2472,41 @@ window.loadBlockedIPs = async function() {
             }
         });
 
+        console.log('📡 [BLOCKED] Response status:', response.status);
+        
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            const errorText = await response.text();
+            console.error('❌ [BLOCKED] Response error:', errorText);
+            throw new Error(`HTTP ${response.status}: ${response.statusText || 'Unknown error'}`);
         }
 
         const result = await response.json();
+        console.log('📋 [BLOCKED] Response data:', result);
         
         if (result.success) {
             populateBlockedIPs(result.data);
-            showNotification('Blocked IPs loaded successfully', 'success');
+            showNotification('โหลดรายการ IP ที่ถูกบล็อกสำเร็จ', 'success');
         } else {
             throw new Error(result.error || 'Failed to load blocked IPs');
         }
 
     } catch (error) {
         console.error('❌ [BLOCKED] IPs loading error:', error);
-        showNotification('Failed to load blocked IPs: ' + error.message, 'error');
+        
+        // Show user-friendly error
+        if (error.message.includes('Failed to fetch')) {
+            showNotification('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่อ', 'error');
+        } else if (error.message.includes('401')) {
+            showNotification('การยืนยันตัวตนหมดอายุ กรุณาเข้าสู่ระบบใหม่', 'error');
+        } else {
+            showNotification('เกิดข้อผิดพลาด: ' + error.message, 'error');
+        }
+        
+        // Show empty table with error message
+        const tableBody = document.querySelector('#blocked-ips-table tbody');
+        if (tableBody) {
+            tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #ef4444;">❌ ไม่สามารถโหลดข้อมูลได้</td></tr>';
+        }
     }
 };
 
@@ -2515,3 +2647,41 @@ document.addEventListener('DOMContentLoaded', function() {
 console.log('✅ [MAIN] Production-ready RBCK CMS loaded successfully');
 console.log('🧪 [DEBUG] Use window.testAIModalTabs() to test tab switching');
 console.log('🔍 [DEBUG] Use window.verifyTabContent() to check tab content visibility');
+
+// ✅ Debug function for testing API connections
+window.testSecurityAPI = async function() {
+    console.log('🧪 [TEST] Testing Security API connections...');
+    console.log('🔧 [TEST] Config:', config);
+    console.log('🔑 [TEST] Auth token:', authToken ? 'Present' : 'Missing');
+    
+    const endpoints = [
+        '/security/dashboard',
+        '/security/auth-logs', 
+        '/security/blocked-ips'
+    ];
+    
+    for (const endpoint of endpoints) {
+        try {
+            console.log(`🔗 [TEST] Testing: ${config.apiBase}${endpoint}`);
+            const response = await fetch(`${config.apiBase}${endpoint}`, {
+                method: 'GET',
+                headers: authToken ? {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json'
+                } : {'Content-Type': 'application/json'}
+            });
+            
+            console.log(`📡 [TEST] ${endpoint}: ${response.status} ${response.statusText}`);
+            
+            if (response.status === 200) {
+                const data = await response.json();
+                console.log(`✅ [TEST] ${endpoint}: Success`, data);
+            } else {
+                const error = await response.text();
+                console.error(`❌ [TEST] ${endpoint}: Error`, error);
+            }
+        } catch (error) {
+            console.error(`❌ [TEST] ${endpoint}: Failed`, error.message);
+        }
+    }
+};
