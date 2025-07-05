@@ -74,14 +74,29 @@ window.checkAuthentication = async function() {
     
     const authOverlay = document.getElementById('authCheckOverlay');
     
+    // ✅ Debug: Show all storage values
+    console.log('🔍 [AUTH] localStorage.jwtToken:', localStorage.getItem('jwtToken'));
+    console.log('🔍 [AUTH] sessionStorage.authToken:', sessionStorage.getItem('authToken'));
+    console.log('🔍 [AUTH] sessionStorage.isLoggedIn:', sessionStorage.getItem('isLoggedIn'));
+    console.log('🔍 [AUTH] localStorage.loginData:', localStorage.getItem('loginData'));
+    
     // ✅ Get JWT token from localStorage (matching login.html)
     const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
     
     if (!token || token === 'development-token') {
         console.error('❌ [AUTH] No valid auth token found');
+        console.log('🔧 [AUTH] Redirecting to login page...');
+        
+        // ✅ Show overlay briefly then redirect
         if (authOverlay) {
             authOverlay.style.display = 'flex';
         }
+        
+        // Redirect to login after showing message
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 2000);
+        
         return false;
     }
     
@@ -2699,7 +2714,7 @@ console.log('🔑 [DEBUG] Use window.debugAuth() to check authentication status'
 // ✅ Debug function for testing API connections
 window.testSecurityAPI = async function() {
     console.log('🧪 [TEST] Testing Security API connections...');
-    console.log('🔧 [TEST] Config:', config);
+    console.log('🔧 [TEST] Config:', rbckConfig);
     console.log('🔑 [TEST] Auth token:', authToken ? 'Present' : 'Missing');
     
     const endpoints = [

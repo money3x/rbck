@@ -8271,11 +8271,20 @@
         console.log('🔍 [INDEX] Page loaded, authentication status will be checked by main-production.js');
         console.log('🔍 [INDEX] Current JWT Token:', localStorage.getItem('jwtToken'));
         console.log('🔍 [INDEX] Session Status:', sessionStorage.getItem('isLoggedIn'));
+        console.log('🔍 [INDEX] Login Data:', localStorage.getItem('loginData'));
         
         // Wait for main-production.js to load and then check auth
         setTimeout(() => {
             if (typeof window.checkAuthentication === 'function') {
                 console.log('✅ [INDEX] main-production.js loaded, auth check will run automatically');
+                
+                // ✅ IMMEDIATE DEBUG: Check if user has valid token
+                const token = localStorage.getItem('jwtToken');
+                if (token && token !== 'development-token') {
+                    console.log('✅ [INDEX] Valid token found, authentication should succeed');
+                } else {
+                    console.log('❌ [INDEX] No valid token found, will redirect to login');
+                }
             } else {
                 console.error('❌ [INDEX] main-production.js not loaded properly!');
             }
