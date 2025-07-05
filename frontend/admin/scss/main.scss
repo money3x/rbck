@@ -1,0 +1,89 @@
+// ===== RBCK CMS - Optimized CSS =====
+// Performance-first approach with critical styles
+
+// Critical above-the-fold styles
+.critical-layout {
+  .sidebar { 
+    width: 250px; 
+    position: fixed; 
+    left: 0; 
+    top: 0; 
+    height: 100vh; 
+    background: #fff;
+    border-right: 1px solid #e0e0e0;
+    overflow-y: auto;
+  }
+  
+  .main-content { 
+    margin-left: 250px; 
+    padding: 20px; 
+    min-height: 100vh;
+  }
+  
+  .header { 
+    height: 60px; 
+    background: #fff; 
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+  }
+}
+
+// Performance optimizations
+.loading { 
+  opacity: 0.6; 
+  pointer-events: none; 
+  transition: opacity 0.2s ease;
+}
+
+.skeleton { 
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+// Theme variables
+:root {
+  --primary: #007bff;
+  --success: #28a745;
+  --danger: #dc3545;
+  --warning: #ffc107;
+  --info: #17a2b8;
+  --light: #f8f9fa;
+  --dark: #343a40;
+  --shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+// Responsive optimizations
+@media (min-width: 768px) {
+  .responsive-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+    gap: 20px;
+  }
+}
+
+// AI Modal specific optimizations
+.ai-modal {
+  .modal-content {
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+  }
+  
+  .tab-content {
+    min-height: 400px;
+  }
+  
+  .kpi-card {
+    border-radius: 6px;
+    padding: 16px;
+    background: var(--light);
+    border: 1px solid #e9ecef;
+  }
+}

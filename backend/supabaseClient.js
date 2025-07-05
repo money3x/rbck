@@ -188,8 +188,8 @@ if (process.env.NODE_ENV === 'test') {
 } else if (supabaseUrl && supabaseKey && !supabaseUrl.includes('placeholder')) {
     try {
         console.log('🔄 Initializing Supabase client...');
-        console.log(`📍 URL: ${supabaseUrl}`);
-        console.log(`🔑 Key: ${supabaseKey.substring(0, 20)}...`);
+        console.log('📍 URL: [Configured]');
+        console.log('🔑 Supabase key configured successfully');
 
         supabase = createClient(supabaseUrl, supabaseKey, {
             auth: {
@@ -274,17 +274,29 @@ async function testSupabaseConnection() {
 }
 
 
+// Import models
+const { User } = require('./models/User');
+const { Post } = require('./models/Post');
+
 // Database helper functions
 const db = {
     // User operations
     users: {
         async findById(id) {
-            const { data, error } = await supabase
-                .from(User.tableName)
-                .select(User.fields.join(','))
-                .eq('id', id)
-                .single();
-            return { data, error };
+            if (!id) {
+                return { data: null, error: { message: 'User ID is required' } };
+            }
+            
+            try {
+                const { data, error } = await supabase
+                    .from(User.tableName)
+                    .select(User.fields.join(','))
+                    .eq('id', id)
+                    .single();
+                return { data, error };
+            } catch (err) {
+                return { data: null, error: { message: err.message } };
+            }
         },
         
         async findByUsername(username) {

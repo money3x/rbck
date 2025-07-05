@@ -1,10 +1,75 @@
 const { body, param, query, validationResult } = require('express-validator');
 const { logger } = require('./errorHandler');
+const { SecurityLogger, SecurityEvents } = require('./securityLogger');
+
+// ✅ PHASE 3: Enhanced security validators
 
 // Custom validator for Thai text
 const isThaiText = (value) => {
   const thaiRegex = /^[\u0E00-\u0E7F\s\d\w.,!?()[\]{}""''´`~@#$%^&*+=<>|\\:;/-]*$/;
   return thaiRegex.test(value);
+};
+
+// ✅ NEW: Advanced security validators
+const securityValidators = {
+  // Check for SQL injection patterns
+  isSqlSafe: (value) => {
+    if (typeof value !== 'string') return true;
+    const sqlPatterns = [
+      /(\b(union|select|insert|delete|drop|alter|create|exec|execute)\b)/i,
+      /(--|\/\*|\*\/|;|'|")/,
+      /(\bor\b\s+\d+\s*=\s*\d+|\band\b\s+\d+\s*=\s*\d+)/i
+    ];
+    return !sqlPatterns.some(pattern => pattern.test(value));
+  },
+
+  // Check for XSS patterns
+  isXssSafe: (value) => {
+    if (typeof value !== 'string') return true;
+    const xssPatterns = [
+      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+      /javascript:/i,
+      /vbscript:/i,
+      /on\w+\s*=/i,
+      /<iframe/i,
+      /<object/i,
+      /<embed/i
+    ];
+    return !xssPatterns.some(pattern => pattern.test(value));
+  },
+
+  // Check for path traversal
+  isPathSafe: (value) => {
+    if (typeof value !== 'string') return true;
+    const pathPatterns = [
+      /\.\./,
+      /\/\//,
+      /\\\\/, 
+      /%2e%2e/i,
+      /%252e%252e/i
+    ];
+    return !pathPatterns.some(pattern => pattern.test(value));
+  },
+
+  // Check for command injection
+  isCommandSafe: (value) => {
+    if (typeof value !== 'string') return true;
+    const commandPatterns = [
+      /[;&|`$(){}]/,
+      /\b(cat|ls|ps|kill|rm|mv|cp|chmod|chown|su|sudo)\b/i
+    ];
+    return !commandPatterns.some(pattern => pattern.test(value));
+  },
+
+  // Check for suspicious file extensions
+  isSafeFileExtension: (value) => {
+    if (typeof value !== 'string') return true;
+    const dangerousExtensions = [
+      /\.(exe|bat|cmd|com|pif|scr|vbs|js|jar|app|deb|pkg|dmg)$/i,
+      /\.(php|asp|jsp|cgi|pl|py|rb|sh|bash)$/i
+    ];
+    return !dangerousExtensions.some(pattern => pattern.test(value));
+  }
 };
 
 // Validation rules for different endpoints
@@ -226,7 +291,7 @@ const validationRules = {
   ]
 };
 
-// Validation result handler middleware
+// ✅ PHASE 3: Enhanced validation result handler with security logging
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   
@@ -237,19 +302,38 @@ const handleValidationErrors = (req, res, next) => {
       value: error.value
     }));
 
+    // ✅ Check for potential security violations
+    const securityViolations = formattedErrors.filter(error => 
+      error.message.includes('SQL') || 
+      error.message.includes('XSS') || 
+      error.message.includes('injection') ||
+      error.message.includes('path traversal')
+    );
+
+    if (securityViolations.length > 0) {
+      SecurityLogger.logIncident('medium', 'Security validation failure detected', {
+        ip: req.ip,
+        endpoint: req.originalUrl,
+        method: req.method,
+        violations: securityViolations,
+        userAgent: req.get('User-Agent'),
+        userId: req.user?.id
+      });
+    }
+
     logger.warn('Validation failed', {
       url: req.originalUrl,
       method: req.method,
       errors: formattedErrors,
-      body: req.body,
-      ip: req.ip
+      ip: req.ip,
+      securityViolations: securityViolations.length
     });
 
     return res.status(400).json({
       success: false,
       error: {
         message: 'Validation failed',
-        details: formattedErrors,
+        details: process.env.NODE_ENV === 'development' ? formattedErrors : 'Invalid input provided',
         timestamp: new Date().toISOString(),
         requestId: req.requestId
       }
@@ -259,11 +343,29 @@ const handleValidationErrors = (req, res, next) => {
   next();
 };
 
-// Sanitization middleware
+// ✅ PHASE 3: Enhanced sanitization middleware with security detection
 const sanitizeInput = (req, res, next) => {
-  // Remove any potentially dangerous HTML tags from string fields
-  const sanitizeString = (str) => {
+  let suspiciousContent = [];
+  
+  // ✅ Enhanced sanitization with threat detection
+  const sanitizeString = (str, fieldName = 'unknown') => {
     if (typeof str !== 'string') return str;
+    
+    const originalStr = str;
+    
+    // Check for security threats before sanitizing
+    if (!securityValidators.isSqlSafe(str)) {
+      suspiciousContent.push({ field: fieldName, threat: 'SQL_INJECTION', content: str.substring(0, 100) });
+    }
+    if (!securityValidators.isXssSafe(str)) {
+      suspiciousContent.push({ field: fieldName, threat: 'XSS_ATTEMPT', content: str.substring(0, 100) });
+    }
+    if (!securityValidators.isPathSafe(str)) {
+      suspiciousContent.push({ field: fieldName, threat: 'PATH_TRAVERSAL', content: str.substring(0, 100) });
+    }
+    if (!securityValidators.isCommandSafe(str)) {
+      suspiciousContent.push({ field: fieldName, threat: 'COMMAND_INJECTION', content: str.substring(0, 100) });
+    }
     
     // Remove script tags and their content
     str = str.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
@@ -271,34 +373,58 @@ const sanitizeInput = (req, res, next) => {
     // Remove dangerous attributes
     str = str.replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, '');
     str = str.replace(/\s*javascript\s*:/gi, '');
+    str = str.replace(/\s*vbscript\s*:/gi, '');
+    
+    // Remove potentially dangerous HTML elements
+    str = str.replace(/<(iframe|object|embed|applet|link|meta|base)[^>]*>/gi, '');
+    
+    // Remove SQL injection patterns
+    str = str.replace(/(union|select|insert|delete|drop|alter|create|exec|execute)(\s+)/gi, '');
+    
+    // Remove path traversal patterns
+    str = str.replace(/\.\.\//g, '');
+    str = str.replace(/\.\.\\/g, '');
     
     return str.trim();
   };
 
-  // Recursively sanitize object
-  const sanitizeObject = (obj) => {
+  // ✅ Recursively sanitize object with field tracking
+  const sanitizeObject = (obj, parentKey = '') => {
     if (Array.isArray(obj)) {
-      return obj.map(sanitizeObject);
+      return obj.map((item, index) => sanitizeObject(item, `${parentKey}[${index}]`));
     } else if (obj && typeof obj === 'object') {
       const sanitized = {};
       for (const [key, value] of Object.entries(obj)) {
-        sanitized[key] = sanitizeObject(value);
+        const fieldPath = parentKey ? `${parentKey}.${key}` : key;
+        sanitized[key] = sanitizeObject(value, fieldPath);
       }
       return sanitized;
     } else if (typeof obj === 'string') {
-      return sanitizeString(obj);
+      return sanitizeString(obj, parentKey);
     }
     return obj;
   };
 
   // Sanitize request body
   if (req.body) {
-    req.body = sanitizeObject(req.body);
+    req.body = sanitizeObject(req.body, 'body');
   }
 
   // Sanitize query parameters
   if (req.query) {
-    req.query = sanitizeObject(req.query);
+    req.query = sanitizeObject(req.query, 'query');
+  }
+
+  // ✅ Log suspicious content if found
+  if (suspiciousContent.length > 0) {
+    SecurityLogger.logIncident('high', 'Malicious input detected and sanitized', {
+      ip: req.ip,
+      endpoint: req.originalUrl,
+      method: req.method,
+      threats: suspiciousContent,
+      userAgent: req.get('User-Agent'),
+      userId: req.user?.id
+    });
   }
 
   next();
@@ -309,6 +435,7 @@ module.exports = {
   handleValidationErrors,
   sanitizeInput,
   isThaiText,
+  securityValidators, // ✅ PHASE 3: Export security validators
   validatePost: [
     validationRules.createPost,
     handleValidationErrors

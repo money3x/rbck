@@ -1,5 +1,13 @@
 require('dotenv').config(); // Load environment variables
 
+// ✅ SECURITY FIX: Early environment validation
+const EnvironmentValidator = require('./utils/envValidator');
+console.log('🔍 Pre-startup environment validation...');
+if (!EnvironmentValidator.quickCheck()) {
+    console.error('🚨 Cannot start server: Environment validation failed');
+    process.exit(1);
+}
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -19,13 +27,14 @@ const authRoutes = require('./routes/auth.js');
 const aiRoutes = require('./routes/ai.js');
 const migrationRoutes = require('./routes/migration.js');
 const securityRoutes = require('./routes/security.js');
+const performanceRoutes = require('./routes/performance.js');
 const supabase = require('./supabaseClient');
 
 // Import secure API key manager
 const apiKeyManager = require('./models/apiKeys');
 
-// Import middleware
-const { generalRateLimit } = require('./middleware/rateLimiter');
+// Import middleware  
+const { generalRateLimit, blockSuspiciousIPs, aiEndpointRateLimit, migrationRateLimit } = require('./middleware/rateLimiter');
 const { logger, errorHandler, requestLogger, handleNotFound } = require('./middleware/errorHandler');
 const { 
   cacheMiddleware, 
@@ -38,6 +47,8 @@ const {
 const { metricsMiddleware, healthCheck, getMetrics } = require('./middleware/metrics');
 const { validatePost, validateAuth, sanitizeInput } = require('./middleware/validation');
 const { authenticateAdmin } = require('./middleware/auth');
+const { requestMonitoring, trackError } = require('./middleware/monitoring');
+const { securityAuditMiddleware, SecurityLogger } = require('./middleware/securityLogger');
 
 // Import Swagger config
 const { setupSwagger } = require('./config/swagger');
@@ -55,7 +66,7 @@ logger.info('🚀 Starting RBCK CMS Server...', {
 // Initialize cache monitoring
 initializeCacheMonitoring();
 
-// Enhanced security middleware with production-grade settings
+// ✅ PHASE 3: Enhanced security middleware with production-grade settings
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -64,14 +75,19 @@ app.use(helmet({
       fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
       scriptSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:", "blob:"],
-      connectSrc: ["'self'", "https://api.openai.com", "https://api.anthropic.com", "https://generativelanguage.googleapis.com"],
+      connectSrc: ["'self'", "https://api.openai.com", "https://api.anthropic.com", "https://generativelanguage.googleapis.com", "https://api.deepseek.com", "https://api.chindax.com"],
       frameSrc: ["'none'"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
       formAction: ["'self'"],
       frameAncestors: ["'none'"],
-      upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null
+      upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
+      // ✅ NEW: Additional security directives
+      mediaSrc: ["'self'"],
+      manifestSrc: ["'self'"],
+      workerSrc: ["'self'"]
     },
+    reportOnly: process.env.NODE_ENV === 'development' // Report-only in development
   },
   crossOriginEmbedderPolicy: false, // Allow embedding for development
   hsts: {
@@ -82,14 +98,51 @@ app.use(helmet({
   noSniff: true,
   frameguard: { action: 'deny' },
   xssFilter: true,
-  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  // ✅ NEW: Additional security headers
+  permittedCrossDomainPolicies: false,
+  dnsPrefetchControl: { allow: false },
+  crossOriginOpenerPolicy: { policy: 'same-origin' },
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  originAgentCluster: true
 }));
 
-// Request logging and metrics
-app.use(requestLogger);
-app.use(metricsMiddleware);
+// ✅ PHASE 3: Additional custom security headers
+app.use((req, res, next) => {
+  // Prevent MIME type sniffing
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  
+  // Prevent clickjacking
+  res.setHeader('X-Frame-Options', 'DENY');
+  
+  // XSS protection
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  
+  // Referrer policy
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  
+  // Feature policy (Permissions Policy)
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=(), payment=(), usb=(), bluetooth=(), accelerometer=(), gyroscope=(), magnetometer=()');
+  
+  // Cache control for sensitive endpoints
+  if (req.path.includes('/admin') || req.path.includes('/auth')) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+  }
+  
+  next();
+});
 
-// Rate limiting
+// ✅ PHASE 3: Enhanced logging and monitoring
+app.use(requestLogger);
+app.use(securityAuditMiddleware);  // Security audit logging
+app.use(metricsMiddleware);
+app.use(requestMonitoring());
+
+// ✅ PHASE 3: Enhanced rate limiting with suspicious IP blocking
+app.use(blockSuspiciousIPs);
 app.use(generalRateLimit);
 
 // CORS configuration for Netlify frontend
@@ -103,8 +156,9 @@ app.use(cors({
       return callback(null, true);
     }
     
-    // Allow any Netlify app domain for development
-    if (origin.includes('.netlify.app')) {
+    // ✅ SECURITY FIX: Only allow specific Netlify domains, not all .netlify.app
+    if (process.env.NODE_ENV === 'development' && origin.includes('.netlify.app')) {
+      console.warn('⚠️ Development: Allowing Netlify domain:', origin);
       return callback(null, true);
     }
     
@@ -115,7 +169,10 @@ app.use(cors({
   credentials: false, // Set to false for better CORS compatibility
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-From'],
-  exposedHeaders: ['X-Cache', 'X-Cache-Key']
+  exposedHeaders: ['X-Cache', 'X-Cache-Key'],
+  maxAge: 86400, // Cache preflight response for 24 hours
+  preflightContinue: false,
+  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
 }));
 
 // Body parsing with validation
@@ -132,6 +189,10 @@ setupSwagger(app);
 app.get('/health', healthCheck);
 app.get('/api/health', healthCheck);
 app.get('/api/metrics', getMetrics);
+
+// Advanced monitoring routes
+const monitoringRoutes = require('./routes/monitoring');
+app.use('/api/monitoring', monitoringRoutes);
 app.get('/api/cache/stats', (req, res) => {
   try {
     const stats = getCacheStats();
@@ -173,29 +234,12 @@ app.delete('/api/cache/clear', (req, res) => {
 
 // API Routes with enhanced middleware
 app.use('/api/auth', validateAuth, authRoutes); // Authentication routes
-app.use('/api/security', securityRoutes);       // Security monitoring routes (admin only)
-app.use('/api/ai', aiRoutes);                   // AI provider routes  
-app.use('/api/migration', authenticateAdmin, migrationRoutes); // Database migration routes (admin only)
+app.use('/api/security', authenticateAdmin, securityRoutes);       // ✅ Security Dashboard routes (admin only)
+app.use('/api/ai', aiEndpointRateLimit, aiRoutes);                   // ✅ PHASE 3: AI provider routes with rate limiting
+app.use('/api/migration', authenticateAdmin, migrationRateLimit, migrationRoutes); // ✅ PHASE 3: Database migration routes (admin only) with strict rate limiting
+app.use('/api/performance', performanceRoutes); // Performance monitoring routes
 app.use('/api', apiKeyRoutes);                  // Protected API key routes
 app.use('/api/posts', postRoutes);              // Post management routes (mount on /api/posts to avoid conflicts)
-
-app.delete('/api/cache/clear', (req, res) => {
-  try {
-    clearCache.all();
-    logger.info('Cache cleared via API');
-    res.json({ 
-      success: true,
-      message: 'Cache cleared successfully',
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    logger.error('Cache clear error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to clear cache'
-    });
-  }
-});
 
 // Static files - Serve frontend files (DISABLED - Frontend served by Netlify)
 // app.use(express.static(path.join(__dirname, '..', 'frontend')));

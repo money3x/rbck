@@ -3,14 +3,10 @@
 // Enhanced with secure session management and audit logging
 
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
 const { db } = require('../supabaseClient');
 const { logger } = require('./errorHandler');
-
-// In-memory session store for production security
-// In a distributed system, use Redis or database
-const activeSessions = new Map();
-const failedAttempts = new Map();
+const securityService = require('../services/SecurityService');
+const { SecurityLogger, SecurityEvents } = require('./securityLogger');
 
 /**
  * Enhanced authentication middleware with secure session management
@@ -25,7 +21,12 @@ const authenticateAdmin = async (req, res, next) => {
         const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
         
         if (!token) {
-            logger.warn(`🚨 Unauthorized access attempt from ${clientIp} - No token provided`);
+            SecurityLogger.logAuth(SecurityEvents.LOGIN_FAILURE, {
+                reason: 'no_token',
+                clientIp,
+                endpoint: req.path,
+                userAgent: req.get('User-Agent')
+            });
             return res.status(401).json({ 
                 success: false,
                 error: 'Access token required',
@@ -35,11 +36,12 @@ const authenticateAdmin = async (req, res, next) => {
         
         // Check if JWT_SECRET is configured
         if (!process.env.JWT_SECRET) {
-            logger.error('❌ JWT_SECRET not configured in environment variables');
+            // ✅ SECURITY FIX: Don't expose configuration details in logs
+            logger.error('Authentication configuration error', { component: 'auth', level: 'critical' });
             return res.status(500).json({
                 success: false,
-                error: 'Server configuration error',
-                code: 'SERVER_CONFIG_ERROR'
+                error: 'Authentication service unavailable',
+                code: 'AUTH_SERVICE_ERROR'
             });
         }
         
@@ -56,11 +58,38 @@ const authenticateAdmin = async (req, res, next) => {
             });
         }
         
-        // Validate session if sessionId is present
+        // ✅ SECURITY FIX: Enforce session validation for admin operations
+        const requiresSession = req.path.includes('/admin/') || 
+                               req.method !== 'GET' || 
+                               req.path.includes('/migration') ||
+                               req.path.includes('/configure');
+                               
+        if (requiresSession && !decoded.sessionId) {
+            logger.warn('Session required for admin operation', { 
+                userId: decoded.userId || decoded.id,
+                clientIp: clientIp,
+                endpoint: req.path,
+                method: req.method,
+                timestamp: new Date().toISOString()
+            });
+            return res.status(401).json({
+                success: false,
+                error: 'Session required for this operation',
+                code: 'SESSION_REQUIRED'
+            });
+        }
+        
+        // Validate the session if sessionId is present
         if (decoded.sessionId) {
-            const session = validateSession(decoded.sessionId, clientIp);
+            const userAgent = req.get('User-Agent');
+            const session = securityService.validateSession(decoded.sessionId, clientIp, userAgent);
             if (!session) {
-                logger.warn(`🚨 Invalid session ${decoded.sessionId} from ${clientIp}`);
+                logger.warn('Invalid session attempt', { 
+                    sessionId: decoded.sessionId,
+                    clientIp: clientIp,
+                    endpoint: req.path,
+                    timestamp: new Date().toISOString()
+                });
                 return res.status(401).json({
                     success: false,
                     error: 'Session invalid or expired',
@@ -86,16 +115,20 @@ const authenticateAdmin = async (req, res, next) => {
             const { data: user, error } = await db.users.findById(decoded.userId || decoded.id);
             
             if (error || !user) {
-                // Fallback to token-based auth if database is unavailable
-                logger.warn(`Database user lookup failed for ${decoded.username}, using token fallback`);
-                req.user = {
-                    id: decoded.userId || decoded.id,
-                    username: decoded.username,
-                    isAdmin: decoded.isAdmin || false,
-                    loginTime: new Date(decoded.iat * 1000),
-                    sessionId: decoded.sessionId
-                };
-                return next();
+                // ✅ SECURITY FIX: NO FALLBACK - Reject authentication
+                // Database user lookup failed - don't trust token data
+                logger.warn('Database user lookup failed', { 
+                    userId: decoded.userId || decoded.id,
+                    sessionId: decoded.sessionId,
+                    timestamp: new Date().toISOString(),
+                    clientIp: clientIp
+                });
+                
+                return res.status(401).json({
+                    success: false,
+                    error: 'Authentication verification failed',
+                    code: 'AUTH_VERIFICATION_FAILED'
+                });
             }
             
             // Check if user is active
@@ -108,41 +141,59 @@ const authenticateAdmin = async (req, res, next) => {
                 });
             }
             
-            // Check if user has admin privileges
-            if (!user.is_admin && !decoded.isAdmin) {
-                logger.warn(`🚨 Non-admin user ${user.username} attempted admin access from ${clientIp}`);
+            // ✅ SECURITY FIX: Check admin privileges from DATABASE only
+            if (!user.is_admin) {
+                logger.warn('Non-admin access attempt', { 
+                    userId: user.id,
+                    clientIp: clientIp,
+                    endpoint: req.path,
+                    timestamp: new Date().toISOString()
+                });
                 return res.status(403).json({ 
                     success: false,
-                    error: 'Admin access required',
-                    code: 'INSUFFICIENT_PRIVILEGES'
+                    error: 'Administrator privileges required',
+                    code: 'ADMIN_REQUIRED'
                 });
             }
             
-            // Token is valid, add user info to request object
+            // ✅ SECURITY FIX: Set user data from DATABASE only
             req.user = {
                 id: user.id,
                 username: user.username,
                 email: user.email,
-                isAdmin: user.is_admin,
+                role: user.role || 'admin', // Add role field
+                isAdmin: user.is_admin, // From database, not token!
                 fullName: user.full_name,
                 loginTime: new Date(decoded.iat * 1000),
-                sessionId: decoded.sessionId
+                sessionId: decoded.sessionId,
+                lastLogin: user.last_login_at
             };
             
-            logger.debug(`✅ User ${user.username} authenticated successfully from ${clientIp}`);
+            SecurityLogger.logAuth(SecurityEvents.LOGIN_SUCCESS, {
+                userId: user.id,
+                username: user.username,
+                clientIp,
+                endpoint: req.path,
+                sessionId: decoded.sessionId
+            });
             next();
             
         } catch (dbError) {
-            logger.error('Database error during authentication:', dbError);
-            // Continue with token-based auth if database is unavailable
-            req.user = {
-                id: decoded.userId || decoded.id,
-                username: decoded.username,
-                isAdmin: decoded.isAdmin || false,
-                loginTime: new Date(decoded.iat * 1000),
-                sessionId: decoded.sessionId
-            };
-            next();
+            logger.error('Database error during authentication', { 
+                error: dbError.message,
+                userId: decoded.userId || decoded.id,
+                sessionId: decoded.sessionId,
+                clientIp: clientIp,
+                timestamp: new Date().toISOString()
+            });
+            
+            // ✅ SECURITY FIX: NO FALLBACK on database errors
+            // If database is unavailable, reject authentication
+            return res.status(503).json({
+                success: false,
+                error: 'Authentication service temporarily unavailable',
+                code: 'AUTH_SERVICE_UNAVAILABLE'
+            });
         }
         
     } catch (error) {
@@ -175,6 +226,45 @@ const authenticateAdmin = async (req, res, next) => {
             });
         }
     }
+};
+
+/**
+ * ✅ NEW: Admin-only middleware for critical operations
+ * Ensures only verified admin users can access sensitive endpoints
+ */
+const requireAdmin = (req, res, next) => {
+    if (!req.user) {
+        logger.warn('Unauthenticated admin access attempt', {
+            clientIp: req.ip || req.connection.remoteAddress,
+            endpoint: req.path,
+            timestamp: new Date().toISOString()
+        });
+        
+        return res.status(401).json({
+            success: false,
+            error: 'Authentication required',
+            code: 'AUTH_REQUIRED'
+        });
+    }
+    
+    if (req.user.role !== 'admin' || !req.user.isAdmin) {
+        logger.warn('Non-admin attempted admin action', {
+            userId: req.user.id,
+            username: req.user.username,
+            role: req.user.role,
+            endpoint: req.path,
+            clientIp: req.ip || req.connection.remoteAddress,
+            timestamp: new Date().toISOString()
+        });
+        
+        return res.status(403).json({
+            success: false,
+            error: 'Administrator privileges required',
+            code: 'ADMIN_REQUIRED'
+        });
+    }
+    
+    next();
 };
 
 /**
@@ -333,212 +423,32 @@ const generateAdminToken = (username, sessionId, userId) => {
  * @returns {object} - Validation result with session info
  */
 const validateAdminCredentials = (username, password, clientIp = 'unknown') => {
-    const validUsername = process.env.ADMIN_USERNAME;
-    const validPassword = process.env.ADMIN_PASSWORD;
-    
-    if (!validUsername || !validPassword) {
-        logger.error('❌ Admin credentials not configured in environment variables');
-        return { valid: false, error: 'Server configuration error' };
-    }
-    
-    // Check for brute force attempts
-    if (isBlocked(clientIp, username)) {
-        logger.warn(`🚨 Login blocked for ${username} from ${clientIp} due to too many failed attempts`);
-        return { 
-            valid: false, 
-            error: 'Account temporarily locked due to failed attempts',
-            blocked: true 
-        };
-    }
-    
-    // Validate credentials with constant-time comparison for security
-    const usernameValid = crypto.timingSafeEqual(
-        Buffer.from(username), 
-        Buffer.from(validUsername)
-    );
-    const passwordValid = crypto.timingSafeEqual(
-        Buffer.from(password), 
-        Buffer.from(validPassword)
-    );
-    
-    const isValid = usernameValid && passwordValid;
-    
-    if (isValid) {
-        // Clear any previous failed attempts
-        clearFailedAttempts(clientIp, username);
-        
-        // Generate secure session
-        const sessionId = generateSessionId();
-        const userId = 'admin-' + crypto.randomBytes(8).toString('hex');
-        
-        // Store session
-        storeSession(sessionId, userId, username, clientIp);
-        
-        logger.info(`✅ Admin credentials validated for ${username} from ${clientIp}`);
-        return { 
-            valid: true, 
-            sessionId, 
-            userId,
-            username 
-        };
-    } else {
-        // Track failed attempt
-        trackFailedAttempt(clientIp, username);
-        logger.warn(`❌ Invalid login attempt for username: ${username} from ${clientIp}`);
-        return { 
-            valid: false, 
-            error: 'Invalid username or password' 
-        };
-    }
+    return securityService.validateAdminCredentials(username, password, clientIp);
 };
 
 /**
- * Generate a secure session ID
+ * Get all active sessions (for admin monitoring)
  */
-function generateSessionId() {
-    return crypto.randomBytes(32).toString('hex');
-}
-
-/**
- * Track failed login attempts for brute force protection
- */
-function trackFailedAttempt(ip, username) {
-    const key = `${ip}-${username}`;
-    const current = failedAttempts.get(key) || { count: 0, lastAttempt: null };
-    
-    current.count += 1;
-    current.lastAttempt = new Date();
-    
-    failedAttempts.set(key, current);
-    
-    // Auto-cleanup after 1 hour
-    setTimeout(() => {
-        failedAttempts.delete(key);
-    }, 3600000);
-    
-    logger.warn(`🚨 Failed login attempt #${current.count} from ${ip} for user ${username}`);
-}
-
-/**
- * Check if IP/username combination is blocked due to failed attempts
- */
-function isBlocked(ip, username) {
-    const key = `${ip}-${username}`;
-    const attempts = failedAttempts.get(key);
-    
-    if (!attempts) return false;
-    
-    // Block after 5 failed attempts
-    if (attempts.count >= 5) {
-        const timeSinceLastAttempt = Date.now() - attempts.lastAttempt.getTime();
-        // Block for 30 minutes
-        return timeSinceLastAttempt < 1800000;
-    }
-    
-    return false;
-}
-
-/**
- * Clear failed attempts on successful login
- */
-function clearFailedAttempts(ip, username) {
-    const key = `${ip}-${username}`;
-    failedAttempts.delete(key);
-}
-
-/**
- * Store active session securely
- */
-function storeSession(sessionId, userId, username, ipAddress) {
-    activeSessions.set(sessionId, {
-        userId,
-        username,
-        ipAddress,
-        createdAt: new Date(),
-        lastActivity: new Date(),
-        isActive: true
-    });
-    
-    logger.info(`✅ New session created for user ${username} from ${ipAddress}`);
-}
-
-/**
- * Validate and refresh session
- */
-function validateSession(sessionId, ipAddress) {
-    const session = activeSessions.get(sessionId);
-    
-    if (!session || !session.isActive) {
-        return null;
-    }
-    
-    // Check IP address consistency (optional security measure)
-    if (process.env.ENFORCE_IP_CONSISTENCY === 'true' && session.ipAddress !== ipAddress) {
-        logger.warn(`🚨 Session ${sessionId} IP mismatch: ${session.ipAddress} vs ${ipAddress}`);
-        invalidateSession(sessionId);
-        return null;
-    }
-    
-    // Check session timeout (24 hours)
-    const sessionAge = Date.now() - session.createdAt.getTime();
-    if (sessionAge > 86400000) { // 24 hours
-        logger.info(`⏰ Session ${sessionId} expired for user ${session.username}`);
-        invalidateSession(sessionId);
-        return null;
-    }
-    
-    // Update last activity
-    session.lastActivity = new Date();
-    
-    return session;
+function getActiveSessions() {
+    return securityService.getActiveSessions();
 }
 
 /**
  * Invalidate a session
  */
 function invalidateSession(sessionId) {
-    const session = activeSessions.get(sessionId);
-    if (session) {
-        session.isActive = false;
-        activeSessions.delete(sessionId);
-        logger.info(`🔐 Session invalidated for user ${session.username}`);
-    }
-}
-
-/**
- * Get all active sessions (for admin monitoring)
- */
-function getActiveSessions() {
-    const sessions = [];
-    for (const [sessionId, session] of activeSessions.entries()) {
-        if (session.isActive) {
-            sessions.push({
-                sessionId: sessionId.substring(0, 8) + '...',
-                username: session.username,
-                ipAddress: session.ipAddress,
-                createdAt: session.createdAt,
-                lastActivity: session.lastActivity
-            });
-        }
-    }
-    return sessions;
+    return securityService.invalidateSession(sessionId);
 }
 
 // Single consolidated export
 module.exports = {
     authenticateAdmin,
+    requireAdmin, // ✅ NEW: Admin-only middleware
     optionalAuth,
     validateApiKey,
     generateAdminToken,
     validateAdminCredentials,
-    // Session management exports
-    generateSessionId,
-    storeSession,
-    validateSession,
+    // Session management exports  
     invalidateSession,
-    getActiveSessions,
-    // Security monitoring exports
-    trackFailedAttempt,
-    isBlocked,
-    clearFailedAttempts
+    getActiveSessions
 };

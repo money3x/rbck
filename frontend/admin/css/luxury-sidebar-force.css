@@ -1,0 +1,194 @@
+/* ========================================
+   FORCE LUXURY SIDEBAR STYLING
+   High Specificity Override CSS
+======================================== */
+
+/* Force luxury variables to work */
+:root {
+  --luxury-sidebar-bg-primary: #0A0A0A !important;
+  --luxury-sidebar-bg-secondary: #1A1A1A !important;
+  --luxury-text-primary: #FFFFFF !important;
+  --luxury-text-secondary: #E5E4E2 !important;
+  --luxury-text-accent: #FFD700 !important;
+  --luxury-glass-bg: rgba(10, 10, 10, 0.85) !important;
+  --luxury-glass-border: rgba(255, 215, 0, 0.15) !important;
+  --luxury-glass-hover: rgba(255, 215, 0, 0.08) !important;
+  --luxury-gradient-primary: linear-gradient(135deg, 
+    rgba(255, 215, 0, 0.1) 0%, 
+    rgba(10, 10, 10, 0.9) 50%, 
+    rgba(26, 26, 26, 0.95) 100%) !important;
+  --luxury-shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+  --luxury-shadow-glow: 0 4px 20px rgba(255, 215, 0, 0.15) !important;
+  --luxury-space-sm: 0.5rem !important;
+  --luxury-space-md: 1rem !important;
+  --luxury-space-lg: 1.5rem !important;
+  --luxury-radius-lg: 12px !important;
+  --luxury-transition-medium: 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Force sidebar styling with highest specificity */
+nav.sidebar.sidebar-luxury {
+  background: var(--luxury-gradient-primary) !important;
+  backdrop-filter: blur(20px) saturate(1.2) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.2) !important;
+  border-right: 1px solid var(--luxury-glass-border) !important;
+  box-shadow: var(--luxury-shadow-medium) !important;
+  width: 280px !important;
+  height: 100vh !important;
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+}
+
+/* Force nav-menu styling */
+nav.sidebar.sidebar-luxury .nav-menu {
+  padding: var(--luxury-space-lg) var(--luxury-space-md) !important;
+  height: calc(100vh - 140px) !important;
+  overflow-y: auto !important;
+}
+
+/* Force category styling */
+nav.sidebar.sidebar-luxury .nav-category {
+  background: var(--luxury-glass-bg) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid var(--luxury-glass-border) !important;
+  border-radius: var(--luxury-radius-lg) !important;
+  margin-bottom: var(--luxury-space-lg) !important;
+  padding: 0 !important;
+  box-shadow: var(--luxury-shadow-medium) !important;
+  transition: all var(--luxury-transition-medium) !important;
+}
+
+nav.sidebar.sidebar-luxury .nav-category:hover {
+  border-color: var(--luxury-text-accent) !important;
+  box-shadow: var(--luxury-shadow-glow) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Force category header styling */
+nav.sidebar.sidebar-luxury .category-header {
+  background: linear-gradient(135deg,
+    rgba(255, 215, 0, 0.12) 0%,
+    rgba(26, 26, 26, 0.8) 100%) !important;
+  color: var(--luxury-text-primary) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  padding: var(--luxury-space-md) var(--luxury-space-lg) !important;
+  border-bottom: 1px solid var(--luxury-glass-border) !important;
+  border-radius: var(--luxury-radius-lg) var(--luxury-radius-lg) 0 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--luxury-space-md) !important;
+}
+
+nav.sidebar.sidebar-luxury .category-header i {
+  color: var(--luxury-text-accent) !important;
+  opacity: 0.9 !important;
+  font-size: 1rem !important;
+}
+
+/* Force sub-menu grid styling */
+nav.sidebar.sidebar-luxury .sub-menu-grid {
+  padding: var(--luxury-space-sm) !important;
+}
+
+/* Force nav-link styling */
+nav.sidebar.sidebar-luxury .nav-link {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--luxury-space-md) !important;
+  padding: var(--luxury-space-md) var(--luxury-space-lg) !important;
+  margin: 4px 0 !important;
+  color: var(--luxury-text-secondary) !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+  line-height: 1.5 !important;
+  border-radius: 8px !important;
+  border: 1px solid transparent !important;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  cursor: pointer !important;
+  background: transparent !important;
+}
+
+/* Force nav-link hover styling */
+nav.sidebar.sidebar-luxury .nav-link:hover {
+  background: var(--luxury-glass-hover) !important;
+  color: var(--luxury-text-primary) !important;
+  border-color: var(--luxury-glass-border) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  transform: translateX(4px) !important;
+}
+
+/* Force nav-link active styling */
+nav.sidebar.sidebar-luxury .nav-link.active,
+nav.sidebar.sidebar-luxury .nav-link.nav-link.active {
+  background: linear-gradient(135deg,
+    rgba(255, 215, 0, 0.15) 0%,
+    rgba(255, 215, 0, 0.05) 100%) !important;
+  color: var(--luxury-text-primary) !important;
+  border-color: var(--luxury-text-accent) !important;
+  box-shadow: var(--luxury-shadow-glow) !important;
+  font-weight: 600 !important;
+}
+
+nav.sidebar.sidebar-luxury .nav-link.active i {
+  color: var(--luxury-text-accent) !important;
+}
+
+/* Force sidebar header styling */
+nav.sidebar.sidebar-luxury .sidebar-header {
+  background: linear-gradient(135deg, 
+    rgba(255, 215, 0, 0.08) 0%, 
+    rgba(10, 10, 10, 0.95) 100%) !important;
+  border-bottom: 1px solid var(--luxury-glass-border) !important;
+  padding: 2rem 1.5rem !important;
+  color: var(--luxury-text-primary) !important;
+}
+
+nav.sidebar.sidebar-luxury .sidebar-header h1 {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: var(--luxury-text-primary) !important;
+  margin: 0 0 0.5rem 0 !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+nav.sidebar.sidebar-luxury .sidebar-header p {
+  font-size: 0.875rem !important;
+  color: var(--luxury-text-secondary) !important;
+  margin: 0 !important;
+  opacity: 0.9 !important;
+}
+
+/* Force icon styling */
+nav.sidebar.sidebar-luxury .sidebar-nav-icon {
+  font-size: 1rem !important;
+  opacity: 0.8 !important;
+  transition: all 0.15s ease !important;
+  flex-shrink: 0 !important;
+  width: 18px !important;
+  text-align: center !important;
+}
+
+nav.sidebar.sidebar-luxury .nav-link:hover .sidebar-nav-icon {
+  opacity: 1 !important;
+  transform: scale(1.1) !important;
+}
+
+/* Remove any conflicting styles */
+nav.sidebar.sidebar-luxury .nav-link {
+  font-size: 0.875rem !important;
+}
+
+/* Ensure proper z-index and positioning */
+nav.sidebar.sidebar-luxury {
+  z-index: 1000 !important;
+  position: fixed !important;
+}
+
+/* ========================================
+   FORCE COMPLETE - LUXURY SIDEBAR READY
+======================================== */

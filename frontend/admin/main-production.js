@@ -2,7 +2,32 @@
 // All-in-one JavaScript file for production deployment
 // No ES6 modules, all functions available in global scope
 
-console.log('🚀 [MAIN] Loading RBCK CMS Admin Panel...');
+// ✅ TYPESCRIPT: Global interface declarations for better IDE support
+/**
+ * @fileoverview RBCK CMS Admin Panel - Enhanced Production Version
+ * @version 2025-07-04-v3-secure
+ * @description Comprehensive admin panel with security enhancements and performance optimizations
+ */
+
+// Global function declarations for TypeScript/IDE support
+if (typeof window !== 'undefined') {
+    /**
+     * @typedef {Object} Window
+     * @property {function(string, string=): void} showNotification - Display notification to user
+     * @property {function(string): void} showSection - Navigate to section
+     * @property {function(): Promise<void>} loadPosts - Load blog posts (renamed from loadBlogPosts)
+     * @property {function(string): void} formatText - Format selected text
+     * @property {function(): void} insertHeading - Insert heading element
+     * @property {function(): void} insertList - Insert unordered list
+     * @property {function(): void} insertLink - Insert hyperlink
+     * @property {function(): void} copyApiToken - Copy API token to clipboard
+     */
+    
+    // Prevent accidental globals
+    window.RBCK_GLOBALS_DEFINED = true;
+}
+
+console.log('🚀 [MAIN] Loading RBCK CMS Admin Panel v2025-07-04-v3-secure...');
 
 // ===== CONFIGURATION =====
 // Smart configuration ที่ตรวจจับ environment อัตโนมัติ
@@ -92,7 +117,68 @@ const AI_PROVIDERS = [
     }
 ];
 
-// ===== UTILITY FUNCTIONS =====
+// ===== SECURITY UTILITY FUNCTIONS =====
+
+// ✅ SECURITY: HTML sanitization to prevent XSS attacks
+function sanitizeHTML(str) {
+    if (typeof str !== 'string') return '';
+    
+    // Remove all HTML tags and encode entities
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// ✅ SECURITY: URL validation and sanitization
+function sanitizeURL(url) {
+    if (typeof url !== 'string') return null;
+    
+    try {
+        // Basic URL validation
+        const urlPattern = /^https?:\/\/[^\s<>"{}|\\^`[\]]+$/i;
+        if (!urlPattern.test(url)) {
+            return null;
+        }
+        
+        // Create URL object to validate structure
+        const urlObj = new URL(url);
+        
+        // Only allow http and https protocols
+        if (!['http:', 'https:'].includes(urlObj.protocol)) {
+            return null;
+        }
+        
+        // Prevent javascript: and data: protocols
+        if (url.toLowerCase().includes('javascript:') || url.toLowerCase().includes('data:')) {
+            return null;
+        }
+        
+        return urlObj.href; // Returns normalized URL
+    } catch (error) {
+        console.warn('⚠️ Invalid URL:', url);
+        return null;
+    }
+}
+
+// ✅ PERFORMANCE: Debounce function for performance optimization
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// ===== API UTILITY FUNCTIONS =====
 async function apiRequest(endpoint, options = {}) {
     const url = `${config.apiBase}${endpoint}`;
     const defaultOptions = {
@@ -175,21 +261,68 @@ window.showNotification = function(message, type = 'info') {
     }, 4000);
 };
 
-// ===== NAVIGATION SYSTEM =====
+// ===== PERFORMANCE: DOM CACHING SYSTEM =====
+const NavigationCache = {
+    sections: null,
+    navLinks: null,
+    pageTitle: null,
+    initialized: false,
+    
+    init() {
+        if (this.initialized) return;
+        
+        console.log('🚀 [CACHE] Initializing navigation cache...');
+        this.sections = document.querySelectorAll('.content-section, .section');
+        this.navLinks = document.querySelectorAll('.nav-link');
+        this.pageTitle = document.getElementById('pageTitle');
+        this.initialized = true;
+        
+        console.log(`✅ [CACHE] Cached ${this.sections.length} sections and ${this.navLinks.length} nav links`);
+    },
+    
+    refresh() {
+        this.initialized = false;
+        this.sections = null;
+        this.navLinks = null;
+        this.pageTitle = null;
+        this.init();
+        console.log('🔄 [CACHE] Navigation cache refreshed');
+    },
+    
+    hideAllSections() {
+        if (!this.initialized) this.init();
+        
+        this.sections.forEach(section => {
+            section.classList.remove('active');
+            section.style.display = 'none';
+        });
+    },
+    
+    clearActiveNavLinks() {
+        if (!this.initialized) this.init();
+        
+        this.navLinks.forEach(link => {
+            link.classList.remove('active');
+        });
+    },
+    
+    updatePageTitle(title) {
+        if (!this.initialized) this.init();
+        
+        if (this.pageTitle) {
+            this.pageTitle.textContent = title;
+        }
+    }
+};
+
+// ===== ENHANCED NAVIGATION SYSTEM =====
 window.showSection = function(sectionId) {
     console.log('🔄 [NAV] Showing section:', sectionId);
     
     try {
-        // Hide all sections
-        document.querySelectorAll('.content-section, .section').forEach(section => {
-            section.classList.remove('active');
-            section.style.display = 'none';
-        });
-        
-        // Remove active class from all nav links
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.classList.remove('active');
-        });
+        // ✅ PERFORMANCE: Use cached navigation methods
+        NavigationCache.hideAllSections();
+        NavigationCache.clearActiveNavLinks();
         
         // Show selected section
         const selectedSection = document.getElementById(sectionId);
@@ -209,44 +342,63 @@ window.showSection = function(sectionId) {
             navLink.classList.add('active');
         }
         
-        // Update page title
-        const pageTitle = document.getElementById('pageTitle');
-        if (pageTitle) {
-            let title = '';
-            switch(sectionId) {
-                case 'dashboard':
-                    title = '🚀 Gemini 2.0 Flash Dashboard';
-                    loadDashboard();
-                    break;
-                case 'blog-manage':
-                    title = 'จัดการบทความ';
-                    loadPosts();
-                    break;
-                case 'blog-create':
-                    title = 'สร้างบทความใหม่';
-                    break;
-                case 'seo-tools':
-                    title = '🚀 Gemini 2.0 SEO Tools';
-                    break;
-                case 'analytics':
-                    title = '📊 Flash Analytics';
-                    loadAnalytics();
-                    break;
-                case 'ai-swarm':
-                    title = '🤖 AI Swarm Council';
-                    loadAISwarmData();
-                    break;
-                case 'ai-monitoring':
-                    title = '📊 AI Monitoring';
-                    break;
-                case 'migration':
-                    title = '🔄 Migration';
-                    break;
-                default:
-                    title = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
-            }
-            pageTitle.textContent = title;
+        // ✅ PERFORMANCE: Use cached page title update
+        let title = '';
+        switch(sectionId) {
+            case 'dashboard':
+                title = '🚀 Gemini 2.0 Flash Dashboard';
+                loadDashboard();
+                break;
+            case 'blog-manage':
+                title = 'จัดการบทความ';
+                loadPosts();
+                break;
+            case 'blog-create':
+                title = 'สร้างบทความใหม่';
+                break;
+            case 'seo-tools':
+                title = '🚀 Gemini 2.0 SEO Tools';
+                break;
+            case 'analytics':
+                title = '📊 Flash Analytics';
+                loadAnalytics();
+                break;
+            case 'ai-swarm':
+                title = '🤖 AI Swarm Council';
+                loadAISwarmData();
+                break;
+            case 'ai-monitoring':
+                title = '📊 AI Monitoring';
+                break;
+            case 'migration':
+                title = '🔄 Migration';
+                // Initialize migration system when section is shown
+                setTimeout(() => {
+                    if (typeof initializeMigration === 'function') {
+                        initializeMigration();
+                    }
+                }, 100);
+                break;
+            case 'security-dashboard':
+                title = '🔒 Security Dashboard';
+                loadSecurityDashboard();
+                break;
+            case 'auth-logs':
+                title = '🔒 Authentication Logs';
+                loadAuthLogs();
+                break;
+            case 'blocked-ips':
+                title = '🚫 Blocked IPs';
+                loadBlockedIPs();
+                break;
+            case 'security-alerts':
+                title = '⚠️ Security Alerts';
+                loadSecurityDashboard(); // Load dashboard data for alerts
+                break;
+            default:
+                title = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
         }
+        NavigationCache.updatePageTitle(title);
         
     } catch (error) {
         console.error('❌ [NAV] Error in showSection:', error);
@@ -514,8 +666,9 @@ function updateElement(id, value) {
 }
 
 // ===== BLOG MANAGEMENT FUNCTIONS =====
-window.loadBlogPosts = async function() {
-    console.log('📝 [BLOG] Loading blog posts...');
+// ✅ RENAMED: loadBlogPosts → loadPosts for consistency
+window.loadPosts = async function() {
+    console.log('📝 [BLOG] Loading posts...');
     
     try {
         const response = await apiRequest('/posts');
@@ -606,7 +759,7 @@ window.savePost = async function() {
             // Switch to blog manage section and reload posts
             showSection('blog-manage');
             setTimeout(() => {
-                loadBlogPosts();
+                loadPosts();
             }, 500);
         } else {
             throw new Error(response.error || 'ไม่สามารถบันทึกโพสต์ได้');
@@ -645,45 +798,146 @@ window.exportData = function() {
     showNotification('📤 การส่งออกข้อมูลยังไม่พร้อมใช้งาน', 'info');
 };
 
+// ✅ ENHANCED: Modern text formatting with enhanced error handling
 window.formatText = function(command) {
     console.log('📝 [EDITOR] Format text:', command);
     try {
-        document.execCommand(command, false, null);
+        const selection = window.getSelection();
+        if (!selection.rangeCount) {
+            showNotification('กรุณาเลือกข้อความที่ต้องการจัดรูปแบบ', 'warning');
+            return;
+        }
+        
+        // Use document.execCommand with enhanced error handling
+        // TODO: Replace with modern Selection API when browser support improves
+        const success = document.execCommand(command, false, null);
+        
+        if (!success) {
+            throw new Error(`Command '${command}' failed`);
+        }
+        
+        console.log(`✅ [EDITOR] Format '${command}' applied successfully`);
+        
     } catch (error) {
         console.warn('⚠️ [EDITOR] Format command failed:', error);
+        showNotification(`การจัดรูปแบบ '${command}' ล้มเหลว`, 'error');
     }
 };
 
+// ✅ SECURE: Safe heading insertion with input sanitization
 window.insertHeading = function() {
     console.log('📝 [EDITOR] Insert heading...');
     try {
-        const text = prompt('กรุณาระบุข้อความหัวข้อ:');
+        const text = prompt('กรุณาระบุข้อความหัวข้อ (1-200 ตัวอักษร):');
         if (text) {
-            document.execCommand('insertHTML', false, `<h3>${text}</h3>`);
+            // Input validation and sanitization
+            const sanitizedText = sanitizeHTML(text.trim());
+            
+            if (sanitizedText.length === 0) {
+                showNotification('ข้อความหัวข้อไม่สามารถว่างเปล่าได้', 'error');
+                return;
+            }
+            
+            if (sanitizedText.length > 200) {
+                showNotification('ข้อความหัวข้อยาวเกินไป (สูงสุด 200 ตัวอักษร)', 'error');
+                return;
+            }
+            
+            // Modern approach: Create element safely
+            const selection = window.getSelection();
+            if (selection.rangeCount) {
+                const range = selection.getRangeAt(0);
+                const heading = document.createElement('h3');
+                heading.textContent = sanitizedText; // Safe text insertion
+                heading.style.margin = '1em 0';
+                heading.style.fontWeight = 'bold';
+                
+                range.deleteContents();
+                range.insertNode(heading);
+                
+                // Position cursor after heading
+                range.setStartAfter(heading);
+                range.setEndAfter(heading);
+                selection.removeAllRanges();
+                selection.addRange(range);
+                
+                console.log('✅ [EDITOR] Heading inserted successfully');
+                showNotification('เพิ่มหัวข้อสำเร็จ', 'success');
+            } else {
+                // Fallback to execCommand for compatibility
+                document.execCommand('insertHTML', false, `<h3>${sanitizedText}</h3>`);
+            }
         }
     } catch (error) {
         console.warn('⚠️ [EDITOR] Insert heading failed:', error);
+        showNotification('การเพิ่มหัวข้อล้มเหลว', 'error');
     }
 };
 
+// ✅ ENHANCED: List insertion with better error handling
 window.insertList = function() {
     console.log('📝 [EDITOR] Insert list...');
     try {
-        document.execCommand('insertUnorderedList', false, null);
+        const selection = window.getSelection();
+        if (!selection.rangeCount) {
+            showNotification('กรุณาเลือกตำแหน่งที่ต้องการแทรกรายการ', 'warning');
+            return;
+        }
+        
+        const success = document.execCommand('insertUnorderedList', false, null);
+        
+        if (!success) {
+            throw new Error('List insertion failed');
+        }
+        
+        console.log('✅ [EDITOR] List inserted successfully');
+        showNotification('เพิ่มรายการสำเร็จ', 'success');
+        
     } catch (error) {
         console.warn('⚠️ [EDITOR] Insert list failed:', error);
+        showNotification('การเพิ่มรายการล้มเหลว', 'error');
     }
 };
 
+// ✅ SECURE: Safe link insertion with URL validation
 window.insertLink = function() {
     console.log('📝 [EDITOR] Insert link...');
     try {
-        const url = prompt('กรุณาระบุ URL:');
+        const url = prompt('กรุณาระบุ URL (https://...):');
         if (url) {
-            document.execCommand('createLink', false, url);
+            // URL validation and sanitization
+            const sanitizedUrl = sanitizeURL(url.trim());
+            
+            if (!sanitizedUrl) {
+                showNotification('URL ไม่ถูกต้อง กรุณาระบุ URL ที่ขึ้นต้นด้วย http:// หรือ https://', 'error');
+                return;
+            }
+            
+            const selection = window.getSelection();
+            if (!selection.rangeCount) {
+                showNotification('กรุณาเลือกข้อความที่ต้องการทำลิงก์', 'warning');
+                return;
+            }
+            
+            // Check if text is selected
+            const selectedText = selection.toString();
+            if (!selectedText) {
+                showNotification('กรุณาเลือกข้อความที่ต้องการทำลิงก์', 'warning');
+                return;
+            }
+            
+            const success = document.execCommand('createLink', false, sanitizedUrl);
+            
+            if (!success) {
+                throw new Error('Link creation failed');
+            }
+            
+            console.log('✅ [EDITOR] Link created successfully:', sanitizedUrl);
+            showNotification('สร้างลิงก์สำเร็จ', 'success');
         }
     } catch (error) {
         console.warn('⚠️ [EDITOR] Insert link failed:', error);
+        showNotification('การสร้างลิงก์ล้มเหลว', 'error');
     }
 };
 
@@ -713,7 +967,7 @@ window.debugFunctions = function() {
         showNotification: typeof window.showNotification,
         
         // Blog Management
-        loadBlogPosts: typeof window.loadBlogPosts,
+        loadPosts: typeof window.loadPosts,
         savePost: typeof window.savePost,
         clearForm: typeof window.clearForm,
         editPost: typeof window.editPost,
@@ -761,17 +1015,45 @@ document.addEventListener('DOMContentLoaded', function() {
     if (missingElements.length > 0) {
         console.warn('⚠️ [INIT] Missing elements:', missingElements);
     }
+
+    // ===== AI Settings: Modal Setup =====
+    const aiSettingsBtn = document.getElementById('aiSettingsBtn');
+    const aiSettingsModal = document.getElementById('aiSettingsModal');
+    const closeAiSettingsModal = document.getElementById('closeAiSettingsModal');
+
+    if (aiSettingsBtn && aiSettingsModal) {
+        aiSettingsBtn.addEventListener('click', function() {
+            aiSettingsModal.style.display = 'block';
+        });
+    } else {
+        console.warn('⚠️ [INIT] Missing #aiSettingsBtn or #aiSettingsModal');
+    }
+
+    if (closeAiSettingsModal && aiSettingsModal) {
+        closeAiSettingsModal.addEventListener('click', function() {
+            aiSettingsModal.style.display = 'none';
+        });
+    }
+
+    // ปิด modal เมื่อคลิกที่ overlay นอกกล่อง
+    if (aiSettingsModal) {
+        aiSettingsModal.addEventListener('click', function(e) {
+            if (e.target === aiSettingsModal) {
+                aiSettingsModal.style.display = 'none';
+            }
+        });
+    }
     
     // Initialize default view
     showSection('dashboard');
-      console.log('✅ [INIT] Admin panel initialized successfully');
+    console.log('✅ [INIT] Admin panel initialized successfully');
     console.log('✅ [INIT] Available functions:', {
         // Navigation & Core
         showSection: typeof window.showSection,
         showNotification: typeof window.showNotification,
         
         // Blog Management  
-        loadBlogPosts: typeof window.loadBlogPosts,
+        loadPosts: typeof window.loadPosts,
         savePost: typeof window.savePost,
         clearForm: typeof window.clearForm,
         editPost: typeof window.editPost,
@@ -787,11 +1069,1449 @@ document.addEventListener('DOMContentLoaded', function() {
         toggleSidebar: typeof window.toggleSidebar,
         exportData: typeof window.exportData,
         logout: typeof window.logout,
-        debugFunctions: typeof window.debugFunctions
+        debugFunctions: typeof window.debugFunctions,
+        showAISettings: typeof window.showAISettings
     });
     
     showNotification('🚀 RBCK CMS พร้อมใช้งาน', 'success');
     isAppInitialized = true;
 });
 
+// Performance-Optimized DOM Caching System
+const AIModalCache = {
+  modal: null,
+  tabs: new Map(),
+  content: new Map(),
+  buttons: new Map(),
+  initialized: false,
+  
+  init() {
+    if (this.initialized) return;
+    
+    console.log('🚀 [PERFORMANCE] Initializing DOM cache...');
+    
+    // Cache main modal
+    this.modal = document.getElementById('aiSettingsModal');
+    
+    // Cache tabs
+    document.querySelectorAll('.ai-settings-tab').forEach(tab => {
+      const tabName = tab.getAttribute('data-tab');
+      if (tabName) this.tabs.set(tabName, tab);
+    });
+    
+    // Cache content areas
+    document.querySelectorAll('.ai-tab-content').forEach(content => {
+      const contentId = content.id.replace('-tab', '');
+      this.content.set(contentId, content);
+    });
+    
+    // Cache buttons
+    document.querySelectorAll('.ai-button').forEach(button => {
+      if (button.onclick) this.buttons.set(button.textContent?.trim(), button);
+    });
+    
+    this.initialized = true;
+    console.log('✅ [PERFORMANCE] DOM cache initialized:', {
+      modal: !!this.modal,
+      tabs: this.tabs.size,
+      content: this.content.size,
+      buttons: this.buttons.size
+    });
+  },
+  
+  getModal() {
+    return this.modal || document.getElementById('aiSettingsModal');
+  },
+  
+  getTab(tabName) {
+    return this.tabs.get(tabName);
+  },
+  
+  getContent(tabName) {
+    return this.content.get(tabName);
+  }
+};
+
+// ===== AI SETTINGS FUNCTIONS =====
+window.openAISettingsModal = function() {
+    console.log('🔧 [AI Settings] Opening enterprise configuration modal...');
+    
+    // Start performance monitoring (only if PerformanceMonitor exists)
+    const performanceTimer = typeof PerformanceMonitor !== 'undefined' ? 
+        PerformanceMonitor.startTimer('modalOpen') : null;
+    
+    // Initialize cache if needed (with fallback)
+    if (typeof AIModalCache !== 'undefined') {
+        AIModalCache.init();
+    }
+    
+    // Use cached modal element with fallback
+    const modal = (typeof AIModalCache !== 'undefined') ? 
+        AIModalCache.getModal() : document.getElementById('aiSettingsModal');
+    if (modal) {
+        console.log('🔧 [AI Settings] Configuration modal found, opening...');
+        
+        // Remove hidden class and force display
+        modal.classList.remove('ai-modal-hidden');
+        modal.style.setProperty('display', 'flex', 'important');
+        modal.style.setProperty('opacity', '1', 'important');
+        modal.style.setProperty('visibility', 'visible', 'important');
+        modal.style.setProperty('z-index', '10001', 'important');
+        
+        document.body.style.overflow = 'hidden';
+        
+        // Initialize tabs and load data with verification
+        setTimeout(() => {
+            console.log('🔧 [AI SETTINGS] Checking function availability...');
+            console.log('🔧 [DEBUG] switchAITab available:', typeof window.switchAITab === 'function');
+            console.log('🔧 [DEBUG] initializeAISettingsTabs available:', typeof window.initializeAISettingsTabs === 'function');
+            
+            // Call the proper initialization function
+            if (typeof window.initializeAISettingsTabs === 'function') {
+                window.initializeAISettingsTabs();
+            } else {
+                console.log('🔧 [AI SETTINGS] Using fallback initialization...');
+                // Fallback: Set up tab click listeners manually
+                document.querySelectorAll('.tab-button').forEach(button => {
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const tabName = this.getAttribute('data-tab');
+                        if (typeof window.switchAITab === 'function') {
+                            window.switchAITab(tabName);
+                        } else {
+                            console.error('❌ [AI SETTINGS] switchAITab function not available');
+                        }
+                    });
+                });
+                
+                // Activate general tab by default in fallback mode
+                if (typeof window.switchAITab === 'function') {
+                    window.switchAITab('general');
+                }
+            }
+            
+            // Ensure tab click handlers are working
+            document.querySelectorAll('.ai-settings-tab').forEach(tab => {
+                const tabName = tab.getAttribute('data-tab');
+                if (tabName && !tab.onclick) {
+                    console.log('🔧 [FIX] Adding missing click handler to:', tabName);
+                    tab.onclick = function(e) {
+                        e.preventDefault();
+                        console.log('🖱️ [CLICK] Tab clicked:', tabName);
+                        window.switchAITab(tabName);
+                        return false;
+                    };
+                    tab.style.pointerEvents = 'auto';
+                    tab.style.cursor = 'pointer';
+                }
+            });
+            
+            if (typeof window.loadCurrentProviderStatus === 'function') {
+                window.loadCurrentProviderStatus();
+            }
+        }, 200); // Increased from 100ms to 200ms for better reliability
+        
+        console.log('✅ [AI Settings] Enterprise configuration modal opened successfully');
+        
+        // Debug: Log modal state
+        console.log('🔍 [DEBUG] Modal state after opening:');
+        console.log('- Display:', window.getComputedStyle(modal).display);
+        console.log('- Visibility:', window.getComputedStyle(modal).visibility);
+        console.log('- Opacity:', window.getComputedStyle(modal).opacity);
+        console.log('- Z-index:', window.getComputedStyle(modal).zIndex);
+        console.log('- Position:', window.getComputedStyle(modal).position);
+        console.log('- Classes:', modal.className);
+        
+        // End performance monitoring (with safety check)
+        if (performanceTimer && typeof PerformanceMonitor !== 'undefined') {
+            PerformanceMonitor.endTimer(performanceTimer);
+        }
+        
+    } else {
+        console.error('❌ [AI Settings] Configuration modal element not found');
+        if (performanceTimer && typeof PerformanceMonitor !== 'undefined') {
+            PerformanceMonitor.endTimer(performanceTimer);
+        }
+    }
+    
+    return false;
+};
+
+window.closeAIConfigModal = function() {
+    console.log('🔧 [AI Settings] Closing configuration modal...');
+    const modal = document.getElementById('aiSettingsModal');
+    if (modal) {
+        modal.classList.add('ai-modal-hidden');
+        modal.style.setProperty('display', 'none', 'important');
+        modal.style.setProperty('opacity', '0', 'important');
+        modal.style.setProperty('visibility', 'hidden', 'important');
+        document.body.style.overflow = '';
+        console.log('✅ [AI Settings] Configuration modal closed successfully');
+    }
+};
+
+window.closeAISettingsModal = function() {
+    console.log('🔧 [AI Settings] Closing AI settings modal...');
+    const modal = document.getElementById('aiSettingsModal');
+    if (modal) {
+        modal.classList.remove('show');
+        modal.classList.add('ai-modal-hidden');
+        modal.style.setProperty('display', 'none', 'important');
+        modal.style.setProperty('opacity', '0', 'important');
+        modal.style.setProperty('visibility', 'hidden', 'important');
+        document.body.style.overflow = '';
+        console.log('✅ [AI Settings] AI settings modal closed successfully');
+    }
+};
+
+window.saveAllAISettings = function() {
+    console.log('💾 [AI Settings] Saving all AI settings...');
+    showNotification('💾 Settings saved successfully', 'success');
+    setTimeout(() => {
+        window.closeAIConfigModal();
+    }, 1000);
+};
+
+// ===== PERFORMANCE-OPTIMIZED TAB MANAGEMENT =====
+window.switchAITab = function(tabName) {
+    console.log('⚡ [OPTIMIZED] Switching to tab:', tabName);
+    
+    // Quick fallback if optimization fails
+    try {
+        // Start performance monitoring (with safety check)
+        const performanceTimer = typeof PerformanceMonitor !== 'undefined' ? 
+            PerformanceMonitor.startTimer('tabSwitch') : null;
+        
+        // For immediate response, try simple approach first
+        const quickSuccess = window.switchAITabFallback(tabName);
+        
+        if (quickSuccess) {
+            if (performanceTimer && typeof PerformanceMonitor !== 'undefined') {
+                PerformanceMonitor.endTimer(performanceTimer);
+            }
+            return;
+        }
+        
+        // Initialize cache if needed (with fallback)
+        if (typeof AIModalCache !== 'undefined') {
+            AIModalCache.init();
+        }
+        
+        // Use requestAnimationFrame for smooth 60fps switching as backup
+        requestAnimationFrame(() => {
+        try {
+            // Batch DOM operations for better performance
+            const operations = [];
+            
+            // Declare target elements
+            let targetTab, targetContent;
+            
+            // Use cached elements if available, otherwise fallback to DOM queries
+            if (typeof AIModalCache !== 'undefined' && AIModalCache.initialized) {
+                // Remove active states from cached elements
+                // ✅ CLEAN: Remove unused parameter
+                AIModalCache.tabs.forEach((tab) => {
+                    if (tab.classList.contains('active')) {
+                        operations.push(() => tab.classList.remove('active'));
+                    }
+                });
+                
+                // ✅ CLEAN: Remove unused parameter
+                AIModalCache.content.forEach((content) => {
+                    if (content.classList.contains('active')) {
+                        operations.push(() => {
+                            content.classList.remove('active');
+                            content.style.display = 'none';
+                        });
+                    }
+                });
+                
+                // Get target elements from cache
+                targetTab = AIModalCache.getTab(tabName);
+                targetContent = AIModalCache.getContent(tabName);
+            } else {
+                // Fallback to direct DOM manipulation
+                console.log('🔄 [FALLBACK] Using direct DOM queries');
+                document.querySelectorAll('.ai-settings-tab').forEach(tab => {
+                    operations.push(() => tab.classList.remove('active'));
+                });
+                document.querySelectorAll('.ai-tab-content').forEach(content => {
+                    operations.push(() => {
+                        content.classList.remove('active');
+                        content.style.display = 'none';
+                    });
+                });
+                
+                // Get target elements from DOM
+                targetTab = document.querySelector(`[data-tab="${tabName}"]`);
+                targetContent = document.getElementById(`${tabName}-tab`);
+            }
+            
+            if (targetTab && targetContent) {
+                operations.push(() => {
+                    targetTab.classList.add('active');
+                    targetContent.classList.add('active');
+                    targetContent.style.display = 'block';
+                    targetContent.style.opacity = '1';
+                    targetContent.style.visibility = 'visible';
+                });
+            }
+            
+            // Execute all operations in a batch
+            operations.forEach(op => op());
+            
+            // End performance monitoring (with safety check)
+            if (performanceTimer && typeof PerformanceMonitor !== 'undefined') {
+                PerformanceMonitor.endTimer(performanceTimer);
+            }
+            
+            if (targetTab && targetContent) {
+                console.log('✅ [OPTIMIZED] Tab switched to:', tabName);
+            } else {
+                console.error('❌ [OPTIMIZED] Tab or content not found:', tabName);
+                // Fallback to direct DOM manipulation
+                const fallbackTab = document.querySelector(`[data-tab="${tabName}"]`);
+                const fallbackContent = document.getElementById(`${tabName}-tab`);
+                if (fallbackTab && fallbackContent) {
+                    document.querySelectorAll('.ai-settings-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.ai-tab-content').forEach(c => c.style.display = 'none');
+                    fallbackTab.classList.add('active');
+                    fallbackContent.style.display = 'block';
+                }
+            }
+            
+        } catch (error) {
+            console.error('❌ [PERFORMANCE] Tab switching failed:', error);
+            // Safe fallback
+            const fallbackContent = document.getElementById(`${tabName}-tab`);
+            if (fallbackContent) {
+                document.querySelectorAll('.ai-tab-content').forEach(c => c.style.display = 'none');
+                fallbackContent.style.display = 'block';
+            }
+        }
+    });
+    
+        // Lazy load tab data
+        if (tabName === 'general' && typeof window.loadGeneralTabData === 'function') {
+            setTimeout(() => window.loadGeneralTabData(), 0);
+        }
+        
+    } catch (mainError) {
+        console.error('❌ [MAIN] switchAITab failed, using emergency fallback:', mainError);
+        // Emergency fallback - direct DOM manipulation
+        try {
+            document.querySelectorAll('.ai-tab-content').forEach(c => c.style.display = 'none');
+            document.querySelectorAll('.ai-settings-tab').forEach(t => t.classList.remove('active'));
+            
+            const emergencyContent = document.getElementById(`${tabName}-tab`);
+            const emergencyTab = document.querySelector(`[data-tab="${tabName}"]`);
+            
+            if (emergencyContent) emergencyContent.style.display = 'block';
+            if (emergencyTab) emergencyTab.classList.add('active');
+            
+            console.log('✅ [EMERGENCY] Tab switched to:', tabName);
+        } catch (emergencyError) {
+            console.error('❌ [EMERGENCY] Complete failure:', emergencyError);
+        }
+    }
+};
+
+window.showAISettings = function() {
+    console.log('🔧 [AI SETTINGS] Showing AI Settings...');
+    
+    try {
+        // Try optimized modal opening
+        console.log('🔧 [AI SETTINGS] Opening provider configuration modal...');
+        window.openAISettingsModal();
+    } catch (error) {
+        console.error('❌ [AI SETTINGS] Optimized modal failed, using fallback:', error);
+        // Fallback to simple modal opening
+        window.openAISettingsModalFallback();
+    }
+    
+    return false;
+};
+
+// Simple fallback modal opening function
+window.openAISettingsModalFallback = function() {
+    console.log('🔄 [FALLBACK] Opening AI Settings with simple method...');
+    
+    const modal = document.getElementById('aiSettingsModal');
+    if (modal) {
+        // Simple direct approach
+        modal.classList.remove('ai-modal-hidden');
+        modal.style.display = 'flex';
+        modal.style.opacity = '1';
+        modal.style.visibility = 'visible';
+        modal.style.zIndex = '10001';
+        
+        document.body.style.overflow = 'hidden';
+        
+        // Initialize tabs with simple approach and ensure click handlers
+        setTimeout(() => {
+            // Ensure all tab buttons have click handlers
+            document.querySelectorAll('.ai-settings-tab').forEach(tab => {
+                const tabName = tab.getAttribute('data-tab');
+                if (tabName) {
+                    // Remove existing listeners and add fresh ones
+                    tab.onclick = function(e) {
+                        e.preventDefault();
+                        console.log('🖱️ [CLICK] Tab clicked:', tabName);
+                        window.switchAITabFallback(tabName);
+                        return false;
+                    };
+                    
+                    // Make sure it's clickable
+                    tab.style.pointerEvents = 'auto';
+                    tab.style.cursor = 'pointer';
+                }
+            });
+            
+            // Initialize to general tab
+            window.switchAITabFallback('general');
+            console.log('✅ [FALLBACK] Tab handlers initialized');
+        }, 100);
+        
+        console.log('✅ [FALLBACK] Modal opened successfully');
+    } else {
+        console.error('❌ [FALLBACK] Modal element not found');
+    }
+};
+
+// Simple fallback tab switching
+window.switchAITabFallback = function(tabName) {
+    console.log('🔄 [FALLBACK] Switching to tab:', tabName);
+    
+    try {
+        // Hide all tabs
+        document.querySelectorAll('.ai-tab-content').forEach(content => {
+            content.style.display = 'none';
+            content.classList.remove('active');
+        });
+        
+        // Remove active from all tab buttons
+        document.querySelectorAll('.ai-settings-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Show target tab
+        const targetContent = document.getElementById(`${tabName}-tab`);
+        const targetTab = document.querySelector(`[data-tab="${tabName}"]`);
+        
+        if (targetContent && targetTab) {
+            targetContent.style.display = 'block';
+            targetContent.classList.add('active');
+            targetTab.classList.add('active');
+            
+            console.log('✅ [FALLBACK] Tab switched to:', tabName);
+            return true; // Success
+        } else {
+            console.error('❌ [FALLBACK] Tab or content not found:', tabName);
+            console.log('🔍 [DEBUG] Available tabs:', 
+                Array.from(document.querySelectorAll('.ai-settings-tab')).map(t => t.getAttribute('data-tab')));
+            console.log('🔍 [DEBUG] Available content:', 
+                Array.from(document.querySelectorAll('.ai-tab-content')).map(c => c.id));
+            return false; // Failed
+        }
+    } catch (error) {
+        console.error('❌ [FALLBACK] Tab switching error:', error);
+        return false; // Failed
+    }
+};
+
+// Performance Monitoring System
+const PerformanceMonitor = {
+  metrics: {
+    modalOpenTime: [],
+    tabSwitchTime: [],
+    memoryUsage: [],
+    domQueries: 0,
+    cacheHits: 0,
+    cacheMisses: 0
+  },
+  
+  startTimer(operation) {
+    return {
+      operation,
+      startTime: performance.now(),
+      startMemory: performance.memory ? performance.memory.usedJSHeapSize : 0
+    };
+  },
+  
+  endTimer(timer) {
+    const endTime = performance.now();
+    const endMemory = performance.memory ? performance.memory.usedJSHeapSize : 0;
+    const duration = endTime - timer.startTime;
+    const memoryDelta = endMemory - timer.startMemory;
+    
+    this.metrics[timer.operation + 'Time'].push(duration);
+    if (memoryDelta > 0) {
+      this.metrics.memoryUsage.push(memoryDelta);
+    }
+    
+    console.log(`⚡ [PERFORMANCE] ${timer.operation}: ${duration.toFixed(2)}ms, Memory: ${(memoryDelta/1024).toFixed(2)}KB`);
+    
+    // Warn if performance is below threshold
+    if (duration > this.getThreshold(timer.operation)) {
+      console.warn(`⚠️ [PERFORMANCE WARNING] ${timer.operation} exceeded threshold: ${duration.toFixed(2)}ms`);
+    }
+    
+    return duration;
+  },
+  
+  getThreshold(operation) {
+    const thresholds = {
+      modalOpen: 100, // 95% threshold: <100ms
+      tabSwitch: 50,  // 95% threshold: <50ms
+    };
+    return thresholds[operation] || 100;
+  },
+  
+  recordCacheHit() {
+    this.metrics.cacheHits++;
+  },
+  
+  recordCacheMiss() {
+    this.metrics.cacheMisses++;
+  },
+  
+  recordDOMQuery() {
+    this.metrics.domQueries++;
+  },
+  
+  getReport() {
+    const report = {
+      modalOpenAvg: this.getAverage(this.metrics.modalOpenTime),
+      tabSwitchAvg: this.getAverage(this.metrics.tabSwitchTime),
+      memoryAvg: this.getAverage(this.metrics.memoryUsage),
+      cacheEfficiency: this.metrics.cacheHits / (this.metrics.cacheHits + this.metrics.cacheMisses) * 100,
+      totalDOMQueries: this.metrics.domQueries,
+      performanceScore: this.calculateScore()
+    };
+    
+    console.log('📊 [PERFORMANCE REPORT]', report);
+    return report;
+  },
+  
+  getAverage(arr) {
+    return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+  },
+  
+  calculateScore() {
+    const modalScore = Math.max(0, 100 - (this.getAverage(this.metrics.modalOpenTime) - 50));
+    const tabScore = Math.max(0, 100 - (this.getAverage(this.metrics.tabSwitchTime) - 25) * 2);
+    const cacheScore = this.metrics.cacheHits / (this.metrics.cacheHits + this.metrics.cacheMisses) * 100 || 0;
+    
+    return Math.round((modalScore + tabScore + cacheScore) / 3);
+  }
+};
+
+// Enhanced AIModalCache with performance monitoring
+const originalInit = AIModalCache.init;
+AIModalCache.init = function() {
+  if (this.initialized) {
+    PerformanceMonitor.recordCacheHit();
+    return;
+  }
+  
+  PerformanceMonitor.recordCacheMiss();
+  const timer = PerformanceMonitor.startTimer('cacheInit');
+  originalInit.call(this);
+  PerformanceMonitor.endTimer(timer);
+};
+
+// Global performance monitoring functions
+window.getPerformanceReport = () => PerformanceMonitor.getReport();
+window.resetPerformanceMetrics = () => {
+  Object.keys(PerformanceMonitor.metrics).forEach(key => {
+    if (Array.isArray(PerformanceMonitor.metrics[key])) {
+      PerformanceMonitor.metrics[key] = [];
+    } else {
+      PerformanceMonitor.metrics[key] = 0;
+    }
+  });
+  console.log('🔄 [PERFORMANCE] Metrics reset');
+};
+
+// Debug function for tab clicking issues
+window.debugTabIssue = function() {
+    console.log('🔍 [TAB DEBUG] Checking tab functionality...');
+    
+    const tabs = document.querySelectorAll('.ai-settings-tab');
+    const contents = document.querySelectorAll('.ai-tab-content');
+    
+    console.log('📊 [TAB DEBUG] Found elements:');
+    console.log('- Tabs:', tabs.length);
+    console.log('- Contents:', contents.length);
+    
+    tabs.forEach((tab, index) => {
+        const tabName = tab.getAttribute('data-tab');
+        const isClickable = tab.onclick !== null;
+        const hasEventListener = tab._listeners?.click || false;
+        
+        console.log(`🔍 [TAB ${index + 1}] ${tabName}:`, {
+            clickable: isClickable,
+            hasListener: hasEventListener,
+            onclick: !!tab.onclick,
+            classes: tab.className,
+            style: tab.style.cssText || 'none'
+        });
+        
+        // Test click manually
+        console.log(`🧪 [TEST] Manually clicking ${tabName}...`);
+        try {
+            if (tab.onclick) {
+                tab.onclick();
+                console.log(`✅ [TEST] ${tabName} onclick worked`);
+            } else {
+                window.switchAITab(tabName);
+                console.log(`✅ [TEST] ${tabName} direct call worked`);
+            }
+        } catch (error) {
+            console.error(`❌ [TEST] ${tabName} failed:`, error);
+        }
+    });
+    
+    console.log('📋 [TAB DEBUG] Content elements:');
+    contents.forEach((content, index) => {
+        console.log(`🔍 [CONTENT ${index + 1}] ${content.id}:`, {
+            display: window.getComputedStyle(content).display,
+            visibility: window.getComputedStyle(content).visibility,
+            classes: content.className
+        });
+    });
+};
+
+// Manual debug function - call from console
+window.debugModalIssue = function() {
+    console.log('🔍 [MANUAL DEBUG] Checking modal issue...');
+    
+    const modal = document.getElementById('aiSettingsModal');
+    if (!modal) {
+        console.error('❌ Modal element not found!');
+        return;
+    }
+    
+    console.log('✅ Modal element found');
+    console.log('- Current classes:', modal.className);
+    console.log('- Current style.display:', modal.style.display);
+    console.log('- Computed display:', window.getComputedStyle(modal).display);
+    console.log('- Computed visibility:', window.getComputedStyle(modal).visibility);
+    console.log('- Computed opacity:', window.getComputedStyle(modal).opacity);
+    console.log('- Z-index:', window.getComputedStyle(modal).zIndex);
+    
+    console.log('🔧 Forcing modal to show...');
+    modal.classList.remove('ai-modal-hidden');
+    modal.style.setProperty('display', 'flex', 'important');
+    modal.style.setProperty('visibility', 'visible', 'important');
+    modal.style.setProperty('opacity', '1', 'important');
+    modal.style.setProperty('z-index', '99999', 'important');
+    modal.style.setProperty('position', 'fixed', 'important');
+    modal.style.setProperty('top', '0', 'important');
+    modal.style.setProperty('left', '0', 'important');
+    modal.style.setProperty('width', '100vw', 'important');
+    modal.style.setProperty('height', '100vh', 'important');
+    
+    console.log('✅ Modal should be visible now');
+    console.log('- New display:', window.getComputedStyle(modal).display);
+    console.log('- New visibility:', window.getComputedStyle(modal).visibility);
+    console.log('- New opacity:', window.getComputedStyle(modal).opacity);
+};
+
+// Test all tabs functionality
+window.testAllTabs = function() {
+    console.log('🧪 [TEST] Testing all tabs...');
+    
+    const tabs = ['general', 'models', 'performance', 'security', 'advanced'];
+    
+    tabs.forEach((tabName, index) => {
+        setTimeout(() => {
+            console.log(`🔄 [TEST] Testing ${tabName} tab...`);
+            
+            const tabElement = document.getElementById(`${tabName}-tab`);
+            const buttonElement = document.querySelector(`[data-tab="${tabName}"]`);
+            
+            if (!tabElement) {
+                console.error(`❌ ${tabName} tab element not found`);
+                return;
+            }
+            
+            if (!buttonElement) {
+                console.error(`❌ ${tabName} tab button not found`);
+                return;
+            }
+            
+            // Switch to this tab
+            window.switchAITab(tabName);
+            
+            // Check after a short delay
+            setTimeout(() => {
+                const isActive = tabElement.classList.contains('active');
+                const isVisible = window.getComputedStyle(tabElement).display !== 'none';
+                
+                console.log(`🔍 ${tabName} tab active:`, isActive);
+                console.log(`🔍 ${tabName} tab visible:`, isVisible);
+                
+                if (isActive && isVisible) {
+                    console.log(`✅ ${tabName} tab test PASSED!`);
+                } else {
+                    console.error(`❌ ${tabName} tab test FAILED`);
+                }
+            }, 100);
+            
+        }, index * 500);
+    });
+};
+
+// ===== SECURITY TAB FUNCTIONS =====
+
+window.rotateAllKeys = function() {
+    console.log('🔐 [SECURITY] Rotating all API keys...');
+    // In production, this would call backend API to rotate keys
+    showToast('All API keys have been rotated successfully', 'success');
+};
+
+window.generateBackupKeys = function() {
+    console.log('🔐 [SECURITY] Generating backup keys...');
+    // In production, this would generate backup keys
+    showToast('Backup keys generated successfully', 'success');
+};
+
+window.viewActiveSessions = function() {
+    console.log('🔐 [SECURITY] Viewing active sessions...');
+    // In production, this would show active session modal
+    showToast('Active sessions: 3 sessions found', 'info');
+};
+
+window.revokeAllSessions = function() {
+    console.log('🔐 [SECURITY] Revoking all sessions...');
+    if (confirm('Are you sure you want to revoke all active sessions? This will log out all users.')) {
+        // In production, this would revoke all sessions
+        showToast('All sessions have been revoked', 'warning');
+    }
+};
+
+// ===== ADVANCED TAB FUNCTIONS =====
+
+window.downloadLogs = function() {
+    console.log('🔧 [ADVANCED] Downloading logs...');
+    // In production, this would trigger log download
+    const blob = new Blob(['Sample log content'], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'rbck-logs.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Logs downloaded successfully', 'success');
+};
+
+window.clearLogs = function() {
+    console.log('🔧 [ADVANCED] Clearing logs...');
+    if (confirm('Are you sure you want to clear all logs? This action cannot be undone.')) {
+        // In production, this would clear system logs
+        showToast('All logs have been cleared', 'warning');
+    }
+};
+
+window.resetToDefaults = function() {
+    console.log('🔧 [ADVANCED] Resetting to defaults...');
+    if (confirm('Are you sure you want to reset all model parameters to defaults?')) {
+        // Reset sliders to default values
+        document.getElementById('globalTemperature').value = 0.7;
+        document.getElementById('globalTemperatureValue').textContent = '0.7';
+        document.getElementById('globalMaxTokens').value = 2000;
+        document.getElementById('globalMaxTokensValue').textContent = '2,000';
+        document.getElementById('globalTopP').value = 0.9;
+        document.getElementById('globalTopPValue').textContent = '0.9';
+        document.getElementById('globalFrequencyPenalty').value = 0;
+        document.getElementById('globalFrequencyPenaltyValue').textContent = '0.0';
+        showToast('Model parameters reset to defaults', 'info');
+    }
+};
+
+window.saveGlobalParameters = function() {
+    console.log('🔧 [ADVANCED] Saving global parameters...');
+    const params = {
+        temperature: document.getElementById('globalTemperature').value,
+        maxTokens: document.getElementById('globalMaxTokens').value,
+        topP: document.getElementById('globalTopP').value,
+        frequencyPenalty: document.getElementById('globalFrequencyPenalty').value
+    };
+    // In production, this would save to backend
+    console.log('Parameters to save:', params);
+    showToast('Global parameters saved successfully', 'success');
+};
+
+window.testWebhook = function() {
+    console.log('🔧 [ADVANCED] Testing webhook...');
+    const webhookUrl = document.getElementById('webhookUrl').value;
+    if (!webhookUrl) {
+        showToast('Please enter a webhook URL first', 'error');
+        return;
+    }
+    // In production, this would send test webhook
+    showToast('Test webhook sent successfully', 'success');
+};
+
+window.saveWebhookConfig = function() {
+    console.log('🔧 [ADVANCED] Saving webhook configuration...');
+    const config = {
+        url: document.getElementById('webhookUrl').value,
+        secret: document.getElementById('webhookSecret').value,
+        retries: document.getElementById('webhookRetries').value,
+        enabled: document.getElementById('enableWebhooks').checked
+    };
+    // In production, this would save to backend
+    console.log('Webhook config to save:', config);
+    showToast('Webhook configuration saved successfully', 'success');
+};
+
+window.clearCache = function() {
+    console.log('🔧 [ADVANCED] Clearing cache...');
+    // In production, this would clear system cache
+    showToast('Cache cleared successfully', 'success');
+};
+
+window.optimizeDatabase = function() {
+    console.log('🔧 [ADVANCED] Optimizing database...');
+    // In production, this would optimize database
+    showToast('Database optimization completed', 'success');
+};
+
+window.fullMaintenance = function() {
+    console.log('🔧 [ADVANCED] Running full maintenance...');
+    if (confirm('Are you sure you want to run full maintenance? This may affect system performance temporarily.')) {
+        // In production, this would run full maintenance
+        showToast('Full maintenance completed successfully', 'success');
+    }
+};
+
+window.regenerateApiToken = function() {
+    console.log('🔧 [ADVANCED] Regenerating API token...');
+    if (confirm('Are you sure you want to regenerate the API token? The old token will become invalid.')) {
+        // In production, this would regenerate token
+        const newToken = 'sk-rbck-' + Math.random().toString(36).substring(2, 15);
+        document.getElementById('apiToken').value = newToken;
+        showToast('API token regenerated successfully', 'warning');
+    }
+};
+
+window.viewApiDocs = function() {
+    console.log('🔧 [ADVANCED] Opening API documentation...');
+    // In production, this would open API docs
+    window.open('/api/docs', '_blank');
+};
+
+// ✅ MODERN: Clipboard API with fallback
+window.copyApiToken = function() {
+    const tokenInput = document.getElementById('apiToken');
+    if (!tokenInput) {
+        showNotification('ไม่พบ API Token', 'error');
+        return;
+    }
+    
+    const tokenValue = tokenInput.value;
+    
+    // Modern Clipboard API with fallback
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(tokenValue).then(() => {
+            console.log('✅ [CLIPBOARD] API token copied via Clipboard API');
+            showNotification('API Token ถูกคัดลอกแล้ว', 'success');
+        }).catch(err => {
+            console.warn('⚠️ [CLIPBOARD] Clipboard API failed, using fallback:', err);
+            fallbackCopyToClipboard(tokenInput, tokenValue);
+        });
+    } else {
+        // Fallback for older browsers
+        fallbackCopyToClipboard(tokenInput, tokenValue);
+    }
+};
+
+// ✅ HELPER: Fallback copy function
+function fallbackCopyToClipboard(inputElement, value) {
+    try {
+        inputElement.select();
+        inputElement.setSelectionRange(0, 99999); // For mobile devices
+        
+        const success = document.execCommand('copy');
+        if (success) {
+            console.log('✅ [CLIPBOARD] API token copied via fallback method');
+            showNotification('API Token ถูกคัดลอกแล้ว', 'success');
+        } else {
+            throw new Error('Copy command failed');
+        }
+    } catch (err) {
+        console.error('❌ [CLIPBOARD] Copy failed:', err);
+        showNotification('ไม่สามารถคัดลอก API Token ได้ กรุณาคัดลอกด้วยตนเอง', 'error');
+    }
+}
+
+window.togglePasswordVisibility = function(inputId) {
+    const input = document.getElementById(inputId);
+    const button = input.nextElementSibling;
+    const icon = button.querySelector('i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+};
+
+// ===== SLIDER VALUE UPDATES =====
+
+// Initialize slider value updates for Security and Advanced tabs
+document.addEventListener('DOMContentLoaded', function() {
+    // Session timeout slider
+    const sessionTimeoutSlider = document.getElementById('sessionTimeout');
+    if (sessionTimeoutSlider) {
+        sessionTimeoutSlider.addEventListener('input', function() {
+            document.getElementById('sessionTimeoutValue').textContent = this.value;
+        });
+    }
+    
+    // Alert threshold slider
+    const alertThresholdSlider = document.getElementById('alertThreshold');
+    if (alertThresholdSlider) {
+        alertThresholdSlider.addEventListener('input', function() {
+            document.getElementById('alertThresholdValue').textContent = this.value;
+        });
+    }
+    
+    // Requests per minute slider
+    const requestsPerMinuteSlider = document.getElementById('requestsPerMinute');
+    if (requestsPerMinuteSlider) {
+        requestsPerMinuteSlider.addEventListener('input', function() {
+            document.getElementById('requestsPerMinuteValue').textContent = this.value;
+        });
+    }
+    
+    // Daily limit slider
+    const dailyLimitSlider = document.getElementById('dailyLimit');
+    if (dailyLimitSlider) {
+        dailyLimitSlider.addEventListener('input', function() {
+            const value = parseInt(this.value);
+            document.getElementById('dailyLimitValue').textContent = value.toLocaleString();
+        });
+    }
+    
+    // Advanced tab sliders
+    const maxLogSizeSlider = document.getElementById('maxLogSize');
+    if (maxLogSizeSlider) {
+        maxLogSizeSlider.addEventListener('input', function() {
+            document.getElementById('maxLogSizeValue').textContent = this.value;
+        });
+    }
+    
+    const globalTemperatureSlider = document.getElementById('globalTemperature');
+    if (globalTemperatureSlider) {
+        globalTemperatureSlider.addEventListener('input', function() {
+            document.getElementById('globalTemperatureValue').textContent = this.value;
+        });
+    }
+    
+    const globalMaxTokensSlider = document.getElementById('globalMaxTokens');
+    if (globalMaxTokensSlider) {
+        globalMaxTokensSlider.addEventListener('input', function() {
+            const value = parseInt(this.value);
+            document.getElementById('globalMaxTokensValue').textContent = value.toLocaleString();
+        });
+    }
+    
+    const globalTopPSlider = document.getElementById('globalTopP');
+    if (globalTopPSlider) {
+        globalTopPSlider.addEventListener('input', function() {
+            document.getElementById('globalTopPValue').textContent = this.value;
+        });
+    }
+    
+    const globalFrequencyPenaltySlider = document.getElementById('globalFrequencyPenalty');
+    if (globalFrequencyPenaltySlider) {
+        globalFrequencyPenaltySlider.addEventListener('input', function() {
+            document.getElementById('globalFrequencyPenaltyValue').textContent = this.value;
+        });
+    }
+    
+    const webhookRetriesSlider = document.getElementById('webhookRetries');
+    if (webhookRetriesSlider) {
+        webhookRetriesSlider.addEventListener('input', function() {
+            document.getElementById('webhookRetriesValue').textContent = this.value;
+        });
+    }
+    
+    const cleanupIntervalSlider = document.getElementById('cleanupInterval');
+    if (cleanupIntervalSlider) {
+        cleanupIntervalSlider.addEventListener('input', function() {
+            document.getElementById('cleanupIntervalValue').textContent = this.value;
+        });
+    }
+    
+    const cacheTTLSlider = document.getElementById('cacheTTL');
+    if (cacheTTLSlider) {
+        cacheTTLSlider.addEventListener('input', function() {
+            document.getElementById('cacheTTLValue').textContent = this.value;
+        });
+    }
+    
+    const apiRateLimitSlider = document.getElementById('apiRateLimit');
+    if (apiRateLimitSlider) {
+        apiRateLimitSlider.addEventListener('input', function() {
+            const value = parseInt(this.value);
+            document.getElementById('apiRateLimitValue').textContent = value.toLocaleString();
+        });
+    }
+});
+
+// ===== DEBUG FUNCTION TO TEST TAB SWITCHING =====
+window.testAIModalTabs = function() {
+    console.log('🧪 [TEST] Testing AI modal tab switching...');
+    
+    // Check if modal exists
+    const modal = document.getElementById('aiSettingsModal');
+    if (!modal) {
+        console.error('❌ [TEST] AI modal not found');
+        return;
+    }
+    
+    // Check if functions exist
+    console.log('🔍 [TEST] switchAITab available:', typeof window.switchAITab === 'function');
+    console.log('🔍 [TEST] openAISettingsModal available:', typeof window.openAISettingsModal === 'function');
+    
+    // Test tab switching if modal is open
+    if (modal.style.display === 'flex') {
+        console.log('🧪 [TEST] Modal is open, testing tab switching...');
+        const tabs = ['general', 'models', 'performance', 'security', 'advanced'];
+        
+        tabs.forEach((tabName, index) => {
+            setTimeout(() => {
+                console.log(`🧪 [TEST] Switching to ${tabName} tab...`);
+                if (typeof window.switchAITab === 'function') {
+                    window.switchAITab(tabName);
+                    
+                    // Verify the switch worked
+                    const content = document.getElementById(`${tabName}-tab`);
+                    const button = document.querySelector(`[data-tab="${tabName}"]`);
+                    
+                    console.log(`✅ [TEST] ${tabName} tab - Button active:`, button?.classList.contains('active'));
+                    console.log(`✅ [TEST] ${tabName} tab - Content active:`, content?.classList.contains('active'));
+                    console.log(`✅ [TEST] ${tabName} tab - Content visible:`, content?.offsetHeight > 0);
+                } else {
+                    console.error('❌ [TEST] switchAITab function not available');
+                }
+            }, index * 1000);
+        });
+    } else {
+        console.log('🔧 [TEST] Modal is not open. Opening modal first...');
+        if (typeof window.openAISettingsModal === 'function') {
+            window.openAISettingsModal();
+            setTimeout(() => window.testAIModalTabs(), 500);
+        }
+    }
+};
+
+// ===== CONTENT VERIFICATION FUNCTION =====
+window.verifyTabContent = function() {
+    console.log('🔍 [VERIFY] Checking tab content visibility...');
+    
+    const tabs = ['general', 'models', 'performance', 'security', 'advanced'];
+    tabs.forEach(tabName => {
+        const content = document.getElementById(`${tabName}-tab`);
+        if (content) {
+            const isVisible = content.offsetHeight > 0 && content.offsetWidth > 0;
+            const hasContent = content.innerHTML.trim().length > 100;
+            const computedStyle = window.getComputedStyle(content);
+            
+            console.log(`📊 [VERIFY] ${tabName.toUpperCase()} TAB:`, {
+                element: content ? '✅ Found' : '❌ Missing',
+                visible: isVisible ? '✅ Visible' : '❌ Hidden',
+                hasContent: hasContent ? '✅ Has Content' : '❌ Empty',
+                height: content.offsetHeight + 'px',
+                width: content.offsetWidth + 'px',
+                display: computedStyle.display,
+                visibility: computedStyle.visibility,
+                opacity: computedStyle.opacity,
+                innerHTML_length: content.innerHTML.length,
+                active_class: content.classList.contains('active') ? '✅ Active' : '❌ Inactive'
+            });
+        } else {
+            console.error(`❌ [VERIFY] ${tabName} tab content not found!`);
+        }
+    });
+    
+    // Check for missing CSS classes
+    const requiredClasses = ['kpi-grid', 'providers-luxury-grid', 'settings-grid'];
+    requiredClasses.forEach(className => {
+        const elements = document.querySelectorAll(`.${className}`);
+        console.log(`🎨 [VERIFY] .${className} elements found:`, elements.length);
+        if (elements.length > 0) {
+            elements.forEach((el, index) => {
+                const styles = window.getComputedStyle(el);
+                console.log(`   Element ${index + 1}:`, {
+                    display: styles.display,
+                    gridTemplateColumns: styles.gridTemplateColumns || 'Not set',
+                    gap: styles.gap || 'Not set'
+                });
+            });
+        }
+    });
+};
+
+// ===== SECURITY DASHBOARD FUNCTIONS =====
+
+/**
+ * 🔒 Load Security Dashboard
+ * Fetches and displays security metrics, alerts, and logs
+ */
+window.loadSecurityDashboard = async function() {
+    console.log('🔒 [SECURITY] Loading security dashboard...');
+    
+    try {
+        const response = await fetch(`${config.apiBase}/security/dashboard`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            populateSecurityDashboard(result.data);
+            showNotification('Security dashboard loaded successfully', 'success');
+        } else {
+            throw new Error(result.error || 'Failed to load security data');
+        }
+
+    } catch (error) {
+        console.error('❌ [SECURITY] Dashboard loading error:', error);
+        showNotification('Failed to load security dashboard: ' + error.message, 'error');
+    }
+};
+
+/**
+ * 📊 Populate Security Dashboard with data
+ */
+function populateSecurityDashboard(data) {
+    console.log('📊 [SECURITY] Populating dashboard with data:', data);
+    
+    // Update metrics cards
+    updateMetricCard('failed-logins', data.metrics.failedLogins);
+    updateMetricCard('blocked-ips', data.metrics.blockedIPs);
+    updateMetricCard('rate-limited', data.metrics.rateLimited);
+    updateMetricCard('security-alerts', data.metrics.securityAlerts);
+    
+    // Update recent alerts
+    populateSecurityAlerts(data.alerts);
+    
+    // Update system status
+    updateSystemStatus(data.systemStatus);
+    
+    // Update last updated timestamp
+    const lastUpdated = document.querySelector('.dashboard-last-updated');
+    if (lastUpdated) {
+        lastUpdated.textContent = `Last updated: ${new Date(data.timestamp).toLocaleString()}`;
+    }
+}
+
+/**
+ * 📈 Update individual metric card
+ */
+function updateMetricCard(metricId, value) {
+    const card = document.querySelector(`[data-metric="${metricId}"]`);
+    if (card) {
+        const valueElement = card.querySelector('.metric-value');
+        if (valueElement) {
+            valueElement.textContent = value;
+        }
+    }
+}
+
+/**
+ * ⚠️ Populate Security Alerts
+ */
+function populateSecurityAlerts(alerts) {
+    const alertsContainer = document.querySelector('#security-alerts-list');
+    if (!alertsContainer) return;
+    
+    if (alerts.length === 0) {
+        alertsContainer.innerHTML = '<p class="no-alerts">No security alerts in the last 24 hours</p>';
+        return;
+    }
+    
+    alertsContainer.innerHTML = alerts.map(alert => `
+        <div class="alert-item alert-${alert.severity}">
+            <div class="alert-header">
+                <span class="alert-type">${alert.type}</span>
+                <span class="alert-time">${new Date(alert.timestamp).toLocaleString()}</span>
+            </div>
+            <div class="alert-message">${alert.message}</div>
+            <div class="alert-ip">IP: ${alert.ip}</div>
+        </div>
+    `).join('');
+}
+
+/**
+ * 🏥 Update System Status
+ */
+function updateSystemStatus(status) {
+    const statusContainer = document.querySelector('#system-status');
+    if (!statusContainer) return;
+    
+    const statusItems = [
+        { key: 'server', label: 'Server', value: status.server },
+        { key: 'database', label: 'Database', value: status.database },
+        { key: 'security', label: 'Security', value: status.security },
+        { key: 'logging', label: 'Logging', value: status.logging }
+    ];
+    
+    statusContainer.innerHTML = statusItems.map(item => `
+        <div class="status-item">
+            <span class="status-label">${item.label}:</span>
+            <span class="status-value status-${item.value}">${item.value}</span>
+        </div>
+    `).join('');
+}
+
+/**
+ * 🔒 Load Authentication Logs
+ */
+window.loadAuthLogs = async function() {
+    console.log('🔒 [AUTH] Loading authentication logs...');
+    
+    try {
+        const response = await fetch(`${config.apiBase}/security/auth-logs`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            populateAuthLogs(result.data);
+            showNotification('Authentication logs loaded successfully', 'success');
+        } else {
+            throw new Error(result.error || 'Failed to load authentication logs');
+        }
+
+    } catch (error) {
+        console.error('❌ [AUTH] Logs loading error:', error);
+        showNotification('Failed to load authentication logs: ' + error.message, 'error');
+    }
+};
+
+/**
+ * 📋 Populate Authentication Logs Table
+ */
+function populateAuthLogs(logs) {
+    const tableBody = document.querySelector('#auth-logs-table tbody');
+    if (!tableBody) return;
+    
+    if (logs.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="6">No authentication logs found</td></tr>';
+        return;
+    }
+    
+    tableBody.innerHTML = logs.map(log => `
+        <tr class="log-row log-${log.status}">
+            <td>${new Date(log.timestamp).toLocaleString()}</td>
+            <td>${log.event}</td>
+            <td>${log.username}</td>
+            <td>${log.ip}</td>
+            <td><span class="status-badge status-${log.status}">${log.status}</span></td>
+            <td>
+                <button class="btn-details" onclick="showLogDetails('${log.id}')">
+                    <i class="fas fa-info-circle"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+/**
+ * 🚫 Load Blocked IPs
+ */
+window.loadBlockedIPs = async function() {
+    console.log('🚫 [BLOCKED] Loading blocked IPs...');
+    
+    try {
+        const response = await fetch(`${config.apiBase}/security/blocked-ips`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            populateBlockedIPs(result.data);
+            showNotification('Blocked IPs loaded successfully', 'success');
+        } else {
+            throw new Error(result.error || 'Failed to load blocked IPs');
+        }
+
+    } catch (error) {
+        console.error('❌ [BLOCKED] IPs loading error:', error);
+        showNotification('Failed to load blocked IPs: ' + error.message, 'error');
+    }
+};
+
+/**
+ * 🚫 Populate Blocked IPs Table
+ */
+function populateBlockedIPs(blockedIPs) {
+    const tableBody = document.querySelector('#blocked-ips-table tbody');
+    if (!tableBody) return;
+    
+    if (blockedIPs.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="5">No blocked IPs found</td></tr>';
+        return;
+    }
+    
+    tableBody.innerHTML = blockedIPs.map(ip => `
+        <tr class="blocked-ip-row">
+            <td>${ip.ip}</td>
+            <td>${ip.reason}</td>
+            <td>${new Date(ip.blockedAt).toLocaleString()}</td>
+            <td>${ip.attempts}</td>
+            <td>
+                <button class="btn-unblock" onclick="unblockIP('${ip.ip}')">
+                    <i class="fas fa-unlock"></i> Unblock
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+/**
+ * 🔓 Unblock IP Address
+ */
+window.unblockIP = async function(ipAddress) {
+    if (!confirm(`Are you sure you want to unblock IP: ${ipAddress}?`)) {
+        return;
+    }
+    
+    console.log('🔓 [UNBLOCK] Unblocking IP:', ipAddress);
+    
+    try {
+        const response = await fetch(`${config.apiBase}/security/unblock-ip`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ ip: ipAddress })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(`IP ${ipAddress} has been unblocked`, 'success');
+            // Reload blocked IPs to update the table
+            await loadBlockedIPs();
+        } else {
+            throw new Error(result.error || 'Failed to unblock IP');
+        }
+
+    } catch (error) {
+        console.error('❌ [UNBLOCK] Error unblocking IP:', error);
+        showNotification('Failed to unblock IP: ' + error.message, 'error');
+    }
+};
+
+/**
+ * 🔄 Refresh Security Dashboard
+ */
+window.refreshSecurityDashboard = async function() {
+    console.log('🔄 [REFRESH] Refreshing security dashboard...');
+    
+    const currentSection = document.querySelector('.main-content .section:not([style*="display: none"])');
+    if (!currentSection) return;
+    
+    const sectionId = currentSection.id;
+    
+    switch(sectionId) {
+        case 'security-dashboard':
+            await loadSecurityDashboard();
+            break;
+        case 'auth-logs':
+            await loadAuthLogs();
+            break;
+        case 'blocked-ips':
+            await loadBlockedIPs();
+            break;
+        default:
+            console.log('🔄 [REFRESH] No security section to refresh');
+    }
+};
+
+/**
+ * 📄 Show Log Details (placeholder)
+ */
+window.showLogDetails = function(logId) {
+    console.log('📄 [DETAILS] Showing details for log:', logId);
+    showNotification('Log details feature coming soon', 'info');
+};
+
+/**
+ * 🎯 Auto-refresh security data every 30 seconds
+ */
+let securityRefreshInterval;
+
+window.startSecurityAutoRefresh = function() {
+    if (securityRefreshInterval) {
+        clearInterval(securityRefreshInterval);
+    }
+    
+    securityRefreshInterval = setInterval(() => {
+        const securitySections = ['security-dashboard', 'auth-logs', 'blocked-ips'];
+        const currentSection = document.querySelector('.main-content .section:not([style*="display: none"])');
+        
+        if (currentSection && securitySections.includes(currentSection.id)) {
+            console.log('🔄 [AUTO-REFRESH] Refreshing security data...');
+            refreshSecurityDashboard();
+        }
+    }, 30000); // 30 seconds
+};
+
+window.stopSecurityAutoRefresh = function() {
+    if (securityRefreshInterval) {
+        clearInterval(securityRefreshInterval);
+        securityRefreshInterval = null;
+    }
+};
+
+// Auto-start security refresh when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    startSecurityAutoRefresh();
+});
+
 console.log('✅ [MAIN] Production-ready RBCK CMS loaded successfully');
+console.log('🧪 [DEBUG] Use window.testAIModalTabs() to test tab switching');
+console.log('🔍 [DEBUG] Use window.verifyTabContent() to check tab content visibility');

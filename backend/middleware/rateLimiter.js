@@ -1,7 +1,88 @@
-// Development Rate Limiting Middleware for RBCK API
-// More lenient limits for development and testing
+// ✅ PHASE 3: Enhanced Rate Limiting Middleware for RBCK API
+// Advanced security features with adaptive protection
 
 const rateLimit = require('express-rate-limit');
+
+// ✅ NEW: Suspicious IP tracking
+const suspiciousIPs = new Map();
+const blockedIPs = new Set();
+
+/**
+ * ✅ PHASE 3: Advanced IP analysis and blocking
+ */
+const analyzeIPBehavior = (ip, endpoint) => {
+    const key = `${ip}:${endpoint}`;
+    const now = Date.now();
+    
+    if (!suspiciousIPs.has(key)) {
+        suspiciousIPs.set(key, {
+            requests: 1,
+            firstSeen: now,
+            lastSeen: now,
+            violations: 0,
+            patterns: []
+        });
+        return false;
+    }
+    
+    const data = suspiciousIPs.get(key);
+    data.requests++;
+    data.lastSeen = now;
+    
+    // Check for rapid-fire requests (potential bot)
+    const timeDiff = now - data.lastSeen;
+    if (timeDiff < 100) { // Less than 100ms between requests
+        data.violations++;
+        data.patterns.push('rapid_fire');
+    }
+    
+    // Check for sustained high volume
+    const duration = now - data.firstSeen;
+    if (duration < 60000 && data.requests > 50) { // 50+ requests in 1 minute
+        data.violations++;
+        data.patterns.push('high_volume');
+    }
+    
+    // Block if too many violations
+    if (data.violations >= 3) {
+        blockedIPs.add(ip);
+        console.warn(`🔒 [SECURITY] IP ${ip} blocked due to suspicious behavior:`, data.patterns);
+        return true;
+    }
+    
+    return false;
+};
+
+/**
+ * ✅ PHASE 3: Enhanced middleware to check blocked IPs
+ */
+const blockSuspiciousIPs = (req, res, next) => {
+    const ip = req.ip || req.connection.remoteAddress;
+    
+    if (blockedIPs.has(ip)) {
+        console.warn(`🚫 [SECURITY] Blocked IP ${ip} attempted access to ${req.path}`);
+        return res.status(429).json({
+            success: false,
+            error: 'Access temporarily restricted',
+            message: 'Your IP has been temporarily blocked due to suspicious activity',
+            code: 'IP_BLOCKED',
+            timestamp: new Date().toISOString()
+        });
+    }
+    
+    // Analyze current request
+    if (analyzeIPBehavior(ip, req.path)) {
+        return res.status(429).json({
+            success: false,
+            error: 'Suspicious activity detected',
+            message: 'Access restricted due to unusual request patterns',
+            code: 'SUSPICIOUS_ACTIVITY',
+            timestamp: new Date().toISOString()
+        });
+    }
+    
+    next();
+};
 
 /**
  * Development Rate limiter for API Key management endpoints
@@ -194,6 +275,80 @@ const adaptiveLoginRateLimit = process.env.NODE_ENV === 'production'
     ? productionLoginRateLimit 
     : loginRateLimit;
 
+/**
+ * ✅ PHASE 3: Advanced AI endpoint rate limiting
+ */
+const aiEndpointRateLimit = rateLimit({
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    max: process.env.NODE_ENV === 'production' ? 30 : 100,
+    message: {
+        error: 'AI service rate limit exceeded',
+        message: 'Too many AI requests. Please wait before trying again.',
+        retryAfter: 5 * 60,
+        timestamp: new Date().toISOString()
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => {
+        return `${req.ip}:ai:${req.user?.id || 'anonymous'}`;
+    }
+});
+
+/**
+ * ✅ PHASE 3: Migration endpoint rate limiting (very strict)
+ */
+const migrationRateLimit = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 5, // Maximum 5 migration operations per hour
+    message: {
+        error: 'Migration rate limit exceeded',
+        message: 'Too many migration operations. Please wait before trying again.',
+        retryAfter: 60 * 60,
+        timestamp: new Date().toISOString()
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => {
+        return `${req.ip}:migration:${req.user?.id || 'anonymous'}`;
+    }
+});
+
+/**
+ * ✅ PHASE 3: Cleanup function to prevent memory leaks
+ */
+const cleanupSuspiciousIPs = () => {
+    const now = Date.now();
+    const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+    
+    for (const [key, data] of suspiciousIPs.entries()) {
+        if (now - data.lastSeen > maxAge) {
+            suspiciousIPs.delete(key);
+        }
+    }
+    
+    // Clear blocked IPs after 2 hours
+    if (blockedIPs.size > 0) {
+        setTimeout(() => {
+            blockedIPs.clear();
+            console.log('🔄 [SECURITY] Cleared blocked IPs list');
+        }, 2 * 60 * 60 * 1000);
+    }
+};
+
+// Run cleanup every hour
+setInterval(cleanupSuspiciousIPs, 60 * 60 * 1000);
+
+/**
+ * ✅ PHASE 3: Get rate limiting stats (for monitoring)
+ */
+const getRateLimitStats = () => {
+    return {
+        suspiciousIPs: suspiciousIPs.size,
+        blockedIPs: blockedIPs.size,
+        timestamp: new Date().toISOString()
+    };
+};
+
 module.exports = {
     apiKeyRateLimit,
     loginRateLimit,
@@ -202,5 +357,11 @@ module.exports = {
     productionApiKeyRateLimit,
     productionLoginRateLimit,
     adaptiveApiKeyRateLimit,
-    adaptiveLoginRateLimit
+    adaptiveLoginRateLimit,
+    // ✅ PHASE 3: New advanced rate limiting
+    blockSuspiciousIPs,
+    aiEndpointRateLimit,
+    migrationRateLimit,
+    getRateLimitStats,
+    analyzeIPBehavior
 };

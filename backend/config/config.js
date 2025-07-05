@@ -1,8 +1,45 @@
 /**
  * Application Configuration
  * Central configuration management for all environment variables
+ * ✅ SECURITY ENHANCED: Environment validation and secure configuration
  * Environment variables are loaded by server.js
  */
+
+const EnvironmentValidator = require('../utils/envValidator');
+
+// ✅ SECURITY FIX: Validate environment on startup
+console.log('🔍 Validating environment configuration...');
+const securityValidation = EnvironmentValidator.validateSecurity();
+if (!securityValidation.isValid) {
+    console.error('🚨 CRITICAL: Environment validation failed!');
+    securityValidation.errors.forEach(error => {
+        console.error(`  ❌ ${error}`);
+    });
+    process.exit(1);  // Stop startup on critical errors
+}
+
+const aiValidation = EnvironmentValidator.validateAIProviders();
+aiValidation.warnings.forEach(warning => {
+    console.warn(`  ⚠️ ${warning}`);
+});
+
+console.log('✅ Environment validation passed');
+
+// ✅ ENVIRONMENT-SPECIFIC CORS CONFIGURATION
+const getAllowedOrigins = () => {
+    const baseOrigins = [process.env.FRONTEND_URL].filter(Boolean);
+    
+    if (process.env.NODE_ENV === 'development') {
+        return [...baseOrigins, 
+            'http://localhost:3000',
+            'http://localhost:5173',
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:5173'
+        ];
+    }
+    
+    return baseOrigins;  // Production: only environment-specified origins
+};
 
 const config = {
   // Server Configuration
@@ -19,21 +56,10 @@ const config = {
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY 
   },
 
-  // Frontend Configuration
+  // ✅ FRONTEND CONFIGURATION - Environment-specific CORS
   frontend: {
     url: process.env.FRONTEND_URL || 'https://flourishing-gumdrop-dffe7a.netlify.app',
-    allowedOrigins: [
-      process.env.FRONTEND_URL,
-      'https://flourishing-gumdrop-dffe7a.netlify.app',
-      'http://localhost:3000',
-      'http://localhost:5173',
-      'http://localhost:8080',
-      'http://localhost:5500',
-      'http://127.0.0.1:3000',
-      'http://127.0.0.1:5173',
-      'http://127.0.0.1:8080',
-      'http://127.0.0.1:5500'
-    ].filter(Boolean) // Remove null/undefined values
+    allowedOrigins: getAllowedOrigins()
   },
 
   // API Configuration
@@ -44,41 +70,34 @@ const config = {
     description: 'Rice Harvester Content Management System API'
   },
 
-  // Security Configuration
-  security: {
-    jwtSecret: process.env.JWT_SECRET,
-    jwtExpiration: process.env.JWT_EXPIRATION || '24h',
-    bcryptRounds: parseInt(process.env.BCRYPT_ROUNDS) || 12,
-    rateLimitWindowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-    rateLimitMax: parseInt(process.env.RATE_LIMIT_MAX) || 100
-  },
+  // ✅ SECURITY CONFIGURATION - Using validated values
+  security: securityValidation.config,
 
-  // AI Providers Configuration
+  // ✅ AI Providers Configuration - NO API KEYS STORED
   ai: {
     providers: {
       openai: {
-        apiKey: process.env.OPENAI_API_KEY,
+        // ✅ REMOVED: apiKey (use SecureConfigService.getApiKey('openai'))
         model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
         enabled: !!process.env.OPENAI_API_KEY
       },
       gemini: {
-        apiKey: process.env.GEMINI_API_KEY,
+        // ✅ REMOVED: apiKey (use SecureConfigService.getApiKey('gemini'))
         model: process.env.GEMINI_MODEL || 'gemini-pro',
         enabled: !!process.env.GEMINI_API_KEY
       },
       claude: {
-        apiKey: process.env.CLAUDE_API_KEY,
+        // ✅ REMOVED: apiKey (use SecureConfigService.getApiKey('claude'))
         model: process.env.CLAUDE_MODEL || 'claude-3-sonnet-20240229',
         enabled: !!process.env.CLAUDE_API_KEY
       },
       deepseek: {
-        apiKey: process.env.DEEPSEEK_API_KEY,
+        // ✅ REMOVED: apiKey (use SecureConfigService.getApiKey('deepseek'))
         model: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
         enabled: !!process.env.DEEPSEEK_API_KEY
       },
       chinda: {
-        apiKey: process.env.CHINDA_API_KEY,
-        jwtToken: process.env.CHINDA_JWT_TOKEN,
+        // ✅ REMOVED: apiKey and jwtToken (use SecureConfigService.getApiKey('chinda'))
         baseURL: process.env.CHINDA_BASE_URL,
         model: process.env.CHINDA_MODEL || 'chinda-qwen3-32b',
         enabled: !!(process.env.CHINDA_API_KEY && process.env.CHINDA_JWT_TOKEN)

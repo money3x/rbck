@@ -1,0 +1,70 @@
+<!-- General Tab Component -->
+<div id="general-tab" class="tab-content active">
+  <div class="section-header">
+    <h3>General Settings</h3>
+    <p>Basic AI provider configuration and connectivity</p>
+  </div>
+
+  <div class="settings-grid">
+    <!-- AI Service Status -->
+    <div class="setting-card">
+      <div class="card-header">
+        <h4>🔌 Service Status</h4>
+        <div class="status-indicator" id="generalServiceStatus">
+          <span class="status-dot checking"></span>
+          <span>Checking...</span>
+        </div>
+      </div>
+      <div class="card-content">
+        <div class="metric-row">
+          <span>Active Providers</span>
+          <span class="metric-value" id="activeProvidersCount">-</span>
+        </div>
+        <div class="metric-row">
+          <span>Total Requests Today</span>
+          <span class="metric-value" id="totalRequestsToday">-</span>
+        </div>
+        <div class="metric-row">
+          <span>Average Response Time</span>
+          <span class="metric-value" id="avgResponseTime">-</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Global Settings -->
+    <div class="setting-card">
+      <div class="card-header">
+        <h4>🌐 Global Settings</h4>
+      </div>
+      <div class="card-content">
+        <div class="setting-item">
+          <label class="setting-label">
+            <span>Enable AI Features</span>
+            <div class="toggle-switch">
+              <input type="checkbox" id="enableAI" checked>
+              <span class="toggle-slider"></span>
+            </div>
+          </label>
+        </div>
+        <div class="setting-item">
+          <label class="setting-label">
+            <span>Auto-retry Failed Requests</span>
+            <div class="toggle-switch">
+              <input type="checkbox" id="autoRetry" checked>
+              <span class="toggle-slider"></span>
+            </div>
+          </label>
+        </div>
+        <div class="setting-item">
+          <label class="setting-label">
+            <span>Request Timeout (seconds)</span>
+            <div class="slider-container">
+              <input type="range" id="requestTimeout" min="5" max="60" value="30" class="slider">
+              <span class="slider-value">30s</span>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

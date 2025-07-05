@@ -165,49 +165,61 @@ class AdminMigration {
 
     // ✅ Display migration status
     displayStatus(status) {
+        // Update main status display
         const statusDiv = document.getElementById('migration-status');
-        const statusClass = status.isFullyMigrated ? 'status-success' : 'status-warning';
-        
-        statusDiv.innerHTML = `
-            <div class="migration-status ${statusClass}">
-                <div class="status-header">
-                    <h4>${status.isFullyMigrated ? '✅' : '⚠️'} Database Status</h4>
-                    <span class="status-badge ${statusClass}">
-                        ${status.isFullyMigrated ? 'READY' : 'NEEDS MIGRATION'}
-                    </span>
-                </div>
-                
-                <div class="status-details">
-                    <div class="status-item">
-                        <span class="label">Tables:</span>
-                        <span class="value">${status.existingTables}/${status.totalRequiredTables}</span>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${(status.existingTables/status.totalRequiredTables)*100}%"></div>
+        if (statusDiv) {
+            const statusText = status.isFullyMigrated ? 
+                `✅ พร้อมใช้งาน (${status.existingTables}/${status.totalRequiredTables})` : 
+                `⚠️ ต้อง Migration (${status.existingTables}/${status.totalRequiredTables})`;
+            statusDiv.textContent = statusText;
+        }
+
+        // Update results area with detailed status
+        const resultsDiv = document.getElementById('migration-results');
+        if (resultsDiv) {
+            const statusClass = status.isFullyMigrated ? 'status-success' : 'status-warning';
+            
+            resultsDiv.innerHTML = `
+                <div class="migration-status ${statusClass}">
+                    <div class="status-header">
+                        <h4>${status.isFullyMigrated ? '✅' : '⚠️'} Database Status</h4>
+                        <span class="status-badge ${statusClass}">
+                            ${status.isFullyMigrated ? 'READY' : 'NEEDS MIGRATION'}
+                        </span>
+                    </div>
+                    
+                    <div class="status-details">
+                        <div class="status-item">
+                            <span class="label">Tables:</span>
+                            <span class="value">${status.existingTables}/${status.totalRequiredTables}</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${(status.existingTables/status.totalRequiredTables)*100}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="status-item">
+                            <span class="label">Migrations Executed:</span>
+                            <span class="value">${status.executedMigrations}</span>
+                        </div>
+                        
+                        <div class="status-item">
+                            <span class="label">Missing Tables:</span>
+                            <span class="value ${status.missingTables > 0 ? 'missing' : 'complete'}">${status.missingTables}</span>
                         </div>
                     </div>
                     
-                    <div class="status-item">
-                        <span class="label">Migrations Executed:</span>
-                        <span class="value">${status.executedMigrations}</span>
+                    <div class="recommendation">
+                        <strong>💡 Recommendation:</strong> ${status.recommendation}
                     </div>
                     
-                    <div class="status-item">
-                        <span class="label">Missing Tables:</span>
-                        <span class="value ${status.missingTables > 0 ? 'missing' : 'complete'}">${status.missingTables}</span>
-                    </div>
+                    ${status.missingTables > 0 ? `
+                        <div class="next-action">
+                            <strong>🚀 Next Action:</strong> Click "Run Migration" to create missing tables
+                        </div>
+                    ` : ''}
                 </div>
-                
-                <div class="recommendation">
-                    <strong>💡 Recommendation:</strong> ${status.recommendation}
-                </div>
-                
-                ${status.missingTables > 0 ? `
-                    <div class="next-action">
-                        <strong>🚀 Next Action:</strong> Click "Run Migration" to create missing tables
-                    </div>
-                ` : ''}
-            </div>
-        `;
+            `;
+        }
     }
 
     // ✅ Display migration results
@@ -358,3 +370,75 @@ document.addEventListener('DOMContentLoaded', () => {
 // ✅ Make functions globally available
 window.initializeMigration = initializeMigration;
 window.adminMigration = adminMigration;
+
+// ✅ Global function bindings for HTML onclick handlers
+window.refreshMigrationStatus = function() {
+    console.log('🔄 Refreshing migration status...');
+    if (window.adminMigration) {
+        return window.adminMigration.handleCheckStatus();
+    } else {
+        initializeMigration();
+        setTimeout(() => window.adminMigration?.handleCheckStatus(), 500);
+    }
+};
+
+window.runPendingMigrations = function() {
+    console.log('🚀 Running pending migrations...');
+    if (window.adminMigration) {
+        return window.adminMigration.handleRunMigration();
+    } else {
+        initializeMigration();
+        setTimeout(() => window.adminMigration?.handleRunMigration(), 500);
+    }
+};
+
+window.checkDatabaseHealth = function() {
+    console.log('🏥 Checking database health...');
+    if (window.adminMigration) {
+        return window.adminMigration.handleHealthCheck();
+    } else {
+        initializeMigration();
+        setTimeout(() => window.adminMigration?.handleHealthCheck(), 500);
+    }
+};
+
+window.rollbackLastMigration = function() {
+    console.log('⚠️ Rollback function not implemented yet');
+    if (typeof showNotification === 'function') {
+        showNotification('Rollback functionality not implemented yet', 'warning');
+    } else {
+        alert('Rollback functionality is not implemented yet');
+    }
+};
+
+window.clearMigrationConsole = function() {
+    console.log('🧹 Clearing migration console...');
+    if (window.adminMigration) {
+        window.adminMigration.clearLogs();
+    }
+};
+
+window.exportMigrationReport = function() {
+    console.log('📄 Exporting migration report...');
+    if (typeof showNotification === 'function') {
+        showNotification('Export functionality not implemented yet', 'info');
+    } else {
+        alert('Export functionality is not implemented yet');
+    }
+};
+
+window.exportConsoleLogs = function() {
+    console.log('📋 Exporting console logs...');
+    if (window.adminMigration && window.adminMigration.logs) {
+        const logs = window.adminMigration.logs.join('\n');
+        const blob = new Blob([logs], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `migration-logs-${new Date().toISOString().split('T')[0]}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+};

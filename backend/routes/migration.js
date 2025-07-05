@@ -98,7 +98,7 @@ router.get('/status', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to check migration status',
-            details: error.message,
+            details: process.env.NODE_ENV === 'development' ? error.message : 'Contact support for details',
             timestamp: new Date().toISOString()
         });
     }
@@ -389,7 +389,7 @@ router.post('/execute', authenticateAdmin, requireAdmin, async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Database migration failed',
-            details: error.message,
+            details: process.env.NODE_ENV === 'development' ? error.message : 'Contact support for details',
             migrationResults,
             timestamp: new Date().toISOString(),
             troubleshooting: [
@@ -497,7 +497,7 @@ router.get('/health', async (req, res) => {
             success: false,
             healthy: false,
             error: 'Health check failed',
-            details: error.message,
+            details: process.env.NODE_ENV === 'development' ? error.message : 'Contact support for details',
             timestamp: new Date().toISOString()
         });
     }
