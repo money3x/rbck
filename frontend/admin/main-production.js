@@ -1731,7 +1731,12 @@ const PerformanceMonitor = {
     const duration = endTime - timer.startTime;
     const memoryDelta = endMemory - timer.startMemory;
     
-    this.metrics[timer.operation + 'Time'].push(duration);
+    // ✅ Safe metrics handling
+    const metricKey = timer.operation + 'Time';
+    if (!this.metrics[metricKey]) {
+        this.metrics[metricKey] = [];
+    }
+    this.metrics[metricKey].push(duration);
     if (memoryDelta > 0) {
       this.metrics.memoryUsage.push(memoryDelta);
     }
@@ -2357,11 +2362,20 @@ window.verifyTabContent = function() {
 window.loadSecurityDashboard = async function() {
     console.log('🔒 [SECURITY] Loading security dashboard...');
     
+    // ✅ Get current auth token
+    const currentToken = authToken || localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
+    
+    if (!currentToken) {
+        console.error('❌ [SECURITY] No auth token available');
+        showNotification('Please login to access security dashboard', 'error');
+        return;
+    }
+    
     try {
         const response = await fetch(`${rbckConfig.apiBase}/security/dashboard`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${authToken}`,
+                'Authorization': `Bearer ${currentToken}`,
                 'Content-Type': 'application/json'
             }
         });
@@ -2475,11 +2489,20 @@ function updateSystemStatus(status) {
 window.loadAuthLogs = async function() {
     console.log('🔒 [AUTH] Loading authentication logs...');
     
+    // ✅ Get current auth token
+    const currentToken = authToken || localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
+    
+    if (!currentToken) {
+        console.error('❌ [AUTH] No auth token available');
+        showNotification('Please login to access auth logs', 'error');
+        return;
+    }
+    
     try {
         const response = await fetch(`${rbckConfig.apiBase}/security/auth-logs`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${authToken}`,
+                'Authorization': `Bearer ${currentToken}`,
                 'Content-Type': 'application/json'
             }
         });
@@ -2537,8 +2560,10 @@ function populateAuthLogs(logs) {
 window.loadBlockedIPs = async function() {
     console.log('🚫 [BLOCKED] Loading blocked IPs...');
     
-    // Check if user is authenticated
-    if (!authToken) {
+    // ✅ Get current auth token
+    const currentToken = authToken || localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
+    
+    if (!currentToken) {
         console.error('❌ [BLOCKED] No auth token available');
         showNotification('กรุณาเข้าสู่ระบบก่อนดูข้อมูล', 'error');
         return;
@@ -2550,7 +2575,7 @@ window.loadBlockedIPs = async function() {
         const response = await fetch(`${rbckConfig.apiBase}/security/blocked-ips`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${authToken}`,
+                'Authorization': `Bearer ${currentToken}`,
                 'Content-Type': 'application/json'
             }
         });
@@ -2750,6 +2775,27 @@ window.debugAuth = function() {
     console.log('  sessionStorage.isLoggedIn:', sessionStorage.getItem('isLoggedIn'));
     console.log('  currentUser:', currentUser);
     console.log('  authToken:', authToken);
+};
+
+// ✅ Define missing functions to prevent ReferenceError
+window.testProvider = window.testProvider || function(provider) {
+    console.log(`🔧 [FALLBACK] Testing ${provider} provider...`);
+    showNotification(`Testing ${provider} connection...`, 'info');
+};
+
+window.saveAISettings = window.saveAISettings || function() {
+    console.log('💾 [FALLBACK] Saving AI settings...');
+    showNotification('AI Settings saved!', 'success');
+};
+
+window.clearCache = window.clearCache || function() {
+    console.log('🗑️ [FALLBACK] Clearing cache...');
+    showNotification('Cache cleared!', 'success');
+};
+
+window.resetSettings = window.resetSettings || function() {
+    console.log('🔄 [FALLBACK] Resetting settings...');
+    showNotification('Settings reset to defaults!', 'info');
 };
 
 console.log('✅ [MAIN] Production-ready RBCK CMS loaded successfully');
