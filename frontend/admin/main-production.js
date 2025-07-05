@@ -31,7 +31,7 @@ console.log('🚀 [MAIN] Loading RBCK CMS Admin Panel v2025-07-04-v3-secure...')
 
 // ===== CONFIGURATION =====
 // Smart configuration ที่ตรวจจับ environment อัตโนมัติ
-const config = {
+const rbckConfig = {
     apiBase: (() => {
         const hostname = window.location.hostname;
         const port = window.location.port;
@@ -60,7 +60,7 @@ const config = {
     version: '2025-06-19-production-v2'
 };
 
-console.log('🔧 [CONFIG] API Base:', config.apiBase);
+console.log('🔧 [CONFIG] API Base:', rbckConfig.apiBase);
 
 // ===== GLOBAL VARIABLES =====
 let currentUser = null;
@@ -87,7 +87,7 @@ window.checkAuthentication = async function() {
     
     try {
         // ✅ Call backend to verify JWT + ENCRYPTION_KEY
-        const response = await fetch(`${config.apiBase}/auth/verify-session`, {
+        const response = await fetch(`${rbckConfig.apiBase}/auth/verify-session`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -293,7 +293,7 @@ function debounce(func, wait) {
 
 // ===== API UTILITY FUNCTIONS =====
 async function apiRequest(endpoint, options = {}) {
-    const url = `${config.apiBase}${endpoint}`;
+    const url = `${rbckConfig.apiBase}${endpoint}`;
     const defaultOptions = {
         headers: {
             'Content-Type': 'application/json',
@@ -590,7 +590,7 @@ async function checkAIProvidersStatus() {
         
         try {
             // Try to check real status from backend
-            const response = await fetch(`${config.apiBase}/ai/status`);
+            const response = await fetch(`${rbckConfig.apiBase}/ai/status`);
             if (response.ok) {
                 const data = await response.json();
                 const providerStatus = data.providers?.[provider.id];
@@ -2284,7 +2284,7 @@ window.loadSecurityDashboard = async function() {
     console.log('🔒 [SECURITY] Loading security dashboard...');
     
     try {
-        const response = await fetch(`${config.apiBase}/security/dashboard`, {
+        const response = await fetch(`${rbckConfig.apiBase}/security/dashboard`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
@@ -2402,7 +2402,7 @@ window.loadAuthLogs = async function() {
     console.log('🔒 [AUTH] Loading authentication logs...');
     
     try {
-        const response = await fetch(`${config.apiBase}/security/auth-logs`, {
+        const response = await fetch(`${rbckConfig.apiBase}/security/auth-logs`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
@@ -2471,9 +2471,9 @@ window.loadBlockedIPs = async function() {
     }
     
     try {
-        console.log('🔗 [BLOCKED] Fetching from:', `${config.apiBase}/security/blocked-ips`);
+        console.log('🔗 [BLOCKED] Fetching from:', `${rbckConfig.apiBase}/security/blocked-ips`);
         
-        const response = await fetch(`${config.apiBase}/security/blocked-ips`, {
+        const response = await fetch(`${rbckConfig.apiBase}/security/blocked-ips`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
@@ -2557,7 +2557,7 @@ window.unblockIP = async function(ipAddress) {
     console.log('🔓 [UNBLOCK] Unblocking IP:', ipAddress);
     
     try {
-        const response = await fetch(`${config.apiBase}/security/unblock-ip`, {
+        const response = await fetch(`${rbckConfig.apiBase}/security/unblock-ip`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
@@ -2697,8 +2697,8 @@ window.testSecurityAPI = async function() {
     
     for (const endpoint of endpoints) {
         try {
-            console.log(`🔗 [TEST] Testing: ${config.apiBase}${endpoint}`);
-            const response = await fetch(`${config.apiBase}${endpoint}`, {
+            console.log(`🔗 [TEST] Testing: ${rbckConfig.apiBase}${endpoint}`);
+            const response = await fetch(`${rbckConfig.apiBase}${endpoint}`, {
                 method: 'GET',
                 headers: authToken ? {
                     'Authorization': `Bearer ${authToken}`,
