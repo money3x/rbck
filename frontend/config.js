@@ -52,6 +52,217 @@ if (API_BASE.startsWith('/api') && !window.location.hostname.includes('localhost
     console.log('✅ Config validation passed');
 }
 
+/**
+ * ⚡ Smart Configuration Management - ดึงทุกอย่างจาก Render โดยตรง
+ */
+export class ConfigManager {
+    constructor() {
+        this.cache = {
+            jwtToken: null,
+            encryptionKey: null,
+            supabaseUrl: null,
+            supabaseServiceKey: null,
+            supabaseAnonKey: null,
+            lastUpdate: null,
+            ttl: 5 * 60 * 1000 // 5 minutes cache
+        };
+    }
+
+    /**
+     * ดึง Supabase configuration จาก Render backend โดยตรง
+     */
+    async getSupabaseConfig() {
+        try {
+            // ✅ ตรวจสอบ cache ก่อน
+            if (this.cache.supabaseUrl && Date.now() - this.cache.lastUpdate < this.cache.ttl) {
+                console.log('🎯 [SUPABASE] Using cached Supabase config');
+                return {
+                    url: this.cache.supabaseUrl,
+                    serviceKey: this.cache.supabaseServiceKey,
+                    anonKey: this.cache.supabaseAnonKey
+                };
+            }
+
+            console.log('🔄 [SUPABASE] Fetching Supabase config from Render...');
+            
+            const response = await fetch(`${API_BASE}/config/supabase`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            
+            if (result.success && result.config) {
+                // ✅ Cache the configuration
+                this.cache.supabaseUrl = result.config.SUPABASE_URL;
+                this.cache.supabaseServiceKey = result.config.SUPABASE_SERVICE_KEY;
+                this.cache.supabaseAnonKey = result.config.SUPABASE_ANON_KEY;
+                this.cache.lastUpdate = Date.now();
+                
+                console.log('✅ [SUPABASE] Fresh Supabase config retrieved from Render');
+                
+                return {
+                    url: result.config.SUPABASE_URL,
+                    serviceKey: result.config.SUPABASE_SERVICE_KEY,
+                    anonKey: result.config.SUPABASE_ANON_KEY
+                };
+            } else {
+                throw new Error(result.error || 'Failed to get Supabase config');
+            }
+
+        } catch (error) {
+            console.error('❌ [SUPABASE] Failed to get Supabase config from Render:', error);
+            // ⚠️ อย่าใช้ fallback เพราะ sensitive data ไม่ควรเก็บใน frontend
+            throw error;
+        }
+    }
+
+
+    /**
+     * ดึง JWT Token จาก Render backend โดยตรง
+     */
+    async getJWTToken() {
+        try {
+            // ✅ ตรวจสอบ cache ก่อน
+            if (this.cache.jwtToken && Date.now() - this.cache.lastUpdate < this.cache.ttl) {
+                console.log('🎯 [TOKEN] Using cached JWT token');
+                return this.cache.jwtToken;
+            }
+
+            console.log('🔄 [TOKEN] Fetching fresh JWT token from Render...');
+            
+            const response = await fetch(`${API_BASE}/auth/get-jwt-token`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            
+            if (result.success && result.jwtToken) {
+                this.cache.jwtToken = result.jwtToken;
+                this.cache.lastUpdate = Date.now();
+                console.log('✅ [TOKEN] Fresh JWT token retrieved from Render');
+                return result.jwtToken;
+            } else {
+                throw new Error(result.error || 'Failed to get JWT token');
+            }
+
+        } catch (error) {
+            console.error('❌ [TOKEN] Failed to get JWT from Render:', error);
+            // Fallback to localStorage
+            const fallbackToken = localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
+            if (fallbackToken) {
+                console.log('🔄 [TOKEN] Using fallback token from storage');
+                return fallbackToken;
+            }
+            throw error;
+        }
+    }
+
+    /**
+     * ดึง ENCRYPTION_KEY จาก Render backend โดยตรง
+     */
+    async getEncryptionKey() {
+        try {
+            // ✅ ตรวจสอบ cache ก่อน
+            if (this.cache.encryptionKey && Date.now() - this.cache.lastUpdate < this.cache.ttl) {
+                console.log('🎯 [ENCRYPTION] Using cached encryption key');
+                return this.cache.encryptionKey;
+            }
+
+            console.log('🔄 [ENCRYPTION] Fetching encryption key from Render...');
+            
+            const response = await fetch(`${API_BASE}/auth/get-encryption-key`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            
+            if (result.success && result.encryptionKey) {
+                this.cache.encryptionKey = result.encryptionKey;
+                this.cache.lastUpdate = Date.now();
+                console.log('✅ [ENCRYPTION] Fresh encryption key retrieved from Render');
+                return result.encryptionKey;
+            } else {
+                throw new Error(result.error || 'Failed to get encryption key');
+            }
+
+        } catch (error) {
+            console.error('❌ [ENCRYPTION] Failed to get encryption key from Render:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * ล้าง cache (ใช้เมื่อต้องการ refresh tokens)
+     */
+    clearCache() {
+        this.cache = {
+            jwtToken: null,
+            encryptionKey: null,
+            lastUpdate: null,
+            ttl: 5 * 60 * 1000
+        };
+        console.log('🗑️ [TOKEN] Token cache cleared');
+    }
+
+    /**
+     * ตรวจสอบว่า token ยังใช้งานได้หรือไม่
+     */
+    async validateToken(token) {
+        try {
+            const response = await fetch(`${API_BASE}/auth/verify-session`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ token })
+            });
+
+            const result = await response.json();
+            return result.success;
+        } catch (error) {
+            console.error('❌ [TOKEN] Token validation failed:', error);
+            return false;
+        }
+    }
+}
+
+// ✅ สร้าง instance ที่ใช้ทั่วทั้งแอป
+export const configManager = new ConfigManager();
+
+/**
+ * ⚡ Helper functions สำหรับใช้งานง่าย
+ */
+export const getToken = () => configManager.getJWTToken();
+export const getEncryptionKey = () => configManager.getEncryptionKey();
+export const getSupabaseConfig = () => configManager.getSupabaseConfig();
+export const validateToken = (token) => configManager.validateToken(token);
+export const clearConfigCache = () => configManager.clearCache();
+
 // Additional config for production
 export const CONFIG = {
     isDevelopment: window.location.hostname.includes('localhost'),

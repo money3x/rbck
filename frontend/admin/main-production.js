@@ -79,9 +79,9 @@ let authToken = null; // ✅ No localStorage - server manages sessions
 let aiSwarmCouncil = null;
 let isAppInitialized = false;
 
-// ✅ PRODUCTION: JWT + ENCRYPTION_KEY Authentication Check
+// ✅ ENHANCED: JWT + ENCRYPTION_KEY Authentication with ConfigManager Support
 window.checkAuthentication = async function() {
-    console.log('🔒 [AUTH] Checking JWT authentication...');
+    console.log('🔒 [AUTH] Enhanced authentication check...');
     
     const authOverlay = document.getElementById('authCheckOverlay');
     const authCheckingState = document.getElementById('authCheckingState');
@@ -100,8 +100,26 @@ window.checkAuthentication = async function() {
     console.log('🔍 [AUTH] sessionStorage.isLoggedIn:', sessionStorage.getItem('isLoggedIn'));
     console.log('🔍 [AUTH] localStorage.loginData:', localStorage.getItem('loginData'));
     
-    // ✅ Get JWT token from localStorage (matching login.html)
-    const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
+    // ⚡ Phase 1: Try existing token first (backward compatibility)
+    let token = localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
+    
+    // ⚡ Phase 2: If no local token, try ConfigManager (enhancement)
+    if (!token) {
+        try {
+            console.log('🔄 [AUTH] No local token, trying ConfigManager...');
+            const { getToken } = await import('../config.js');
+            const freshToken = await getToken();
+            
+            if (freshToken) {
+                console.log('✅ [AUTH] Fresh token obtained from Render backend');
+                // ⚡ Store for future use (hybrid approach)
+                localStorage.setItem('jwtToken', freshToken);
+                token = freshToken;
+            }
+        } catch (configError) {
+            console.warn('⚠️ [AUTH] ConfigManager failed, continuing with existing flow:', configError);
+        }
+    }
     
     // ✅ Handle development token separately
     if (token === 'development-token') {
@@ -2353,6 +2371,38 @@ window.verifyTabContent = function() {
     });
 };
 
+// ===== ENHANCED AUTH HELPER FUNCTIONS =====
+
+/**
+ * ⚡ Enhanced Token Retrieval with ConfigManager Support
+ * Backward compatible with existing system
+ */
+async function getEnhancedAuthToken() {
+    // ⚡ Phase 1: Try existing token first (backward compatibility)
+    let token = authToken || localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
+    
+    // ⚡ Phase 2: If no local token, try ConfigManager (enhancement)
+    if (!token) {
+        try {
+            console.log('🔄 [AUTH] No local token, trying ConfigManager...');
+            const { getToken } = await import('../config.js');
+            const freshToken = await getToken();
+            
+            if (freshToken) {
+                console.log('✅ [AUTH] Fresh token obtained from Render backend');
+                // ⚡ Store for future use (hybrid approach)
+                localStorage.setItem('jwtToken', freshToken);
+                authToken = freshToken; // Update global variable
+                token = freshToken;
+            }
+        } catch (configError) {
+            console.warn('⚠️ [AUTH] ConfigManager failed, continuing with existing flow:', configError);
+        }
+    }
+    
+    return token;
+}
+
 // ===== SECURITY DASHBOARD FUNCTIONS =====
 
 /**
@@ -2362,8 +2412,8 @@ window.verifyTabContent = function() {
 window.loadSecurityDashboard = async function() {
     console.log('🔒 [SECURITY] Loading security dashboard...');
     
-    // ✅ Get current auth token
-    const currentToken = authToken || localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
+    // ⚡ Use enhanced token retrieval
+    const currentToken = await getEnhancedAuthToken();
     
     if (!currentToken) {
         console.error('❌ [SECURITY] No auth token available');
@@ -2498,8 +2548,8 @@ function updateSystemStatus(status) {
 window.loadAuthLogs = async function() {
     console.log('🔒 [AUTH] Loading authentication logs...');
     
-    // ✅ Get current auth token
-    const currentToken = authToken || localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
+    // ⚡ Use enhanced token retrieval
+    const currentToken = await getEnhancedAuthToken();
     
     if (!currentToken) {
         console.error('❌ [AUTH] No auth token available');
@@ -2578,8 +2628,8 @@ function populateAuthLogs(logs) {
 window.loadBlockedIPs = async function() {
     console.log('🚫 [BLOCKED] Loading blocked IPs...');
     
-    // ✅ Get current auth token
-    const currentToken = authToken || localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
+    // ⚡ Use enhanced token retrieval
+    const currentToken = await getEnhancedAuthToken();
     
     if (!currentToken) {
         console.error('❌ [BLOCKED] No auth token available');
@@ -2793,9 +2843,9 @@ window.loadBlogPosts = window.loadPosts; // Alias for loadPosts
 window.editPost = function(id) { showNotification('Edit post feature coming soon', 'info'); };
 window.deletePost = function(id) { showNotification('Delete post feature coming soon', 'info'); };
 
-// ✅ Debug function for token checking
-window.debugAuth = function() {
-    console.log('🔍 [DEBUG] Authentication Debug:');
+// ✅ Enhanced debug function for token checking
+window.debugAuth = async function() {
+    console.log('🔍 [DEBUG] Enhanced Authentication Debug:');
     console.log('  localStorage.jwtToken:', localStorage.getItem('jwtToken'));
     console.log('  localStorage.loginData:', localStorage.getItem('loginData'));
     console.log('  sessionStorage.authToken:', sessionStorage.getItem('authToken'));
@@ -2803,32 +2853,42 @@ window.debugAuth = function() {
     console.log('  currentUser:', currentUser);
     console.log('  authToken:', authToken);
     
-    // ⚡ Test current token
-    const currentToken = authToken || localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
-    console.log('  currentToken (computed):', currentToken);
-    
-    if (currentToken) {
-        console.log('  Token length:', currentToken.length);
-        console.log('  Token starts with:', currentToken.substring(0, 20) + '...');
+    // ⚡ Test enhanced token retrieval
+    try {
+        console.log('\n🔄 [DEBUG] Testing enhanced token retrieval...');
+        const enhancedToken = await getEnhancedAuthToken();
+        console.log('  Enhanced token result:', enhancedToken ? enhancedToken.substring(0, 20) + '...' : 'null');
         
-        // ⚡ Test token with backend
-        fetch(`${rbckConfig.apiBase}/auth/verify-session`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${currentToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ token: currentToken })
-        }).then(response => {
+        if (enhancedToken) {
+            console.log('  Token length:', enhancedToken.length);
+            console.log('  Token starts with:', enhancedToken.substring(0, 20) + '...');
+            
+            // ⚡ Test token with backend
+            console.log('\n🔄 [DEBUG] Testing token verification...');
+            const response = await fetch(`${rbckConfig.apiBase}/auth/verify-session`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${enhancedToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ token: enhancedToken })
+            });
+            
             console.log('  Token verification status:', response.status);
-            return response.json();
-        }).then(result => {
+            const result = await response.json();
             console.log('  Token verification result:', result);
-        }).catch(error => {
-            console.log('  Token verification error:', error);
-        });
-    } else {
-        console.log('  ❌ No token available');
+        } else {
+            console.log('  ❌ No token available from enhanced retrieval');
+        }
+        
+        // ⚡ Test ConfigManager directly
+        console.log('\n🔄 [DEBUG] Testing ConfigManager directly...');
+        const { getToken } = await import('../config.js');
+        const configToken = await getToken();
+        console.log('  ConfigManager token:', configToken ? configToken.substring(0, 20) + '...' : 'null');
+        
+    } catch (error) {
+        console.error('  ❌ Enhanced debug error:', error);
     }
 };
 

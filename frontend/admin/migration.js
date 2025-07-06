@@ -2,12 +2,64 @@ class AdminMigration {
     constructor() {
         this.apiBase = window.CONFIG?.API_BASE_URL || 'https://rbck.onrender.com/api';
         this.logs = [];
+        this.configManager = null;
+        this.supabaseConfig = null;
         console.log('🔄 Admin Migration initialized');
+    }
+
+    // ✅ Initialize configuration manager
+    async initializeConfig() {
+        try {
+            if (!this.configManager) {
+                // ⚡ ดึง ConfigManager จาก config.js
+                const { ConfigManager } = await import('../config.js');
+                this.configManager = new ConfigManager();
+                console.log('✅ [MIGRATION] ConfigManager initialized');
+            }
+
+            // ⚡ ดึง Supabase configuration จาก Render
+            this.supabaseConfig = await this.configManager.getSupabaseConfig();
+            console.log('✅ [MIGRATION] Supabase config loaded from Render backend');
+            
+        } catch (error) {
+            console.error('❌ [MIGRATION] Failed to initialize config:', error);
+            throw error;
+        }
+    }
+
+    // ✅ Get authentication token from config manager
+    async getAuthToken() {
+        try {
+            if (!this.configManager) {
+                await this.initializeConfig();
+            }
+            
+            const token = await this.configManager.getJWTToken();
+            console.log('✅ [MIGRATION] Auth token retrieved from Render backend');
+            return token;
+            
+        } catch (error) {
+            console.error('❌ [MIGRATION] Failed to get auth token:', error);
+            // Fallback to local storage
+            const fallbackToken = localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
+            if (fallbackToken) {
+                console.log('🔄 [MIGRATION] Using fallback token from storage');
+                return fallbackToken;
+            }
+            throw error;
+        }
     }
 
     // ✅ Initialize migration interface
     async init() {
         console.log('🚀 Initializing migration interface...');
+        
+        // ⚡ Initialize configuration first
+        try {
+            await this.initializeConfig();
+        } catch (error) {
+            console.warn('⚠️ [MIGRATION] Config initialization failed, continuing with fallback');
+        }
         
         this.bindEvents();
         await this.checkStatusOnLoad();
@@ -48,10 +100,13 @@ class AdminMigration {
             this.log('🔍 Checking migration status...');
             this.showLoading('migration-status', 'Checking database status...');
 
+            // ⚡ ใช้ token จาก ConfigManager แทน localStorage
+            const authToken = await this.getAuthToken();
+
             const response = await fetch(`${this.apiBase}/migration/status`, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken')}`,
+                    'Authorization': `Bearer ${authToken}`,
                     'Content-Type': 'application/json'
                 }
             });
@@ -100,10 +155,13 @@ class AdminMigration {
                 runBtn.innerHTML = '⏳ Running Migration...';
             }
 
+            // ⚡ ใช้ token จาก ConfigManager แทน localStorage
+            const authToken = await this.getAuthToken();
+
             const response = await fetch(`${this.apiBase}/migration/execute`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken')}`,
+                    'Authorization': `Bearer ${authToken}`,
                     'Content-Type': 'application/json'
                 }
             });
@@ -140,10 +198,13 @@ class AdminMigration {
             this.showLoading('migration-results', 'Running health check...');
             this.showCard('migration-results-card');
 
+            // ⚡ ใช้ token จาก ConfigManager แทน localStorage
+            const authToken = await this.getAuthToken();
+
             const response = await fetch(`${this.apiBase}/migration/health`, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken')}`,
+                    'Authorization': `Bearer ${authToken}`,
                     'Content-Type': 'application/json'
                 }
             });
