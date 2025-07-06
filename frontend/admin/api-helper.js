@@ -73,9 +73,9 @@ class APIHelper {
             } catch (error) {
                 console.error('❌ [API HELPER] Request failed:', error);
                 
-                // ✅ Return mock data for CORS errors
-                if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
-                    console.log('🔄 [API HELPER] CORS error, returning mock data');
+                // ✅ Return mock data for CORS errors - STOP RETRYING
+                if (error.message.includes('CORS') || error.message.includes('Failed to fetch') || error.message.includes('ERR_FAILED')) {
+                    console.log('🔄 [API HELPER] CORS/Network error, returning mock data immediately');
                     const mockData = this.generateMockData(url);
                     resolve(mockData);
                 } else {
@@ -129,6 +129,12 @@ class APIHelper {
             return await response.json();
 
         } catch (error) {
+            // ✅ Don't retry CORS errors - they won't resolve with retry
+            if (error.message.includes('CORS') || error.message.includes('Failed to fetch') || error.message.includes('ERR_FAILED')) {
+                console.log('🛑 [API HELPER] CORS/Network error - not retrying');
+                throw error;
+            }
+            
             if (retryCount < this.maxRetries) {
                 console.log(`🔄 [API HELPER] Retry ${retryCount + 1}/${this.maxRetries}`);
                 await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));

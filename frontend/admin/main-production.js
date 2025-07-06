@@ -2723,21 +2723,22 @@ window.loadAuthLogs = async function() {
                 }
             });
 
-        if (!response.ok) {
-            if (response.status === 401) {
-                // ⚡ Handle 401 Unauthorized - force re-authentication
-                console.warn('🔒 [AUTH] Token expired or invalid, redirecting to login...');
-                localStorage.removeItem('jwtToken');
-                sessionStorage.removeItem('authToken');
-                authToken = null;
-    window.authToken = authToken;
-                window.location.href = 'login.html';
-                return;
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // ⚡ Handle 401 Unauthorized - force re-authentication
+                    console.warn('🔒 [AUTH] Token expired or invalid, redirecting to login...');
+                    localStorage.removeItem('jwtToken');
+                    sessionStorage.removeItem('authToken');
+                    authToken = null;
+                    window.authToken = authToken;
+                    window.location.href = 'login.html';
+                    return;
+                }
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
 
-        const result = await response.json();
+            result = await response.json();
+        }
         
         if (result.success) {
             populateAuthLogs(result.data);

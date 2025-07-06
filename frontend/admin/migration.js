@@ -310,12 +310,22 @@ class AdminMigration {
 
     // ✅ Display migration status
     displayStatus(status) {
+        // ✅ Check if status is valid
+        if (!status) {
+            console.error('❌ [MIGRATION] Status is null or undefined');
+            const statusDiv = document.getElementById('migration-status');
+            if (statusDiv) {
+                statusDiv.textContent = '❌ ไม่สามารถโหลดสถานะได้';
+            }
+            return;
+        }
+        
         // Update main status display
         const statusDiv = document.getElementById('migration-status');
         if (statusDiv) {
             const statusText = status.isFullyMigrated ? 
-                `✅ พร้อมใช้งาน (${status.existingTables}/${status.totalRequiredTables})` : 
-                `⚠️ ต้อง Migration (${status.existingTables}/${status.totalRequiredTables})`;
+                `✅ พร้อมใช้งาน (${status.existingTables || 0}/${status.totalRequiredTables || 0})` : 
+                `⚠️ ต้อง Migration (${status.existingTables || 0}/${status.totalRequiredTables || 0})`;
             statusDiv.textContent = statusText;
         }
 
@@ -323,6 +333,9 @@ class AdminMigration {
         const resultsDiv = document.getElementById('migration-results');
         if (resultsDiv) {
             const statusClass = status.isFullyMigrated ? 'status-success' : 'status-warning';
+            const existingTables = status.existingTables || 0;
+            const totalRequiredTables = status.totalRequiredTables || 0;
+            const progressPercent = totalRequiredTables > 0 ? (existingTables / totalRequiredTables) * 100 : 0;
             
             resultsDiv.innerHTML = `
                 <div class="migration-status ${statusClass}">
@@ -336,28 +349,28 @@ class AdminMigration {
                     <div class="status-details">
                         <div class="status-item">
                             <span class="label">Tables:</span>
-                            <span class="value">${status.existingTables}/${status.totalRequiredTables}</span>
+                            <span class="value">${existingTables}/${totalRequiredTables}</span>
                             <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${(status.existingTables/status.totalRequiredTables)*100}%"></div>
+                                <div class="progress-fill" style="width: ${progressPercent}%"></div>
                             </div>
                         </div>
                         
                         <div class="status-item">
                             <span class="label">Migrations Executed:</span>
-                            <span class="value">${status.executedMigrations}</span>
+                            <span class="value">${status.executedMigrations || 0}</span>
                         </div>
                         
                         <div class="status-item">
                             <span class="label">Missing Tables:</span>
-                            <span class="value ${status.missingTables > 0 ? 'missing' : 'complete'}">${status.missingTables}</span>
+                            <span class="value ${(status.missingTables || 0) > 0 ? 'missing' : 'complete'}">${status.missingTables || 0}</span>
                         </div>
                     </div>
                     
                     <div class="recommendation">
-                        <strong>💡 Recommendation:</strong> ${status.recommendation}
+                        <strong>💡 Recommendation:</strong> ${status.recommendation || 'No recommendation available'}
                     </div>
                     
-                    ${status.missingTables > 0 ? `
+                    ${(status.missingTables || 0) > 0 ? `
                         <div class="next-action">
                             <strong>🚀 Next Action:</strong> Click "Run Migration" to create missing tables
                         </div>

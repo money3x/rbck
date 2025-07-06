@@ -5615,8 +5615,8 @@
     <!-- Original AI Settings Modal (Keep for compatibility) -->
     <!-- Emergency debug fix for showSection ReferenceError -->
     <!-- Production-ready JavaScript -->
-    <script src="api-helper.js" onload="console.log('✅ api-helper.js loaded')" onerror="console.error('❌ Failed to load api-helper.js')"></script>
-    <script src="main-production.js" onload="console.log('✅ main-production.js loaded'); console.log('showSection type:', typeof window.showSection);" onerror="console.error('❌ Failed to load main-production.js')"></script>
+    <script src="api-helper.js?v=2" onload="console.log('✅ api-helper.js v2 loaded')" onerror="console.error('❌ Failed to load api-helper.js')"></script>
+    <script src="main-production.js?v=2" onload="console.log('✅ main-production.js v2 loaded'); console.log('showSection type:', typeof window.showSection);" onerror="console.error('❌ Failed to load main-production.js')"></script>
     
     <!-- Complete Modal Conflict Fix -->
     <script>
@@ -6173,15 +6173,16 @@
         function setupModalHandlers() {
             console.log('🔧 [AI Settings] Setting up modal handlers...');
             
-            const modal = document.getElementById('aiSettingsModal') || document.querySelector('.ai-settings-modal');
-            const modalContent = modal ? modal.querySelector('.ai-modal') : null;
+            let modal = document.getElementById('aiSettingsModal') || document.querySelector('.ai-settings-modal');
             
             if (!modal) {
-                console.warn('⚠️ [AI Settings] Modal not found, creating fallback...');
-                // Create a basic modal structure if not found
+                console.error('❌ [AI Settings] Modal not found in DOM!');
+                console.error('❌ [AI Settings] Available elements with ai:', Array.from(document.querySelectorAll('[id*="ai"], [class*="ai"]')).map(el => `${el.tagName}#${el.id}.${el.className}`));
                 createFallbackModal();
-                return;
+                modal = document.getElementById('aiSettingsModal');
             }
+            
+            const modalContent = modal ? modal.querySelector('.ai-modal, .ai-settings-modal-content') : null;
             
             if (modal && modalContent) {
                 // Prevent modal content clicks from bubbling to overlay
@@ -6209,9 +6210,22 @@
                 
                 console.log('✅ [AI Settings] Modal handlers setup complete');
             } else {
-                console.error('❌ [AI Settings] Modal or modal content not found');
-                // Try creating fallback
-                createFallbackModal();
+                console.error('❌ [AI Settings] Modal found but content not found');
+                console.error('❌ [AI Settings] Modal innerHTML length:', modal ? modal.innerHTML.length : 'N/A');
+                console.error('❌ [AI Settings] Modal children:', modal ? Array.from(modal.children).map(c => c.className) : 'N/A');
+                
+                if (modal) {
+                    // Modal exists but content missing - add basic handlers
+                    modal.addEventListener('click', function(event) {
+                        if (event.target === modal) {
+                            modal.style.display = 'none';
+                        }
+                    });
+                    console.log('✅ [AI Settings] Basic modal handlers added');
+                } else {
+                    // No modal at all - create fallback
+                    createFallbackModal();
+                }
             }
         }
         
@@ -8348,9 +8362,10 @@
         // ✅ Wait for main-production.js to load, then check for showSection
         function checkAndCreateFallback() {
             if (typeof window.showSection === 'undefined') {
-                console.warn('⚠️ [FALLBACK] showSection not available, creating fallback');
+                console.error('❌ [FALLBACK] showSection NOT AVAILABLE - CREATING FALLBACK!');
+                console.error('❌ [FALLBACK] This means main-production.js failed to load or has errors!');
                 window.showSection = function(sectionId) {
-                console.log('🔄 [FALLBACK] Attempting to show section:', sectionId);
+                console.error('🚨 [FALLBACK] Using fallback showSection for:', sectionId);
                 
                 // ✅ แทนที่จะ reload ให้ลองหาและแสดง section โดยตรง
                 try {
@@ -8389,6 +8404,61 @@
             } else {
                 console.log('✅ [FALLBACK] showSection already available from main-production.js');
             }
+            
+            // ✅ Also check switchAITab
+            if (typeof window.switchAITab === 'undefined') {
+                console.error('❌ [FALLBACK] switchAITab NOT AVAILABLE - CREATING FALLBACK!');
+                window.switchAITab = function(tabName) {
+                    console.error('🚨 [FALLBACK] Using fallback switchAITab for:', tabName);
+                    try {
+                        // Hide all tab contents
+                        document.querySelectorAll('.ai-tab-content').forEach(content => {
+                            content.style.display = 'none';
+                            content.classList.remove('active');
+                        });
+                        
+                        // Remove active from all tab buttons
+                        document.querySelectorAll('.ai-settings-tab').forEach(tab => {
+                            tab.classList.remove('active');
+                        });
+                        
+                        // Show target tab
+                        const targetContent = document.getElementById(`${tabName}-tab`);
+                        const targetTab = document.querySelector(`[data-tab="${tabName}"]`);
+                        
+                        if (targetContent && targetTab) {
+                            targetContent.style.display = 'block';
+                            targetContent.classList.add('active');
+                            targetTab.classList.add('active');
+                            console.log('✅ [FALLBACK] AI Tab switched to:', tabName);
+                        } else {
+                            console.error('❌ [FALLBACK] AI Tab or content not found:', tabName);
+                        }
+                    } catch (error) {
+                        console.error('❌ [FALLBACK] Error in switchAITab:', error);
+                    }
+                };
+            } else {
+                console.log('✅ [FALLBACK] switchAITab already available from main-production.js');
+            }
+            
+            // ✅ Check and create other essential functions
+            const essentialFunctions = ['showNotification', 'loadBlogPosts', 'savePost', 'editPost', 'deletePost', 'clearForm'];
+            essentialFunctions.forEach(funcName => {
+                if (typeof window[funcName] === 'undefined') {
+                    console.error(`❌ [FALLBACK] ${funcName} NOT AVAILABLE - CREATING FALLBACK!`);
+                    window[funcName] = function(...args) {
+                        console.error(`🚨 [FALLBACK] Using fallback ${funcName} with args:`, args);
+                        if (funcName === 'showNotification') {
+                            alert(args[0] || 'Notification');
+                        } else {
+                            alert(`${funcName} function is not fully loaded yet. Please refresh the page.`);
+                        }
+                    };
+                } else {
+                    console.log(`✅ [FALLBACK] ${funcName} already available`);
+                }
+            });
         }
         
         // ✅ Check immediately and also after delays with more debugging
