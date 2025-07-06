@@ -76,6 +76,7 @@ console.log('🔧 [CONFIG] API Base:', rbckConfig.apiBase);
 // ===== GLOBAL VARIABLES =====
 let currentUser = null;
 let authToken = null; // ✅ No localStorage - server manages sessions
+window.authToken = authToken; // Make globally accessible
 let aiSwarmCouncil = null;
 let isAppInitialized = false;
 
@@ -172,19 +173,19 @@ window.checkAuthentication = async function() {
         }
         
         if (result.success && result.user && result.user.encryptionVerified) {
-                // ✅ Authentication valid with ENCRYPTION_KEY verified
-                currentUser = result.user;
-                authToken = token;
-                
-                console.log('✅ [AUTH] JWT + ENCRYPTION_KEY verified:', result.user.username);
-                
-                // Hide auth overlay and show main content
-                if (authOverlay) {
-                    authOverlay.style.display = 'none';
-                }
-                
-                return true;
+            // ✅ Authentication valid with ENCRYPTION_KEY verified
+            currentUser = result.user;
+            authToken = token;
+            window.authToken = authToken;
+            
+            console.log('✅ [AUTH] JWT + ENCRYPTION_KEY verified:', result.user.username);
+            
+            // Hide auth overlay and show main content
+            if (authOverlay) {
+                authOverlay.style.display = 'none';
             }
+            
+            return true;
         }
         
         // ❌ Authentication failed - clear invalid tokens
@@ -236,6 +237,7 @@ window.logout = function() {
     
     // Reset global variables
     authToken = null;
+    window.authToken = authToken;
     currentUser = null;
     
     // Show notification
@@ -2422,6 +2424,7 @@ async function getEnhancedAuthToken() {
                 // ⚡ Store for future use (hybrid approach)
                 localStorage.setItem('jwtToken', freshToken);
                 authToken = freshToken; // Update global variable
+                window.authToken = authToken;
                 token = freshToken;
             }
         } catch (configError) {
@@ -2477,6 +2480,7 @@ window.loadSecurityDashboard = async function() {
                     localStorage.removeItem('jwtToken');
                     sessionStorage.removeItem('authToken');
                     authToken = null;
+    window.authToken = authToken;
                     window.location.href = 'login.html';
                     return;
                 }
@@ -2625,6 +2629,7 @@ window.loadAuthLogs = async function() {
                 localStorage.removeItem('jwtToken');
                 sessionStorage.removeItem('authToken');
                 authToken = null;
+    window.authToken = authToken;
                 window.location.href = 'login.html';
                 return;
             }
@@ -2709,6 +2714,7 @@ window.loadBlockedIPs = async function() {
                 localStorage.removeItem('jwtToken');
                 sessionStorage.removeItem('authToken');
                 authToken = null;
+    window.authToken = authToken;
                 window.location.href = 'login.html';
                 return;
             }

@@ -5620,6 +5620,16 @@
     
     <!-- Complete Modal Conflict Fix -->
     <script>
+        // ⚡ Helper function to get auth token from main-production.js or localStorage
+        function getAuthToken() {
+            // Try to get from main-production.js global scope
+            if (window.authToken) {
+                return window.authToken;
+            }
+            // Fallback to localStorage
+            return localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken') || '';
+        }
+        
         // CRITICAL FIX: Remove the conflicting overlay click handler from main-production.js
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(function() {
@@ -5799,7 +5809,7 @@
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': authToken ? `Bearer ${authToken}` : ''
+                        'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
                     }
                 });
                 
@@ -5899,7 +5909,7 @@
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': authToken ? `Bearer ${authToken}` : ''
+                        'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
                     }
                 });
                 
@@ -5974,7 +5984,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': authToken ? `Bearer ${authToken}` : ''
+                        'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
                     },
                     body: JSON.stringify(configData)
                 });
@@ -6446,7 +6456,7 @@
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': authToken ? `Bearer ${authToken}` : ''
+                        'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
                     }
                 });
                 
@@ -6670,7 +6680,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': authToken ? `Bearer ${authToken}` : ''
+                        'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
                     }
                 });
                 
@@ -6853,7 +6863,7 @@
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': authToken ? `Bearer ${authToken}` : ''
+                            'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
                         }
                     });
                     
@@ -7078,7 +7088,7 @@
                                 method: 'GET',
                                 headers: {
                                     'Content-Type': 'application/json',
-                                    'Authorization': authToken ? `Bearer ${authToken}` : ''
+                                    'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
                                 }
                             });
                             
@@ -7190,7 +7200,7 @@
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': authToken ? `Bearer ${authToken}` : ''
+                            'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
                         }
                     });
                     
@@ -7407,7 +7417,7 @@
                             method: 'GET',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'Authorization': authToken ? `Bearer ${authToken}` : ''
+                                'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
                             }
                         });
                         
@@ -7573,7 +7583,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': authToken ? `Bearer ${authToken}` : ''
+                        'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
                     },
                     body: JSON.stringify({
                         message: message,
@@ -7712,7 +7722,7 @@
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': authToken ? `Bearer ${authToken}` : ''
+                        'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
                     }
                 });
                 
@@ -7788,12 +7798,19 @@
             refreshAllProviderMetrics(); // Load AI monitoring data from backend
         }, 4000);
         
-        // Make functions globally available
-        window.openAISettingsModal = openAISettingsModal;
-        window.closeAISettingsModal = closeAISettingsModal;
-        window.openAIConfigModal = openAIConfigModal;
-        window.closeAIConfigModal = closeAIConfigModal;
-        window.switchAITab = switchAITab;
+        // Make functions globally available (use existing functions from main-production.js)
+        // Functions are already defined in main-production.js, no need to reassign
+        if (!window.openAISettingsModal) {
+            window.openAISettingsModal = function() { 
+                console.warn('⚠️ openAISettingsModal not yet loaded'); 
+            };
+        }
+        if (!window.closeAISettingsModal) {
+            window.closeAISettingsModal = function() { 
+                const modal = document.getElementById('aiSettingsModal');
+                if (modal) modal.style.display = 'none';
+            };
+        }
         
         // DEBUG: Test function for Performance tab
         window.debugPerformanceTab = function() {
@@ -8301,39 +8318,31 @@
     
     <!-- Debug Script for Function Availability -->
     <script>
-        // Wait for module to load and check function availability
+        // Wait for module to load and check function availability with delay
         window.addEventListener('load', function() {
-            console.log('🔍 [DEBUG] Page loaded, checking functions...');
-            
-            const criticalFunctions = [
-                'showSection', 'showNotification', 'loadBlogPosts', 
-                'savePost', 'editPost', 'deletePost', 'clearForm'
-            ];
-            
-            let missingFunctions = [];
-            criticalFunctions.forEach(fn => {
-                if (typeof window[fn] !== 'function') {
-                    missingFunctions.push(fn);
-                }
-            });
-            
-            if (missingFunctions.length > 0) {
-                console.error('❌ [DEBUG] Missing functions:', missingFunctions);
-                console.log('🔧 [DEBUG] Attempting to reload module...');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 300000);
-            } else {
-                console.log('✅ [DEBUG] All critical functions available');
-                console.log('✅ [DEBUG] showSection type:', typeof window.showSection);
+            // Add delay to ensure main-production.js is fully loaded
+            setTimeout(function() {
+                console.log('🔍 [DEBUG] Page loaded, checking functions...');
                 
-                // Test showSection specifically
-                if (typeof window.showSection === 'function') {
-                    console.log('✅ [DEBUG] showSection is ready for onclick handlers');
+                const criticalFunctions = [
+                    'showSection', 'showNotification', 'loadBlogPosts', 
+                    'savePost', 'editPost', 'deletePost', 'clearForm'
+                ];
+                
+                let missingFunctions = [];
+                criticalFunctions.forEach(fn => {
+                    if (typeof window[fn] !== 'function') {
+                        missingFunctions.push(fn);
+                    }
+                });
+                
+                if (missingFunctions.length > 0) {
+                    console.error('❌ [DEBUG] Missing functions:', missingFunctions);
+                    console.log('🔧 [DEBUG] Functions will be available after main-production.js loads');
                 } else {
-                    console.error('❌ [DEBUG] showSection is not a function!');
+                    console.log('✅ [DEBUG] All critical functions are available');
                 }
-            }
+            }, 2000); // 2 second delay
         });
         
         // Fallback showSection function in case module fails to load
