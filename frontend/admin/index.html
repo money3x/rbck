@@ -6394,6 +6394,9 @@
             `;
             
             try {
+                // Get auth token
+                const authToken = localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
+                
                 // Make API call to backend to get provider status
                 const response = await fetch(`${window.rbckConfig.apiBase}/ai/providers/status`, {
                     method: 'GET',

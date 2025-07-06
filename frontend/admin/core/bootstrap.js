@@ -261,13 +261,14 @@ class PerformanceBootstrap {
         // ⚡ Core Web Vitals tracking
         const observer = new PerformanceObserver((list) => {
             list.getEntries().forEach((entry) => {
-                console.log(`📊 [PERFORMANCE] ${entry.name}: ${entry.value.toFixed(1)}ms`);
+                const value = entry.value || entry.duration || 0;
+                console.log(`📊 [PERFORMANCE] ${entry.name}: ${value.toFixed(1)}ms`);
                 
                 // ⚡ Send to analytics (if available)
                 if (window.gtag) {
                     gtag('event', 'web_vitals', {
                         metric_name: entry.name,
-                        metric_value: entry.value,
+                        metric_value: value,
                         metric_id: entry.id
                     });
                 }
