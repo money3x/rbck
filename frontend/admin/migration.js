@@ -11,19 +11,54 @@ class AdminMigration {
     async initializeConfig() {
         try {
             if (!this.configManager) {
-                // ⚡ ดึง ConfigManager จาก config.js
-                const { ConfigManager } = await import('../config.js');
-                this.configManager = new ConfigManager();
-                console.log('✅ [MIGRATION] ConfigManager initialized');
+                try {
+                    // ⚡ ดึง ConfigManager จาก config.js (ลองหลาย path)
+                    let ConfigManager;
+                    try {
+                        const module = await import('../config.js');
+                        ConfigManager = module.ConfigManager;
+                    } catch (e1) {
+                        try {
+                            const module = await import('./config.js');
+                            ConfigManager = module.ConfigManager;
+                        } catch (e2) {
+                            try {
+                                const module = await import('/frontend/config.js');
+                                ConfigManager = module.ConfigManager;
+                            } catch (e3) {
+                                console.warn('⚠️ [MIGRATION] ConfigManager not found, using fallback');
+                                ConfigManager = null;
+                            }
+                        }
+                    }
+                    
+                    if (ConfigManager) {
+                        this.configManager = new ConfigManager();
+                        console.log('✅ [MIGRATION] ConfigManager initialized');
+                    } else {
+                        console.warn('⚠️ [MIGRATION] ConfigManager not available, using localStorage fallback');
+                        this.configManager = null;
+                    }
+                } catch (error) {
+                    console.error('❌ [MIGRATION] Error initializing ConfigManager:', error);
+                    this.configManager = null;
+                }
             }
 
-            // ⚡ ดึง Supabase configuration จาก Render
-            this.supabaseConfig = await this.configManager.getSupabaseConfig();
-            console.log('✅ [MIGRATION] Supabase config loaded from Render backend');
+            // ⚡ ดึง Supabase configuration จาก Render (ถ้ามี ConfigManager)
+            if (this.configManager) {
+                try {
+                    this.supabaseConfig = await this.configManager.getSupabaseConfig();
+                    console.log('✅ [MIGRATION] Supabase config loaded from Render backend');
+                } catch (configError) {
+                    console.warn('⚠️ [MIGRATION] Failed to load Supabase config from Render, continuing without it');
+                    this.supabaseConfig = null;
+                }
+            }
             
         } catch (error) {
             console.error('❌ [MIGRATION] Failed to initialize config:', error);
-            throw error;
+            // Don't throw error - continue with fallback
         }
     }
 
@@ -98,20 +133,37 @@ class AdminMigration {
     async handleCheckStatus() {
         try {
             this.log('🔍 Checking migration status...');
-            this.showLoading('migration-status', 'Checking database status...');
+            this.showLoading('migration-status', 'กำลังตรวจสอบ...');
 
             // ⚡ ใช้ token จาก ConfigManager แทน localStorage
             const authToken = await this.getAuthToken();
 
-            const response = await fetch(`${this.apiBase}/migration/status`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+            // ✅ ใช้ safeApiCall ถ้ามี เพื่อป้องกัน CORS error
+            let result;
+            if (window.safeApiCall && typeof window.safeApiCall === 'function') {
+                console.log('🛡️ [MIGRATION] Using APIHelper for CORS protection');
+                result = await window.safeApiCall(`${this.apiBase}/migration/status`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+            } else {
+                const response = await fetch(`${this.apiBase}/migration/status`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
 
-            const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                result = await response.json();
+            }
             
             if (!result.success) {
                 throw new Error(result.error || 'Status check failed');
@@ -121,8 +173,40 @@ class AdminMigration {
             this.log(`✅ Status check completed. ${result.data.existingTables}/${result.data.totalRequiredTables} tables exist`);
 
         } catch (error) {
+            console.error('❌ [MIGRATION] Status check error:', error);
             this.log(`❌ Status check failed: ${error.message}`);
-            this.showError('migration-status', 'Status Check Failed', error.message);
+            
+            // ✅ แสดง fallback status แทนการ error
+            const statusDiv = document.getElementById('migration-status');
+            if (statusDiv) {
+                statusDiv.textContent = '⚠️ ไม่สามารถเชื่อมต่อกับ Backend ได้';
+            }
+            
+            // ✅ แสดงข้อความแนะนำผู้ใช้
+            const resultsDiv = document.getElementById('migration-results');
+            if (resultsDiv) {
+                resultsDiv.innerHTML = `
+                    <div class="migration-status status-warning">
+                        <div class="status-header">
+                            <h4>⚠️ ไม่สามารถตรวจสอบสถานะได้</h4>
+                        </div>
+                        <div class="status-details">
+                            <p>❌ <strong>ข้อผิดพลาด:</strong> ${error.message}</p>
+                            <p>💡 <strong>แนะนำ:</strong></p>
+                            <ul>
+                                <li>ตรวจสอบการเชื่อมต่อ Internet</li>
+                                <li>ตรวจสอบว่า Backend Server ทำงานปกติ</li>
+                                <li>ลองรีเฟรชหน้าเพจ</li>
+                            </ul>
+                        </div>
+                        <div class="migration-actions">
+                            <button onclick="adminMigration.handleCheckStatus()" class="btn btn-primary btn-sm">
+                                🔄 ลองใหม่
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
         }
     }
 
@@ -402,9 +486,24 @@ class AdminMigration {
 
     async checkStatusOnLoad() {
         try {
-            await this.handleCheckStatus();
+            // ✅ เพิ่ม delay เพื่อให้ scripts โหลดครบก่อน
+            setTimeout(async () => {
+                try {
+                    console.log('🔄 [MIGRATION] Auto-checking status on load...');
+                    await this.handleCheckStatus();
+                } catch (error) {
+                    console.warn('⚠️ [MIGRATION] Auto status check failed:', error.message);
+                    this.log(`⚠️ Auto status check failed: ${error.message}`);
+                    
+                    // ✅ แสดงสถานะเริ่มต้นแทน
+                    const statusDiv = document.getElementById('migration-status');
+                    if (statusDiv) {
+                        statusDiv.textContent = '⚠️ กรุณาคลิก "รีเฟรชสถานะ" เพื่อตรวจสอบ';
+                    }
+                }
+            }, 1000); // รอ 1 วินาที
         } catch (error) {
-            this.log(`⚠️ Auto status check failed: ${error.message}`);
+            console.warn('⚠️ [MIGRATION] Error in checkStatusOnLoad:', error);
         }
     }
 }

@@ -578,61 +578,148 @@ window.showSection = function(sectionId) {
             navLink.classList.add('active');
         }
         
-        // ✅ PERFORMANCE: Use cached page title update
+        // ✅ PERFORMANCE: Use cached page title update with error handling
         let title = '';
-        switch(sectionId) {
-            case 'dashboard':
-                title = '🚀 Gemini 2.0 Flash Dashboard';
-                loadDashboard();
-                break;
-            case 'blog-manage':
-                title = 'จัดการบทความ';
-                loadPosts();
-                break;
-            case 'blog-create':
-                title = 'สร้างบทความใหม่';
-                break;
-            case 'seo-tools':
-                title = '🚀 Gemini 2.0 SEO Tools';
-                break;
-            case 'analytics':
-                title = '📊 Flash Analytics';
-                loadAnalytics();
-                break;
-            case 'ai-swarm':
-                title = '🤖 AI Swarm Council';
-                loadAISwarmData();
-                break;
-            case 'ai-monitoring':
-                title = '📊 AI Monitoring';
-                break;
-            case 'migration':
-                title = '🔄 Migration';
-                // Initialize migration system when section is shown
-                setTimeout(() => {
-                    if (typeof initializeMigration === 'function') {
-                        initializeMigration();
+        try {
+            switch(sectionId) {
+                case 'dashboard':
+                    title = '🚀 Gemini 2.0 Flash Dashboard';
+                    try {
+                        if (typeof loadDashboard === 'function') {
+                            loadDashboard();
+                        } else {
+                            console.warn('⚠️ [NAV] loadDashboard function not available');
+                        }
+                    } catch (err) {
+                        console.error('❌ [NAV] Error loading dashboard:', err);
                     }
-                }, 100);
-                break;
-            case 'security-dashboard':
-                title = '🔒 Security Dashboard';
-                loadSecurityDashboard();
-                break;
-            case 'auth-logs':
-                title = '🔒 Authentication Logs';
-                loadAuthLogs();
-                break;
-            case 'blocked-ips':
-                title = '🚫 Blocked IPs';
-                loadBlockedIPs();
-                break;
-            case 'security-alerts':
-                title = '⚠️ Security Alerts';
-                loadSecurityDashboard(); // Load dashboard data for alerts
-                break;
-            default:
-                title = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
+                    break;
+                case 'blog-manage':
+                    title = 'จัดการบทความ';
+                    try {
+                        if (typeof loadPosts === 'function') {
+                            loadPosts();
+                        } else {
+                            console.warn('⚠️ [NAV] loadPosts function not available');
+                        }
+                    } catch (err) {
+                        console.error('❌ [NAV] Error loading posts:', err);
+                    }
+                    break;
+                case 'blog-create':
+                    title = 'สร้างบทความใหม่';
+                    break;
+                case 'seo-tools':
+                    title = '🚀 Gemini 2.0 SEO Tools';
+                    break;
+                case 'analytics':
+                    title = '📊 Flash Analytics';
+                    try {
+                        if (typeof loadAnalytics === 'function') {
+                            loadAnalytics();
+                        } else {
+                            console.warn('⚠️ [NAV] loadAnalytics function not available');
+                        }
+                    } catch (err) {
+                        console.error('❌ [NAV] Error loading analytics:', err);
+                    }
+                    break;
+                case 'ai-swarm':
+                    title = '🤖 AI Swarm Council';
+                    try {
+                        if (typeof loadAISwarmData === 'function') {
+                            loadAISwarmData();
+                        } else {
+                            console.warn('⚠️ [NAV] loadAISwarmData function not available');
+                        }
+                    } catch (err) {
+                        console.error('❌ [NAV] Error loading AI Swarm:', err);
+                    }
+                    break;
+                case 'ai-monitoring':
+                    title = '📊 AI Monitoring';
+                    break;
+                case 'migration':
+                    title = '🔄 Migration';
+                    // Initialize migration system when section is shown with better error handling
+                    setTimeout(() => {
+                        try {
+                            if (typeof initializeMigration === 'function') {
+                                initializeMigration();
+                            } else {
+                                console.warn('⚠️ [NAV] initializeMigration function not available, attempting to load migration.js');
+                                // Attempt to load migration.js dynamically
+                                import('./migration.js').then(() => {
+                                    if (typeof initializeMigration === 'function') {
+                                        initializeMigration();
+                                    }
+                                }).catch(err => {
+                                    console.error('❌ [NAV] Failed to load migration.js:', err);
+                                    const migrationStatus = document.getElementById('migration-status');
+                                    if (migrationStatus) {
+                                        migrationStatus.textContent = '❌ ไม่สามารถโหลดระบบ Migration ได้';
+                                    }
+                                });
+                            }
+                        } catch (err) {
+                            console.error('❌ [NAV] Error initializing migration:', err);
+                        }
+                    }, 100);
+                    break;
+                case 'security-dashboard':
+                    title = '🔒 Security Dashboard';
+                    try {
+                        if (typeof loadSecurityDashboard === 'function') {
+                            loadSecurityDashboard();
+                        } else {
+                            console.warn('⚠️ [NAV] loadSecurityDashboard function not available');
+                        }
+                    } catch (err) {
+                        console.error('❌ [NAV] Error loading security dashboard:', err);
+                    }
+                    break;
+                case 'auth-logs':
+                    title = '🔒 Authentication Logs';
+                    try {
+                        if (typeof loadAuthLogs === 'function') {
+                            loadAuthLogs();
+                        } else {
+                            console.warn('⚠️ [NAV] loadAuthLogs function not available');
+                        }
+                    } catch (err) {
+                        console.error('❌ [NAV] Error loading auth logs:', err);
+                    }
+                    break;
+                case 'blocked-ips':
+                    title = '🚫 Blocked IPs';
+                    try {
+                        if (typeof loadBlockedIPs === 'function') {
+                            loadBlockedIPs();
+                        } else {
+                            console.warn('⚠️ [NAV] loadBlockedIPs function not available');
+                        }
+                    } catch (err) {
+                        console.error('❌ [NAV] Error loading blocked IPs:', err);
+                    }
+                    break;
+                case 'security-alerts':
+                    title = '⚠️ Security Alerts';
+                    try {
+                        if (typeof loadSecurityDashboard === 'function') {
+                            loadSecurityDashboard(); // Load dashboard data for alerts
+                        } else {
+                            console.warn('⚠️ [NAV] loadSecurityDashboard function not available for alerts');
+                        }
+                    } catch (err) {
+                        console.error('❌ [NAV] Error loading security alerts:', err);
+                    }
+                    break;
+                default:
+                    title = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
+            }
+        } catch (switchError) {
+            console.error('❌ [NAV] Error in section switch:', switchError);
+            title = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
         }
         NavigationCache.updatePageTitle(title);
         
