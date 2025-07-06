@@ -217,7 +217,9 @@ class PerformanceBootstrap {
             console.error(`❌ [BOOTSTRAP] Failed to load ${name}:`, error);
             
             // ⚡ Fallback for MIME type issues - try loading as regular script
-            if (error.message.includes('MIME type')) {
+            if (error.message.includes('MIME type') || 
+                error.message.includes('JavaScript module script') ||
+                error.message.includes('text/html')) {
                 console.warn(`⚠️ [BOOTSTRAP] MIME type issue detected, trying fallback for ${name}`);
                 return this.loadModuleAsFallback(name, path);
             }

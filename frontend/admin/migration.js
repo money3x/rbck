@@ -51,7 +51,7 @@ class AdminMigration {
             const response = await fetch(`${this.apiBase}/migration/status`, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Authorization': `Bearer ${localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken')}`,
                     'Content-Type': 'application/json'
                 }
             });
@@ -103,7 +103,7 @@ class AdminMigration {
             const response = await fetch(`${this.apiBase}/migration/execute`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Authorization': `Bearer ${localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken')}`,
                     'Content-Type': 'application/json'
                 }
             });
@@ -143,7 +143,7 @@ class AdminMigration {
             const response = await fetch(`${this.apiBase}/migration/health`, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Authorization': `Bearer ${localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken')}`,
                     'Content-Type': 'application/json'
                 }
             });

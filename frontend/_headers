@@ -1,0 +1,28 @@
+# Netlify headers file to fix MIME types for ES modules
+
+# JavaScript modules - fix MIME type
+/admin/*.js
+  Content-Type: application/javascript; charset=utf-8
+
+/admin/js/*.js
+  Content-Type: application/javascript; charset=utf-8
+
+/admin/core/*.js
+  Content-Type: application/javascript; charset=utf-8
+
+# All other JavaScript files
+*.js
+  Content-Type: application/javascript; charset=utf-8
+
+# Ensure proper caching for performance
+/admin/core/*
+  Cache-Control: public, max-age=31536000
+
+/admin/css/*
+  Cache-Control: public, max-age=31536000
+
+# Security headers
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  X-XSS-Protection: 1; mode=block

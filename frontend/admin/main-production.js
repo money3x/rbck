@@ -2381,6 +2381,15 @@ window.loadSecurityDashboard = async function() {
         });
 
         if (!response.ok) {
+            if (response.status === 401) {
+                // ⚡ Handle 401 Unauthorized - force re-authentication
+                console.warn('🔒 [AUTH] Token expired or invalid, redirecting to login...');
+                localStorage.removeItem('jwtToken');
+                sessionStorage.removeItem('authToken');
+                authToken = null;
+                window.location.href = 'login.html';
+                return;
+            }
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
@@ -2508,6 +2517,15 @@ window.loadAuthLogs = async function() {
         });
 
         if (!response.ok) {
+            if (response.status === 401) {
+                // ⚡ Handle 401 Unauthorized - force re-authentication
+                console.warn('🔒 [AUTH] Token expired or invalid, redirecting to login...');
+                localStorage.removeItem('jwtToken');
+                sessionStorage.removeItem('authToken');
+                authToken = null;
+                window.location.href = 'login.html';
+                return;
+            }
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
@@ -2583,6 +2601,15 @@ window.loadBlockedIPs = async function() {
         console.log('📡 [BLOCKED] Response status:', response.status);
         
         if (!response.ok) {
+            if (response.status === 401) {
+                // ⚡ Handle 401 Unauthorized - force re-authentication
+                console.warn('🔒 [AUTH] Token expired or invalid, redirecting to login...');
+                localStorage.removeItem('jwtToken');
+                sessionStorage.removeItem('authToken');
+                authToken = null;
+                window.location.href = 'login.html';
+                return;
+            }
             const errorText = await response.text();
             console.error('❌ [BLOCKED] Response error:', errorText);
             throw new Error(`HTTP ${response.status}: ${response.statusText || 'Unknown error'}`);
