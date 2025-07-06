@@ -458,4 +458,8 @@ if (document.readyState === 'loading') {
 window.LuxurySidebar = LuxurySidebar;
 window.initializeLuxurySidebar = initializeLuxurySidebar;
 
+// ES Module exports
+export { LuxurySidebar, initializeLuxurySidebar };
+export default LuxurySidebar;
+
 console.log('🎭 [LUXURY SIDEBAR] JavaScript module loaded successfully');

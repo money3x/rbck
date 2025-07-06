@@ -124,14 +124,14 @@ class PerformanceBootstrap {
         // ⚡ Load AI modal when AI button clicked
         document.addEventListener('click', (e) => {
             if (e.target.closest('[data-module="ai-modal"]')) {
-                this.loadModule('ai-modal', '../ui/ai-modal.js');
+                this.loadModule('ai-modal', '../modals.js');
             }
         });
 
         // ⚡ Load security dashboard when security menu clicked
         document.addEventListener('click', (e) => {
             if (e.target.closest('[data-module="security"]')) {
-                this.loadModule('security', '../ui/security-dashboard.js');
+                this.loadModule('security', '../js/security-dashboard.js');
             }
         });
 
@@ -140,7 +140,7 @@ class PerformanceBootstrap {
         document.addEventListener('click', (e) => {
             if (!sidebarLoaded && e.target.closest('.sidebar')) {
                 sidebarLoaded = true;
-                this.loadModule('sidebar', '../ui/luxury-sidebar.js');
+                this.loadModule('sidebar', '../js/luxury-sidebar.js');
             }
         });
     }
@@ -151,13 +151,13 @@ class PerformanceBootstrap {
     addAdminModuleLoaders() {
         // ⚡ Load performance monitoring when needed
         window.loadPerformanceModule = () => {
-            return this.loadModule('performance', '../ui/performance-monitor.js');
+            return this.loadModule('performance', '../js/performance-monitor.js');
         };
 
         // ⚡ Load debug tools in development
         if (window.location.hostname.includes('localhost')) {
             setTimeout(() => {
-                this.loadModule('debug', '../ui/debug-tools.js');
+                this.loadModule('debug', '../js/debug-tools.js');
             }, 2000);
         }
     }
@@ -169,8 +169,8 @@ class PerformanceBootstrap {
         // ⚡ Preload likely modules after critical path
         setTimeout(() => {
             this.preloadModules([
-                '../ui/luxury-sidebar.js',
-                '../ui/ai-modal.js'
+                '../js/luxury-sidebar.js',
+                '../modals.js'
             ]);
         }, 1000);
 
@@ -178,8 +178,8 @@ class PerformanceBootstrap {
         window.addEventListener('auth-success', () => {
             setTimeout(() => {
                 this.preloadModules([
-                    '../ui/security-dashboard.js',
-                    '../ui/performance-monitor.js'
+                    '../js/security-dashboard.js',
+                    '../js/performance-monitor.js'
                 ]);
             }, 500);
         });
@@ -215,8 +215,37 @@ class PerformanceBootstrap {
             
         } catch (error) {
             console.error(`❌ [BOOTSTRAP] Failed to load ${name}:`, error);
+            
+            // ⚡ Fallback for MIME type issues - try loading as regular script
+            if (error.message.includes('MIME type')) {
+                console.warn(`⚠️ [BOOTSTRAP] MIME type issue detected, trying fallback for ${name}`);
+                return this.loadModuleAsFallback(name, path);
+            }
+            
             throw error;
         }
+    }
+
+    /**
+     * ⚡ OPTIMIZED: Fallback module loading for MIME type issues
+     */
+    async loadModuleAsFallback(name, path) {
+        console.log(`🔄 [BOOTSTRAP] Loading ${name} as regular script...`);
+        
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = path;
+            script.onload = () => {
+                console.log(`✅ [BOOTSTRAP] ${name} loaded as fallback`);
+                this.modules.set(name, window); // Store window object as module
+                resolve(window);
+            };
+            script.onerror = (error) => {
+                console.error(`❌ [BOOTSTRAP] Fallback failed for ${name}:`, error);
+                reject(error);
+            };
+            document.head.appendChild(script);
+        });
     }
 
     /**

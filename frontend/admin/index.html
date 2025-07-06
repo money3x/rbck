@@ -6324,54 +6324,55 @@
                     };
                 } else {
                     console.error('❌ [AI SETTINGS] aiSettingsLink not found!');
-                    
-                    // CLOSE MODAL - Multiple close methods
-                    function closeModal() {
-                        console.log('🔧 [BACKEND MODAL] Closing modal...');
-                        simpleModal.style.display = 'none';
-                        document.body.style.overflow = '';
-                        console.log('✅ [BACKEND MODAL] Modal closed successfully!');
-                    }
-                    
-                    if (closeBtn) {
-                        closeBtn.onclick = function(e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            closeModal();
-                        };
-                    }
-                    
-                    if (cancelBtn) {
-                        cancelBtn.onclick = function(e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            closeModal();
-                        };
-                    }
-                    
-                    if (refreshBtn) {
-                        refreshBtn.onclick = function(e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            loadBackendProviderStatus();
-                        };
-                    }
-                    
-                    // Close on overlay click
-                    simpleModal.onclick = function(e) {
-                        if (e.target === simpleModal) {
-                            closeModal();
-                        }
+                }
+                
+                // CLOSE MODAL - Multiple close methods
+                function closeModal() {
+                    console.log('🔧 [BACKEND MODAL] Closing modal...');
+                    simpleModal.style.display = 'none';
+                    document.body.style.overflow = '';
+                    console.log('✅ [BACKEND MODAL] Modal closed successfully!');
+                }
+                
+                if (closeBtn) {
+                    closeBtn.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        closeModal();
                     };
-                    
-                    // Close on ESC key
-                    document.addEventListener('keydown', function(e) {
-                        if (e.key === 'Escape' && simpleModal.style.display === 'block') {
-                            closeModal();
-                        }
-                    });
-                    
-                    console.log('✅ [BACKEND MODAL] All event handlers set up successfully!');
+                }
+                
+                if (cancelBtn) {
+                    cancelBtn.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        closeModal();
+                    };
+                }
+                
+                if (refreshBtn) {
+                    refreshBtn.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        loadBackendProviderStatus();
+                    };
+                }
+                
+                // Close on overlay click
+                simpleModal.onclick = function(e) {
+                    if (e.target === simpleModal) {
+                        closeModal();
+                    }
+                };
+                
+                // Close on ESC key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && simpleModal.style.display === 'block') {
+                        closeModal();
+                    }
+                });
+                
+                console.log('✅ [BACKEND MODAL] All event handlers set up successfully!');
             }, 3000);
         });
         
@@ -8343,11 +8344,9 @@
         
         // ⚡ Load deferred scripts after critical path
         setTimeout(() => {
-            // ⚡ Load migration system if needed
-            if (window.rbckConfig.isDevelopment) {
-                import('./migration.js').catch(() => console.warn('Migration script not available'));
-            }
-        }, 2000);
+            // ⚡ Load migration system (always load for admin functionality)
+            import('./migration.js').catch(() => console.warn('Migration script not available'));
+        }, 500);
     </script>
     
     <!-- ⚡ PERFORMANCE: Fallback for non-module browsers -->
