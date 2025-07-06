@@ -143,20 +143,35 @@ window.checkAuthentication = async function() {
     
     try {
         // ✅ Call backend to verify JWT + ENCRYPTION_KEY
-        const response = await fetch(`${rbckConfig.apiBase}/auth/verify-session`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        console.log('📡 [AUTH] Server response status:', response.status);
-        
-        if (response.status === 200) {
-            const result = await response.json();
+        let result;
+        if (window.safeApiCall && typeof window.safeApiCall === 'function') {
+            console.log('🛡️ [AUTH] Using APIHelper for auth verification');
+            result = await window.safeApiCall(`${rbckConfig.apiBase}/auth/verify-session`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+        } else {
+            const response = await fetch(`${rbckConfig.apiBase}/auth/verify-session`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
             
-            if (result.success && result.user && result.user.encryptionVerified) {
+            console.log('📡 [AUTH] Server response status:', response.status);
+            
+            if (response.status === 200) {
+                result = await response.json();
+            } else {
+                throw new Error(`Auth failed: ${response.status}`);
+            }
+        }
+        
+        if (result.success && result.user && result.user.encryptionVerified) {
                 // ✅ Authentication valid with ENCRYPTION_KEY verified
                 currentUser = result.user;
                 authToken = token;
@@ -250,10 +265,16 @@ document.addEventListener('DOMContentLoaded', function() {
 // ⚡ PERFORMANCE: Keep Render backend warm (prevent cold starts)
 setInterval(async () => {
     try {
-        await fetch(`${rbckConfig.apiBase}/ai/status`, { 
-            method: 'GET',
-            mode: 'no-cors' // Avoid CORS preflight for warming
-        });
+        if (window.safeApiCall && typeof window.safeApiCall === 'function') {
+            await window.safeApiCall(`${rbckConfig.apiBase}/ai/status`, { 
+                method: 'GET'
+            });
+        } else {
+            await fetch(`${rbckConfig.apiBase}/ai/status`, { 
+                method: 'GET',
+                mode: 'no-cors' // Avoid CORS preflight for warming
+            });
+        }
         console.log('🔥 [WARMING] Backend kept warm');
     } catch (e) {
         // Silent fail - just warming
@@ -387,6 +408,14 @@ async function apiRequest(endpoint, options = {}) {
     
     try {
         console.log(`🔄 [API] ${finalOptions.method || 'GET'} ${url}`);
+        
+        // ✅ Use APIHelper if available for CORS and rate limiting
+        if (window.safeApiCall && typeof window.safeApiCall === 'function') {
+            console.log(`🛡️ [API] Using APIHelper for CORS protection`);
+            return await window.safeApiCall(url, finalOptions);
+        }
+        
+        // ✅ Fallback to direct fetch if APIHelper not available
         const response = await fetch(url, finalOptions);
         
         if (!response.ok) {
@@ -2422,28 +2451,40 @@ window.loadSecurityDashboard = async function() {
     }
     
     try {
-        const response = await fetch(`${rbckConfig.apiBase}/security/dashboard`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${currentToken}`,
-                'Content-Type': 'application/json'
-            }
-        });
+        let result;
+        if (window.safeApiCall && typeof window.safeApiCall === 'function') {
+            console.log('🛡️ [SECURITY] Using APIHelper for dashboard');
+            result = await window.safeApiCall(`${rbckConfig.apiBase}/security/dashboard`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+        } else {
+            const response = await fetch(`${rbckConfig.apiBase}/security/dashboard`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
 
-        if (!response.ok) {
-            if (response.status === 401) {
-                // ⚡ Handle 401 Unauthorized - force re-authentication
-                console.warn('🔒 [AUTH] Token expired or invalid, redirecting to login...');
-                localStorage.removeItem('jwtToken');
-                sessionStorage.removeItem('authToken');
-                authToken = null;
-                window.location.href = 'login.html';
-                return;
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // ⚡ Handle 401 Unauthorized - force re-authentication
+                    console.warn('🔒 [AUTH] Token expired or invalid, redirecting to login...');
+                    localStorage.removeItem('jwtToken');
+                    sessionStorage.removeItem('authToken');
+                    authToken = null;
+                    window.location.href = 'login.html';
+                    return;
+                }
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+
+            result = await response.json();
         }
-
-        const result = await response.json();
         
         if (result.success) {
             populateSecurityDashboard(result.data);
@@ -2558,13 +2599,24 @@ window.loadAuthLogs = async function() {
     }
     
     try {
-        const response = await fetch(`${rbckConfig.apiBase}/security/auth-logs`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${currentToken}`,
-                'Content-Type': 'application/json'
-            }
-        });
+        let result;
+        if (window.safeApiCall && typeof window.safeApiCall === 'function') {
+            console.log('🛡️ [SECURITY] Using APIHelper for auth logs');
+            result = await window.safeApiCall(`${rbckConfig.apiBase}/security/auth-logs`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+        } else {
+            const response = await fetch(`${rbckConfig.apiBase}/security/auth-logs`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
 
         if (!response.ok) {
             if (response.status === 401) {

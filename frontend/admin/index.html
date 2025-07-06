@@ -6215,30 +6215,29 @@
         // ⚡ Also try after a delay in case DOM is still loading
         setTimeout(setupModalHandlers, 1000);
             
-            // Override any conflicting handlers from main-production.js
-            setTimeout(function() {
-                const existingModal = document.getElementById('aiSettingsModal');
-                if (existingModal) {
-                    // Remove all existing event listeners by cloning the element
-                    const newModal = existingModal.cloneNode(true);
-                    existingModal.parentNode.replaceChild(newModal, existingModal);
-                    
-                    // Re-add our custom handlers
-                    const modalContent = newModal.querySelector('.ai-modal');
-                    if (modalContent) {
-                        modalContent.addEventListener('click', function(event) {
-                            event.stopPropagation();
-                        });
-                    }
-                    
-                    newModal.addEventListener('click', function(event) {
-                        if (event.target === newModal) {
-                            closeAISettingsModal();
-                        }
+        // Override any conflicting handlers from main-production.js
+        setTimeout(function() {
+            const existingModal = document.getElementById('aiSettingsModal');
+            if (existingModal) {
+                // Remove all existing event listeners by cloning the element
+                const newModal = existingModal.cloneNode(true);
+                existingModal.parentNode.replaceChild(newModal, existingModal);
+                
+                // Re-add our custom handlers
+                const modalContent = newModal.querySelector('.ai-modal');
+                if (modalContent) {
+                    modalContent.addEventListener('click', function(event) {
+                        event.stopPropagation();
                     });
                 }
-            }, 2000);
-        });
+                
+                newModal.addEventListener('click', function(event) {
+                    if (event.target === newModal) {
+                        closeAISettingsModal();
+                    }
+                });
+            }
+        }, 2000);
         
         // AI Config Modal Functions (New approach)
         function openAIConfigModal() {
