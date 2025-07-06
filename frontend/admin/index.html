@@ -5615,8 +5615,8 @@
     <!-- Original AI Settings Modal (Keep for compatibility) -->
     <!-- Emergency debug fix for showSection ReferenceError -->
     <!-- Production-ready JavaScript -->
-    <script src="api-helper.js"></script>
-    <script src="main-production.js"></script>
+    <script src="api-helper.js" onload="console.log('✅ api-helper.js loaded')" onerror="console.error('❌ Failed to load api-helper.js')"></script>
+    <script src="main-production.js" onload="console.log('✅ main-production.js loaded'); console.log('showSection type:', typeof window.showSection);" onerror="console.error('❌ Failed to load main-production.js')"></script>
     
     <!-- Complete Modal Conflict Fix -->
     <script>
@@ -8345,17 +8345,67 @@
             }, 2000); // 2 second delay
         });
         
-        // Fallback showSection function in case module fails to load
-        if (typeof window.showSection === 'undefined') {
-            console.warn('⚠️ [FALLBACK] Module not loaded yet, creating fallback showSection');
-            window.showSection = function(sectionId) {
-                console.log('🔄 [FALLBACK] Showing section:', sectionId);
-                alert('กำลังโหลดระบบ กรุณารอสักครู่...');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
+        // ✅ Wait for main-production.js to load, then check for showSection
+        function checkAndCreateFallback() {
+            if (typeof window.showSection === 'undefined') {
+                console.warn('⚠️ [FALLBACK] showSection not available, creating fallback');
+                window.showSection = function(sectionId) {
+                console.log('🔄 [FALLBACK] Attempting to show section:', sectionId);
+                
+                // ✅ แทนที่จะ reload ให้ลองหาและแสดง section โดยตรง
+                try {
+                    // Hide all sections first
+                    const allSections = document.querySelectorAll('.content-section, .section');
+                    allSections.forEach(section => {
+                        section.style.display = 'none';
+                        section.classList.remove('active');
+                    });
+                    
+                    // Show target section
+                    const targetSection = document.getElementById(sectionId);
+                    if (targetSection) {
+                        targetSection.style.display = 'block';
+                        targetSection.classList.add('active');
+                        console.log('✅ [FALLBACK] Section shown successfully:', sectionId);
+                        
+                        // Update nav links
+                        document.querySelectorAll('.nav-link').forEach(link => {
+                            link.classList.remove('active');
+                        });
+                        const navLink = document.querySelector(`.nav-link[onclick*="${sectionId}"]`);
+                        if (navLink) {
+                            navLink.classList.add('active');
+                        }
+                        
+                    } else {
+                        console.error('❌ [FALLBACK] Section not found:', sectionId);
+                        alert(`ไม่พบหน้า ${sectionId} กรุณาลองใหม่อีกครั้ง`);
+                    }
+                } catch (error) {
+                    console.error('❌ [FALLBACK] Error in fallback showSection:', error);
+                    alert('เกิดข้อผิดพลาด กรุณาลองรีเฟรชหน้าเพจ');
+                }
             };
+            } else {
+                console.log('✅ [FALLBACK] showSection already available from main-production.js');
+            }
         }
+        
+        // ✅ Check immediately and also after delays with more debugging
+        console.log('🔍 [DEBUG] Checking showSection availability...');
+        console.log('🔍 [DEBUG] window.showSection type:', typeof window.showSection);
+        
+        checkAndCreateFallback();
+        
+        setTimeout(() => {
+            console.log('🔍 [DEBUG] After 1s - window.showSection type:', typeof window.showSection);
+            checkAndCreateFallback();
+        }, 1000);
+        
+        setTimeout(() => {
+            console.log('🔍 [DEBUG] After 3s - window.showSection type:', typeof window.showSection);
+            checkAndCreateFallback();
+        }, 3000);
     </script>
     <!-- ⚡ PERFORMANCE: High-performance module system -->
     <script type="module">

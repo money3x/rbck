@@ -29,6 +29,17 @@ if (typeof window !== 'undefined') {
 
 console.log('🚀 [MAIN] Loading RBCK CMS Admin Panel v2025-07-04-v3-secure...');
 
+// ✅ Add global error handler to catch any errors that prevent showSection from loading
+window.addEventListener('error', function(event) {
+    console.error('❌ [MAIN] JavaScript Error:', event.error);
+    console.error('❌ [MAIN] Error in file:', event.filename, 'at line:', event.lineno);
+});
+
+// ✅ Add unhandled promise rejection handler
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('❌ [MAIN] Unhandled Promise Rejection:', event.reason);
+});
+
 // ===== CONFIGURATION =====
 // ✅ Unified configuration system (browser-compatible)
 const rbckConfig = {
@@ -552,6 +563,7 @@ const NavigationCache = {
 };
 
 // ===== ENHANCED NAVIGATION SYSTEM =====
+console.log('🔧 [MAIN] Defining showSection function...');
 window.showSection = function(sectionId) {
     console.log('🔄 [NAV] Showing section:', sectionId);
     
@@ -728,6 +740,8 @@ window.showSection = function(sectionId) {
         showNotification('เกิดข้อผิดพลาดในการเปลี่ยนหน้า: ' + error.message, 'error');
     }
 };
+
+console.log('✅ [MAIN] showSection function defined successfully!');
 
 // ===== AI SWARM COUNCIL FUNCTIONS =====
 window.loadAISwarmData = function() {
