@@ -681,10 +681,10 @@ async function checkAIProvidersStatus() {
         if (!statusElement) continue;
         
         try {
-            // Try to check real status from backend
-            const response = await fetch(`${rbckConfig.apiBase}/ai/status`);
-            if (response.ok) {
-                const data = await response.json();
+            // ⚡ Use safe API call to prevent CORS and rate limiting issues
+            const data = await window.safeApiCall(`${rbckConfig.apiBase}/ai/status`);
+            
+            if (data && data.success !== false) {
                 const providerStatus = data.providers?.[provider.id];
                 
                 if (providerStatus?.status === 'connected' || providerStatus?.available) {

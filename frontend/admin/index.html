@@ -5615,6 +5615,7 @@
     <!-- Original AI Settings Modal (Keep for compatibility) -->
     <!-- Emergency debug fix for showSection ReferenceError -->
     <!-- Production-ready JavaScript -->
+    <script src="api-helper.js"></script>
     <script src="main-production.js"></script>
     
     <!-- Complete Modal Conflict Fix -->
@@ -5794,7 +5795,7 @@
                 }
                 
                 // Fetch provider status
-                const response = await fetch(`${window.rbckConfig.apiBase}/ai/providers/status`, {
+                const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/providers/status`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -5894,7 +5895,7 @@
             console.log('🔄 [AI Settings] Loading current provider status...');
             
             try {
-                const response = await fetch(`${window.rbckConfig.apiBase}/ai/providers/status`, {
+                const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/providers/status`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -5969,7 +5970,7 @@
                     configData.jwtToken = jwtToken;
                 }
                 
-                const response = await fetch(`${window.rbckConfig.apiBase}/ai/providers/configure`, {
+                const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/providers/configure`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -6135,12 +6136,42 @@
             }
         }
         
-        // Wait for DOM to be ready before setting up additional handlers
-        document.addEventListener('DOMContentLoaded', function() {
+        // ⚡ Create fallback modal if not found
+        function createFallbackModal() {
+            console.log('🔧 [AI Settings] Creating fallback modal...');
+            
+            const modalHTML = `
+                <div id="aiSettingsModal" class="ai-settings-modal" style="display: none;">
+                    <div class="ai-modal">
+                        <div class="modal-header">
+                            <h3>🤖 AI Provider Settings</h3>
+                            <button class="modal-close" onclick="closeAISettingsModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <p>AI Settings modal is loading...</p>
+                            <p>Please wait while we initialize the settings interface.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            console.log('✅ [AI Settings] Fallback modal created');
+        }
+        
+        // ⚡ Enhanced modal setup with fallback
+        function setupModalHandlers() {
             console.log('🔧 [AI Settings] Setting up modal handlers...');
             
-            const modal = document.getElementById('aiSettingsModal');
-            const modalContent = document.querySelector('#aiSettingsModal .ai-modal');
+            const modal = document.getElementById('aiSettingsModal') || document.querySelector('.ai-settings-modal');
+            const modalContent = modal ? modal.querySelector('.ai-modal') : null;
+            
+            if (!modal) {
+                console.warn('⚠️ [AI Settings] Modal not found, creating fallback...');
+                // Create a basic modal structure if not found
+                createFallbackModal();
+                return;
+            }
             
             if (modal && modalContent) {
                 // Prevent modal content clicks from bubbling to overlay
@@ -6169,7 +6200,20 @@
                 console.log('✅ [AI Settings] Modal handlers setup complete');
             } else {
                 console.error('❌ [AI Settings] Modal or modal content not found');
+                // Try creating fallback
+                createFallbackModal();
             }
+        }
+        
+        // ⚡ Initialize modal handlers when ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupModalHandlers);
+        } else {
+            setupModalHandlers();
+        }
+        
+        // ⚡ Also try after a delay in case DOM is still loading
+        setTimeout(setupModalHandlers, 1000);
             
             // Override any conflicting handlers from main-production.js
             setTimeout(function() {
@@ -6399,7 +6443,7 @@
                 const authToken = localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
                 
                 // Make API call to backend to get provider status
-                const response = await fetch(`${window.rbckConfig.apiBase}/ai/providers/status`, {
+                const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/providers/status`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -6623,7 +6667,7 @@
             console.log(`🔍 [BACKEND] Testing ${providerId} connection...`);
             
             try {
-                const response = await fetch(`${window.rbckConfig.apiBase}/ai/providers/${providerId}/test`, {
+                const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/providers/${providerId}/test`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -6696,30 +6740,41 @@
                     throw new Error('API key is required');
                 }
                 
-                // Simulate API test (you can implement real API testing here)
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                // For now, just check if key has the right format
-                let isValid = false;
-                switch (providerId) {
-                    case 'openai':
-                        isValid = apiKey.startsWith('sk-');
-                        break;
-                    case 'claude':
-                        isValid = apiKey.startsWith('sk-ant-');
-                        break;
-                    case 'gemini':
-                        isValid = apiKey.startsWith('AIza');
-                        break;
-                    case 'deepseek':
-                        isValid = apiKey.startsWith('sk-');
-                        break;
-                    case 'chindax':
-                        isValid = apiKey.length > 0 && jwtToken.length > 0;
-                        break;
+                // ✅ Use APIHelper for real connection testing
+                let testResult;
+                if (window.testProviderConnection) {
+                    console.log(`🧪 [AI TEST] Using APIHelper to test ${providerId}`);
+                    testResult = await window.testProviderConnection(providerId, apiKey);
+                } else {
+                    // Fallback to basic format validation
+                    console.log(`⚠️ [AI TEST] APIHelper not available, using format validation`);
+                    
+                    let isValid = false;
+                    switch (providerId) {
+                        case 'openai':
+                            isValid = apiKey.startsWith('sk-');
+                            break;
+                        case 'claude':
+                            isValid = apiKey.startsWith('sk-ant-');
+                            break;
+                        case 'gemini':
+                            isValid = apiKey.startsWith('AIza');
+                            break;
+                        case 'deepseek':
+                            isValid = apiKey.startsWith('sk-');
+                            break;
+                        case 'chindax':
+                            isValid = apiKey.length > 0 && jwtToken.length > 0;
+                            break;
+                    }
+                    
+                    testResult = {
+                        success: isValid,
+                        message: isValid ? 'API key format valid' : 'Invalid API key format'
+                    };
                 }
                 
-                if (isValid) {
+                if (testResult.success) {
                     if (resultSpan) {
                         resultSpan.textContent = '✅ Connected';
                         resultSpan.style.color = '#28a745';
@@ -6730,8 +6785,10 @@
                         badge.style.background = '#28a745';
                         badge.textContent = 'Connected';
                     }
+                    
+                    console.log(`✅ [AI TEST] ${providerId} connection successful:`, testResult.message);
                 } else {
-                    throw new Error('Invalid API key format');
+                    throw new Error(testResult.message || 'Connection failed');
                 }
                 
             } catch (error) {
@@ -6793,7 +6850,7 @@
                 let providersData = {};
                 
                 try {
-                    const response = await fetch(`${window.rbckConfig.apiBase}/ai/providers/status`, {
+                    const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/providers/status`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
@@ -7018,7 +7075,7 @@
                         let metricsData = null;
                         
                         try {
-                            const metricsResponse = await fetch(`${window.rbckConfig.apiBase}/ai/metrics`, {
+                            const metricsResponse = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/metrics`, {
                                 method: 'GET',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -7130,7 +7187,7 @@
             // Get provider status from backend if not provided
             if (!providersData) {
                 try {
-                    const response = await fetch(`${window.rbckConfig.apiBase}/ai/providers/status`, {
+                    const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/providers/status`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
@@ -7347,7 +7404,7 @@
                     // Fetch metrics data first
                     let metricsData = null;
                     try {
-                        const metricsResponse = await fetch(`${window.rbckConfig.apiBase}/ai/metrics`, {
+                        const metricsResponse = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/metrics`, {
                             method: 'GET',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -7513,7 +7570,7 @@
             
             try {
                 // Send message to backend AI endpoint
-                const response = await fetch(`${window.rbckConfig.apiBase}/ai/chat`, {
+                const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/chat`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -7652,7 +7709,7 @@
             
             try {
                 // Get provider status from backend
-                const response = await fetch(`${window.rbckConfig.apiBase}/ai/providers/status`, {
+                const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/providers/status`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
