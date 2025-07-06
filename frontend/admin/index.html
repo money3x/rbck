@@ -7066,7 +7066,7 @@
                                     '</div>' +
                                 '</td>' +
                                 '<td class="requests-cell">' +
-                                    '<div class="metric-value">' + performance.requests.toLocaleString() + '</div>' +
+                                    '<div class="metric-value">' + (performance.requests || 0).toLocaleString() + '</div>' +
                                     '<div class="metric-sub">Today</div>' +
                                 '</td>' +
                                 '<td class="success-rate-cell">' +
@@ -7086,13 +7086,13 @@
                                     '<div class="metric-sub">' + performance.uptimeHours + 'h</div>' +
                                 '</td>' +
                                 '<td class="cost-cell">' +
-                                    '<div class="metric-value">฿' + performance.cost.toFixed(2) + '</div>' +
+                                    '<div class="metric-value">฿' + (performance.cost || 0).toFixed(2) + '</div>' +
                                     '<div class="metric-sub">Today</div>' +
                                 '</td>' +
                                 '<td class="activity-cell">' +
                                     '<div class="last-activity">' +
-                                        '<div class="activity-text">' + performance.lastActivity.action + '</div>' +
-                                        '<div class="activity-time">' + performance.lastActivity.time + '</div>' +
+                                        '<div class="activity-text">' + (performance.lastActivity?.action || 'No activity') + '</div>' +
+                                        '<div class="activity-time">' + (performance.lastActivity?.time || 'Unknown') + '</div>' +
                                     '</div>' +
                                 '</td>' +
                             '</tr>';

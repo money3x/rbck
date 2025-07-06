@@ -2802,6 +2802,34 @@ window.debugAuth = function() {
     console.log('  sessionStorage.isLoggedIn:', sessionStorage.getItem('isLoggedIn'));
     console.log('  currentUser:', currentUser);
     console.log('  authToken:', authToken);
+    
+    // ⚡ Test current token
+    const currentToken = authToken || localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
+    console.log('  currentToken (computed):', currentToken);
+    
+    if (currentToken) {
+        console.log('  Token length:', currentToken.length);
+        console.log('  Token starts with:', currentToken.substring(0, 20) + '...');
+        
+        // ⚡ Test token with backend
+        fetch(`${rbckConfig.apiBase}/auth/verify-session`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${currentToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ token: currentToken })
+        }).then(response => {
+            console.log('  Token verification status:', response.status);
+            return response.json();
+        }).then(result => {
+            console.log('  Token verification result:', result);
+        }).catch(error => {
+            console.log('  Token verification error:', error);
+        });
+    } else {
+        console.log('  ❌ No token available');
+    }
 };
 
 // ✅ Define missing functions to prevent ReferenceError

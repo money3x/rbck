@@ -197,34 +197,33 @@ class PerformanceBootstrap {
         console.log(`⚡ [BOOTSTRAP] Loading module: ${name}`);
         const startTime = performance.now();
 
+        // ⚡ Always try fallback first for better compatibility
         try {
-            const moduleExport = await import(path);
-            const loadTime = performance.now() - startTime;
+            return await this.loadModuleAsFallback(name, path);
+        } catch (fallbackError) {
+            console.warn(`⚠️ [BOOTSTRAP] Fallback failed for ${name}, trying ES module:`, fallbackError);
             
-            this.modules.set(name, moduleExport.default);
-            this.loadTimes.set(name, loadTime);
-            
-            console.log(`✅ [BOOTSTRAP] ${name} loaded (${loadTime.toFixed(1)}ms)`);
-            
-            // ⚡ Trigger module loaded event
-            window.dispatchEvent(new CustomEvent('module-loaded', {
-                detail: { name, loadTime }
-            }));
-            
-            return moduleExport.default;
-            
-        } catch (error) {
-            console.error(`❌ [BOOTSTRAP] Failed to load ${name}:`, error);
-            
-            // ⚡ Fallback for MIME type issues - try loading as regular script
-            if (error.message.includes('MIME type') || 
-                error.message.includes('JavaScript module script') ||
-                error.message.includes('text/html')) {
-                console.warn(`⚠️ [BOOTSTRAP] MIME type issue detected, trying fallback for ${name}`);
-                return this.loadModuleAsFallback(name, path);
+            // ⚡ If fallback fails, try ES module as secondary option
+            try {
+                const moduleExport = await import(path);
+                const loadTime = performance.now() - startTime;
+                
+                this.modules.set(name, moduleExport.default);
+                this.loadTimes.set(name, loadTime);
+                
+                console.log(`✅ [BOOTSTRAP] ${name} loaded via ES module (${loadTime.toFixed(1)}ms)`);
+                
+                // ⚡ Trigger module loaded event
+                window.dispatchEvent(new CustomEvent('module-loaded', {
+                    detail: { name, loadTime }
+                }));
+                
+                return moduleExport.default;
+                
+            } catch (esError) {
+                console.error(`❌ [BOOTSTRAP] Both fallback and ES module failed for ${name}:`, esError);
+                throw esError;
             }
-            
-            throw error;
         }
     }
 
@@ -237,15 +236,37 @@ class PerformanceBootstrap {
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
             script.src = path;
+            script.type = 'text/javascript'; // Explicit type
+            
+            const loadTime = performance.now();
+            
             script.onload = () => {
-                console.log(`✅ [BOOTSTRAP] ${name} loaded as fallback`);
-                this.modules.set(name, window); // Store window object as module
+                const duration = performance.now() - loadTime;
+                console.log(`✅ [BOOTSTRAP] ${name} loaded as fallback (${duration.toFixed(1)}ms)`);
+                
+                this.modules.set(name, window);
+                this.loadTimes.set(name, duration);
+                
+                // ⚡ Trigger module loaded event
+                window.dispatchEvent(new CustomEvent('module-loaded', {
+                    detail: { name, loadTime: duration }
+                }));
+                
                 resolve(window);
             };
+            
             script.onerror = (error) => {
                 console.error(`❌ [BOOTSTRAP] Fallback failed for ${name}:`, error);
-                reject(error);
+                reject(new Error(`Failed to load ${name} as regular script`));
             };
+            
+            // ⚡ Timeout protection
+            setTimeout(() => {
+                if (!script.complete) {
+                    reject(new Error(`Timeout loading ${name}`));
+                }
+            }, 10000); // 10 second timeout
+            
             document.head.appendChild(script);
         });
     }
