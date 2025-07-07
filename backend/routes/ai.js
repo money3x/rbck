@@ -210,10 +210,7 @@ router.get('/providers/status', async (req, res) => {
                     try {
                         // Create provider instance and test connection
                         const providerConfig = SecureConfigService.getProviderConfig(key);
-                        const provider = ProviderFactory.getProvider(key, {
-                            apiKey: providerConfig.apiKey,
-                            baseURL: providerConfig.endpoint
-                        });
+                        const provider = ProviderFactory.createProvider(key);
                         
                         if (provider) {
                             const startTime = Date.now();
@@ -921,11 +918,7 @@ router.post('/providers/configure', async (req, res) => {
         try {
             const ProviderFactory = require('../ai/providers/factory/ProviderFactory');
             
-            const providerInstance = ProviderFactory.getProvider(provider, {
-                apiKey: providerConfig.apiKey,
-                baseURL: AI_PROVIDERS[provider].endpoint,
-                jwtToken: jwtToken
-            });
+            const providerInstance = ProviderFactory.createProvider(provider);
             
             if (providerInstance) {
                 const startTime = Date.now();
