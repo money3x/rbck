@@ -36,15 +36,15 @@ const analyzeIPBehavior = (ip, endpoint) => {
         data.patterns.push('rapid_fire');
     }
     
-    // Check for sustained high volume
+    // Check for sustained high volume - more lenient for production
     const duration = now - data.firstSeen;
-    if (duration < 60000 && data.requests > 200) { // 200+ requests in 1 minute (more lenient)
+    if (duration < 60000 && data.requests > 500) { // 500+ requests in 1 minute (very lenient)
         data.violations++;
         data.patterns.push('high_volume');
     }
     
-    // ✅ PRODUCTION FIX: Less aggressive blocking
-    if (data.violations >= 10) { // Increased threshold
+    // ✅ PRODUCTION FIX: Very lenient blocking for legitimate frontend usage
+    if (data.violations >= 20) { // Much higher threshold for production
         blockedIPs.add(ip);
         console.warn(`🔒 [SECURITY] IP ${ip} blocked due to suspicious behavior:`, data.patterns);
         return true;
@@ -171,26 +171,26 @@ const loginRateLimit = rateLimit({
  */
 const generalRateLimit = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 500, // Maximum 500 requests per 15 minutes (very high for dev)
+    max: process.env.NODE_ENV === 'production' ? 2000 : 500, // Higher for production frontend
     message: {
-        error: 'Too many requests (Development Mode)',
+        error: 'Too many requests',
         message: 'You have exceeded the general request limit. Please slow down your requests.',
         retryAfter: 15 * 60,
-        environment: 'development',
+        environment: process.env.NODE_ENV || 'development',
         timestamp: new Date().toISOString()
     },
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: (req) => {
-        return req.ip + ':dev';
+        return req.ip + ':general';
     },
     handler: (req, res) => {
-        console.log(`⚠️ [DEV] General rate limit exceeded for IP: ${req.ip} at ${new Date().toISOString()}`);
+        console.log(`⚠️ [RATE LIMIT] General rate limit exceeded for IP: ${req.ip} at ${new Date().toISOString()}`);
         res.status(429).json({
-            error: 'Too many requests (Development Mode)',
+            error: 'Too many requests',
             message: 'You have exceeded the general request limit. Please slow down your requests.',
             retryAfter: 15 * 60,
-            environment: 'development',
+            environment: process.env.NODE_ENV || 'development',
             timestamp: new Date().toISOString()
         });
     }

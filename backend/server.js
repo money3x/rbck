@@ -157,7 +157,13 @@ app.use(cors({
       return callback(null, true);
     }
     
-    // ✅ SECURITY FIX: Only allow specific Netlify domains, not all .netlify.app
+    // ✅ PRODUCTION FIX: Allow the specific Netlify domain in production
+    if (origin === 'https://flourishing-gumdrop-dffe7a.netlify.app') {
+      console.log('✅ Production: Allowing configured Netlify domain:', origin);
+      return callback(null, true);
+    }
+    
+    // ✅ Development: Allow any .netlify.app domain for testing
     if (process.env.NODE_ENV === 'development' && origin.includes('.netlify.app')) {
       console.warn('⚠️ Development: Allowing Netlify domain:', origin);
       return callback(null, true);

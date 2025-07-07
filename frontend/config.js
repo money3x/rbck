@@ -271,6 +271,7 @@ export const getEncryptionKey = () => configManager.getEncryptionKey();
 export const getSupabaseConfig = () => configManager.getSupabaseConfig();
 export const validateToken = (token) => configManager.validateToken(token);
 export const clearConfigCache = () => configManager.clearCache();
+export { testBackendConfiguration };
 
 /**
  * ✅ Test backend configuration and endpoints
