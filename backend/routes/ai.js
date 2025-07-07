@@ -13,8 +13,60 @@ const EATOptimizedSwarmCouncil = require('../ai/swarm/EATOptimizedSwarmCouncil')
 const swarmCouncil = new SwarmCouncil();
 const eatSwarmCouncil = new EATOptimizedSwarmCouncil();
 
-// ✅ REMOVED: AI_PROVIDERS object that exposed API keys
-// Now using SecureConfigService.getProviderConfig() instead
+// ✅ AI_PROVIDERS configuration (secure version using SecureConfigService)
+const AI_PROVIDERS = {
+    gemini: {
+        name: 'Google Gemini',
+        endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
+        model: 'gemini-pro',
+        get apiKey() { return SecureConfigService.getApiKey('gemini'); },
+        enabled: !!process.env.GEMINI_API_KEY,
+        costPerToken: 0.000002,
+        status: 'active',
+        responseTime: 1200
+    },
+    openai: {
+        name: 'OpenAI GPT',
+        endpoint: 'https://api.openai.com/v1/chat/completions',
+        model: 'gpt-3.5-turbo',
+        get apiKey() { return SecureConfigService.getApiKey('openai'); },
+        enabled: !!process.env.OPENAI_API_KEY,
+        costPerToken: 0.000002,
+        status: 'active',
+        responseTime: 1500
+    },
+    claude: {
+        name: 'Anthropic Claude',
+        endpoint: 'https://api.anthropic.com/v1/messages',
+        model: 'claude-3-sonnet-20240229',
+        get apiKey() { return SecureConfigService.getApiKey('claude'); },
+        enabled: !!process.env.CLAUDE_API_KEY,
+        costPerToken: 0.000003,
+        status: 'active',
+        responseTime: 1800
+    },
+    deepseek: {
+        name: 'DeepSeek AI',
+        endpoint: 'https://api.deepseek.com/v1/chat/completions',
+        model: 'deepseek-chat',
+        get apiKey() { return SecureConfigService.getApiKey('deepseek'); },
+        enabled: !!process.env.DEEPSEEK_API_KEY,
+        costPerToken: 0.000001,
+        status: 'active',
+        responseTime: 2000
+    },
+    chinda: {
+        name: 'Chinda AI',
+        endpoint: process.env.CHINDA_BASE_URL || 'https://api.chinda.ai/v1/chat/completions',
+        model: 'chinda-qwen3-32b',
+        get apiKey() { return SecureConfigService.getApiKey('chinda'); },
+        get jwtToken() { return process.env.CHINDA_JWT_TOKEN; },
+        enabled: !!(process.env.CHINDA_API_KEY && process.env.CHINDA_JWT_TOKEN),
+        costPerToken: 0.000001,
+        status: 'active',
+        responseTime: 2200
+    }
+};
 
 /**
  * ✅ PRODUCTION FIX: GET /api/ai/status  
@@ -158,7 +210,7 @@ router.get('/providers/status', async (req, res) => {
                         // Create provider instance and test connection
                         const providerConfig = SecureConfigService.getProviderConfig(key);
                         const provider = ProviderFactory.getProvider(key, {
-                            apiKey: apiKey,
+                            apiKey: providerConfig.apiKey,
                             baseURL: providerConfig.endpoint
                         });
                         
@@ -294,7 +346,7 @@ router.post('/providers/:provider/test', async (req, res) => {
             
             // Create provider instance
             const providerInstance = ProviderFactory.getProvider(provider, {
-                apiKey: apiKey,
+                apiKey: providerConfig.apiKey,
                 baseURL: providerConfig.endpoint
             });
             
@@ -522,7 +574,7 @@ router.post('/chat', async (req, res) => {
             
             // Create provider instance
             const providerInstance = ProviderFactory.getProvider(provider, {
-                apiKey: apiKey,
+                apiKey: providerConfig.apiKey,
                 baseURL: providerConfig.endpoint
             });
             
@@ -861,7 +913,7 @@ router.post('/providers/configure', async (req, res) => {
             const ProviderFactory = require('../ai/providers/factory/ProviderFactory');
             
             const providerInstance = ProviderFactory.getProvider(provider, {
-                apiKey: apiKey,
+                apiKey: providerConfig.apiKey,
                 baseURL: AI_PROVIDERS[provider].endpoint,
                 jwtToken: jwtToken
             });
