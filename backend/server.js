@@ -24,6 +24,7 @@ config.validateConfig();
 const apiKeyRoutes = require('./apiKey.js');
 const postRoutes = require('./routes/posts');
 const authRoutes = require('./routes/auth.js');
+const configRoutes = require('./routes/config.js');
 const aiRoutes = require('./routes/ai.js');
 const migrationRoutes = require('./routes/migration.js');
 const securityRoutes = require('./routes/security.js');
@@ -234,6 +235,7 @@ app.delete('/api/cache/clear', (req, res) => {
 
 // API Routes with enhanced middleware
 app.use('/api/auth', validateAuth, authRoutes); // Authentication routes
+app.use('/api/config', configRoutes);            // ✅ Configuration routes (public for frontend)
 app.use('/api/security', authenticateAdmin, securityRoutes);       // ✅ Security Dashboard routes (admin only)
 app.use('/api/ai', aiEndpointRateLimit, aiRoutes);                   // ✅ PHASE 3: AI provider routes with rate limiting
 app.use('/api/migration', authenticateAdmin, migrationRateLimit, migrationRoutes); // ✅ PHASE 3: Database migration routes (admin only) with strict rate limiting

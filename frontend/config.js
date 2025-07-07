@@ -163,13 +163,22 @@ export class ConfigManager {
 
         } catch (error) {
             console.error('❌ [TOKEN] Failed to get JWT from Render:', error);
-            // Fallback to localStorage
-            const fallbackToken = localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
-            if (fallbackToken) {
-                console.log('🔄 [TOKEN] Using fallback token from storage');
-                return fallbackToken;
+            
+            // ✅ ใน production ไม่ควรใช้ localStorage เก็บ token (security risk)
+            if (error.message.includes('HTTP 400') || error.message.includes('HTTP 404')) {
+                console.warn('⚠️ [TOKEN] Backend endpoint not available - this indicates configuration problem');
+                console.warn('⚠️ [TOKEN] Please check Render backend environment variables:');
+                console.warn('⚠️ [TOKEN] - JWT_SECRET should be set');
+                console.warn('⚠️ [TOKEN] - ENCRYPTION_KEY should be set'); 
+                console.warn('⚠️ [TOKEN] - Backend routes should be properly configured');
             }
-            throw error;
+            
+            // ✅ Production approach: Don't use localStorage, require proper backend setup
+            console.error('❌ [TOKEN] ConfigManager requires proper backend setup');
+            console.error('❌ [TOKEN] Backend must provide JWT tokens through /api/auth/get-jwt-token');
+            console.error('❌ [TOKEN] Please ensure Render backend is configured with proper environment variables');
+            
+            throw new Error('Backend configuration required - JWT endpoint not available');
         }
     }
 
@@ -263,6 +272,71 @@ export const getSupabaseConfig = () => configManager.getSupabaseConfig();
 export const validateToken = (token) => configManager.validateToken(token);
 export const clearConfigCache = () => configManager.clearCache();
 
+/**
+ * ✅ Test backend configuration and endpoints
+ */
+export async function testBackendConfiguration() {
+    console.log('🧪 [CONFIG] Testing backend configuration...');
+    
+    const results = {
+        jwtEndpoint: false,
+        encryptionEndpoint: false,
+        supabaseEndpoint: false,
+        healthCheck: false,
+        errors: []
+    };
+    
+    // Test JWT token endpoint
+    try {
+        const response = await fetch(`${API_BASE}/auth/get-jwt-token`);
+        if (response.ok) {
+            const data = await response.json();
+            results.jwtEndpoint = data.success === true;
+        } else {
+            results.errors.push(`JWT endpoint returned ${response.status}`);
+        }
+    } catch (error) {
+        results.errors.push(`JWT endpoint error: ${error.message}`);
+    }
+    
+    // Test encryption key endpoint
+    try {
+        const response = await fetch(`${API_BASE}/auth/get-encryption-key`);
+        if (response.ok) {
+            const data = await response.json();
+            results.encryptionEndpoint = data.success === true;
+        } else {
+            results.errors.push(`Encryption endpoint returned ${response.status}`);
+        }
+    } catch (error) {
+        results.errors.push(`Encryption endpoint error: ${error.message}`);
+    }
+    
+    // Test Supabase config endpoint
+    try {
+        const response = await fetch(`${API_BASE}/config/supabase`);
+        if (response.ok) {
+            const data = await response.json();
+            results.supabaseEndpoint = data.success === true;
+        } else {
+            results.errors.push(`Supabase config endpoint returned ${response.status}`);
+        }
+    } catch (error) {
+        results.errors.push(`Supabase config endpoint error: ${error.message}`);
+    }
+    
+    // Test general health
+    try {
+        const response = await fetch(`${API_BASE}/health`);
+        results.healthCheck = response.ok;
+    } catch (error) {
+        results.errors.push(`Health check error: ${error.message}`);
+    }
+    
+    console.log('🧪 [CONFIG] Backend test results:', results);
+    return results;
+}
+
 // Additional config for production
 export const CONFIG = {
     isDevelopment: window.location.hostname.includes('localhost'),
@@ -270,7 +344,7 @@ export const CONFIG = {
     version: '1.0.0',
     apiTimeout: 30000, // 30 seconds
     retryAttempts: 3,
-    configVersion: '2025-06-19-v1-supabase-fix',
+    configVersion: '2025-07-07-v1-production-ready',
     
     // CORS settings for direct connection
     corsSettings: {

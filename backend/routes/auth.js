@@ -401,4 +401,86 @@ router.post('/logout', (req, res) => {
     }
 });
 
+/**
+ * ✅ PRODUCTION: GET /api/auth/get-jwt-token
+ * Get fresh JWT token for ConfigManager
+ */
+router.get('/get-jwt-token', (req, res) => {
+    try {
+        // ✅ ตรวจสอบว่ามี JWT_SECRET ใน environment
+        if (!process.env.JWT_SECRET) {
+            logger.error('❌ JWT_SECRET not configured in environment');
+            return res.status(500).json({
+                success: false,
+                error: 'JWT configuration missing',
+                code: 'MISSING_JWT_SECRET'
+            });
+        }
+
+        // ✅ สร้าง JWT token สำหรับระบบ
+        const jwt = require('jsonwebtoken');
+        const payload = {
+            isAdmin: true,
+            username: 'system',
+            iat: Math.floor(Date.now() / 1000),
+            exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours
+            encryptionKey: process.env.ENCRYPTION_KEY || 'default-key'
+        };
+
+        const token = jwt.sign(payload, process.env.JWT_SECRET);
+        
+        logger.info('✅ Fresh JWT token generated for ConfigManager');
+        
+        res.json({
+            success: true,
+            jwtToken: token,
+            expiresIn: '24h',
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        logger.error('❌ JWT token generation error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to generate JWT token',
+            code: 'TOKEN_GENERATION_FAILED'
+        });
+    }
+});
+
+/**
+ * ✅ PRODUCTION: GET /api/auth/get-encryption-key  
+ * Get ENCRYPTION_KEY for frontend configuration
+ */
+router.get('/get-encryption-key', (req, res) => {
+    try {
+        // ✅ ตรวจสอบว่ามี ENCRYPTION_KEY
+        if (!process.env.ENCRYPTION_KEY) {
+            logger.error('❌ ENCRYPTION_KEY not configured in environment');
+            return res.status(500).json({
+                success: false,
+                error: 'Encryption key not configured',
+                code: 'MISSING_ENCRYPTION_KEY'
+            });
+        }
+
+        logger.info('✅ Encryption key provided to frontend');
+        
+        res.json({
+            success: true,
+            encryptionKey: process.env.ENCRYPTION_KEY,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        logger.error('❌ Encryption key retrieval error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get encryption key',
+            code: 'ENCRYPTION_KEY_FAILED'
+        });
+    }
+});
+
+
 module.exports = router;

@@ -62,25 +62,91 @@ class AdminMigration {
         }
     }
 
-    // ✅ Get authentication token from config manager
+    // ✅ Get authentication token from Supabase session (proper way)
     async getAuthToken() {
         try {
+            // ✅ Phase 1: Get fresh token from Render backend
             if (!this.configManager) {
                 await this.initializeConfig();
             }
             
-            const token = await this.configManager.getJWTToken();
-            console.log('✅ [MIGRATION] Auth token retrieved from Render backend');
-            return token;
+            if (this.configManager) {
+                try {
+                    const token = await this.configManager.getJWTToken();
+                    console.log('✅ [MIGRATION] Got fresh JWT from Render backend');
+                    return token;
+                } catch (configError) {
+                    console.warn('⚠️ [MIGRATION] ConfigManager failed:', configError.message);
+                    // Continue to fallback...
+                }
+            }
+
+            // ✅ Phase 2: Try to verify Supabase connection through Render
+            try {
+                const response = await fetch(`${this.apiBase}/auth/verify-session`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success && result.authenticated) {
+                        console.log('✅ [MIGRATION] Session verified through Render');
+                        return 'verified-session-token';
+                    }
+                }
+            } catch (verifyError) {
+                console.warn('⚠️ [MIGRATION] Session verification failed:', verifyError.message);
+            }
+
+            // ✅ Phase 3: Show proper error to user  
+            console.error('❌ [MIGRATION] No valid authentication available');
+            
+            const statusDiv = document.getElementById('migration-status');
+            if (statusDiv) {
+                statusDiv.textContent = '🔒 ต้องตรวจสอบการ authentication ผ่าน Render';
+            }
+            
+            const resultsDiv = document.getElementById('migration-results');
+            if (resultsDiv) {
+                resultsDiv.innerHTML = `
+                    <div class="migration-status status-error">
+                        <div class="status-header">
+                            <h4>🔒 การ Authentication ผ่าน Supabase</h4>
+                        </div>
+                        <div class="status-details">
+                            <p>❌ <strong>ข้อผิดพลาด:</strong> ไม่สามารถตรวจสอบ Supabase session ได้</p>
+                            <p>💡 <strong>สาเหตุที่เป็นไปได้:</strong></p>
+                            <ul>
+                                <li>Supabase credentials ไม่ได้ตั้งค่าใน Render backend</li>
+                                <li>Network connection ไม่เสถียร</li>
+                                <li>Backend server ไม่ได้เชื่อมต่อกับ Supabase</li>
+                            </ul>
+                            <p>💡 <strong>แก้ไข:</strong></p>
+                            <ul>
+                                <li>ตรวจสอบ SUPABASE_URL และ SUPABASE_SERVICE_KEY ใน Render</li>
+                                <li>ตรวจสอบว่า Backend server ทำงานปกติ</li>
+                                <li>ลองรีเฟรชหน้าเพจ</li>
+                            </ul>
+                        </div>
+                        <div class="migration-actions">
+                            <button onclick="window.location.reload()" class="btn btn-primary btn-sm">
+                                🔄 รีเฟรชหน้าเพจ
+                            </button>
+                            <button onclick="window.debugAuth?.()" class="btn btn-secondary btn-sm">
+                                🧪 ทดสอบ Authentication
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            throw new Error('Supabase authentication required');
             
         } catch (error) {
-            console.error('❌ [MIGRATION] Failed to get auth token:', error);
-            // Fallback to local storage
-            const fallbackToken = localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
-            if (fallbackToken) {
-                console.log('🔄 [MIGRATION] Using fallback token from storage');
-                return fallbackToken;
-            }
+            console.error('❌ [MIGRATION] Authentication system error:', error);
             throw error;
         }
     }
