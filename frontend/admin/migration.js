@@ -62,10 +62,10 @@ class AdminMigration {
         }
     }
 
-    // ✅ Get authentication token from Supabase session (proper way)
+    // ✅ Get authentication token from production backend
     async getAuthToken() {
         try {
-            // ✅ Phase 1: Get fresh token from Render backend
+            // ✅ Phase 1: Try to get fresh JWT token from backend
             if (!this.configManager) {
                 await this.initializeConfig();
             }
@@ -76,37 +76,23 @@ class AdminMigration {
                     console.log('✅ [MIGRATION] Got fresh JWT from Render backend');
                     return token;
                 } catch (configError) {
-                    console.warn('⚠️ [MIGRATION] ConfigManager failed:', configError.message);
-                    // Continue to fallback...
+                    console.error('❌ [MIGRATION] ConfigManager failed:', configError.message);
+                    // Don't continue to fallback - this is a real configuration issue
+                    throw new Error(`Backend configuration error: ${configError.message}`);
                 }
             }
 
-            // ✅ Phase 2: Try to verify Supabase connection through Render
-            try {
-                const response = await fetch(`${this.apiBase}/auth/verify-session`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success && result.authenticated) {
-                        console.log('✅ [MIGRATION] Session verified through Render');
-                        return 'verified-session-token';
-                    }
-                }
-            } catch (verifyError) {
-                console.warn('⚠️ [MIGRATION] Session verification failed:', verifyError.message);
-            }
-
-            // ✅ Phase 3: Show proper error to user  
-            console.error('❌ [MIGRATION] No valid authentication available');
+            // ✅ If no ConfigManager, this is a critical error
+            console.error('❌ [MIGRATION] ConfigManager not available');
+            throw new Error('ConfigManager initialization failed - check backend connectivity');
             
+        } catch (error) {
+            console.error('❌ [MIGRATION] Authentication system error:', error);
+            
+            // ✅ Show specific error to user for production debugging
             const statusDiv = document.getElementById('migration-status');
             if (statusDiv) {
-                statusDiv.textContent = '🔒 ต้องตรวจสอบการ authentication ผ่าน Render';
+                statusDiv.textContent = '🔒 Authentication ล้มเหลว - ตรวจสอบ Backend Configuration';
             }
             
             const resultsDiv = document.getElementById('migration-results');
@@ -114,39 +100,36 @@ class AdminMigration {
                 resultsDiv.innerHTML = `
                     <div class="migration-status status-error">
                         <div class="status-header">
-                            <h4>🔒 การ Authentication ผ่าน Supabase</h4>
+                            <h4>🔒 Production Authentication Error</h4>
                         </div>
                         <div class="status-details">
-                            <p>❌ <strong>ข้อผิดพลาด:</strong> ไม่สามารถตรวจสอบ Supabase session ได้</p>
-                            <p>💡 <strong>สาเหตุที่เป็นไปได้:</strong></p>
+                            <p>❌ <strong>Error:</strong> ${error.message}</p>
+                            <p>💡 <strong>Required for Production:</strong></p>
                             <ul>
-                                <li>Supabase credentials ไม่ได้ตั้งค่าใน Render backend</li>
-                                <li>Network connection ไม่เสถียร</li>
-                                <li>Backend server ไม่ได้เชื่อมต่อกับ Supabase</li>
+                                <li>Render backend must have JWT_SECRET environment variable</li>
+                                <li>Render backend must have ENCRYPTION_KEY environment variable</li>
+                                <li>Backend API endpoints must be accessible</li>
+                                <li>CORS must be properly configured</li>
                             </ul>
-                            <p>💡 <strong>แก้ไข:</strong></p>
+                            <p>🔧 <strong>Check Render Dashboard:</strong></p>
                             <ul>
-                                <li>ตรวจสอบ SUPABASE_URL และ SUPABASE_SERVICE_KEY ใน Render</li>
-                                <li>ตรวจสอบว่า Backend server ทำงานปกติ</li>
-                                <li>ลองรีเฟรชหน้าเพจ</li>
+                                <li>Environment Variables section</li>
+                                <li>Deployment logs for errors</li>
+                                <li>Backend service status</li>
                             </ul>
                         </div>
                         <div class="migration-actions">
                             <button onclick="window.location.reload()" class="btn btn-primary btn-sm">
-                                🔄 รีเฟรชหน้าเพจ
+                                🔄 Retry After Fixing Backend
                             </button>
-                            <button onclick="window.debugAuth?.()" class="btn btn-secondary btn-sm">
-                                🧪 ทดสอบ Authentication
+                            <button onclick="window.open('https://dashboard.render.com', '_blank')" class="btn btn-secondary btn-sm">
+                                🔧 Open Render Dashboard
                             </button>
                         </div>
                     </div>
                 `;
             }
             
-            throw new Error('Supabase authentication required');
-            
-        } catch (error) {
-            console.error('❌ [MIGRATION] Authentication system error:', error);
             throw error;
         }
     }

@@ -2545,12 +2545,15 @@ async function getEnhancedAuthToken() {
 window.loadSecurityDashboard = async function() {
     console.log('🔒 [SECURITY] Loading security dashboard...');
     
-    // ⚡ Use enhanced token retrieval
-    const currentToken = await getEnhancedAuthToken();
-    
-    if (!currentToken) {
-        console.error('❌ [SECURITY] No auth token available');
-        showNotification('Please login to access security dashboard', 'error');
+    // ✅ Get fresh token from ConfigManager (production approach)
+    let currentToken;
+    try {
+        const { getToken } = await import('../config.js');
+        currentToken = await getToken();
+        console.log('✅ [SECURITY] Got fresh token from ConfigManager');
+    } catch (error) {
+        console.error('❌ [SECURITY] Failed to get authentication token:', error);
+        showNotification('Authentication required - Backend configuration error', 'error');
         return;
     }
     
@@ -2576,13 +2579,9 @@ window.loadSecurityDashboard = async function() {
 
             if (!response.ok) {
                 if (response.status === 401) {
-                    // ⚡ Handle 401 Unauthorized - force re-authentication
-                    console.warn('🔒 [AUTH] Token expired or invalid, redirecting to login...');
-                    localStorage.removeItem('jwtToken');
-                    sessionStorage.removeItem('authToken');
-                    authToken = null;
-    window.authToken = authToken;
-                    window.location.href = 'login.html';
+                    // ✅ Production: Show specific error instead of redirect
+                    console.error('❌ [AUTH] Unauthorized - Backend authentication failed');
+                    showNotification('Backend authentication failed - Check Render environment variables', 'error');
                     return;
                 }
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -2601,6 +2600,15 @@ window.loadSecurityDashboard = async function() {
     } catch (error) {
         console.error('❌ [SECURITY] Dashboard loading error:', error);
         showNotification('Failed to load security dashboard: ' + error.message, 'error');
+        
+        // ✅ Show production debugging info
+        console.error('🔧 [DEBUG] Security dashboard failed to load');
+        console.error('🔧 [DEBUG] This indicates a backend configuration issue');
+        console.error('🔧 [DEBUG] Check Render dashboard for:');
+        console.error('   - JWT_SECRET environment variable');
+        console.error('   - ENCRYPTION_KEY environment variable');
+        console.error('   - Backend deployment status');
+        console.error('   - API endpoint accessibility');
     }
 };
 
@@ -3114,4 +3122,61 @@ window.testSecurityAPI = async function() {
             console.error(`❌ [TEST] ${endpoint}: Failed`, error.message);
         }
     }
+};
+
+/**
+ * 🧪 Debug Backend Configuration (Production)
+ */
+window.debugBackendConfig = async function() {
+    console.log('🧪 [DEBUG] Testing backend configuration...');
+    
+    const tests = {
+        'Health Check': `${rbckConfig.apiBase}/health`,
+        'JWT Token Endpoint': `${rbckConfig.apiBase}/auth/get-jwt-token`,
+        'Encryption Key Endpoint': `${rbckConfig.apiBase}/auth/get-encryption-key`,
+        'Supabase Config Endpoint': `${rbckConfig.apiBase}/config/supabase`,
+        'Auth Verification': `${rbckConfig.apiBase}/auth/verify-session`
+    };
+    
+    for (const [name, url] of Object.entries(tests)) {
+        try {
+            console.log(`🔍 [DEBUG] Testing ${name}...`);
+            const response = await fetch(url);
+            const status = response.status;
+            const statusText = response.statusText;
+            
+            if (response.ok) {
+                console.log(`✅ [DEBUG] ${name}: ${status} ${statusText}`);
+                try {
+                    const data = await response.json();
+                    console.log(`📄 [DEBUG] ${name} Response:`, data);
+                } catch (jsonError) {
+                    console.log(`📄 [DEBUG] ${name}: Non-JSON response`);
+                }
+            } else {
+                console.error(`❌ [DEBUG] ${name}: ${status} ${statusText}`);
+                if (status === 400) {
+                    console.error(`   💡 [DEBUG] HTTP 400 usually means missing environment variables`);
+                }
+                if (status === 401) {
+                    console.error(`   💡 [DEBUG] HTTP 401 means authentication is required`);
+                }
+                if (status === 500) {
+                    console.error(`   💡 [DEBUG] HTTP 500 means server error - check Render logs`);
+                }
+            }
+        } catch (error) {
+            console.error(`❌ [DEBUG] ${name}: ${error.message}`);
+            if (error.message.includes('CORS')) {
+                console.error(`   💡 [DEBUG] CORS error - backend might be down or misconfigured`);
+            }
+        }
+    }
+    
+    console.log('🧪 [DEBUG] Backend configuration test completed');
+    console.log('🔧 [DEBUG] If tests fail, check Render dashboard environment variables:');
+    console.log('   - JWT_SECRET');
+    console.log('   - ENCRYPTION_KEY');
+    console.log('   - SUPABASE_URL');
+    console.log('   - SUPABASE_SERVICE_KEY');
 };

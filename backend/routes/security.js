@@ -13,7 +13,7 @@ const { SecurityLogger, getSecurityLogSummary } = require('../middleware/securit
 const { getRateLimitStats } = require('../middleware/rateLimiter');
 
 /**
- * 📊 Security Dashboard - Main endpoint
+ * 📊 Security Dashboard - Production endpoint with proper authentication
  * GET /api/security/dashboard
  */
 router.get('/dashboard', authenticateAdmin, requireAdmin, async (req, res) => {

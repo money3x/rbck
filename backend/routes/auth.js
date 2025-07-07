@@ -273,13 +273,61 @@ router.post('/logout',
 
 /**
  * ✅ PRODUCTION: GET /api/auth/verify-session  
- * Verify JWT token with ENCRYPTION_KEY validation
+ * Check if authentication is properly configured (no token required)
  */
 router.get('/verify-session', (req, res) => {
     try {
-        // Get token from Authorization header
+        // ✅ For migration check - just verify backend is configured
+        if (!process.env.JWT_SECRET) {
+            return res.status(400).json({
+                success: false,
+                authenticated: false,
+                error: 'JWT_SECRET not configured in backend',
+                code: 'MISSING_JWT_SECRET'
+            });
+        }
+
+        if (!process.env.ENCRYPTION_KEY) {
+            return res.status(400).json({
+                success: false,
+                authenticated: false,
+                error: 'ENCRYPTION_KEY not configured in backend',
+                code: 'MISSING_ENCRYPTION_KEY'
+            });
+        }
+
+        // ✅ Backend is properly configured
+        console.log('✅ [AUTH] Session verification endpoint - backend configured');
+        
+        res.json({
+            success: true,
+            authenticated: true,
+            backendConfigured: true,
+            hasJWTSecret: !!process.env.JWT_SECRET,
+            hasEncryptionKey: !!process.env.ENCRYPTION_KEY,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('❌ [AUTH] Session verification error:', error);
+        res.status(500).json({
+            success: false,
+            authenticated: false,
+            error: 'Session verification failed',
+            code: 'SERVER_ERROR'
+        });
+    }
+});
+
+/**
+ * ✅ PRODUCTION: POST /api/auth/verify-token
+ * Verify JWT token with ENCRYPTION_KEY validation (requires token)
+ */
+router.post('/verify-token', (req, res) => {
+    try {
+        // Get token from Authorization header or body
         const authHeader = req.headers.authorization;
-        const token = authHeader && authHeader.split(' ')[1];
+        const token = authHeader && authHeader.split(' ')[1] || req.body.token;
         
         if (!token) {
             return res.status(401).json({
