@@ -559,13 +559,17 @@ router.post('/chat', async (req, res) => {
             // Provide specific configuration guidance
             let configHelp = `Provider ${provider} is not properly configured.`;
             if (provider === 'gemini') {
-                configHelp += ' Set GEMINI_API_KEY and GEMINI_ENABLED=true in your Render environment variables.';
+                configHelp += ' Set GEMINI_API_KEY in your Render environment variables.';
             }
+            
+            console.error(`❌ [AI CHAT] Provider ${provider} configuration error:`, error.message);
+            
             return res.status(400).json({
                 success: false,
                 error: 'AI provider configuration error',
                 message: error.message,
-                configurationHelp: configHelp
+                configurationHelp: configHelp,
+                provider: provider
             });
         }
         

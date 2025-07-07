@@ -23,13 +23,15 @@ class ChindaAIProvider extends BaseProvider {    constructor(config) {
         }
     }
     
-    async generateContent(prompt) {
+    async generateResponse(prompt, options = {}) {
         try {
-            console.log(`🤖 [ChindaX] Generating content...`);
+            console.log(`🤖 [ChindaX] Generating response...`);
             
             const response = await this.client.post('/generate', {
                 prompt: prompt,
-                model: 'chinda-qwen3-32b'
+                model: options.model || 'chinda-qwen3-32b',
+                max_tokens: options.maxTokens || 1000,
+                temperature: options.temperature || 0.7
             });
             
             // axios auto-handles JSON parsing
@@ -42,7 +44,11 @@ class ChindaAIProvider extends BaseProvider {    constructor(config) {
                 throw new Error('No content received from ChindaX');
             }
             
-            return content;
+            return {
+                content: content,
+                model: options.model || 'chinda-qwen3-32b',
+                provider: 'ChindaX'
+            };
             
         } catch (error) {
             console.error('❌ [ChindaX] Generation error:', error.message);
@@ -60,6 +66,12 @@ class ChindaAIProvider extends BaseProvider {    constructor(config) {
                 throw new Error(`ChindaX error: ${error.message}`);
             }
         }
+    }
+
+    async generateContent(prompt) {
+        // For backward compatibility
+        const response = await this.generateResponse(prompt);
+        return response.content;
     }
     
     async validateRequest(data) {
