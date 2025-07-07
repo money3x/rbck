@@ -550,12 +550,66 @@ router.post('/chat', async (req, res) => {
             });
         }
         
+        // Map frontend provider names to backend provider names
+        const providerMapping = {
+            'anthropic': 'claude',
+            'openai': 'openai',
+            'gemini': 'gemini',
+            'deepseek': 'deepseek',
+            'chinda': 'chinda'
+        };
+        
+        const mappedProvider = providerMapping[provider] || provider;
+        console.log(`🔄 [AI CHAT] Provider mapping: ${provider} -> ${mappedProvider}`);
+        
         // Use providers.config.js for consistent configuration
         let providerConfig;
         try {
-            providerConfig = getProviderConfig(provider);
+            providerConfig = getProviderConfig(mappedProvider);
         } catch (error) {
-            // Provide specific configuration guidance
+            // Try to find an available fallback provider
+            const fallbackProviders = ['openai', 'claude', 'deepseek', 'chinda'];
+            let fallbackProvider = null;
+            
+            for (const fallback of fallbackProviders) {
+                try {
+                    const fallbackConfig = getProviderConfig(fallback);
+                    if (fallbackConfig && fallbackConfig.apiKey) {
+                        fallbackProvider = fallback;
+                        break;
+                    }
+                } catch (e) {
+                    // Continue to next fallback
+                }
+            }
+            
+            if (fallbackProvider) {
+                console.log(`🔄 [AI CHAT] Provider ${mappedProvider} unavailable, using fallback: ${fallbackProvider}`);
+                try {
+                    providerConfig = getProviderConfig(fallbackProvider);
+                    // Update mapped provider to the fallback
+                    const ProviderFactory = require('../ai/providers/factory/ProviderFactory');
+                    const providerInstance = ProviderFactory.createProvider(fallbackProvider);
+                    
+                    const response = await providerInstance.generateResponse(message, {
+                        model: model,
+                        maxTokens: maxTokens,
+                        temperature: 0.7
+                    });
+                    
+                    return res.json({
+                        success: true,
+                        response: response.content,
+                        provider: fallbackProvider,
+                        model: response.model,
+                        note: `Used ${fallbackProvider} as fallback for ${provider}`
+                    });
+                } catch (fallbackError) {
+                    console.error(`❌ [AI CHAT] Fallback ${fallbackProvider} also failed:`, fallbackError.message);
+                }
+            }
+            
+            // No fallback available, return original error
             let configHelp = `Provider ${provider} is not properly configured.`;
             if (provider === 'gemini') {
                 configHelp += ' Set GEMINI_API_KEY in your Render environment variables.';
@@ -583,8 +637,8 @@ router.post('/chat', async (req, res) => {
         try {
             const ProviderFactory = require('../ai/providers/factory/ProviderFactory');
             
-            // Create provider instance using correct method with provider name
-            const providerInstance = ProviderFactory.createProvider(provider);
+            // Create provider instance using correct method with mapped provider name
+            const providerInstance = ProviderFactory.createProvider(mappedProvider);
             
             if (!providerInstance) {
                 return res.status(500).json({
