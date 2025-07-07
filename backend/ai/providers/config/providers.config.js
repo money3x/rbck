@@ -62,7 +62,7 @@ const providersConfig = {
         apiKey: process.env.GEMINI_API_KEY,
         baseURL: process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta',
         defaultModel: 'gemini-2.0-flash-exp',
-        enabled: process.env.GEMINI_ENABLED === 'true',
+        enabled: !!process.env.GEMINI_API_KEY,
         models: ['gemini-pro', 'gemini-pro-vision', 'gemini-2.0-flash-exp'],
         role: 'Content Comprehensiveness Enhancer',
         specialties: ['content breadth', 'comprehensive coverage', 'engaging elements', 'multimodal content'],

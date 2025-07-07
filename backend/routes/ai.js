@@ -8,6 +8,7 @@ const { authenticateAdmin } = require('../middleware/auth');
 const SecureConfigService = require('../services/SecureConfigService');
 const SwarmCouncil = require('../ai/swarm/SwarmCouncil');
 const EATOptimizedSwarmCouncil = require('../ai/swarm/EATOptimizedSwarmCouncil');
+const { getProviderConfig } = require('../ai/providers/config/providers.config');
 
 // Initialize AI Swarm Councils
 const swarmCouncil = new SwarmCouncil();
@@ -344,11 +345,8 @@ router.post('/providers/:provider/test', async (req, res) => {
         try {
             const ProviderFactory = require('../ai/providers/factory/ProviderFactory');
             
-            // Create provider instance
-            const providerInstance = ProviderFactory.getProvider(provider, {
-                apiKey: providerConfig.apiKey,
-                baseURL: providerConfig.endpoint
-            });
+            // Create provider instance using correct method with provider name
+            const providerInstance = ProviderFactory.createProvider(provider);
             
             if (!providerInstance) {
                 return res.status(500).json({
@@ -553,15 +551,25 @@ router.post('/chat', async (req, res) => {
             });
         }
         
-        const providerConfig = AI_PROVIDERS[provider];
-        if (!providerConfig) {
-            return res.status(404).json({
+        // Use providers.config.js for consistent configuration
+        let providerConfig;
+        try {
+            providerConfig = getProviderConfig(provider);
+        } catch (error) {
+            // Provide specific configuration guidance
+            let configHelp = `Provider ${provider} is not properly configured.`;
+            if (provider === 'gemini') {
+                configHelp += ' Set GEMINI_API_KEY and GEMINI_ENABLED=true in your Render environment variables.';
+            }
+            return res.status(400).json({
                 success: false,
-                error: 'AI provider not found'
+                error: 'AI provider configuration error',
+                message: error.message,
+                configurationHelp: configHelp
             });
         }
         
-        if (!providerConfig.apiKey || providerConfig.apiKey.length < 10) {
+        if (!providerConfig.apiKey) {
             return res.status(400).json({
                 success: false,
                 error: 'AI provider not configured',
@@ -572,11 +580,8 @@ router.post('/chat', async (req, res) => {
         try {
             const ProviderFactory = require('../ai/providers/factory/ProviderFactory');
             
-            // Create provider instance
-            const providerInstance = ProviderFactory.getProvider(provider, {
-                apiKey: providerConfig.apiKey,
-                baseURL: providerConfig.endpoint
-            });
+            // Create provider instance using correct method with provider name
+            const providerInstance = ProviderFactory.createProvider(provider);
             
             if (!providerInstance) {
                 return res.status(500).json({
