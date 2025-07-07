@@ -82,13 +82,15 @@ router.get('/status', async (req, res) => {
             providers: {}
         };
         
-        // Quick status check for each provider
+        console.log('🔍 [AI STATUS] Checking providers status...');
+        
+        // Simple provider availability check (no complex config)
         for (const provider of providers) {
-            const config = SecureConfigService.getProviderConfig(provider);
+            const hasApiKey = !!process.env[`${provider.toUpperCase()}_API_KEY`];
             status.providers[provider] = {
-                enabled: config && config.enabled,
-                configured: !!SecureConfigService.getApiKey(provider),
-                status: 'ready'
+                name: provider,
+                configured: hasApiKey,
+                status: hasApiKey ? 'ready' : 'needs_configuration'
             };
         }
         
