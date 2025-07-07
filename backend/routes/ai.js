@@ -536,17 +536,52 @@ router.get('/health', (req, res) => {
 });
 
 /**
+ * Test endpoint for debugging chat issues
+ * POST /api/ai/test-chat
+ */
+router.post('/test-chat', async (req, res) => {
+    console.log('🧪 [AI TEST] Request headers:', req.headers);
+    console.log('🧪 [AI TEST] Request body:', req.body);
+    console.log('🧪 [AI TEST] Request method:', req.method);
+    console.log('🧪 [AI TEST] Request URL:', req.url);
+    
+    res.json({
+        success: true,
+        message: 'Test endpoint working',
+        receivedBody: req.body,
+        receivedHeaders: req.headers
+    });
+});
+
+/**
  * Real AI chat completion endpoint
  * POST /api/ai/chat
  */
 router.post('/chat', async (req, res) => {
     try {
+        console.log('🔍 [AI CHAT] Incoming request body:', JSON.stringify(req.body, null, 2));
+        
         const { provider, message, model, maxTokens = 1000 } = req.body;
         
+        console.log('🔍 [AI CHAT] Extracted parameters:');
+        console.log('  - provider:', provider);
+        console.log('  - message:', message ? `"${message.substring(0, 50)}..."` : 'undefined');
+        console.log('  - model:', model);
+        console.log('  - maxTokens:', maxTokens);
+        
         if (!provider || !message) {
+            console.error('❌ [AI CHAT] Missing required parameters');
+            console.error('  - provider provided:', !!provider);
+            console.error('  - message provided:', !!message);
+            
             return res.status(400).json({
                 success: false,
-                error: 'Missing required parameters: provider, message'
+                error: 'Missing required parameters: provider, message',
+                received: {
+                    provider: !!provider,
+                    message: !!message,
+                    body: req.body
+                }
             });
         }
         

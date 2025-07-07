@@ -243,7 +243,7 @@ app.delete('/api/cache/clear', (req, res) => {
 app.use('/api/auth', validateAuth, authRoutes); // Authentication routes
 app.use('/api/config', configRoutes);            // ✅ Configuration routes (public for frontend)
 app.use('/api/security', authenticateAdmin, securityRoutes);       // ✅ Security Dashboard routes (admin only)
-app.use('/api/ai', aiEndpointRateLimit, aiRoutes);                   // ✅ PHASE 3: AI provider routes with rate limiting
+app.use('/api/ai', aiRoutes);                   // ✅ PHASE 3: AI provider routes (rate limiting temporarily disabled for debugging)
 app.use('/api/migration', authenticateAdmin, migrationRateLimit, migrationRoutes); // ✅ PHASE 3: Database migration routes (admin only) with strict rate limiting
 app.use('/api/performance', performanceRoutes); // Performance monitoring routes
 app.use('/api', apiKeyRoutes);                  // Protected API key routes
