@@ -1448,9 +1448,12 @@ router.post('/cache/clear', async (req, res) => {
     try {
         aiProviderService.clearCache();
         
+        // Force re-initialization
+        await aiProviderService.initializeProviders();
+        
         res.json({
             success: true,
-            message: 'AI provider cache cleared',
+            message: 'AI provider cache cleared and reinitialized',
             timestamp: new Date().toISOString()
         });
     } catch (error) {

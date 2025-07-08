@@ -15,8 +15,12 @@ class GeminiProvider extends BaseProvider {
             this.validateApiKey();
             
             const model = options.model || this.model;
-            const response = await axios.post(
-                `${this.baseURL}/models/${model}:generateContent?key=${this.apiKey}`,
+            // Use the complete baseURL that includes the endpoint
+            const apiUrl = this.baseURL.includes(':generateContent') 
+                ? `${this.baseURL}?key=${this.apiKey}`
+                : `${this.baseURL}/models/${model}:generateContent?key=${this.apiKey}`;
+            
+            const response = await axios.post(apiUrl,
                 {
                     contents: [{
                         parts: [{ text: prompt }]
