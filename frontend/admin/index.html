@@ -7659,7 +7659,13 @@
         
         function addMessageToChat(type, content, provider = null) {
             const messages = document.getElementById('chatbotMessages');
-            if (!messages) return;
+            if (!messages) {
+                console.error('❌ chatbotMessages element not found!');
+                return;
+            }
+            console.log('✅ Adding message to chat:', type, content.substring(0, 50));
+            console.log('✅ Messages container found:', messages);
+            console.log('✅ Messages container children before:', messages.children.length);
             
             const messageDiv = document.createElement('div');
             messageDiv.className = `chat-message ${type}-message`;
@@ -7700,6 +7706,7 @@
             `;
             
             messages.appendChild(messageDiv);
+            console.log('✅ Message appended. Children after:', messages.children.length);
             messages.scrollTop = messages.scrollHeight;
         }
         
