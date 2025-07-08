@@ -647,12 +647,19 @@ router.post('/test-gemini', async (req, res) => {
         try {
             const instance = await aiProviderService.getProviderInstance('gemini');
             console.log('🧪 [GEMINI TEST] Instance created:', instance.constructor.name);
+            console.log('🧪 [GEMINI TEST] Instance config:', {
+                baseURL: instance.baseURL,
+                model: instance.model,
+                hasApiKey: !!instance.apiKey
+            });
             
             // Try a simple test message
+            console.log('🧪 [GEMINI TEST] Attempting generateResponse...');
             const testResponse = await instance.generateResponse('Hello, respond with just "Test successful"', {
                 maxTokens: 50,
                 temperature: 0.1
             });
+            console.log('🧪 [GEMINI TEST] Response received:', testResponse);
             
             res.json({
                 success: true,

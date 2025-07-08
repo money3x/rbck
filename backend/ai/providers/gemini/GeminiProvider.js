@@ -39,7 +39,21 @@ class GeminiProvider extends BaseProvider {
                 provider: 'Gemini'
             };
         } catch (error) {
-            throw this.formatError(error);
+            console.error('❌ [GEMINI] generateResponse error:', error);
+            console.error('❌ [GEMINI] Error details:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+                config: {
+                    url: error.config?.url,
+                    method: error.config?.method
+                }
+            });
+            
+            // Format error properly
+            const formattedError = this.formatError(error);
+            console.error('❌ [GEMINI] Formatted error:', formattedError);
+            throw formattedError;
         }
     }
 

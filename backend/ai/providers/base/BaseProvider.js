@@ -49,12 +49,42 @@ class BaseProvider {
     }
 
     formatError(error) {
-        return {
+        console.error('🔍 [BASE PROVIDER] formatError input:', {
+            error: error,
+            message: error?.message,
+            response: error?.response?.data,
+            status: error?.response?.status
+        });
+        
+        // Handle different error types
+        let errorMessage = 'Unknown error';
+        let statusCode = 500;
+        
+        if (error?.message) {
+            errorMessage = error.message;
+        } else if (error?.response?.data?.error?.message) {
+            errorMessage = error.response.data.error.message;
+        } else if (error?.response?.data?.message) {
+            errorMessage = error.response.data.message;
+        } else if (typeof error === 'string') {
+            errorMessage = error;
+        }
+        
+        if (error?.response?.status) {
+            statusCode = error.response.status;
+        } else if (error?.status) {
+            statusCode = error.status;
+        }
+        
+        const formattedError = {
             provider: this.constructor.name,
-            error: error.message,
-            status: error.status || 500,
+            error: errorMessage,
+            status: statusCode,
             timestamp: new Date().toISOString()
         };
+        
+        console.error('🔍 [BASE PROVIDER] formatError output:', formattedError);
+        return formattedError;
     }
 
     async checkHealth() {
