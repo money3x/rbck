@@ -9,6 +9,7 @@ const SecureConfigService = require('../services/SecureConfigService');
 const SwarmCouncil = require('../ai/swarm/SwarmCouncil');
 const EATOptimizedSwarmCouncil = require('../ai/swarm/EATOptimizedSwarmCouncil');
 const { getProviderConfig } = require('../ai/providers/config/providers.config');
+const aiProviderService = require('../services/AIProviderService');
 
 // Initialize AI Swarm Councils
 const swarmCouncil = new SwarmCouncil();
@@ -533,6 +534,80 @@ router.get('/health', (req, res) => {
         providers: allProviders.length,
         timestamp: new Date().toISOString()
     });
+});
+
+/**
+ * ✅ OPTIMIZED: AI chat completion endpoint (new version)
+ * POST /api/ai/chat-optimized
+ * Performance improvements: Caching, smart fallbacks, async processing
+ */
+router.post('/chat-optimized', async (req, res) => {
+    const requestStart = Date.now();
+    
+    try {
+        // Input validation
+        const { provider, message, model, maxTokens = 1000, temperature = 0.7 } = req.body;
+        
+        // Quick validation
+        if (!provider || !message) {
+            return res.status(400).json({
+                success: false,
+                error: 'Missing required parameters',
+                details: 'Both provider and message are required',
+                received: { hasProvider: !!provider, hasMessage: !!message }
+            });
+        }
+        
+        if (typeof message !== 'string' || message.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid message format',
+                details: 'Message must be a non-empty string'
+            });
+        }
+        
+        console.log(`🚀 [AI CHAT] Processing message for provider: ${provider}`);
+        
+        // Use optimized service
+        const result = await aiProviderService.processMessage(provider, message.trim(), {
+            model: model,
+            maxTokens: maxTokens,
+            temperature: temperature
+        });
+        
+        const totalTime = Date.now() - requestStart;
+        
+        // Success response
+        res.json({
+            ...result,
+            requestTime: totalTime,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        const totalTime = Date.now() - requestStart;
+        
+        console.error('❌ [AI CHAT] Request failed:', error);
+        
+        // Structured error response
+        if (error.success === false) {
+            // Error from service layer
+            res.status(400).json({
+                ...error,
+                requestTime: totalTime,
+                timestamp: new Date().toISOString()
+            });
+        } else {
+            // Unexpected error
+            res.status(500).json({
+                success: false,
+                error: 'Internal server error',
+                message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong',
+                requestTime: totalTime,
+                timestamp: new Date().toISOString()
+            });
+        }
+    }
 });
 
 /**
@@ -1275,6 +1350,79 @@ router.get('/swarm/eat-guidelines', async (req, res) => {
         res.status(500).json({
             success: false,
             error: process.env.NODE_ENV === 'development' ? (error.message || 'Failed to get E-A-T guidelines') : 'AI guidelines service unavailable'
+        });
+    }
+});
+
+/**
+ * ✅ PERFORMANCE: Cache management endpoints
+ */
+
+// Clear AI provider cache
+router.post('/cache/clear', async (req, res) => {
+    try {
+        aiProviderService.clearCache();
+        
+        res.json({
+            success: true,
+            message: 'AI provider cache cleared',
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('❌ [AI CACHE] Clear cache error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to clear cache',
+            message: error.message
+        });
+    }
+});
+
+// Get cache statistics
+router.get('/cache/stats', async (req, res) => {
+    try {
+        const stats = aiProviderService.getCacheStats();
+        
+        res.json({
+            success: true,
+            data: stats,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('❌ [AI CACHE] Stats error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get cache stats',
+            message: error.message
+        });
+    }
+});
+
+// Health check endpoint  
+router.get('/health', async (req, res) => {
+    try {
+        const providersStatus = await aiProviderService.getProvidersStatus();
+        const availableProviders = Object.values(providersStatus).filter(p => p.available).length;
+        const totalProviders = Object.keys(providersStatus).length;
+        
+        const health = {
+            status: availableProviders > 0 ? 'healthy' : 'unhealthy',
+            availableProviders: availableProviders,
+            totalProviders: totalProviders,
+            uptime: process.uptime(),
+            timestamp: new Date().toISOString()
+        };
+        
+        res.json({
+            success: true,
+            data: health
+        });
+    } catch (error) {
+        console.error('❌ [AI HEALTH] Health check error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Health check failed',
+            message: error.message
         });
     }
 });
