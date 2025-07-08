@@ -16,7 +16,7 @@ class SecureConfigService {
                 name: 'Gemini 2.0 Flash',
                 type: 'Google AI',
                 endpoint: process.env.GEMINI_API_ENDPOINT || 'https://generativelanguage.googleapis.com/v1beta',
-                model: process.env.GEMINI_MODEL || 'gemini-pro',
+                model: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
                 status: this.hasValidKey('gemini') ? 'active' : 'inactive',
                 responseTime: 800,
                 successRate: 0.95,

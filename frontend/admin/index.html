@@ -7592,7 +7592,7 @@
             const typingId = addTypingIndicator();
             
             try {
-                // Send message to backend AI endpoint (using existing endpoint)
+                // Send message to backend AI endpoint (using correct endpoint)
                 const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/chat`, {
                     method: 'POST',
                     headers: {
@@ -7638,7 +7638,7 @@
             const modelMap = {
                 'openai': 'gpt-4o-mini',
                 'anthropic': 'claude-3-haiku-20240307',
-                'gemini': 'gemini-2.0-flash-exp',
+                'gemini': 'gemini-2.0-flash',
                 'deepseek': 'deepseek-chat',
                 'chinda': 'qwen2.5-32b-instruct'
             };
@@ -7731,8 +7731,8 @@
             if (!modelSelect) return;
             
             try {
-                // Get provider status from backend
-                const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/providers/status`, {
+                // Get provider status from backend (using available endpoint)
+                const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/status`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -7744,25 +7744,36 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    providersData = data.providers || {};
+                    console.log('🔍 [CHATBOT] Provider data received:', data);
+                    // Handle both /ai/status and /ai/providers/status response formats
+                    providersData = data.data?.providers || data.providers || {};
                 } else {
-                    console.warn('⚠️ [CHATBOT] Backend not available, showing all providers');
-                    // Fallback: use all providers as available
+                    console.warn('⚠️ [CHATBOT] Backend not available, using fallback');
+                    // Fallback: use basic providers as ready (especially Gemini)
                     providersData = {
-                        openai: { configured: true, status: 'connected' },
-                        claude: { configured: true, status: 'connected' },
-                        gemini: { configured: true, status: 'connected' },
-                        chindax: { configured: true, status: 'connected' }
+                        gemini: { configured: true, status: 'ready' },
+                        openai: { configured: false, status: 'needs_configuration' },
+                        claude: { configured: false, status: 'needs_configuration' },
+                        deepseek: { configured: false, status: 'needs_configuration' },
+                        chinda: { configured: false, status: 'needs_configuration' }
                     };
                 }
                 
-                // Update dropdown options
+                console.log('🔍 [CHATBOT] Processing providers data:', providersData);
+                
+                // Force Gemini as available if backend confirms it's working
+                if (providersData.gemini && providersData.gemini.configured) {
+                    providersData.gemini.status = 'ready';
+                    console.log('✅ [CHATBOT] Gemini marked as ready');
+                }
+                
+                // Update dropdown options (match with backend provider status)
                 const options = [
-                    { value: 'openai', text: 'OpenAI (GPT-4/3.5)', enabled: providersData.openai?.configured && providersData.openai?.status === 'connected' },
-                    { value: 'anthropic', text: 'Anthropic (Claude)', enabled: providersData.claude?.configured && providersData.claude?.status === 'connected' },
-                    { value: 'gemini', text: 'Gemini 2.0 Flash', enabled: providersData.gemini?.configured && providersData.gemini?.status === 'connected' },
-                    { value: 'deepseek', text: 'DeepSeek AI', enabled: providersData.deepseek?.configured && providersData.deepseek?.status === 'connected' },
-                    { value: 'chinda', text: 'ChindaX (qwen3-32b)', enabled: providersData.chindax?.configured && providersData.chindax?.status === 'connected' }
+                    { value: 'openai', text: 'OpenAI (GPT-4/3.5)', enabled: providersData.openai?.configured && providersData.openai?.status === 'ready' },
+                    { value: 'anthropic', text: 'Anthropic (Claude)', enabled: providersData.claude?.configured && providersData.claude?.status === 'ready' },
+                    { value: 'gemini', text: 'Gemini 2.0 Flash', enabled: providersData.gemini?.configured && providersData.gemini?.status === 'ready' },
+                    { value: 'deepseek', text: 'DeepSeek AI', enabled: providersData.deepseek?.configured && providersData.deepseek?.status === 'ready' },
+                    { value: 'chinda', text: 'ChindaX (qwen3-32b)', enabled: providersData.chinda?.configured && providersData.chinda?.status === 'ready' }
                 ];
                 
                 modelSelect.innerHTML = '';
