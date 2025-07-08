@@ -7592,8 +7592,8 @@
             const typingId = addTypingIndicator();
             
             try {
-                // Send message to backend AI endpoint (optimized version)
-                const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/chat-optimized`, {
+                // Send message to backend AI endpoint (testing Gemini specifically)
+                const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/test-gemini`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

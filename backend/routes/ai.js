@@ -545,16 +545,24 @@ router.post('/chat-optimized', async (req, res) => {
     const requestStart = Date.now();
     
     try {
+        console.log('🔍 [OPTIMIZED CHAT] Request body:', JSON.stringify(req.body, null, 2));
+        
         // Input validation
         const { provider, message, model, maxTokens = 1000, temperature = 0.7 } = req.body;
         
+        console.log('🔍 [OPTIMIZED CHAT] Extracted parameters:');
+        console.log('  - provider:', provider);
+        console.log('  - message:', message ? `"${message.substring(0, 50)}..."` : 'undefined');
+        console.log('  - model:', model);
+        
         // Quick validation
         if (!provider || !message) {
+            console.error('❌ [OPTIMIZED CHAT] Missing parameters');
             return res.status(400).json({
                 success: false,
                 error: 'Missing required parameters',
                 details: 'Both provider and message are required',
-                received: { hasProvider: !!provider, hasMessage: !!message }
+                received: { hasProvider: !!provider, hasMessage: !!message, requestBody: req.body }
             });
         }
         
@@ -607,6 +615,76 @@ router.post('/chat-optimized', async (req, res) => {
                 timestamp: new Date().toISOString()
             });
         }
+    }
+});
+
+/**
+ * ✅ GEMINI TEST: Specific test for Gemini provider
+ * POST /api/ai/test-gemini
+ */
+router.post('/test-gemini', async (req, res) => {
+    try {
+        console.log('🧪 [GEMINI TEST] Testing Gemini configuration...');
+        
+        // Check environment variables
+        const geminiApiKey = process.env.GEMINI_API_KEY;
+        console.log('🧪 [GEMINI TEST] GEMINI_API_KEY exists:', !!geminiApiKey);
+        console.log('🧪 [GEMINI TEST] GEMINI_API_KEY length:', geminiApiKey ? geminiApiKey.length : 0);
+        
+        // Check provider config
+        try {
+            const config = await aiProviderService.getProviderConfig('gemini');
+            console.log('🧪 [GEMINI TEST] Provider config:', {
+                name: config.name,
+                hasApiKey: !!config.apiKey,
+                enabled: config.enabled
+            });
+        } catch (configError) {
+            console.error('🧪 [GEMINI TEST] Config error:', configError.message);
+        }
+        
+        // Try to create provider instance
+        try {
+            const instance = await aiProviderService.getProviderInstance('gemini');
+            console.log('🧪 [GEMINI TEST] Instance created:', instance.constructor.name);
+            
+            // Try a simple test message
+            const testResponse = await instance.generateResponse('Hello, respond with just "Test successful"', {
+                maxTokens: 50,
+                temperature: 0.1
+            });
+            
+            res.json({
+                success: true,
+                message: 'Gemini test successful',
+                testResponse: testResponse,
+                environment: {
+                    hasApiKey: !!geminiApiKey,
+                    keyLength: geminiApiKey ? geminiApiKey.length : 0
+                }
+            });
+            
+        } catch (instanceError) {
+            console.error('🧪 [GEMINI TEST] Instance error:', instanceError.message);
+            
+            res.json({
+                success: false,
+                error: 'Gemini instance creation failed',
+                details: instanceError.message,
+                environment: {
+                    hasApiKey: !!geminiApiKey,
+                    keyLength: geminiApiKey ? geminiApiKey.length : 0
+                }
+            });
+        }
+        
+    } catch (error) {
+        console.error('🧪 [GEMINI TEST] General error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Gemini test failed',
+            message: error.message
+        });
     }
 });
 
