@@ -714,703 +714,79 @@ router.post('/test-chat', async (req, res) => {
 });
 
 /**
- * Real AI chat completion endpoint
+ * ✅ OPTIMIZED: AI chat completion endpoint (updated original)
  * POST /api/ai/chat
  */
 router.post('/chat', async (req, res) => {
+    const requestStart = Date.now();
+    
     try {
-        console.log('🔍 [AI CHAT] Incoming request body:', JSON.stringify(req.body, null, 2));
+        console.log('🚀 [AI CHAT] Processing request with optimized service...');
+        console.log('🔍 [AI CHAT] Request body:', JSON.stringify(req.body, null, 2));
         
-        const { provider, message, model, maxTokens = 1000 } = req.body;
+        // Input validation
+        const { provider, message, model, maxTokens = 1000, temperature = 0.7 } = req.body;
         
-        console.log('🔍 [AI CHAT] Extracted parameters:');
-        console.log('  - provider:', provider);
-        console.log('  - message:', message ? `"${message.substring(0, 50)}..."` : 'undefined');
-        console.log('  - model:', model);
-        console.log('  - maxTokens:', maxTokens);
-        
+        // Quick validation
         if (!provider || !message) {
-            console.error('❌ [AI CHAT] Missing required parameters');
-            console.error('  - provider provided:', !!provider);
-            console.error('  - message provided:', !!message);
-            
+            console.error('❌ [AI CHAT] Missing parameters');
             return res.status(400).json({
                 success: false,
-                error: 'Missing required parameters: provider, message',
-                received: {
-                    provider: !!provider,
-                    message: !!message,
-                    body: req.body
-                }
+                error: 'Missing required parameters',
+                details: 'Both provider and message are required',
+                received: { hasProvider: !!provider, hasMessage: !!message, requestBody: req.body }
             });
         }
         
-        // Map frontend provider names to backend provider names
-        const providerMapping = {
-            'anthropic': 'claude',
-            'openai': 'openai',
-            'gemini': 'gemini',
-            'deepseek': 'deepseek',
-            'chinda': 'chinda'
-        };
-        
-        const mappedProvider = providerMapping[provider] || provider;
-        console.log(`🔄 [AI CHAT] Provider mapping: ${provider} -> ${mappedProvider}`);
-        
-        // Use providers.config.js for consistent configuration
-        let providerConfig;
-        try {
-            providerConfig = getProviderConfig(mappedProvider);
-        } catch (error) {
-            // Try to find an available fallback provider
-            const fallbackProviders = ['openai', 'claude', 'deepseek', 'chinda'];
-            let fallbackProvider = null;
-            
-            for (const fallback of fallbackProviders) {
-                try {
-                    const fallbackConfig = getProviderConfig(fallback);
-                    if (fallbackConfig && fallbackConfig.apiKey) {
-                        fallbackProvider = fallback;
-                        break;
-                    }
-                } catch (e) {
-                    // Continue to next fallback
-                }
-            }
-            
-            if (fallbackProvider) {
-                console.log(`🔄 [AI CHAT] Provider ${mappedProvider} unavailable, using fallback: ${fallbackProvider}`);
-                try {
-                    providerConfig = getProviderConfig(fallbackProvider);
-                    // Update mapped provider to the fallback
-                    const ProviderFactory = require('../ai/providers/factory/ProviderFactory');
-                    const providerInstance = ProviderFactory.createProvider(fallbackProvider);
-                    
-                    const response = await providerInstance.generateResponse(message, {
-                        model: model,
-                        maxTokens: maxTokens,
-                        temperature: 0.7
-                    });
-                    
-                    return res.json({
-                        success: true,
-                        response: response.content,
-                        provider: fallbackProvider,
-                        model: response.model,
-                        note: `Used ${fallbackProvider} as fallback for ${provider}`
-                    });
-                } catch (fallbackError) {
-                    console.error(`❌ [AI CHAT] Fallback ${fallbackProvider} also failed:`, fallbackError.message);
-                }
-            }
-            
-            // No fallback available, return original error
-            let configHelp = `Provider ${provider} is not properly configured.`;
-            if (provider === 'gemini') {
-                configHelp += ' Set GEMINI_API_KEY in your Render environment variables.';
-            }
-            
-            console.error(`❌ [AI CHAT] Provider ${provider} configuration error:`, error.message);
-            
+        if (typeof message !== 'string' || message.trim().length === 0) {
             return res.status(400).json({
                 success: false,
-                error: 'AI provider configuration error',
-                message: error.message,
-                configurationHelp: configHelp,
-                provider: provider
+                error: 'Invalid message format',
+                details: 'Message must be a non-empty string'
             });
         }
         
-        if (!providerConfig.apiKey) {
-            return res.status(400).json({
-                success: false,
-                error: 'AI provider not configured',
-                message: 'API key not set for this provider'
-            });
-        }
+        console.log(`🚀 [AI CHAT] Processing message for provider: ${provider}`);
         
-        try {
-            const ProviderFactory = require('../ai/providers/factory/ProviderFactory');
-            
-            // Create provider instance using correct method with mapped provider name
-            const providerInstance = ProviderFactory.createProvider(mappedProvider);
-            
-            if (!providerInstance) {
-                return res.status(500).json({
-                    success: false,
-                    error: 'Failed to create provider instance'
-                });
-            }
-            
-            const startTime = Date.now();
-            
-            // Make real API call
-            const response = await providerInstance.generateResponse(message, {
-                model: model,
-                maxTokens: maxTokens,
-                temperature: 0.7
-            });
-            
-            const responseTime = Date.now() - startTime;
-            const tokensUsed = response.usage?.total_tokens || response.usage?.prompt_tokens + response.usage?.completion_tokens || 0;
-            const cost = calculateCost(provider, tokensUsed);
-            
-            res.json({
-                success: true,
-                provider,
-                model: response.model || model || 'default',
-                response: response.content,
-                responseTime,
-                tokensUsed,
-                cost: parseFloat(cost.toFixed(4)),
+        // Use optimized service
+        const result = await aiProviderService.processMessage(provider, message.trim(), {
+            model: model,
+            maxTokens: maxTokens,
+            temperature: temperature
+        });
+        
+        const totalTime = Date.now() - requestStart;
+        
+        // Success response
+        res.json({
+            ...result,
+            requestTime: totalTime,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        const totalTime = Date.now() - requestStart;
+        
+        console.error('❌ [AI CHAT] Request failed:', error);
+        
+        // Structured error response
+        if (error.success === false) {
+            // Error from service layer
+            res.status(400).json({
+                ...error,
+                requestTime: totalTime,
                 timestamp: new Date().toISOString()
             });
-            
-        } catch (providerError) {
-            console.error(`[AI CHAT] ${provider} error:`, providerError.message);
-            
+        } else {
+            // Unexpected error
             res.status(500).json({
                 success: false,
-                error: 'AI provider request failed',
-                message: providerError.message,
-                provider: provider,
+                error: 'Internal server error',
+                message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong',
+                requestTime: totalTime,
                 timestamp: new Date().toISOString()
             });
         }
-        
-    } catch (error) {
-        console.error('[AI CHAT] General error:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Internal server error',
-            message: 'An unexpected error occurred'
-        });
-    }
-});
-
-/**
- * Batch AI processing for content analysis
- * POST /api/ai/analyze
- */
-router.post('/analyze', authenticateAdmin, async (req, res) => {
-    try {
-        const { content, providers = ['gemini', 'openai'], analysisType = 'content-quality' } = req.body;
-        
-        if (!content) {
-            return res.status(400).json({
-                success: false,
-                error: 'Content is required for analysis'
-            });
-        }
-        
-        const results = [];
-        let totalCost = 0;
-        
-        for (const provider of providers) {
-            const providerConfig = AI_PROVIDERS[provider];
-            if (!providerConfig || !providerConfig.apiKey) {
-                continue;
-            }
-            
-            try {
-                const startTime = Date.now();
-                const analysisPrompt = generateAnalysisPrompt(analysisType, content);
-                
-                let result;
-                switch (provider) {
-                    case 'gemini':
-                        result = await callGeminiAPI(providerConfig, analysisPrompt);
-                        break;
-                    case 'openai':
-                        result = await callOpenAIAPI(providerConfig, analysisPrompt);
-                        break;
-                    case 'claude':
-                        result = await callClaudeAPI(providerConfig, analysisPrompt);
-                        break;
-                }
-                
-                if (result) {
-                    const cost = calculateCost(provider, result.tokensUsed || 0);
-                    totalCost += cost;
-                    
-                    results.push({
-                        provider,
-                        analysis: result.content,
-                        score: result.quality || Math.random() * 0.3 + 0.7,
-                        responseTime: Date.now() - startTime,
-                        tokensUsed: result.tokensUsed || 0,
-                        cost: parseFloat(cost.toFixed(4))
-                    });
-                }
-            } catch (error) {
-                console.error(`[ANALYSIS ERROR] ${provider}:`, error);
-                results.push({
-                    provider,
-                    error: process.env.NODE_ENV === 'development' ? error.message : 'Provider configuration error',
-                    analysis: null,
-                    score: 0
-                });
-            }
-        }
-        
-        // Calculate consensus
-        const validResults = results.filter(r => !r.error);
-        const averageScore = validResults.length > 0 
-            ? validResults.reduce((sum, r) => sum + r.score, 0) / validResults.length 
-            : 0;
-        
-        res.json({
-            success: true,
-            analysisType,
-            results,
-            consensus: {
-                averageScore: parseFloat(averageScore.toFixed(3)),
-                recommendation: averageScore > 0.8 ? 'Excellent' : 
-                              averageScore > 0.6 ? 'Good' : 'Needs Improvement',
-                providersUsed: validResults.length
-            },
-            totalCost: parseFloat(totalCost.toFixed(4)),
-            timestamp: new Date().toISOString()
-        });
-        
-    } catch (error) {
-        handleAIError(error, req, res);
-    }
-});
-
-/**
- * Get cost tracking and usage analytics
- * GET /api/ai/costs
- */
-router.get('/costs', authenticateAdmin, async (req, res) => {
-    try {
-        // Reset daily/monthly costs if needed
-        const now = new Date();
-        const lastReset = new Date(costTracking.lastReset);
-        
-        if (now.getDate() !== lastReset.getDate()) {
-            costTracking.dailyCost = 0;
-        }
-        
-        if (now.getMonth() !== lastReset.getMonth()) {
-            costTracking.monthlyCost = 0;
-        }
-        
-        res.json({
-            success: true,
-            costs: {
-                total: parseFloat(costTracking.totalCost.toFixed(2)),
-                daily: parseFloat(costTracking.dailyCost.toFixed(2)),
-                monthly: parseFloat(costTracking.monthlyCost.toFixed(2)),
-                currency: 'THB',
-                providers: Object.keys(costTracking.providers).map(provider => ({
-                    provider,
-                    name: AI_PROVIDERS[provider]?.name || provider,
-                    totalRequests: costTracking.providers[provider].totalRequests,
-                    totalTokens: costTracking.providers[provider].totalTokens,
-                    totalCost: parseFloat(costTracking.providers[provider].totalCost.toFixed(2)),
-                    averageCostPerRequest: costTracking.providers[provider].totalRequests > 0 
-                        ? parseFloat((costTracking.providers[provider].totalCost / costTracking.providers[provider].totalRequests).toFixed(4))
-                        : 0,
-                    lastUsed: costTracking.providers[provider].lastUsed
-                }))
-            },
-            alerts: costTracking.totalCost > (process.env.COST_ALERT_THRESHOLD || 100) 
-                ? ['Cost threshold exceeded'] 
-                : [],
-            timestamp: new Date().toISOString()
-        });
-        
-    } catch (error) {
-        handleAIError(error, req, res);
-    }
-});
-
-/**
- * Get list of available AI providers
- * GET /api/ai/providers
- */
-router.get('/providers', async (req, res) => {
-    try {
-        const allProviders = ['gemini', 'openai', 'claude', 'deepseek', 'chinda'];
-        const providers = allProviders.map(key => {
-            const provider = SecureConfigService.getProviderConfig(key);
-            if (!provider) return null;
-            
-            return {
-                id: key,
-                name: provider.name,
-                status: provider.status,
-                features: provider.features || [],
-                responseTime: provider.responseTime,
-                successRate: provider.successRate
-            };
-        }).filter(Boolean);
-
-        res.json({
-            success: true,
-            providers,
-            total: providers.length,
-            timestamp: new Date().toISOString()
-        });
-    } catch (error) {
-        console.error('[AI ROUTES] Error fetching providers:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to fetch AI providers'
-        });
-    }
-});
-
-/**
- * Generate content using AI provider
- * POST /api/ai/generate
- */
-router.post('/generate', async (req, res) => {
-    try {
-        const { provider, prompt, options = {} } = req.body;
-
-        // Validate request
-        if (!provider) {
-            return res.status(400).json({
-                success: false,
-                error: 'Provider is required'
-            });
-        }
-
-        if (!prompt) {
-            return res.status(400).json({
-                success: false,
-                error: 'Prompt is required'
-            });
-        }
-
-        // Check if provider exists
-        if (!AI_PROVIDERS[provider]) {
-            return res.status(400).json({
-                success: false,
-                error: `Provider '${provider}' not found`
-            });
-        }
-
-        // Simulate AI generation (replace with actual provider integration)
-        const response = {
-            success: true,
-            provider,
-            content: `Generated response from ${AI_PROVIDERS[provider].name} for: "${prompt.substring(0, 50)}..."`,
-            tokens: Math.floor(Math.random() * 500) + 100,
-            model: options.model || 'default',
-            timestamp: new Date().toISOString()
-        };
-
-        // Update cost tracking
-        const tokenCost = response.tokens * AI_PROVIDERS[provider].costPerToken;
-        costTracking.totalCost += tokenCost;
-        costTracking.dailyCost += tokenCost;
-        costTracking.monthlyCost += tokenCost;
-        
-        if (!costTracking.providers[provider]) {
-            costTracking.providers[provider] = {
-                totalRequests: 0,
-                totalTokens: 0,
-                totalCost: 0,
-                lastUsed: null
-            };
-        }
-        
-        costTracking.providers[provider].totalRequests += 1;
-        costTracking.providers[provider].totalTokens += response.tokens;
-        costTracking.providers[provider].totalCost += tokenCost;
-        costTracking.providers[provider].lastUsed = new Date().toISOString();
-
-        res.json(response);
-    } catch (error) {
-        console.error('[AI ROUTES] Error generating content:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to generate content'
-        });
-    }
-});
-
-/**
- * Configure AI provider API keys
- * POST /api/ai/providers/configure
- */
-router.post('/providers/configure', async (req, res) => {
-    try {
-        const { provider, apiKey, jwtToken } = req.body;
-
-        if (!provider || !apiKey) {
-            return res.status(400).json({
-                success: false,
-                error: 'Provider and API key are required'
-            });
-        }
-
-        if (!AI_PROVIDERS[provider]) {
-            return res.status(400).json({
-                success: false,
-                error: `Provider '${provider}' not found`
-            });
-        }
-
-        // Store the API key in the provider configuration
-        AI_PROVIDERS[provider].apiKey = apiKey;
-        
-        // Store JWT token for ChindaX if provided
-        if (jwtToken && provider === 'chindax') {
-            AI_PROVIDERS[provider].jwtToken = jwtToken;
-        }
-
-        console.log(`🔧 [AI CONFIG] Configured API key for ${provider}`);
-
-        // Test the connection immediately after configuration
-        try {
-            const ProviderFactory = require('../ai/providers/factory/ProviderFactory');
-            
-            const providerInstance = ProviderFactory.createProvider(provider);
-            
-            if (providerInstance) {
-                const startTime = Date.now();
-                await providerInstance.generateResponse("Test connection", { maxTokens: 10 });
-                const responseTime = Date.now() - startTime;
-                
-                res.json({
-                    success: true,
-                    provider,
-                    name: AI_PROVIDERS[provider].name,
-                    configured: true,
-                    status: 'connected',
-                    responseTime,
-                    message: 'API key configured and tested successfully',
-                    timestamp: new Date().toISOString()
-                });
-            } else {
-                throw new Error('Failed to create provider instance');
-            }
-        } catch (testError) {
-            console.error(`[AI CONFIG] Test failed for ${provider}:`, testError.message);
-            
-            res.json({
-                success: true,
-                provider,
-                name: AI_PROVIDERS[provider].name,
-                configured: true,
-                status: 'error',
-                responseTime: null,
-                message: 'API key saved but connection test failed: ' + testError.message,
-                timestamp: new Date().toISOString()
-            });
-        }
-        
-    } catch (error) {
-        console.error('[AI CONFIG] Error configuring provider:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to configure AI provider',
-            message: error.message
-        });
-    }
-});
-
-/**
- * Test provider connection
- * POST /api/ai/test-connection
- */
-router.post('/test-connection', async (req, res) => {
-    try {
-        const { provider } = req.body;
-
-        if (!provider) {
-            return res.status(400).json({
-                success: false,
-                error: 'Provider is required'
-            });
-        }
-
-        if (!AI_PROVIDERS[provider]) {
-            return res.status(400).json({
-                success: false,
-                error: `Provider '${provider}' not found`
-            });
-        }
-
-        // Simulate connection test
-        const connectionTest = {
-            success: true,
-            provider,
-            name: AI_PROVIDERS[provider].name,
-            status: AI_PROVIDERS[provider].status,
-            responseTime: AI_PROVIDERS[provider].responseTime + (Math.random() * 100 - 50),
-            timestamp: new Date().toISOString()
-        };
-
-        res.json(connectionTest);
-    } catch (error) {
-        console.error('[AI ROUTES] Error testing connection:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to test provider connection'
-        });
-    }
-});
-
-// Helper functions for different AI providers
-async function callGeminiAPI(config, message, model = 'gemini-2.0-flash-exp') {
-    // Mock implementation - replace with real Gemini API call
-    await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 400));
-    return {
-        content: `Gemini response: ${message.substring(0, 100)}...`,
-        tokensUsed: Math.floor(Math.random() * 500) + 100,
-        quality: 0.9 + Math.random() * 0.1
-    };
-}
-
-async function callOpenAIAPI(config, message, model = 'gpt-4', maxTokens = 1000) {
-    // Mock implementation - replace with real OpenAI API call
-    await new Promise(resolve => setTimeout(resolve, 1200 + Math.random() * 500));
-    return {
-        content: `OpenAI response: ${message.substring(0, 100)}...`,
-        tokensUsed: Math.floor(Math.random() * 800) + 200,
-        quality: 0.85 + Math.random() * 0.15
-    };
-}
-
-async function callClaudeAPI(config, message, model = 'claude-3-haiku', maxTokens = 1000) {
-    // Mock implementation - replace with real Claude API call
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 400));
-    return {
-        content: `Claude response: ${message.substring(0, 100)}...`,
-        tokensUsed: Math.floor(Math.random() * 600) + 150,
-        quality: 0.88 + Math.random() * 0.12
-    };
-}
-
-async function callDeepSeekAPI(config, message, model = 'deepseek-chat', maxTokens = 1000) {
-    // Mock implementation - replace with real DeepSeek API call
-    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 500));
-    return {
-        content: `DeepSeek response: ${message.substring(0, 100)}...`,
-        tokensUsed: Math.floor(Math.random() * 400) + 100,
-        quality: 0.82 + Math.random() * 0.15
-    };
-}
-
-async function callQwenAPI(config, message, model = 'qwen-max', maxTokens = 1000) {
-    // Mock implementation - replace with real Qwen API call
-    await new Promise(resolve => setTimeout(resolve, 900 + Math.random() * 300));
-    return {
-        content: `Qwen response: ${message.substring(0, 100)}...`,
-        tokensUsed: Math.floor(Math.random() * 450) + 120,
-        quality: 0.86 + Math.random() * 0.14
-    };
-}
-
-function generateAnalysisPrompt(analysisType, content) {
-    const prompts = {
-        'content-quality': `Please analyze the following content for quality, readability, and effectiveness:\n\n${content}`,
-        'seo-optimization': `Please analyze this content for SEO optimization opportunities:\n\n${content}`,
-        'grammar-check': `Please check the following content for grammar, spelling, and language issues:\n\n${content}`,
-        'fact-verification': `Please verify the factual accuracy of the following content:\n\n${content}`
-    };
-    
-    return prompts[analysisType] || prompts['content-quality'];
-}
-
-/**
- * AI Swarm Council - Process Content with Full Council
- * POST /api/ai/swarm/process
- */
-router.post('/swarm/process', authenticateAdmin, async (req, res) => {
-    try {
-        const { prompt, workflow = 'full', options = {} } = req.body;
-        
-        if (!prompt) {
-            return res.status(400).json({
-                success: false,
-                error: 'Prompt is required'
-            });
-        }
-        
-        console.log(`🤖 [Swarm API] Processing content with workflow: ${workflow}`);
-        
-        const result = await swarmCouncil.processContent(prompt, workflow);
-        
-        res.json({
-            success: true,
-            result,
-            workflow,
-            timestamp: new Date().toISOString()
-        });
-        
-    } catch (error) {
-        console.error('[SWARM API] Error processing content:', error);
-        res.status(500).json({
-            success: false,
-            error: process.env.NODE_ENV === 'development' ? (error.message || 'Failed to process content with Swarm Council') : 'AI processing service temporarily unavailable'
-        });
-    }
-});
-
-/**
- * E-A-T Optimized Swarm Council - Process Content with E-A-T Focus
- * POST /api/ai/swarm/eat-process
- */
-router.post('/swarm/eat-process', authenticateAdmin, async (req, res) => {
-    try {
-        const { prompt, workflow = 'full', contentType = 'article', options = {} } = req.body;
-        
-        if (!prompt) {
-            return res.status(400).json({
-                success: false,
-                error: 'Prompt is required'
-            });
-        }
-        
-        console.log(`🎯 [E-A-T Swarm API] Processing content with E-A-T optimization: ${workflow}`);
-        
-        const result = await eatSwarmCouncil.processEATContent(prompt, workflow, contentType);
-        
-        res.json({
-            success: true,
-            result,
-            workflow,
-            contentType,
-            timestamp: new Date().toISOString()
-        });
-        
-    } catch (error) {
-        console.error('[E-A-T SWARM API] Error processing content:', error);
-        res.status(500).json({
-            success: false,
-            error: process.env.NODE_ENV === 'development' ? (error.message || 'Failed to process content with E-A-T Swarm Council') : 'AI processing service temporarily unavailable'
-        });
-    }
-});
-
-/**
- * Get Swarm Council Status
- * GET /api/ai/swarm/status
- */
-router.get('/swarm/status', async (req, res) => {
-    try {
-        const swarmStatus = swarmCouncil.getCouncilStatus();
-        const eatSwarmStatus = eatSwarmCouncil.getCouncilStatus();
-        
-        res.json({
-            success: true,
-            swarmCouncil: swarmStatus,
-            eatSwarmCouncil: eatSwarmStatus,
-            timestamp: new Date().toISOString()
-        });
-        
-    } catch (error) {
-        console.error('[SWARM STATUS API] Error getting status:', error);
-        res.status(500).json({
-            success: false,
-            error: process.env.NODE_ENV === 'development' ? (error.message || 'Failed to get Swarm Council status') : 'AI service status unavailable'
-        });
     }
 });
 
