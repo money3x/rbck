@@ -7623,8 +7623,28 @@
                     
                     if (data.success && data.response) {
                         console.log('Adding message to chat:', data.response);
+                        
+                        // Try adding message
                         addMessageToChat('assistant', data.response, selectedModel);
                         console.log('Message added successfully');
+                        
+                        // Double check: Force direct DOM manipulation if normal method fails
+                        setTimeout(() => {
+                            const messagesContainer = document.getElementById('chatbotMessages');
+                            if (messagesContainer && messagesContainer.children.length < 2) {
+                                console.warn('⚠️ Fallback: Direct DOM manipulation');
+                                messagesContainer.innerHTML += `
+                                    <div class="chat-message assistant-message">
+                                        <div class="message-header">
+                                            <span class="message-avatar">✨</span>
+                                            <span class="message-author">Gemini</span>
+                                            <span class="message-time">${new Date().toLocaleTimeString()}</span>
+                                        </div>
+                                        <div class="message-content">${data.response}</div>
+                                    </div>
+                                `;
+                            }
+                        }, 100);
                     } else {
                         console.error('Invalid data format:', data);
                         throw new Error(data.error || 'No response from AI');
@@ -7707,6 +7727,13 @@
             
             messages.appendChild(messageDiv);
             console.log('✅ Message appended. Children after:', messages.children.length);
+            console.log('✅ MessageDiv HTML:', messageDiv.outerHTML);
+            console.log('✅ Messages container HTML:', messages.outerHTML.substring(0, 200));
+            
+            // Force visibility check
+            console.log('✅ Messages container visible:', messages.offsetHeight > 0);
+            console.log('✅ Messages container style display:', getComputedStyle(messages).display);
+            
             messages.scrollTop = messages.scrollHeight;
         }
         
