@@ -5,8 +5,8 @@ class GeminiProvider extends BaseProvider {
     constructor(config) {
         super({
             ...config,
-            baseURL: config.baseURL || 'https://generativelanguage.googleapis.com/v1beta',
-            defaultModel: 'gemini-pro'
+            baseURL: config.baseURL || 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+            defaultModel: 'gemini-2.0-flash'
         });
     }
 
