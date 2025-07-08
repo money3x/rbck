@@ -7592,7 +7592,14 @@
             const typingId = addTypingIndicator();
             
             try {
-                // Simple API call - direct fetch (avoid complications)
+                // Add debug info temporarily
+                console.log('Sending to:', `${window.rbckConfig.apiBase}/ai/chat`);
+                console.log('Request data:', {
+                    message: message,
+                    provider: selectedModel,
+                    model: getModelForProvider(selectedModel)
+                });
+                
                 const response = await fetch(`${window.rbckConfig.apiBase}/ai/chat`, {
                     method: 'POST',
                     headers: {
@@ -7605,21 +7612,31 @@
                     })
                 });
                 
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
                 removeTypingIndicator(typingId);
                 
                 if (response.ok) {
                     const data = await response.json();
+                    console.log('Response data:', data);
                     
                     if (data.success && data.response) {
+                        console.log('Adding message to chat:', data.response);
                         addMessageToChat('assistant', data.response, selectedModel);
+                        console.log('Message added successfully');
                     } else {
+                        console.error('Invalid data format:', data);
                         throw new Error(data.error || 'No response from AI');
                     }
                 } else {
+                    const errorText = await response.text();
+                    console.error('HTTP Error:', response.status, errorText);
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
             } catch (error) {
+                console.error('Chatbot error:', error);
                 removeTypingIndicator(typingId);
                 addMessageToChat('error', `Error: ${error.message}`);
                 
