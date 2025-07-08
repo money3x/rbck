@@ -7610,19 +7610,29 @@
                 
                 if (response.ok) {
                     const data = await response.json();
+                    console.log('🔍 [CHATBOT] Response data:', data);
                     
-                    if (data.success && data.response) {
-                        addMessageToChat('assistant', data.response, selectedModel);
+                    if (data.success && (data.response || data.content)) {
+                        const aiResponse = data.response || data.content;
+                        addMessageToChat('assistant', aiResponse, selectedModel);
                         console.log('✅ [CHATBOT] Message sent successfully');
                     } else {
+                        console.error('❌ [CHATBOT] Invalid response format:', data);
                         throw new Error(data.error || 'No response from AI');
                     }
                 } else {
+                    const errorText = await response.text();
+                    console.error('❌ [CHATBOT] HTTP Error:', response.status, response.statusText, errorText);
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
             } catch (error) {
                 console.error('❌ [CHATBOT] Error sending message:', error);
+                console.error('❌ [CHATBOT] Error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                });
                 removeTypingIndicator(typingId);
                 
                 // Show error message in chat
