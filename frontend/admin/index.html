@@ -7592,12 +7592,11 @@
             const typingId = addTypingIndicator();
             
             try {
-                // Send message to backend AI endpoint (using correct endpoint)
-                const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/chat`, {
+                // Simple API call - direct fetch (avoid complications)
+                const response = await fetch(`${window.rbckConfig.apiBase}/ai/chat`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         message: message,
@@ -7610,33 +7609,19 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('🔍 [CHATBOT] Response data:', data);
                     
-                    if (data.success && (data.response || data.content)) {
-                        const aiResponse = data.response || data.content;
-                        addMessageToChat('assistant', aiResponse, selectedModel);
-                        console.log('✅ [CHATBOT] Message sent successfully');
+                    if (data.success && data.response) {
+                        addMessageToChat('assistant', data.response, selectedModel);
                     } else {
-                        console.error('❌ [CHATBOT] Invalid response format:', data);
                         throw new Error(data.error || 'No response from AI');
                     }
                 } else {
-                    const errorText = await response.text();
-                    console.error('❌ [CHATBOT] HTTP Error:', response.status, response.statusText, errorText);
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
             } catch (error) {
-                console.error('❌ [CHATBOT] Error sending message:', error);
-                console.error('❌ [CHATBOT] Error details:', {
-                    message: error.message,
-                    stack: error.stack,
-                    name: error.name
-                });
                 removeTypingIndicator(typingId);
-                
-                // Show error message in chat
-                addMessageToChat('error', `Sorry, I encountered an error: ${error.message}. Please check if the AI provider is properly configured on the backend.`);
+                addMessageToChat('error', `Error: ${error.message}`);
                 
                 if (window.showNotification) {
                     window.showNotification('❌ Chatbot error: ' + error.message, 'error');
