@@ -1609,39 +1609,60 @@ window.saveAllAISettings = function() {
     }, 1000);
 };
 
-// ===== ENHANCED TAB MANAGEMENT =====
+// ===== ENHANCED TAB MANAGEMENT WITH COMPLETE ISOLATION =====
 window.switchAITab = function(tabName) {
     console.log('🔄 [AI SETTINGS] Switching to tab:', tabName);
     
     try {
-        // Batch DOM updates for better performance
-        requestAnimationFrame(() => {
-            // Phase 1: Hide all tab contents with thorough cleanup
-            document.querySelectorAll('.ai-tab-content').forEach(content => {
-                content.style.display = 'none';
-                content.style.visibility = 'hidden';
-                content.style.opacity = '0';
-                content.style.zIndex = '1';
-                content.classList.remove('active');
-                content.setAttribute('aria-hidden', 'true');
-            });
-            
-            // Phase 2: Deactivate all tab buttons
-            document.querySelectorAll('.ai-settings-tab').forEach(tab => {
-                tab.classList.remove('active');
-                tab.setAttribute('aria-selected', 'false');
-            });
-            
-            // Phase 3: Show target tab content
-            const targetContent = document.getElementById(`${tabName}-tab`);
-            const targetButton = document.querySelector(`[data-tab="${tabName}"]`);
-            
-            if (targetContent && targetButton) {
-                // Force display and visibility
+        // Phase 1: Complete cleanup of all tabs
+        document.querySelectorAll('.ai-tab-content').forEach(content => {
+            // Force complete hiding
+            content.style.display = 'none';
+            content.style.visibility = 'hidden';
+            content.style.opacity = '0';
+            content.style.position = 'absolute';
+            content.style.left = '-10000px';
+            content.style.top = '-10000px';
+            content.style.width = '0';
+            content.style.height = '0';
+            content.style.zIndex = '-999';
+            content.style.overflow = 'hidden';
+            content.classList.remove('active');
+            content.setAttribute('aria-hidden', 'true');
+        });
+        
+        // Phase 2: Deactivate all tab buttons
+        document.querySelectorAll('.ai-settings-tab').forEach(tab => {
+            tab.classList.remove('active');
+            tab.setAttribute('aria-selected', 'false');
+        });
+        
+        // Phase 3: Clear the content container
+        const contentContainer = document.querySelector('.ai-settings-content');
+        if (contentContainer) {
+            // Force clear any remaining content
+            contentContainer.style.height = 'auto';
+            contentContainer.style.overflow = 'hidden';
+        }
+        
+        // Phase 4: Show target tab content with complete reset
+        const targetContent = document.getElementById(`${tabName}-tab`);
+        const targetButton = document.querySelector(`[data-tab="${tabName}"]`);
+        
+        if (targetContent && targetButton) {
+            // Wait for DOM cleanup to complete
+            setTimeout(() => {
+                // Force complete visibility for target tab
                 targetContent.style.display = 'block';
                 targetContent.style.visibility = 'visible';
                 targetContent.style.opacity = '1';
+                targetContent.style.position = 'relative';
+                targetContent.style.left = '0';
+                targetContent.style.top = '0';
+                targetContent.style.width = '100%';
+                targetContent.style.height = 'auto';
                 targetContent.style.zIndex = '10';
+                targetContent.style.overflow = 'visible';
                 targetContent.classList.add('active');
                 targetContent.setAttribute('aria-hidden', 'false');
                 
@@ -1651,40 +1672,47 @@ window.switchAITab = function(tabName) {
                 
                 console.log(`✅ [AI SETTINGS] Successfully switched to ${tabName} tab`);
                 
-                // Verify the switch worked
+                // Verify isolation
                 setTimeout(() => {
-                    const isVisible = window.getComputedStyle(targetContent).display === 'block';
-                    const hasActiveClass = targetContent.classList.contains('active');
+                    const allActiveTabs = document.querySelectorAll('.ai-tab-content.active');
+                    const visibleTabs = Array.from(document.querySelectorAll('.ai-tab-content'))
+                        .filter(tab => window.getComputedStyle(tab).display === 'block');
                     
-                    if (!isVisible || !hasActiveClass) {
-                        console.error(`❌ [AI SETTINGS] Tab switch verification failed for ${tabName}`);
-                        console.error('  Display:', window.getComputedStyle(targetContent).display);
-                        console.error('  Active class:', hasActiveClass);
+                    if (allActiveTabs.length === 1 && visibleTabs.length === 1) {
+                        console.log(`✅ [AI SETTINGS] Tab isolation verified for ${tabName}`);
+                    } else {
+                        console.error(`❌ [AI SETTINGS] Tab isolation failed for ${tabName}`);
+                        console.error('  Active tabs:', allActiveTabs.length);
+                        console.error('  Visible tabs:', visibleTabs.length);
                         
-                        // Force fix if needed
-                        targetContent.style.display = 'block !important';
-                        targetContent.classList.add('active');
+                        // Force fix isolation
+                        document.querySelectorAll('.ai-tab-content').forEach(content => {
+                            if (content.id !== `${tabName}-tab`) {
+                                content.style.display = 'none';
+                                content.classList.remove('active');
+                            }
+                        });
                     }
                 }, 100);
                 
                 // Load tab-specific data
                 switch(tabName) {
                     case 'models':
-                        setTimeout(() => window.updateConnectionStatus?.(), 200);
+                        setTimeout(() => window.updateConnectionStatus?.(), 300);
                         break;
                     case 'performance':
-                        setTimeout(() => window.loadPerformanceData?.(), 200);
+                        setTimeout(() => window.loadPerformanceData?.(), 300);
                         break;
                     case 'general':
-                        setTimeout(() => window.loadGeneralTabData?.(), 200);
+                        setTimeout(() => window.loadGeneralTabData?.(), 300);
                         break;
                 }
-            } else {
-                console.error(`❌ [AI SETTINGS] Tab elements not found: ${tabName}`);
-                console.error('  Target content:', !!targetContent);
-                console.error('  Target button:', !!targetButton);
-            }
-        });
+            }, 50);
+        } else {
+            console.error(`❌ [AI SETTINGS] Tab elements not found: ${tabName}`);
+            console.error('  Target content:', !!targetContent);
+            console.error('  Target button:', !!targetButton);
+        }
     } catch (error) {
         console.error(`❌ [AI SETTINGS] Error switching tab: ${error.message}`);
     }

@@ -546,20 +546,90 @@
 .ai-settings-content {
   position: relative;
   overflow: hidden;
+  width: 100%;
+  height: auto;
 }
 
+/* Force complete isolation for inactive tabs */
 .ai-tab-content:not(.active) {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
-  position: absolute;
-  left: -9999px;
-  z-index: -1;
+  position: absolute !important;
+  left: -10000px !important;
+  top: -10000px !important;
+  width: 0 !important;
+  height: 0 !important;
+  z-index: -999 !important;
+  overflow: hidden !important;
 }
 
-/* Force clear isolation between tabs */
-.ai-tab-content.active + .ai-tab-content:not(.active) {
-  display: none !important;
+/* Ensure active tab takes full space */
+.ai-tab-content.active {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: auto !important;
+  z-index: 10 !important;
+  overflow: visible !important;
+}
+
+/* Clear float and positioning for all tabs */
+.ai-tab-content {
+  clear: both !important;
+  float: none !important;
+  margin: 0 !important;
+  padding: 20px !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+/* Specific styling for each tab to ensure complete separation */
+#general-tab {
+  background: #f8f9fa !important;
+  border-radius: 8px !important;
+  min-height: 400px !important;
+}
+
+#models-tab {
+  background: #fff !important;
+  border: 1px solid #e9ecef !important;
+  border-radius: 8px !important;
+  min-height: 500px !important;
+}
+
+#performance-tab {
+  background: #f1f3f4 !important;
+  border-radius: 8px !important;
+  min-height: 450px !important;
+}
+
+#security-tab {
+  background: #fef7f0 !important;
+  border: 1px solid #ffd6cc !important;
+  border-radius: 8px !important;
+  min-height: 400px !important;
+}
+
+#advanced-tab {
+  background: #e8f5e8 !important;
+  border: 1px solid #c3e6c3 !important;
+  border-radius: 8px !important;
+  min-height: 450px !important;
+}
+
+/* Ensure each tab's content is completely isolated */
+.ai-tab-content .ai-card-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important;
+  gap: 20px !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* Performance Tab - Simple and Clean */
