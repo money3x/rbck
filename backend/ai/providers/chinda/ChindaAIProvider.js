@@ -7,16 +7,22 @@ class ChindaAIProvider extends BaseProvider {    constructor(config) {
         this.apiKey = config.apiKey;
         this.jwtToken = config.jwtToken;
         
-        // Debug: ตรวจสอบ config ที่ได้รับ
-        console.log('🔍 [ChindaX] Constructor config:', {
-            baseURL: this.baseURL,
-            apiKey: this.apiKey ? this.apiKey.substring(0, 20) + '...' : 'NOT SET',
-            apiKeyLength: this.apiKey ? this.apiKey.length : 0,
-            jwtToken: this.jwtToken ? 'Present' : 'Not set'
-        });
+        // Usage tracking
+        this.usageStats = {
+            totalRequests: 0,
+            totalTokens: 0,
+            lastUsed: null,
+            requestsToday: 0,
+            lastResetDate: new Date().toDateString()
+        };
         
-        // Additional debug: Log the exact URL being used
-        console.log('🔍 [ChindaX] Will make requests to:', `${this.baseURL}/chat/completions`);
+        // Only log in development mode - like Gemini
+        if (process.env.NODE_ENV === 'development') {
+            console.log('🔍 [ChindaX] Provider initialized:', {
+                baseURL: this.baseURL,
+                apiKey: this.apiKey ? 'Present' : 'Missing'
+            });
+        }
         
         // Configure axios instance with timeout (ไม่ใส่ Authorization header ตรงนี้)
         this.client = axios.create({
@@ -36,11 +42,22 @@ class ChindaAIProvider extends BaseProvider {    constructor(config) {
     
     async generateResponse(prompt, options = {}) {
         try {
-            console.log(`🤖 [ChindaX] Generating response...`);
-            console.log(`🔍 [ChindaX] Base URL: ${this.baseURL}`);
-            console.log(`🔍 [ChindaX] API Key: ${this.apiKey ? 'Present' : 'Missing'}`);
-            console.log(`🔍 [ChindaX] API Key value: ${this.apiKey ? this.apiKey.substring(0, 20) + '...' : 'Not set'}`);
-            console.log(`🔍 [ChindaX] API Key length: ${this.apiKey ? this.apiKey.length : 0}`);
+            // Reset daily counter if needed
+            const today = new Date().toDateString();
+            if (this.usageStats.lastResetDate !== today) {
+                this.usageStats.requestsToday = 0;
+                this.usageStats.lastResetDate = today;
+            }
+            
+            // Update usage stats
+            this.usageStats.totalRequests++;
+            this.usageStats.requestsToday++;
+            this.usageStats.lastUsed = new Date();
+            
+            // Only log when actually being used (like Gemini)
+            if (options.verbose || process.env.NODE_ENV === 'development') {
+                console.log(`🤖 [ChindaX] Generating response (${this.usageStats.requestsToday} requests today)...`);
+            }
             
             const requestData = {
                 model: options.model || 'chinda-qwen3-32b',
@@ -54,16 +71,12 @@ class ChindaAIProvider extends BaseProvider {    constructor(config) {
                 temperature: options.temperature || 0.7
             };
             
-            console.log(`🔍 [ChindaX] Request data:`, JSON.stringify(requestData, null, 2));
-            
             // Chinda API ใช้ OpenAI-compatible format
             const response = await this.client.post('/chat/completions', requestData, {
                 headers: {
                     'Authorization': `Bearer ${this.apiKey}`
                 }
             });
-            
-            console.log(`🔍 [ChindaX] Response received:`, JSON.stringify(response.data, null, 2));
             
             // Chinda API response format
             const content = response.data.choices?.[0]?.message?.content || 
@@ -76,31 +89,37 @@ class ChindaAIProvider extends BaseProvider {    constructor(config) {
                 throw new Error('No content received from ChindaX');
             }
             
+            // Update token usage stats
+            const tokensUsed = response.data.usage?.total_tokens || 150; // Estimate if not provided
+            this.usageStats.totalTokens += tokensUsed;
+            
             return {
                 content: content,
                 model: options.model || 'chinda-qwen3-32b',
-                provider: 'ChindaX'
+                provider: 'ChindaX',
+                usage: {
+                    total_tokens: tokensUsed,
+                    prompt_tokens: response.data.usage?.prompt_tokens || 0,
+                    completion_tokens: response.data.usage?.completion_tokens || tokensUsed
+                }
             };
             
         } catch (error) {
-            console.error('❌ [ChindaX] Generation error:', error.message);
-            
+            // Only log errors for debugging - similar to Gemini
             if (error.response) {
-                // HTTP error from ChindaX API
                 const status = error.response.status;
                 const responseData = error.response.data;
-                console.error('❌ [ChindaX] Response status:', status);
-                console.error('❌ [ChindaX] Response data:', JSON.stringify(responseData, null, 2));
-                console.error('❌ [ChindaX] Response headers:', JSON.stringify(error.response.headers, null, 2));
-                
                 const message = responseData?.message || responseData?.detail || 'Unknown API error';
+                
+                // Log minimal error info
+                console.error(`❌ [ChindaX] API error [${status}]:`, message);
+                
                 throw new Error(`ChindaX API error [${status}]: ${message}`);
             } else if (error.request) {
-                // Network error
-                console.error('❌ [ChindaX] Request config:', JSON.stringify(error.request, null, 2));
+                console.error('❌ [ChindaX] Network error');
                 throw new Error('ChindaX API network error - please check connection');
             } else {
-                // Configuration or other error
+                console.error('❌ [ChindaX] Configuration error:', error.message);
                 throw new Error(`ChindaX error: ${error.message}`);
             }
         }
@@ -127,6 +146,14 @@ class ChindaAIProvider extends BaseProvider {    constructor(config) {
             content: response,
             provider: 'chinda',
             model: 'chinda-qwen3-32b'
+        };
+    }
+    
+    // Get usage statistics
+    getUsageStats() {
+        return {
+            ...this.usageStats,
+            provider: 'ChindaX'
         };
     }
 }

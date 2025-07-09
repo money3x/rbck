@@ -110,6 +110,67 @@ router.get('/status', async (req, res) => {
     }
 });
 
+/**
+ * ✅ NEW: Get usage statistics for providers
+ * GET /api/ai/usage
+ */
+router.get('/usage', async (req, res) => {
+    try {
+        const ProviderFactory = require('../ai/providers/factory/ProviderFactory');
+        const usage = {
+            timestamp: new Date().toISOString(),
+            providers: {}
+        };
+        
+        // Get usage stats from each provider
+        const providers = ['gemini', 'openai', 'claude', 'deepseek', 'chinda'];
+        
+        for (const providerName of providers) {
+            try {
+                const hasApiKey = !!process.env[`${providerName.toUpperCase()}_API_KEY`];
+                if (hasApiKey) {
+                    const provider = ProviderFactory.createProvider(providerName);
+                    if (provider && typeof provider.getUsageStats === 'function') {
+                        usage.providers[providerName] = provider.getUsageStats();
+                    } else {
+                        usage.providers[providerName] = {
+                            provider: providerName,
+                            totalRequests: 0,
+                            totalTokens: 0,
+                            lastUsed: null,
+                            requestsToday: 0,
+                            status: 'no_stats'
+                        };
+                    }
+                } else {
+                    usage.providers[providerName] = {
+                        provider: providerName,
+                        status: 'not_configured'
+                    };
+                }
+            } catch (error) {
+                usage.providers[providerName] = {
+                    provider: providerName,
+                    status: 'error',
+                    error: error.message
+                };
+            }
+        }
+        
+        res.json({
+            success: true,
+            data: usage
+        });
+        
+    } catch (error) {
+        console.error('Usage stats error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get usage statistics'
+        });
+    }
+});
+
 // Cost tracking storage (in production, use database)
 let costTracking = {
     totalCost: 0,
@@ -315,14 +376,27 @@ router.get('/status/:provider', async (req, res) => {
     }
 });
 
+// Provider test result caching to reduce API calls
+const providerTestCache = new Map();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
+
 /**
- * Test AI provider with real API call
+ * ✅ OPTIMIZED: Test AI provider with real API call + caching
  * POST /api/ai/providers/:provider/test
  */
 router.post('/providers/:provider/test', async (req, res) => {
     try {
         const { provider } = req.params;
-        const { prompt = 'Hello, please respond with a brief test message.' } = req.body;
+        const { prompt = 'Hello, please respond with a brief test message.', forceRefresh = false } = req.body;
+        
+        // Check cache first (unless force refresh)
+        const cacheKey = `${provider}_test`;
+        const cached = providerTestCache.get(cacheKey);
+        
+        if (!forceRefresh && cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+            console.log(`🔄 [${provider.toUpperCase()}] Using cached test result (${Math.round((Date.now() - cached.timestamp) / 1000)}s old)`);
+            return res.json(cached.result);
+        }
         
         const providerConfig = SecureConfigService.getProviderConfig(provider);
         if (!providerConfig) {
@@ -357,6 +431,9 @@ router.post('/providers/:provider/test', async (req, res) => {
             
             const startTime = Date.now();
             
+            // Log actual API call for monitoring
+            console.log(`🔌 [${provider.toUpperCase()}] Making real API test call...`);
+            
             // Make real API call
             const response = await providerInstance.generateResponse(prompt, {
                 maxTokens: 100,
@@ -365,7 +442,7 @@ router.post('/providers/:provider/test', async (req, res) => {
             
             const responseTime = Date.now() - startTime;
             
-            res.json({
+            const result = {
                 success: true,
                 provider: provider,
                 name: providerConfig.name,
@@ -374,7 +451,17 @@ router.post('/providers/:provider/test', async (req, res) => {
                 tokensUsed: response.usage?.total_tokens || response.usage?.prompt_tokens + response.usage?.completion_tokens || 0,
                 model: response.model,
                 timestamp: new Date().toISOString()
+            };
+            
+            // Cache the successful result
+            providerTestCache.set(cacheKey, {
+                result,
+                timestamp: Date.now()
             });
+            
+            console.log(`✅ [${provider.toUpperCase()}] Test successful, cached for ${CACHE_DURATION / 1000}s`);
+            
+            res.json(result);
             
         } catch (providerError) {
             console.error(`[AI TEST] ${provider} test failed:`, providerError.message);
