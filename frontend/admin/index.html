@@ -8969,6 +8969,292 @@
             
             return allGood;
         };
+        
+        // Comprehensive frontend system validation
+        window.validateFrontendSystem = async function() {
+            console.log('🔧 [SYSTEM VALIDATION] Starting comprehensive frontend system check...');
+            
+            const results = {
+                tabSystem: { status: 'pending', issues: [] },
+                chatInterface: { status: 'pending', issues: [] },
+                apiConnectivity: { status: 'pending', issues: [] },
+                uiComponents: { status: 'pending', issues: [] },
+                performance: { status: 'pending', issues: [] }
+            };
+            
+            // 1. Tab System Validation
+            console.log('📋 [VALIDATION] Testing tab system...');
+            try {
+                const tabTest = window.verifyTabContentFix();
+                results.tabSystem.status = tabTest ? 'pass' : 'fail';
+                if (!tabTest) {
+                    results.tabSystem.issues.push('Tab content isolation failed');
+                }
+            } catch (error) {
+                results.tabSystem.status = 'error';
+                results.tabSystem.issues.push(`Tab system error: ${error.message}`);
+            }
+            
+            // 2. Chat Interface Validation
+            console.log('💬 [VALIDATION] Testing chat interface...');
+            try {
+                const chatForm = document.getElementById('chatbotForm');
+                const chatMessages = document.getElementById('chatbotMessages');
+                const chatInput = document.getElementById('chatbotInput');
+                
+                if (chatForm && chatMessages && chatInput) {
+                    results.chatInterface.status = 'pass';
+                } else {
+                    results.chatInterface.status = 'fail';
+                    results.chatInterface.issues.push('Missing chat interface elements');
+                }
+            } catch (error) {
+                results.chatInterface.status = 'error';
+                results.chatInterface.issues.push(`Chat interface error: ${error.message}`);
+            }
+            
+            // 3. API Connectivity Validation
+            console.log('🔗 [VALIDATION] Testing API connectivity...');
+            try {
+                if (window.api && typeof window.api.get === 'function') {
+                    results.apiConnectivity.status = 'pass';
+                } else {
+                    results.apiConnectivity.status = 'fail';
+                    results.apiConnectivity.issues.push('API client not available');
+                }
+            } catch (error) {
+                results.apiConnectivity.status = 'error';
+                results.apiConnectivity.issues.push(`API connectivity error: ${error.message}`);
+            }
+            
+            // 4. UI Components Validation
+            console.log('🎨 [VALIDATION] Testing UI components...');
+            try {
+                const criticalElements = [
+                    'aiSettingsModal',
+                    'chatbotPanel',
+                    'blog-manage',
+                    'ai-chatbot'
+                ];
+                
+                let missingElements = [];
+                criticalElements.forEach(id => {
+                    if (!document.getElementById(id)) {
+                        missingElements.push(id);
+                    }
+                });
+                
+                if (missingElements.length === 0) {
+                    results.uiComponents.status = 'pass';
+                } else {
+                    results.uiComponents.status = 'fail';
+                    results.uiComponents.issues.push(`Missing elements: ${missingElements.join(', ')}`);
+                }
+            } catch (error) {
+                results.uiComponents.status = 'error';
+                results.uiComponents.issues.push(`UI components error: ${error.message}`);
+            }
+            
+            // 5. Performance Check
+            console.log('⚡ [VALIDATION] Testing performance...');
+            try {
+                const jsFiles = Array.from(document.querySelectorAll('script[src]')).length;
+                const cssFiles = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).length;
+                
+                results.performance.status = 'pass';
+                results.performance.metrics = {
+                    jsFiles,
+                    cssFiles,
+                    domElements: document.querySelectorAll('*').length
+                };
+            } catch (error) {
+                results.performance.status = 'error';
+                results.performance.issues.push(`Performance check error: ${error.message}`);
+            }
+            
+            // Generate report
+            console.log('📊 [VALIDATION] System validation results:');
+            Object.entries(results).forEach(([category, result]) => {
+                const status = result.status === 'pass' ? '✅' : result.status === 'fail' ? '❌' : '⚠️';
+                console.log(`  ${status} ${category}: ${result.status}`);
+                if (result.issues && result.issues.length > 0) {
+                    result.issues.forEach(issue => console.log(`    - ${issue}`));
+                }
+                if (result.metrics) {
+                    console.log(`    Metrics:`, result.metrics);
+                }
+            });
+            
+            const overallStatus = Object.values(results).every(r => r.status === 'pass') ? 'HEALTHY' : 'ISSUES_FOUND';
+            console.log(`🎯 [VALIDATION] Overall system status: ${overallStatus}`);
+            
+            return results;
+        };
+        
+        // Generate comprehensive system health report
+        window.generateSystemHealthReport = async function() {
+            console.log('📊 [HEALTH REPORT] Generating comprehensive system health report...');
+            
+            const report = {
+                timestamp: new Date().toISOString(),
+                overallHealth: 'UNKNOWN',
+                systemInfo: {
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                    language: navigator.language,
+                    cookieEnabled: navigator.cookieEnabled,
+                    onlineStatus: navigator.onLine
+                },
+                validation: {},
+                diagnostics: {},
+                performance: {},
+                recommendations: []
+            };
+            
+            // 1. Run system validation
+            try {
+                report.validation = await window.validateFrontendSystem();
+                console.log('✅ System validation completed');
+            } catch (error) {
+                console.error('❌ System validation failed:', error);
+                report.validation = { error: error.message };
+            }
+            
+            // 2. Collect diagnostics
+            try {
+                report.diagnostics = {
+                    jsErrors: window.jsErrors || [],
+                    domElements: document.querySelectorAll('*').length,
+                    scripts: document.querySelectorAll('script').length,
+                    stylesheets: document.querySelectorAll('link[rel="stylesheet"]').length,
+                    images: document.querySelectorAll('img').length,
+                    forms: document.querySelectorAll('form').length,
+                    buttons: document.querySelectorAll('button').length,
+                    inputs: document.querySelectorAll('input').length
+                };
+                console.log('✅ Diagnostics collected');
+            } catch (error) {
+                console.error('❌ Diagnostics collection failed:', error);
+                report.diagnostics = { error: error.message };
+            }
+            
+            // 3. Performance metrics
+            try {
+                const performance = window.performance;
+                report.performance = {
+                    navigation: performance.timing ? {
+                        pageLoad: performance.timing.loadEventEnd - performance.timing.navigationStart,
+                        domReady: performance.timing.domContentLoadedEventEnd - performance.timing.navigationStart,
+                        firstPaint: performance.timing.responseStart - performance.timing.navigationStart
+                    } : 'Not available',
+                    memory: performance.memory ? {
+                        usedJSHeapSize: performance.memory.usedJSHeapSize,
+                        totalJSHeapSize: performance.memory.totalJSHeapSize,
+                        jsHeapSizeLimit: performance.memory.jsHeapSizeLimit
+                    } : 'Not available',
+                    resources: performance.getEntriesByType ? performance.getEntriesByType('resource').length : 'Not available'
+                };
+                console.log('✅ Performance metrics collected');
+            } catch (error) {
+                console.error('❌ Performance metrics failed:', error);
+                report.performance = { error: error.message };
+            }
+            
+            // 4. Generate recommendations
+            try {
+                // Tab system recommendations
+                if (report.validation.tabSystem?.status !== 'pass') {
+                    report.recommendations.push({
+                        category: 'Tab System',
+                        severity: 'high',
+                        issue: 'Tab content isolation issues detected',
+                        solution: 'Run window.verifyTabContentFix() to diagnose and fix tab issues'
+                    });
+                }
+                
+                // Chat interface recommendations
+                if (report.validation.chatInterface?.status !== 'pass') {
+                    report.recommendations.push({
+                        category: 'Chat Interface',
+                        severity: 'high',
+                        issue: 'Chat interface elements missing or non-functional',
+                        solution: 'Check HTML structure and ensure all chat elements are properly initialized'
+                    });
+                }
+                
+                // API connectivity recommendations
+                if (report.validation.apiConnectivity?.status !== 'pass') {
+                    report.recommendations.push({
+                        category: 'API Connectivity',
+                        severity: 'critical',
+                        issue: 'API client not properly initialized',
+                        solution: 'Ensure api-client.js is loaded and window.api is available'
+                    });
+                }
+                
+                // Performance recommendations
+                if (report.performance.navigation?.pageLoad > 5000) {
+                    report.recommendations.push({
+                        category: 'Performance',
+                        severity: 'medium',
+                        issue: 'Page load time exceeds 5 seconds',
+                        solution: 'Consider code splitting and resource optimization'
+                    });
+                }
+                
+                // DOM size recommendations
+                if (report.diagnostics.domElements > 5000) {
+                    report.recommendations.push({
+                        category: 'Performance',
+                        severity: 'medium',
+                        issue: 'Large DOM size detected',
+                        solution: 'Consider lazy loading and DOM virtualization'
+                    });
+                }
+                
+                console.log('✅ Recommendations generated');
+            } catch (error) {
+                console.error('❌ Recommendations generation failed:', error);
+                report.recommendations = [{ error: error.message }];
+            }
+            
+            // 5. Determine overall health
+            const validationResults = Object.values(report.validation).filter(r => r.status);
+            const passCount = validationResults.filter(r => r.status === 'pass').length;
+            const totalCount = validationResults.length;
+            
+            if (passCount === totalCount) {
+                report.overallHealth = 'HEALTHY';
+            } else if (passCount >= totalCount * 0.7) {
+                report.overallHealth = 'MINOR_ISSUES';
+            } else if (passCount >= totalCount * 0.4) {
+                report.overallHealth = 'MODERATE_ISSUES';
+            } else {
+                report.overallHealth = 'CRITICAL_ISSUES';
+            }
+            
+            // 6. Display report
+            console.log('📋 [HEALTH REPORT] System Health Report Generated');
+            console.log('='.repeat(50));
+            console.log(`🎯 Overall Health: ${report.overallHealth}`);
+            console.log(`📅 Timestamp: ${report.timestamp}`);
+            console.log('🔍 Validation Results:', Object.entries(report.validation).map(([k, v]) => `${k}: ${v.status}`).join(', '));
+            console.log('📊 Performance:', report.performance.navigation ? `Page Load: ${report.performance.navigation.pageLoad}ms` : 'Not available');
+            console.log(`📈 DOM Elements: ${report.diagnostics.domElements}`);
+            console.log(`💡 Recommendations: ${report.recommendations.length}`);
+            
+            if (report.recommendations.length > 0) {
+                console.log('\n🛠️ Recommendations:');
+                report.recommendations.forEach((rec, i) => {
+                    console.log(`  ${i + 1}. [${rec.severity?.toUpperCase()}] ${rec.category}: ${rec.issue}`);
+                    console.log(`     Solution: ${rec.solution}`);
+                });
+            }
+            
+            console.log('='.repeat(50));
+            
+            return report;
+        };
     </script>
     
     <!-- Debug Script for Function Availability -->
