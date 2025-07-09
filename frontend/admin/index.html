@@ -7800,12 +7800,13 @@
             if (!modelSelect) return;
             
             try {
-                // Get provider status from backend (using available endpoint)
-                const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/status`, {
+                // Get provider status from backend (using available endpoint) - with cache busting
+                const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/status?t=${Date.now()}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
+                        'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : '',
+                        'Cache-Control': 'no-cache'
                     }
                 });
                 
@@ -7818,13 +7819,13 @@
                     providersData = data.data?.providers || data.providers || {};
                 } else {
                     console.warn('⚠️ [CHATBOT] Backend not available, using fallback');
-                    // Fallback: use basic providers as ready (especially Gemini)
+                    // Fallback: use basic providers as ready (especially Gemini and ChindaX)
                     providersData = {
                         gemini: { configured: true, status: 'ready' },
                         openai: { configured: false, status: 'needs_configuration' },
                         claude: { configured: false, status: 'needs_configuration' },
                         deepseek: { configured: false, status: 'needs_configuration' },
-                        chinda: { configured: false, status: 'needs_configuration' }
+                        chinda: { configured: true, status: 'ready' }
                     };
                 }
                 
@@ -7872,12 +7873,12 @@
             } catch (error) {
                 console.error('❌ [CHATBOT] Error updating providers:', error);
                 
-                // Fallback: show all providers
+                // Fallback: show all providers (force Gemini and ChindaX as ready)
                 const fallbackOptions = [
-                    { value: 'openai', text: 'OpenAI (GPT-4/3.5)' },
-                    { value: 'anthropic', text: 'Anthropic (Claude)' },
+                    { value: 'gemini', text: 'Gemini 2.0 Flash' },
                     { value: 'chinda', text: 'ChindaX (qwen3-32b)' },
-                    { value: 'gemini', text: 'Gemini 2.0 Flash' }
+                    { value: 'openai', text: 'OpenAI (GPT-4/3.5) (Not Available)' },
+                    { value: 'anthropic', text: 'Anthropic (Claude) (Not Available)' }
                 ];
                 
                 modelSelect.innerHTML = '';
