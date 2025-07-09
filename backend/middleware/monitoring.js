@@ -1,6 +1,7 @@
 // Advanced Monitoring Middleware with APM and Alerting
 const winston = require('winston');
 const prometheus = require('prom-client');
+const { logger } = require('./errorHandler');
 
 // Create a Registry to hold metrics
 const register = new prometheus.Registry();
@@ -96,7 +97,7 @@ class PerformanceMonitor {
         
         // Log slow requests
         if (duration > this.thresholds.responseTime / 1000) {
-          winston.warn('Slow request detected', {
+          logger.warn('Slow request detected', {
             method: req.method,
             path: req.path,
             duration: `${duration}s`,
@@ -152,7 +153,7 @@ class PerformanceMonitor {
       });
     }
     
-    winston.error('System error tracked', {
+    logger.error('System error tracked', {
       error: error.message,
       severity,
       stack: error.stack
@@ -179,7 +180,7 @@ class PerformanceMonitor {
       }
       
       // Log system metrics
-      winston.info('System metrics', {
+      logger.info('System metrics', {
         memory: {
           heapUsed: `${memUsageMB.toFixed(2)}MB`,
           heapTotal: `${(memUsage.heapTotal / 1024 / 1024).toFixed(2)}MB`,
@@ -240,7 +241,7 @@ class PerformanceMonitor {
     this.alerts.push(alert);
     
     // Log alert
-    winston.error('ALERT', alert);
+    logger.error('ALERT', alert);
     
     // Send to external monitoring service (Slack, email, etc.)
     this.sendExternalAlert(alert);
@@ -278,7 +279,7 @@ class PerformanceMonitor {
         console.log('Critical alert email sent');
       }
     } catch (error) {
-      winston.error('Failed to send external alert', error);
+      logger.error('Failed to send external alert', error);
     }
   }
 

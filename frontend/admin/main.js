@@ -57,6 +57,79 @@ let aiSwarmCouncil = null;
 let aiMonitoringUI = null;
 let isAppInitialized = false;
 
+// ===== DEBUGGING FUNCTIONS =====
+window.debugGeminiChat = {
+    testAPI: async () => {
+        console.log('🧪 [DEBUG] Testing Gemini API...');
+        try {
+            const { authenticatedFetch } = await import('./auth.js');
+            const resKey = await authenticatedFetch(`${API_BASE}/apikey`);
+            if (resKey.ok) {
+                const data = await resKey.json();
+                const apiKey = data.data?.geminiApiKey || '';
+                console.log('🔑 [DEBUG] API Key exists:', !!apiKey);
+                
+                if (apiKey) {
+                    const testRes = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: 'Hello, this is a test message' }] }],
+                            generationConfig: { temperature: 0.3, maxOutputTokens: 100 }
+                        })
+                    });
+                    
+                    const testData = await testRes.json();
+                    console.log('📥 [DEBUG] Test response:', testData);
+                    
+                    if (testData?.candidates?.[0]?.content?.parts?.[0]?.text) {
+                        console.log('✅ [DEBUG] API working correctly');
+                        return testData.candidates[0].content.parts[0].text;
+                    } else {
+                        console.warn('⚠️ [DEBUG] Unexpected response structure');
+                        return JSON.stringify(testData);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('❌ [DEBUG] Test failed:', error);
+            return error.message;
+        }
+    },
+    
+    checkElements: () => {
+        console.log('🔍 [DEBUG] Checking chat elements...');
+        const elements = [
+            'chatbotMessages',
+            'chatbotInput',
+            'chatbotForm',
+            'chatModelSelect'
+        ];
+        
+        elements.forEach(id => {
+            const el = document.getElementById(id);
+            console.log(`🔍 [DEBUG] ${id}:`, el ? 'Found' : 'Missing');
+            if (el) {
+                console.log(`   - Display: ${window.getComputedStyle(el).display}`);
+                console.log(`   - Visibility: ${window.getComputedStyle(el).visibility}`);
+            }
+        });
+    },
+    
+    simulateChat: async (message = 'Test message') => {
+        console.log('💬 [DEBUG] Simulating chat with message:', message);
+        const input = document.getElementById('chatbotInput');
+        const form = document.getElementById('chatbotForm');
+        
+        if (input && form) {
+            input.value = message;
+            form.dispatchEvent(new Event('submit'));
+        } else {
+            console.error('❌ [DEBUG] Chat elements not found');
+        }
+    }
+};
+
 // ===== ADDITIONAL MISSING FUNCTIONS FROM HTML =====
 
 // Form management functions
@@ -736,13 +809,25 @@ function setupChatbotHandlers() {
         input.disabled = true;
         autoResizeTextarea(); // Reset height
 
+        // Update status indicator
+        const statusDot = document.getElementById('chatStatus');
+        const statusText = document.getElementById('chatStatusText');
+        if (statusDot && statusText) {
+            statusDot.className = 'status-dot processing';
+            statusText.textContent = 'กำลังประมวลผล...';
+        }
+
         // Show AI typing indicator
         const typingMessage = createChatMessage('', false, true);
         messagesDiv.appendChild(typingMessage);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;// Call Gemini API (only for Gemini model, others can be mocked)
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        
+        // Call Gemini API (enhanced with better error handling and debugging)
         let aiReply = '';
         try {
             if (chatModel === 'gemini') {
+                console.log('🔍 [GEMINI CHAT] Starting API call...');
+                
                 let apiKey = '';
                 try {
                     const { authenticatedFetch } = await import('./auth.js');
@@ -750,43 +835,131 @@ function setupChatbotHandlers() {
                     if (resKey.ok) {
                         const data = await resKey.json();
                         apiKey = data.data?.geminiApiKey || '';
+                        console.log('🔑 [GEMINI CHAT] API Key retrieved:', apiKey ? 'Yes' : 'No');
                     }
-                } catch {}
-                const prompt = userMsg;
-                const url = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(apiKey);
-                const res = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }],
-                        generationConfig: {
-                            temperature: 0.3,
-                            topK: 40,
-                            topP: 0.95,
-                            maxOutputTokens: 1024
-                        }
-                    })
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    aiReply = (data?.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+                } catch (keyError) {
+                    console.error('❌ [GEMINI CHAT] API Key fetch error:', keyError);
+                }
+                
+                if (!apiKey) {
+                    aiReply = '❌ ไม่พบ API Key ของ Gemini กรุณาตั้งค่า API Key ใน AI Settings';
                 } else {
-                    aiReply = '❌ ไม่สามารถเชื่อมต่อ Gemini ได้ (API Key อาจผิดหรือหมดโควต้า)';
+                    const prompt = userMsg;
+                    const url = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(apiKey);
+                    
+                    console.log('📤 [GEMINI CHAT] Sending request to:', url);
+                    console.log('📤 [GEMINI CHAT] Request payload:', { prompt });
+                    
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: {
+                                temperature: 0.3,
+                                topK: 40,
+                                topP: 0.95,
+                                maxOutputTokens: 1024
+                            }
+                        })
+                    });
+                    
+                    console.log('📥 [GEMINI CHAT] Response status:', res.status);
+                    
+                    if (res.ok) {
+                        const data = await res.json();
+                        console.log('📥 [GEMINI CHAT] Response data:', data);
+                        
+                        // Enhanced response parsing with multiple fallbacks
+                        if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+                            aiReply = data.candidates[0].content.parts[0].text.trim();
+                            console.log('✅ [GEMINI CHAT] Successfully extracted response:', aiReply.substring(0, 100) + '...');
+                        } else if (data?.candidates?.[0]?.content?.parts?.[0]) {
+                            // Try different response structure
+                            const part = data.candidates[0].content.parts[0];
+                            aiReply = part.text || part.content || JSON.stringify(part);
+                        } else if (data?.candidates?.[0]) {
+                            // Try candidate level
+                            const candidate = data.candidates[0];
+                            aiReply = candidate.text || candidate.content || JSON.stringify(candidate);
+                        } else {
+                            console.warn('⚠️ [GEMINI CHAT] Unexpected response structure:', data);
+                            aiReply = '⚠️ ได้รับการตอบกลับแล้ว แต่ไม่สามารถแสดงผลได้ (กรุณาเปิด Developer Tools เพื่อดูข้อมูล)';
+                        }
+                    } else {
+                        const errorData = await res.text();
+                        console.error('❌ [GEMINI CHAT] Direct API Error:', res.status, errorData);
+                        
+                        // Try backend API route as fallback
+                        console.log('🔄 [GEMINI CHAT] Trying backend API as fallback...');
+                        try {
+                            const backendRes = await fetch(`${API_BASE}/api/ai/chat`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    provider: 'gemini',
+                                    message: userMsg,
+                                    maxTokens: 1024,
+                                    temperature: 0.3
+                                })
+                            });
+                            
+                            if (backendRes.ok) {
+                                const backendData = await backendRes.json();
+                                console.log('📥 [GEMINI CHAT] Backend response:', backendData);
+                                
+                                if (backendData.success && backendData.content) {
+                                    aiReply = backendData.content.trim();
+                                    console.log('✅ [GEMINI CHAT] Backend fallback successful');
+                                } else {
+                                    aiReply = `❌ Backend API Error: ${backendData.error || 'Unknown error'}`;
+                                }
+                            } else {
+                                aiReply = `❌ ไม่สามารถเชื่อมต่อ Gemini ได้ (${res.status}: ${errorData.substring(0, 100)})`;
+                            }
+                        } catch (backendError) {
+                            console.error('❌ [GEMINI CHAT] Backend fallback failed:', backendError);
+                            aiReply = `❌ ไม่สามารถเชื่อมต่อ Gemini ได้ (${res.status}: ${errorData.substring(0, 100)})`;
+                        }
+                    }
                 }
             } else {
-                // Mock for other models
-                aiReply = '🤖 (Mock) ตอบกลับจาก ' + chatModel + ': ' + userMsg;
-            }        } catch (err) {
-            aiReply = '❌ เกิดข้อผิดพลาดในการเชื่อมต่อ Gemini';
+                // Enhanced mock responses for other models
+                const mockResponses = {
+                    'openai': `🤖 [OpenAI GPT] ตอบกลับ: ${userMsg}`,
+                    'anthropic': `🤖 [Claude] ตอบกลับ: ${userMsg}`,  
+                    'chinda': `🤖 [ChindaX] ตอบกลับ: ${userMsg}`
+                };
+                aiReply = mockResponses[chatModel] || `🤖 [${chatModel}] ตอบกลับ: ${userMsg}`;
+            }
+        } catch (err) {
+            console.error('❌ [GEMINI CHAT] Unexpected error:', err);
+            aiReply = '❌ เกิดข้อผิดพลาดในการเชื่อมต่อ Gemini: ' + err.message;
         }
 
         // Remove typing indicator
         messagesDiv.removeChild(typingMessage);
         
+        // Validate response before displaying
+        if (!aiReply || aiReply.trim() === '') {
+            console.warn('⚠️ [GEMINI CHAT] Empty response received, using fallback');
+            aiReply = '⚠️ ได้รับการตอบกลับแล้ว แต่เนื้อหาว่างเปล่า กรุณาลองส่งข้อความใหม่อีกครั้ง';
+        }
+        
         // Show AI response with new design
         const aiMessage = createChatMessage(aiReply, false);
         messagesDiv.appendChild(aiMessage);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        
+        // Log successful completion
+        console.log('✅ [GEMINI CHAT] Chat message flow completed successfully');
+        console.log('📝 [GEMINI CHAT] Final response:', aiReply.substring(0, 100) + '...');
+        
+        // Reset status indicator
+        if (statusDot && statusText) {
+            statusDot.className = 'status-dot connected';
+            statusText.textContent = 'พร้อมใช้งาน';
+        }
         
         input.disabled = false;
         input.focus();
