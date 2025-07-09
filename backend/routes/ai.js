@@ -59,11 +59,11 @@ const AI_PROVIDERS = {
     },
     chinda: {
         name: 'Chinda AI',
-        endpoint: process.env.CHINDA_BASE_URL || 'https://api.chinda.ai/v1/chat/completions',
+        endpoint: process.env.CHINDA_BASE_URL || 'https://chindax.iapp.co.th/api/chat/completions',
         model: 'chinda-qwen3-32b',
         get apiKey() { return SecureConfigService.getApiKey('chinda'); },
         get jwtToken() { return process.env.CHINDA_JWT_TOKEN; },
-        enabled: !!(process.env.CHINDA_API_KEY && process.env.CHINDA_JWT_TOKEN),
+        enabled: !!process.env.CHINDA_API_KEY,
         costPerToken: 0.000001,
         status: 'active',
         responseTime: 2200

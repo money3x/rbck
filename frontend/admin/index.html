@@ -7936,55 +7936,7 @@
         };
 
         // Modern AI Settings Functions
-        function switchAITab(tabName) {
-            console.log('🔄 [DEBUG] Switching to tab:', tabName);
-            
-            // Debug: Check current modal
-            const modal = document.getElementById('aiSettingsModal');
-            console.log('🔍 Modal element:', modal);
-            console.log('🔍 Modal display:', modal ? window.getComputedStyle(modal).display : 'not found');
-            
-            // Remove active class from ALL tab systems (both old and new)
-            const allTabButtons = document.querySelectorAll('.ai-settings-tab, .tab-button');
-            const allTabContent = document.querySelectorAll('.ai-tab-content, .tab-content');
-            
-            console.log('🔍 Found tab buttons:', allTabButtons.length);
-            console.log('🔍 Found tab content:', allTabContent.length);
-            
-            allTabButtons.forEach(btn => {
-                btn.classList.remove('active');
-            });
-            allTabContent.forEach(content => {
-                content.classList.remove('active');
-            });
-            
-            // Add active class to selected tab and content
-            const selectedTab = document.querySelector(`[data-tab="${tabName}"]`);
-            const selectedContent = document.getElementById(`${tabName}-tab`);
-            
-            console.log('🔍 Selected tab element:', selectedTab);
-            console.log('🔍 Selected content element:', selectedContent);
-            console.log('🔍 Performance tab exists:', document.getElementById('performance-tab'));
-            
-            if (selectedTab && selectedContent) {
-                selectedTab.classList.add('active');
-                selectedContent.classList.add('active');
-                
-                // Force display styles
-                selectedContent.style.display = 'block';
-                selectedContent.style.visibility = 'visible';
-                selectedContent.style.opacity = '1';
-                
-                console.log('✅ [DEBUG] Successfully switched to', tabName);
-                console.log('🔍 Content display:', window.getComputedStyle(selectedContent).display);
-                console.log('🔍 Content visibility:', window.getComputedStyle(selectedContent).visibility);
-                console.log('🔍 Content opacity:', window.getComputedStyle(selectedContent).opacity);
-            } else {
-                console.error('❌ [DEBUG] Tab not found:', tabName);
-                console.log('🔍 All available tabs:', Array.from(document.querySelectorAll('[data-tab]')).map(t => t.dataset.tab));
-                console.log('🔍 All available content:', Array.from(document.querySelectorAll('[id$="-tab"]')).map(c => c.id));
-            }
-        }
+        // switchAITab function ถูกย้ายไปใน main-production.js แล้ว
 
         async function testProvider(provider) {
             console.log(`🔧 [AI Settings] Testing ${provider} provider connection...`);
@@ -9335,36 +9287,7 @@
             // ✅ Also check switchAITab
             if (typeof window.switchAITab === 'undefined') {
                 console.error('❌ [FALLBACK] switchAITab NOT AVAILABLE - CREATING FALLBACK!');
-                window.switchAITab = function(tabName) {
-                    console.error('🚨 [FALLBACK] Using fallback switchAITab for:', tabName);
-                    try {
-                        // Hide all tab contents
-                        document.querySelectorAll('.ai-tab-content').forEach(content => {
-                            content.style.display = 'none';
-                            content.classList.remove('active');
-                        });
-                        
-                        // Remove active from all tab buttons
-                        document.querySelectorAll('.ai-settings-tab').forEach(tab => {
-                            tab.classList.remove('active');
-                        });
-                        
-                        // Show target tab
-                        const targetContent = document.getElementById(`${tabName}-tab`);
-                        const targetTab = document.querySelector(`[data-tab="${tabName}"]`);
-                        
-                        if (targetContent && targetTab) {
-                            targetContent.style.display = 'block';
-                            targetContent.classList.add('active');
-                            targetTab.classList.add('active');
-                            console.log('✅ [FALLBACK] AI Tab switched to:', tabName);
-                        } else {
-                            console.error('❌ [FALLBACK] AI Tab or content not found:', tabName);
-                        }
-                    } catch (error) {
-                        console.error('❌ [FALLBACK] Error in switchAITab:', error);
-                    }
-                };
+                // switchAITab ถูกโหลดจาก main-production.js แล้ว
             } else {
                 console.log('✅ [FALLBACK] switchAITab already available from main-production.js');
             }

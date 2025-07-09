@@ -63,8 +63,8 @@ class SecureConfigService {
             chinda: {
                 name: 'ChindaX AI',
                 type: 'ChindaX',
-                endpoint: process.env.CHINDA_API_ENDPOINT || 'https://api.chindax.com/v1',
-                model: process.env.CHINDA_MODEL || 'chinda-chat',
+                baseURL: process.env.CHINDA_BASE_URL || 'https://chindax.iapp.co.th/api',
+                model: process.env.CHINDA_MODEL || 'chinda-qwen3-32b',
                 status: this.hasValidKey('chinda') ? 'active' : 'inactive',
                 responseTime: 900,
                 successRate: 0.88,

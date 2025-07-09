@@ -117,10 +117,9 @@ const validateConfig = (providerName, config) => {
         return false;
     }
 
-    // ChindaX requires both API key and JWT token
+    // ChindaX requires only API key (JWT token is optional)
     if (providerName === 'chinda' && !config.jwtToken) {
-        console.error(`❌ Provider ${providerName}: JWT token is required for ChindaX`);
-        return false;
+        console.warn(`⚠️  Provider ${providerName}: JWT token not configured, using API key only`);
     }
 
     if (!config.baseURL) {
