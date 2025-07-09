@@ -3677,9 +3677,9 @@
                         </select>
                     </div>
                 </div>
-                <div class="chatbot-messages" id="chatbotMessages">
-                    <div class="welcome-message">
-                        <p>สวัสดีครับ! ผมพร้อมช่วยเหลือคุณในการจัดการเนื้อหาและ SEO พร้อมรองรับบทสนทนาแบบ Long Context สำหรับการทำงานที่ซับซ้อน</p>
+                <div class="chatbot-messages" id="chatbotMessages" style="max-height: 400px; overflow-y: auto; padding: 16px; display: flex !important; flex-direction: column; gap: 12px; background: rgba(255, 255, 255, 0.95); border-radius: 12px; min-height: 200px; visibility: visible !important;">
+                    <div class="welcome-message" style="padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; margin-bottom: 8px;">
+                        <p style="margin: 0; font-size: 14px; line-height: 1.4;">สวัสดีครับ! ผมพร้อมช่วยเหลือคุณในการจัดการเนื้อหาและ SEO พร้อมรองรับบทสนทนาแบบ Long Context สำหรับการทำงานที่ซับซ้อน</p>
                     </div>
                 </div>
                 <form class="chatbot-input-row" id="chatbotForm">
@@ -7592,13 +7592,7 @@
             const typingId = addTypingIndicator();
             
             try {
-                // Add debug info temporarily
-                console.log('Sending to:', `${window.rbckConfig.apiBase}/ai/chat`);
-                console.log('Request data:', {
-                    message: message,
-                    provider: selectedModel,
-                    model: getModelForProvider(selectedModel)
-                });
+                console.log('🚀 Sending request to AI chat endpoint');
                 
                 const response = await fetch(`${window.rbckConfig.apiBase}/ai/chat`, {
                     method: 'POST',
@@ -7612,21 +7606,13 @@
                     })
                 });
                 
-                console.log('Response status:', response.status);
-                console.log('Response ok:', response.ok);
-                
                 removeTypingIndicator(typingId);
                 
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('Response data:', data);
                     
                     if (data.success && data.response) {
-                        console.log('Adding message to chat:', data.response);
-                        
-                        // Try adding message
                         addMessageToChat('assistant', data.response, selectedModel);
-                        console.log('Message added successfully');
                         
                         // Double check: Force direct DOM manipulation if normal method fails
                         setTimeout(() => {
@@ -7634,13 +7620,13 @@
                             if (messagesContainer && messagesContainer.children.length < 2) {
                                 console.warn('⚠️ Fallback: Direct DOM manipulation');
                                 messagesContainer.innerHTML += `
-                                    <div class="chat-message assistant-message">
-                                        <div class="message-header">
-                                            <span class="message-avatar">✨</span>
-                                            <span class="message-author">Gemini</span>
-                                            <span class="message-time">${new Date().toLocaleTimeString()}</span>
+                                    <div class="chat-message assistant-message" style="margin-bottom: 16px; padding: 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.9); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); display: block !important; visibility: visible !important; opacity: 1 !important;">
+                                        <div class="message-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; color: #666;">
+                                            <span class="message-avatar" style="font-size: 16px;">✨</span>
+                                            <span class="message-author" style="font-weight: 600; color: #333;">Gemini</span>
+                                            <span class="message-time" style="color: #999;">${new Date().toLocaleTimeString()}</span>
                                         </div>
-                                        <div class="message-content">${data.response}</div>
+                                        <div class="message-content" style="background: #f8f9fa; color: #333; padding: 12px; border-radius: 8px; line-height: 1.4; word-wrap: break-word;">${data.response}</div>
                                     </div>
                                 `;
                             }
@@ -7684,11 +7670,10 @@
                 return;
             }
             console.log('✅ Adding message to chat:', type, content.substring(0, 50));
-            console.log('✅ Messages container found:', messages);
-            console.log('✅ Messages container children before:', messages.children.length);
             
             const messageDiv = document.createElement('div');
             messageDiv.className = `chat-message ${type}-message`;
+            messageDiv.style.cssText = 'margin-bottom: 16px; padding: 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.9); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); display: block !important; visibility: visible !important; opacity: 1 !important;';
             
             let avatar = '';
             let authorName = '';
@@ -7717,23 +7702,15 @@
             }
             
             messageDiv.innerHTML = `
-                <div class="message-header">
-                    <span class="message-avatar">${avatar}</span>
-                    <span class="message-author">${authorName}</span>
-                    <span class="message-time">${new Date().toLocaleTimeString()}</span>
+                <div class="message-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; color: #666;">
+                    <span class="message-avatar" style="font-size: 16px;">${avatar}</span>
+                    <span class="message-author" style="font-weight: 600; color: #333;">${authorName}</span>
+                    <span class="message-time" style="color: #999;">${new Date().toLocaleTimeString()}</span>
                 </div>
-                <div class="message-content">${content}</div>
+                <div class="message-content" style="background: ${type === 'user' ? '#007bff' : '#f8f9fa'}; color: ${type === 'user' ? 'white' : '#333'}; padding: 12px; border-radius: 8px; line-height: 1.4; word-wrap: break-word;">${content}</div>
             `;
             
             messages.appendChild(messageDiv);
-            console.log('✅ Message appended. Children after:', messages.children.length);
-            console.log('✅ MessageDiv HTML:', messageDiv.outerHTML);
-            console.log('✅ Messages container HTML:', messages.outerHTML.substring(0, 200));
-            
-            // Force visibility check
-            console.log('✅ Messages container visible:', messages.offsetHeight > 0);
-            console.log('✅ Messages container style display:', getComputedStyle(messages).display);
-            
             messages.scrollTop = messages.scrollHeight;
         }
         
