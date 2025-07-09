@@ -4,8 +4,8 @@ import { createOrGetGeminiModal, closeGeminiModal, showModal, closeModal } from 
 import { runGeminiSeoCheck, researchKeywords, generateSitemap, validateSchema, runSpeedTest, optimizationTips } from './seoTools.js';
 import { AISwarmCouncil } from './aiSwarm.js';
 import { AIMonitoringUI } from './aiMonitoringUI.js';
-import { API_BASE, CONFIG } from '../config.js';
-import { requireAuth, isAuthenticated, getCurrentUser } from './auth.js';
+import { API_BASE } from '../config.js';
+import { requireAuth, getCurrentUser } from './auth.js';
 import { api, handleApiError, initNetworkMonitoring } from '../js/apiUtils.js';
 
 // ===== IMMEDIATELY BIND CRITICAL FUNCTIONS TO WINDOW =====
@@ -871,6 +871,8 @@ function setupChatbotHandlers() {
                         console.log('📥 [GEMINI CHAT] Response data:', data);
                         
                         // Enhanced response parsing with multiple fallbacks
+                        console.log('🔍 [GEMINI CHAT] Full API response structure:', JSON.stringify(data, null, 2));
+                        
                         if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
                             aiReply = data.candidates[0].content.parts[0].text.trim();
                             console.log('✅ [GEMINI CHAT] Successfully extracted response:', aiReply.substring(0, 100) + '...');
@@ -878,13 +880,20 @@ function setupChatbotHandlers() {
                             // Try different response structure
                             const part = data.candidates[0].content.parts[0];
                             aiReply = part.text || part.content || JSON.stringify(part);
+                            console.log('⚠️ [GEMINI CHAT] Using fallback parsing method 1:', aiReply.substring(0, 100) + '...');
                         } else if (data?.candidates?.[0]) {
                             // Try candidate level
                             const candidate = data.candidates[0];
                             aiReply = candidate.text || candidate.content || JSON.stringify(candidate);
+                            console.log('⚠️ [GEMINI CHAT] Using fallback parsing method 2:', aiReply.substring(0, 100) + '...');
+                        } else if (data?.text) {
+                            // Direct text response
+                            aiReply = data.text.trim();
+                            console.log('⚠️ [GEMINI CHAT] Using direct text parsing:', aiReply.substring(0, 100) + '...');
                         } else {
                             console.warn('⚠️ [GEMINI CHAT] Unexpected response structure:', data);
-                            aiReply = '⚠️ ได้รับการตอบกลับแล้ว แต่ไม่สามารถแสดงผลได้ (กรุณาเปิด Developer Tools เพื่อดูข้อมูล)';
+                            // Show the actual response for debugging
+                            aiReply = `🔍 DEBUG: Raw API Response\n${JSON.stringify(data, null, 2)}`;
                         }
                     } else {
                         const errorData = await res.text();
@@ -940,16 +949,39 @@ function setupChatbotHandlers() {
         // Remove typing indicator
         messagesDiv.removeChild(typingMessage);
         
-        // Validate response before displaying
+        // Enhanced validation before displaying
+        console.log('🔍 [GEMINI CHAT] Final aiReply before validation:', {
+            exists: !!aiReply,
+            type: typeof aiReply,
+            length: aiReply?.length || 0,
+            trimmedLength: aiReply?.trim()?.length || 0,
+            content: aiReply?.substring(0, 200) || 'undefined'
+        });
+        
         if (!aiReply || aiReply.trim() === '') {
             console.warn('⚠️ [GEMINI CHAT] Empty response received, using fallback');
             aiReply = '⚠️ ได้รับการตอบกลับแล้ว แต่เนื้อหาว่างเปล่า กรุณาลองส่งข้อความใหม่อีกครั้ง';
+        } else {
+            console.log('✅ [GEMINI CHAT] Valid response ready for display:', aiReply.substring(0, 100) + '...');
         }
         
         // Show AI response with new design
         const aiMessage = createChatMessage(aiReply, false);
+        console.log('🔍 [GEMINI CHAT] Created AI message element:', aiMessage);
+        console.log('🔍 [GEMINI CHAT] Messages container:', messagesDiv);
+        console.log('🔍 [GEMINI CHAT] Messages container children before append:', messagesDiv.children.length);
+        
         messagesDiv.appendChild(aiMessage);
+        console.log('🔍 [GEMINI CHAT] Messages container children after append:', messagesDiv.children.length);
+        
+        // Force visibility and scroll
+        messagesDiv.style.display = 'flex';
+        messagesDiv.style.visibility = 'visible';
+        aiMessage.style.display = 'flex';
+        aiMessage.style.visibility = 'visible';
+        
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        console.log('✅ [GEMINI CHAT] Message appended and visibility forced');
         
         // Log successful completion
         console.log('✅ [GEMINI CHAT] Chat message flow completed successfully');
