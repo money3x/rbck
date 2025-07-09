@@ -7836,6 +7836,12 @@
                     console.log('✅ [CHATBOT] Gemini marked as ready');
                 }
                 
+                // Force ChindaX as available if backend confirms it's working
+                if (providersData.chinda && providersData.chinda.configured) {
+                    providersData.chinda.status = 'ready';
+                    console.log('✅ [CHATBOT] ChindaX marked as ready');
+                }
+                
                 // Update dropdown options (match with backend provider status)
                 const options = [
                     { value: 'openai', text: 'OpenAI (GPT-4/3.5)', enabled: providersData.openai?.configured && providersData.openai?.status === 'ready' },
