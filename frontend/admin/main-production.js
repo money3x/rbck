@@ -1609,48 +1609,82 @@ window.saveAllAISettings = function() {
     }, 1000);
 };
 
-// ===== SIMPLIFIED TAB MANAGEMENT =====
+// ===== ENHANCED TAB MANAGEMENT =====
 window.switchAITab = function(tabName) {
     console.log('🔄 [AI SETTINGS] Switching to tab:', tabName);
     
     try {
-        // Hide all tab contents immediately
-        document.querySelectorAll('.ai-tab-content').forEach(content => {
-            content.style.display = 'none';
-            content.classList.remove('active');
-        });
-        
-        // Remove active state from all tab buttons
-        document.querySelectorAll('.ai-settings-tab').forEach(tab => {
-            tab.classList.remove('active');
-        });
-        
-        // Show target tab content
-        const targetContent = document.getElementById(`${tabName}-tab`);
-        const targetButton = document.querySelector(`[data-tab="${tabName}"]`);
-        
-        if (targetContent && targetButton) {
-            targetContent.style.display = 'block';
-            targetContent.classList.add('active');
-            targetButton.classList.add('active');
+        // Batch DOM updates for better performance
+        requestAnimationFrame(() => {
+            // Phase 1: Hide all tab contents with thorough cleanup
+            document.querySelectorAll('.ai-tab-content').forEach(content => {
+                content.style.display = 'none';
+                content.style.visibility = 'hidden';
+                content.style.opacity = '0';
+                content.style.zIndex = '1';
+                content.classList.remove('active');
+                content.setAttribute('aria-hidden', 'true');
+            });
             
-            console.log(`✅ [AI SETTINGS] Successfully switched to ${tabName} tab`);
+            // Phase 2: Deactivate all tab buttons
+            document.querySelectorAll('.ai-settings-tab').forEach(tab => {
+                tab.classList.remove('active');
+                tab.setAttribute('aria-selected', 'false');
+            });
             
-            // Load tab-specific data
-            switch(tabName) {
-                case 'models':
-                    updateConnectionStatus();
-                    break;
-                case 'performance':
-                    loadPerformanceData();
-                    break;
-                case 'general':
-                    loadGeneralTabData();
-                    break;
+            // Phase 3: Show target tab content
+            const targetContent = document.getElementById(`${tabName}-tab`);
+            const targetButton = document.querySelector(`[data-tab="${tabName}"]`);
+            
+            if (targetContent && targetButton) {
+                // Force display and visibility
+                targetContent.style.display = 'block';
+                targetContent.style.visibility = 'visible';
+                targetContent.style.opacity = '1';
+                targetContent.style.zIndex = '10';
+                targetContent.classList.add('active');
+                targetContent.setAttribute('aria-hidden', 'false');
+                
+                // Activate button
+                targetButton.classList.add('active');
+                targetButton.setAttribute('aria-selected', 'true');
+                
+                console.log(`✅ [AI SETTINGS] Successfully switched to ${tabName} tab`);
+                
+                // Verify the switch worked
+                setTimeout(() => {
+                    const isVisible = window.getComputedStyle(targetContent).display === 'block';
+                    const hasActiveClass = targetContent.classList.contains('active');
+                    
+                    if (!isVisible || !hasActiveClass) {
+                        console.error(`❌ [AI SETTINGS] Tab switch verification failed for ${tabName}`);
+                        console.error('  Display:', window.getComputedStyle(targetContent).display);
+                        console.error('  Active class:', hasActiveClass);
+                        
+                        // Force fix if needed
+                        targetContent.style.display = 'block !important';
+                        targetContent.classList.add('active');
+                    }
+                }, 100);
+                
+                // Load tab-specific data
+                switch(tabName) {
+                    case 'models':
+                        setTimeout(() => window.updateConnectionStatus?.(), 200);
+                        break;
+                    case 'performance':
+                        setTimeout(() => window.loadPerformanceData?.(), 200);
+                        break;
+                    case 'general':
+                        setTimeout(() => window.loadGeneralTabData?.(), 200);
+                        break;
+                }
+            } else {
+                console.error(`❌ [AI SETTINGS] Tab elements not found: ${tabName}`);
+                console.error('  Target content:', !!targetContent);
+                console.error('  Target button:', !!targetButton);
             }
-        } else {
-            console.error(`❌ [AI SETTINGS] Tab elements not found: ${tabName}`);
-        }
+        });
     } catch (error) {
         console.error(`❌ [AI SETTINGS] Error switching tab: ${error.message}`);
     }

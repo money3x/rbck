@@ -8747,7 +8747,7 @@
         window.testAISettingsComplete = async function() {
             console.log('🧪 [TEST] Starting comprehensive AI Settings test...');
             
-            // Test 1: Tab switching
+            // Test 1: Tab switching with content verification
             console.log('🧪 [TEST] Phase 1: Testing tab switching...');
             const tabs = ['general', 'models', 'performance', 'security', 'advanced'];
             
@@ -8761,8 +8761,23 @@
                 
                 if (activeTab?.getAttribute('data-tab') === tab && activeContent?.id === `${tab}-tab`) {
                     console.log(`✅ [TEST] ${tab} tab switch successful`);
+                    
+                    // Check unique content
+                    const contentText = activeContent.textContent.substring(0, 100);
+                    console.log(`📝 [TEST] ${tab} tab content preview:`, contentText);
+                    
+                    // Verify visibility
+                    const computedStyle = window.getComputedStyle(activeContent);
+                    console.log(`👁️ [TEST] ${tab} tab visibility:`, {
+                        display: computedStyle.display,
+                        visibility: computedStyle.visibility,
+                        opacity: computedStyle.opacity,
+                        height: activeContent.offsetHeight
+                    });
                 } else {
                     console.error(`❌ [TEST] ${tab} tab switch failed`);
+                    console.error('Active tab:', activeTab?.getAttribute('data-tab'));
+                    console.error('Active content:', activeContent?.id);
                 }
                 
                 await new Promise(resolve => setTimeout(resolve, 500));
@@ -8832,6 +8847,127 @@
             
             console.log('🎉 [TEST] Comprehensive test completed!');
             console.log('💡 [TEST] Use window.testProvider("gemini") to test actual API connections');
+        };
+        
+        // Debug tab content issues
+        window.debugTabContent = function() {
+            console.log('🔍 [DEBUG] Analyzing tab content structure...');
+            
+            const tabs = ['general', 'models', 'performance', 'security', 'advanced'];
+            
+            tabs.forEach(tabName => {
+                const tabContent = document.getElementById(`${tabName}-tab`);
+                const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
+                
+                console.log(`🔍 [DEBUG] Tab: ${tabName}`);
+                console.log('  Content element:', !!tabContent);
+                console.log('  Button element:', !!tabButton);
+                
+                if (tabContent) {
+                    console.log('  Content classes:', tabContent.className);
+                    console.log('  Content display:', window.getComputedStyle(tabContent).display);
+                    console.log('  Content visibility:', window.getComputedStyle(tabContent).visibility);
+                    console.log('  Content children:', tabContent.children.length);
+                    console.log('  Content text preview:', tabContent.textContent.substring(0, 80) + '...');
+                    console.log('  Content height:', tabContent.offsetHeight);
+                }
+                
+                if (tabButton) {
+                    console.log('  Button classes:', tabButton.className);
+                    console.log('  Button active:', tabButton.classList.contains('active'));
+                }
+                
+                console.log('---');
+            });
+            
+            // Check for overlapping content
+            const allActiveContent = document.querySelectorAll('.ai-tab-content.active');
+            console.log('🔍 [DEBUG] Active content elements:', allActiveContent.length);
+            allActiveContent.forEach((content, index) => {
+                console.log(`  Active ${index + 1}: ${content.id}`);
+            });
+            
+            // Check for duplicate IDs
+            const allTabContent = document.querySelectorAll('.ai-tab-content');
+            const ids = Array.from(allTabContent).map(el => el.id);
+            const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
+            if (duplicates.length > 0) {
+                console.error('🚨 [DEBUG] Duplicate tab content IDs found:', duplicates);
+            }
+        };
+        
+        // Test tab content isolation
+        window.testTabIsolation = async function() {
+            console.log('🧪 [ISOLATION] Testing tab content isolation...');
+            
+            const tabs = ['general', 'models', 'performance', 'security', 'advanced'];
+            
+            for (const tab of tabs) {
+                console.log(`🧪 [ISOLATION] Testing ${tab} tab...`);
+                window.switchAITab(tab);
+                
+                // Wait for switch to complete
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                // Check only one tab is active
+                const activeContents = document.querySelectorAll('.ai-tab-content.active');
+                const visibleContents = Array.from(document.querySelectorAll('.ai-tab-content'))
+                    .filter(el => window.getComputedStyle(el).display === 'block');
+                
+                console.log(`  Active content count: ${activeContents.length}`);
+                console.log(`  Visible content count: ${visibleContents.length}`);
+                
+                if (activeContents.length === 1 && activeContents[0].id === `${tab}-tab`) {
+                    console.log(`  ✅ ${tab} tab correctly isolated`);
+                } else {
+                    console.error(`  ❌ ${tab} tab isolation failed`);
+                    console.error(`    Expected: ${tab}-tab`);
+                    console.error(`    Active:`, Array.from(activeContents).map(el => el.id));
+                }
+            }
+            
+            console.log('🎉 [ISOLATION] Tab isolation test completed');
+        };
+        
+        // Quick fix verification
+        window.verifyTabContentFix = function() {
+            console.log('🔧 [VERIFY] Verifying tab content fix...');
+            
+            // Test each tab quickly
+            const tabs = ['general', 'models', 'performance', 'security', 'advanced'];
+            const results = {};
+            
+            tabs.forEach(tab => {
+                window.switchAITab(tab);
+                
+                const activeContent = document.querySelector('.ai-tab-content.active');
+                const allVisible = document.querySelectorAll('.ai-tab-content[style*="block"]');
+                
+                results[tab] = {
+                    correctActive: activeContent?.id === `${tab}-tab`,
+                    onlyOneVisible: allVisible.length === 1,
+                    uniqueContent: activeContent?.textContent.includes(tab === 'general' ? 'Service Status' : 
+                                  tab === 'models' ? 'OpenAI Models' :
+                                  tab === 'performance' ? 'System Performance' :
+                                  tab === 'security' ? 'Security Score' : 'System Health')
+                };
+            });
+            
+            console.log('📊 [VERIFY] Tab content fix results:');
+            Object.entries(results).forEach(([tab, result]) => {
+                const status = result.correctActive && result.onlyOneVisible && result.uniqueContent ? '✅' : '❌';
+                console.log(`  ${status} ${tab}: Active(${result.correctActive}) Isolated(${result.onlyOneVisible}) Unique(${result.uniqueContent})`);
+            });
+            
+            const allGood = Object.values(results).every(r => r.correctActive && r.onlyOneVisible && r.uniqueContent);
+            
+            if (allGood) {
+                console.log('🎉 [VERIFY] All tabs working correctly! Fix successful.');
+            } else {
+                console.error('❌ [VERIFY] Some tabs still have issues. Manual inspection needed.');
+            }
+            
+            return allGood;
         };
     </script>
     

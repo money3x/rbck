@@ -528,6 +528,9 @@
 /* Tab Content Panels */
 .ai-tab-content {
   display: none;
+  position: relative;
+  z-index: 1;
+  width: 100%;
   animation: fadeInUp var(--transition-normal) ease-out;
 }
 
@@ -535,6 +538,28 @@
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
+  position: relative;
+  z-index: 10;
+}
+
+/* Ensure only one tab content is visible at a time */
+.ai-settings-content {
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-tab-content:not(.active) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  position: absolute;
+  left: -9999px;
+  z-index: -1;
+}
+
+/* Force clear isolation between tabs */
+.ai-tab-content.active + .ai-tab-content:not(.active) {
+  display: none !important;
 }
 
 /* Performance Tab - Simple and Clean */
