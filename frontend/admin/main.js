@@ -932,12 +932,50 @@ function setupChatbotHandlers() {
                         }
                     }
                 }
+            } else if (chatModel === 'chinda') {
+                // ChindaX implementation - same pattern as Gemini
+                console.log('🔍 [CHINDA CHAT] Starting API call...');
+                
+                // Call backend API for ChindaX
+                try {
+                    console.log('🔄 [CHINDA CHAT] Calling backend API...');
+                    const chindaRes = await fetch(`${API_BASE}/api/ai/chat`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            provider: 'chinda',
+                            message: userMsg,
+                            maxTokens: 1024,
+                            temperature: 0.7
+                        })
+                    });
+                    
+                    console.log('📥 [CHINDA CHAT] Backend response status:', chindaRes.status);
+                    
+                    if (chindaRes.ok) {
+                        const chindaData = await chindaRes.json();
+                        console.log('📥 [CHINDA CHAT] Backend response:', chindaData);
+                        
+                        if (chindaData.success && chindaData.content) {
+                            aiReply = chindaData.content.trim();
+                            console.log('✅ [CHINDA CHAT] ChindaX response successful');
+                        } else {
+                            aiReply = `❌ ChindaX API Error: ${chindaData.error || 'Unknown error'}`;
+                        }
+                    } else {
+                        const errorData = await chindaRes.text();
+                        console.error('❌ [CHINDA CHAT] Backend API Error:', chindaRes.status, errorData);
+                        aiReply = `❌ ไม่สามารถเชื่อมต่อ ChindaX ได้ (${chindaRes.status}: ${errorData.substring(0, 100)})`;
+                    }
+                } catch (chindaError) {
+                    console.error('❌ [CHINDA CHAT] ChindaX request failed:', chindaError);
+                    aiReply = `❌ เกิดข้อผิดพลาดในการเชื่อมต่อ ChindaX: ${chindaError.message}`;
+                }
             } else {
                 // Enhanced mock responses for other models
                 const mockResponses = {
                     'openai': `🤖 [OpenAI GPT] ตอบกลับ: ${userMsg}`,
-                    'anthropic': `🤖 [Claude] ตอบกลับ: ${userMsg}`,  
-                    'chinda': `🤖 [ChindaX] ตอบกลับ: ${userMsg}`
+                    'anthropic': `🤖 [Claude] ตอบกลับ: ${userMsg}`
                 };
                 aiReply = mockResponses[chatModel] || `🤖 [${chatModel}] ตอบกลับ: ${userMsg}`;
             }
