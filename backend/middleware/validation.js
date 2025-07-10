@@ -335,7 +335,7 @@ const handleValidationErrors = (req, res, next) => {
         message: 'Validation failed',
         details: process.env.NODE_ENV === 'development' ? formattedErrors : 'Invalid input provided',
         timestamp: new Date().toISOString(),
-        requestId: req.requestId
+        requestId: req.requestId || Date.now() + '-' + Math.random().toString(36).substr(2, 9)
       }
     });
   }
@@ -345,6 +345,11 @@ const handleValidationErrors = (req, res, next) => {
 
 // ✅ PHASE 3: Enhanced sanitization middleware with security detection
 const sanitizeInput = (req, res, next) => {
+  // Skip sanitization for GET requests without body/query params
+  if (req.method === 'GET' && (!req.query || Object.keys(req.query).length === 0)) {
+    return next();
+  }
+  
   let suspiciousContent = [];
   
   // ✅ Enhanced sanitization with threat detection

@@ -12,18 +12,18 @@ class AdminMigration {
         try {
             if (!this.configManager) {
                 try {
-                    // ⚡ ดึง ConfigManager จาก config.js (ลองหลาย path)
+                    // ⚡ ดึง ConfigManager จาก config.js (absolute path)
                     let ConfigManager;
                     try {
-                        const module = await import('../config.js');
+                        const module = await import('/frontend/config.js');
                         ConfigManager = module.ConfigManager;
                     } catch (e1) {
                         try {
-                            const module = await import('./config.js');
+                            const module = await import('../config.js');
                             ConfigManager = module.ConfigManager;
                         } catch (e2) {
                             try {
-                                const module = await import('/frontend/config.js');
+                                const module = await import('./config.js');
                                 ConfigManager = module.ConfigManager;
                             } catch (e3) {
                                 console.warn('⚠️ [MIGRATION] ConfigManager not found, using fallback');
@@ -62,6 +62,38 @@ class AdminMigration {
         }
     }
 
+    // ✅ Get token directly from backend (fallback method)
+    async getTokenDirectly() {
+        try {
+            console.log('🔄 [MIGRATION] Getting token directly from backend...');
+            
+            const response = await fetch(`${this.apiBase}/auth/get-jwt-token`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            
+            if (result.success && result.jwtToken) {
+                console.log('✅ [MIGRATION] Got JWT token directly from backend');
+                return result.jwtToken;
+            } else {
+                throw new Error(result.error || 'Failed to get JWT token from backend');
+            }
+
+        } catch (error) {
+            console.error('❌ [MIGRATION] Direct token fetch failed:', error);
+            throw new Error(`Backend authentication failed: ${error.message}`);
+        }
+    }
+
     // ✅ Get authentication token from production backend
     async getAuthToken() {
         try {
@@ -82,9 +114,9 @@ class AdminMigration {
                 }
             }
 
-            // ✅ If no ConfigManager, this is a critical error
-            console.error('❌ [MIGRATION] ConfigManager not available');
-            throw new Error('ConfigManager initialization failed - check backend connectivity');
+            // ✅ If no ConfigManager, try direct backend calls
+            console.warn('⚠️ [MIGRATION] ConfigManager not available, trying direct backend call');
+            return await this.getTokenDirectly();
             
         } catch (error) {
             console.error('❌ [MIGRATION] Authentication system error:', error);
