@@ -454,6 +454,10 @@ router.post('/logout', (req, res) => {
  * Get fresh JWT token for ConfigManager
  */
 router.get('/get-jwt-token', (req, res) => {
+    console.log('🔑 [AUTH] JWT token endpoint accessed from:', req.ip);
+    console.log('🔑 [AUTH] Request headers:', req.headers);
+    console.log('🔑 [AUTH] Request path:', req.path);
+    
     try {
         // ✅ ตรวจสอบว่ามี JWT_SECRET ใน environment
         if (!process.env.JWT_SECRET) {

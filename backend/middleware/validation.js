@@ -345,8 +345,13 @@ const handleValidationErrors = (req, res, next) => {
 
 // ✅ PHASE 3: Enhanced sanitization middleware with security detection
 const sanitizeInput = (req, res, next) => {
+  console.log('🔍 [VALIDATION] Sanitize input called for:', req.method, req.path);
+  console.log('🔍 [VALIDATION] Query params:', req.query);
+  console.log('🔍 [VALIDATION] Body:', req.body ? 'Present' : 'None');
+  
   // Skip sanitization for GET requests without body/query params
   if (req.method === 'GET' && (!req.query || Object.keys(req.query).length === 0)) {
+    console.log('🔍 [VALIDATION] Skipping sanitization for clean GET request');
     return next();
   }
   

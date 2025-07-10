@@ -198,8 +198,10 @@ app.use((req, res, next) => {
   if (req.path.includes('/auth/get-jwt-token') || 
       req.path.includes('/auth/get-encryption-key') ||
       req.path.includes('/auth/verify-session')) {
+    console.log('🛡️ [MIDDLEWARE] Skipping sanitization for auth endpoint:', req.path);
     return next();
   }
+  console.log('🛡️ [MIDDLEWARE] Applying sanitization for:', req.path);
   return sanitizeInput(req, res, next);
 });
 
