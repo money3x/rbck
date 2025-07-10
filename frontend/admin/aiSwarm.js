@@ -154,9 +154,12 @@ export class AISwarmCouncil {
     async checkExternalProviderStatus(providerKey) {
         try {
             console.log(`🔍 [AI SWARM] Checking ${providerKey} via API...`);
-            const response = await fetch(`${API_BASE}/ai/status/${providerKey}`, {
+            const response = await fetch(`${API_BASE}/ai/status/${providerKey}?t=${Date.now()}`, {
                 method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
             });
             
             if (response.ok) {
