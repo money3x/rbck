@@ -352,19 +352,50 @@ router.get('/status/:provider', async (req, res) => {
             });
         }
         
-        // Simulate status check
-        const isConnected = Math.random() > 0.15; // 85% chance of being connected
-        const responseTime = providerConfig.responseTime + (Math.random() * 500 - 250);
+        // Real status check using actual API validation
+        let isConnected = false;
+        let responseTime = null;
+        let apiKeyValid = false;
+        
+        try {
+            // Check if API key is configured using SecureConfigService
+            const apiKey = SecureConfigService.getApiKey(provider);
+            const configured = !!(apiKey && apiKey.length > 10);
+            
+            if (configured && providerConfig.status === 'active') {
+                const ProviderFactory = require('../ai/providers/factory/ProviderFactory');
+                const startTime = Date.now();
+                
+                // Try to create provider instance and test connection
+                const providerInstance = ProviderFactory.createProvider(provider);
+                
+                if (providerInstance) {
+                    // Simple test with a basic prompt
+                    await providerInstance.generateResponse("Test connection", { maxTokens: 10 });
+                    responseTime = Date.now() - startTime;
+                    isConnected = true;
+                    apiKeyValid = true;
+                    console.log(`✅ [AI STATUS] ${provider} test successful (${responseTime}ms)`);
+                }
+            }
+        } catch (testError) {
+            console.error(`❌ [AI STATUS] ${provider} test failed:`, testError.message);
+            isConnected = false;
+            responseTime = null;
+            apiKeyValid = false;
+        }
         
         res.json({
             success: true,
             provider: provider,
             name: providerConfig.name,
-            connected: isConnected && providerConfig.status === 'active',
-            status: providerConfig.status,
-            responseTime: Math.round(responseTime),
-            successRate: providerConfig.successRate,
-            lastChecked: new Date().toISOString()
+            connected: isConnected,
+            status: isConnected ? 'active' : 'error',
+            responseTime: responseTime,
+            successRate: isConnected ? providerConfig.successRate : 0,
+            lastChecked: new Date().toISOString(),
+            apiKeyValid: apiKeyValid,
+            configured: !!(providerConfig.apiKey && providerConfig.apiKey.length > 10)
         });
         
     } catch (error) {
