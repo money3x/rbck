@@ -945,6 +945,7 @@ function setupChatbotHandlers() {
                         body: JSON.stringify({
                             provider: 'chinda',
                             message: userMsg,
+                            model: 'chinda-qwen3-32b',
                             maxTokens: 1024,
                             temperature: 0.7
                         })
