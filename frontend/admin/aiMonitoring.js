@@ -606,6 +606,88 @@ export class AIMonitoringSystem {
     }
 
     /**
+     * Collect metrics from all providers
+     */
+    async collectMetrics() {
+        console.log('[AI MONITOR] Collecting metrics from all providers...');
+        
+        for (const provider of this.providers) {
+            await this.collectProviderMetrics(provider);
+        }
+        
+        this.updateMonitoringDisplay();
+    }
+
+    /**
+     * Collect metrics from specific provider
+     */
+    async collectProviderMetrics(provider) {
+        try {
+            console.log(`[AI MONITOR] Checking ${provider} status...`);
+            
+            // Call real API endpoint
+            const response = await fetch(`${API_BASE}/ai/status/${provider}?t=${Date.now()}`, {
+                method: 'GET',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log(`[AI MONITOR] ${provider} API response:`, data);
+                
+                // Update metrics with real data
+                this.metrics[provider] = {
+                    ...this.metrics[provider],
+                    status: data.connected ? 'healthy' : 'error',
+                    lastRequestTime: new Date(),
+                    lastResponseTime: data.responseTime || null,
+                    averageResponseTime: data.responseTime || 0,
+                    successRate: data.connected ? (data.successRate || 1.0) : 0,
+                    errorRate: data.connected ? (1 - (data.successRate || 1.0)) : 1,
+                    uptime: data.connected ? 100 : 0,
+                    totalRequests: this.metrics[provider].totalRequests + 1,
+                    successfulRequests: data.connected ? this.metrics[provider].successfulRequests + 1 : this.metrics[provider].successfulRequests
+                };
+                
+                if (!data.connected) {
+                    this.metrics[provider].failedRequests += 1;
+                    this.metrics[provider].errors.push({
+                        timestamp: new Date(),
+                        error: 'Connection failed'
+                    });
+                    // Keep only last 10 errors
+                    if (this.metrics[provider].errors.length > 10) {
+                        this.metrics[provider].errors.shift();
+                    }
+                }
+                
+            } else {
+                console.warn(`[AI MONITOR] ${provider} API returned ${response.status}`);
+                // Mark as error
+                this.metrics[provider].status = 'error';
+                this.metrics[provider].failedRequests += 1;
+                this.metrics[provider].totalRequests += 1;
+                this.metrics[provider].successRate = this.metrics[provider].successfulRequests / this.metrics[provider].totalRequests;
+            }
+            
+        } catch (error) {
+            console.error(`[AI MONITOR] ${provider} check failed:`, error);
+            // Mark as error
+            this.metrics[provider].status = 'error';
+            this.metrics[provider].failedRequests += 1;
+            this.metrics[provider].totalRequests += 1;
+            this.metrics[provider].successRate = this.metrics[provider].successfulRequests / this.metrics[provider].totalRequests;
+            this.metrics[provider].errors.push({
+                timestamp: new Date(),
+                error: error.message
+            });
+        }
+    }
+
+    /**
      * Refresh metrics manually
      */
     async refreshMetrics() {
