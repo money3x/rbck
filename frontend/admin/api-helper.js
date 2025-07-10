@@ -73,9 +73,38 @@ class APIHelper {
             } catch (error) {
                 console.error('❌ [API HELPER] Request failed:', error);
                 
-                // ✅ Return mock data for CORS errors - STOP RETRYING
+                // ✅ Enhanced CORS handling - try alternative approach first
                 if (error.message.includes('CORS') || error.message.includes('Failed to fetch') || error.message.includes('ERR_FAILED')) {
-                    console.log('🔄 [API HELPER] CORS/Network error, returning mock data immediately');
+                    console.log('🔄 [API HELPER] CORS/Network error detected, trying simplified request...');
+                    
+                    try {
+                        // Try a simpler fetch without extra headers
+                        const simpleResponse = await fetch(url, {
+                            method: options.method || 'GET',
+                            mode: 'cors',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        if (simpleResponse.ok) {
+                            console.log('✅ [API HELPER] Simplified request succeeded');
+                            const data = await simpleResponse.json();
+                            
+                            // Cache successful response
+                            this.cache.set(cacheKey, {
+                                data: { json: () => Promise.resolve(data), ok: true },
+                                timestamp: Date.now()
+                            });
+                            
+                            resolve({ json: () => Promise.resolve(data), ok: true });
+                            return;
+                        }
+                    } catch (retryError) {
+                        console.log('❌ [API HELPER] Simplified request also failed:', retryError.message);
+                    }
+                    
+                    console.log('🔄 [API HELPER] All attempts failed, returning mock data');
                     const mockData = this.generateMockData(url);
                     resolve(mockData);
                 } else {

@@ -163,6 +163,12 @@ app.use(cors({
       return callback(null, true);
     }
     
+    // ✅ DEBUGGING: Temporarily allow all .netlify.app domains
+    if (origin && origin.includes('.netlify.app')) {
+      console.log('✅ Debug: Allowing Netlify domain:', origin);
+      return callback(null, true);
+    }
+    
     // ✅ Development: Allow any .netlify.app domain for testing
     if (process.env.NODE_ENV === 'development' && origin.includes('.netlify.app')) {
       console.warn('⚠️ Development: Allowing Netlify domain:', origin);
@@ -174,8 +180,8 @@ app.use(cors({
     callback(new Error('Not allowed by CORS'));
   },
   credentials: false, // Set to false for better CORS compatibility
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-From'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-From', 'Accept', 'Cache-Control', 'Pragma'],
   exposedHeaders: ['X-Cache', 'X-Cache-Key'],
   maxAge: 86400, // Cache preflight response for 24 hours
   preflightContinue: false,
