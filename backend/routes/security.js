@@ -122,14 +122,13 @@ router.post('/unblock-ip', authenticateAdmin, requireAdmin, async (req, res) => 
             });
         }
 
-        // ✅ Implement IP unblocking logic
-        const { blockedIPs } = require('../middleware/rateLimiter');
-        if (blockedIPs && blockedIPs.has(ip)) {
-            blockedIPs.delete(ip);
-        }
+        // ✅ Use the new clear function
+        const { clearBlockedIP } = require('../middleware/rateLimiter');
+        const wasBlocked = clearBlockedIP(ip);
         
         SecurityLogger.logData('IP_UNBLOCKED', {
             unblockedIP: ip,
+            wasActuallyBlocked: wasBlocked,
             adminUser: req.user.username,
             adminIP: req.ip,
             timestamp: new Date().toISOString()
@@ -137,12 +136,42 @@ router.post('/unblock-ip', authenticateAdmin, requireAdmin, async (req, res) => 
 
         res.json({
             success: true,
-            message: `IP ${ip} has been unblocked`
+            message: wasBlocked ? `IP ${ip} has been unblocked` : `IP ${ip} was not blocked`,
+            wasBlocked: wasBlocked
         });
     } catch (error) {
         res.status(500).json({
             success: false,
             error: 'Failed to unblock IP'
+        });
+    }
+});
+
+/**
+ * 🔓 Clear all blocked IPs endpoint
+ * POST /api/security/clear-all-blocked-ips
+ */
+router.post('/clear-all-blocked-ips', authenticateAdmin, requireAdmin, async (req, res) => {
+    try {
+        const { clearAllBlockedIPs } = require('../middleware/rateLimiter');
+        const count = clearAllBlockedIPs();
+        
+        SecurityLogger.logData('ALL_IPS_UNBLOCKED', {
+            clearedCount: count,
+            adminUser: req.user.username,
+            adminIP: req.ip,
+            timestamp: new Date().toISOString()
+        });
+
+        res.json({
+            success: true,
+            message: `Cleared ${count} blocked IPs`,
+            clearedCount: count
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: 'Failed to clear blocked IPs'
         });
     }
 });

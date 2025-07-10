@@ -11,6 +11,12 @@ const blockedIPs = new Set();
  * ✅ PHASE 3: Advanced IP analysis and blocking
  */
 const analyzeIPBehavior = (ip, endpoint) => {
+    // Skip analysis for localhost IPs
+    const localhostIPs = ['127.0.0.1', 'localhost', '::1', '::ffff:127.0.0.1'];
+    if (localhostIPs.includes(ip) || process.env.NODE_ENV === 'development') {
+        return false; // Never block localhost
+    }
+    
     const key = `${ip}:${endpoint}`;
     const now = Date.now();
     
@@ -29,9 +35,9 @@ const analyzeIPBehavior = (ip, endpoint) => {
     data.requests++;
     data.lastSeen = now;
     
-    // Check for rapid-fire requests (potential bot)
+    // Check for rapid-fire requests (potential bot) - ปรับให้เหมาะสมกับ localhost
     const timeDiff = now - data.lastSeen;
-    if (timeDiff < 100) { // Less than 100ms between requests
+    if (timeDiff < 50) { // ลดเวลาเป็น 50ms เพื่อให้ยืดหยุ่นกว่า
         data.violations++;
         data.patterns.push('rapid_fire');
     }
@@ -67,9 +73,13 @@ const blockSuspiciousIPs = (req, res, next) => {
         '::ffff:127.0.0.1'
     ];
     
-    // Skip blocking for development IPs
-    if (process.env.NODE_ENV !== 'production' && 
-        (developmentWhitelist.includes(ip) || ip.startsWith('192.168.') || ip.startsWith('10.0.'))) {
+    // Skip blocking for development IPs (ปรับให้ครอบคลุมมากขึ้น)
+    if (developmentWhitelist.includes(ip) || 
+        ip.startsWith('192.168.') || 
+        ip.startsWith('10.0.') || 
+        ip.startsWith('172.16.') ||
+        ip === 'localhost' ||
+        process.env.NODE_ENV === 'development') {
         return next();
     }
     
@@ -363,6 +373,39 @@ const getRateLimitStats = () => {
     };
 };
 
+/**
+ * ✅ Clear blocked IP (for admin/debugging)
+ */
+const clearBlockedIP = (ip) => {
+    const wasBlocked = blockedIPs.has(ip);
+    blockedIPs.delete(ip);
+    suspiciousIPs.delete(ip);
+    
+    // Clear all related entries
+    for (const [key] of suspiciousIPs.entries()) {
+        if (key.startsWith(ip + ':')) {
+            suspiciousIPs.delete(key);
+        }
+    }
+    
+    if (wasBlocked) {
+        console.log(`🔓 [SECURITY] Cleared blocked IP: ${ip}`);
+    }
+    
+    return wasBlocked;
+};
+
+/**
+ * ✅ Clear all blocked IPs (for admin/debugging)
+ */
+const clearAllBlockedIPs = () => {
+    const count = blockedIPs.size;
+    blockedIPs.clear();
+    suspiciousIPs.clear();
+    console.log(`🔓 [SECURITY] Cleared ${count} blocked IPs`);
+    return count;
+};
+
 module.exports = {
     apiKeyRateLimit,
     loginRateLimit,
@@ -380,5 +423,8 @@ module.exports = {
     analyzeIPBehavior,
     // ✅ Export blocked IPs for manual management
     blockedIPs,
-    suspiciousIPs
+    suspiciousIPs,
+    // ✅ IP management functions
+    clearBlockedIP,
+    clearAllBlockedIPs
 };
