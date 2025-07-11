@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { supabase } = require('../supabaseClient');
 const { authenticateAdmin } = require('../middleware/auth');
+const MigrationService = require('../services/MigrationService');
+const path = require('path');
+const fs = require('fs');
 
 // ✅ Middleware for admin-only access
 const requireAdmin = (req, res, next) => {
@@ -140,177 +143,89 @@ router.get('/status', async (req, res) => {
     }
 });
 
-// ✅ Execute database migration (PUBLIC for setup)
+// ✅ Execute database migration (REAL SQL EXECUTION)
 router.post('/execute', async (req, res) => {
     try {
-        console.log('🚀 Starting database migration...');
-        const migrationResults = [];
-        let totalTime = 0;
-
-        const startTime = Date.now();
+        console.log('🚀 Starting REAL database migration...');
         
-        // 1. Create migrations tracking table
-        console.log('📋 Creating migrations table...');
-        try {
-            // Create migrations table using Supabase SQL editor approach
-            const { data, error: migTableError } = await supabase
-                .from('migrations')
-                .select('*')
-                .limit(1);
-
-            // If table doesn't exist, we'll get a specific error
-            if (migTableError && migTableError.message.includes('does not exist')) {
-                console.log('🏗️ Creating migrations table via SQL...');
-                // We'll create this table manually in Supabase or use a different approach
-            }
-
-            migrationResults.push({
-                step: 'migrations_table',
-                success: true,
-                message: 'Migrations tracking table checked'
-            });
-
-        } catch (migTableErr) {
-            migrationResults.push({
-                step: 'migrations_table',
+        const schemaFilePath = path.join(__dirname, '..', 'database-schema.sql');
+        
+        // Test database connection first
+        console.log('🔌 Testing database connection...');
+        const connectionTest = await MigrationService.testConnection();
+        
+        console.log('Connection test result:', connectionTest);
+        
+        if (!connectionTest.success) {
+            return res.status(500).json({
                 success: false,
-                error: migTableErr.message
+                error: 'Database connection failed',
+                details: connectionTest.error,
+                timestamp: new Date().toISOString(),
+                troubleshooting: [
+                    'Check SUPABASE_DB_HOST environment variable',
+                    'Check SUPABASE_DB_PASSWORD environment variable',
+                    'Verify Supabase database credentials',
+                    'Check network connectivity to Supabase'
+                ]
             });
         }
 
-        // 2. Create tables using individual table creation
-        console.log('🏗️ Creating database tables individually...');
-        
-        const tables = [
-            {
-                name: 'users',
-                check: async () => {
-                    const { error } = await supabase.from('users').select('id').limit(1);
-                    return !error;
-                }
-            },
-            {
-                name: 'categories', 
-                check: async () => {
-                    const { error } = await supabase.from('categories').select('id').limit(1);
-                    return !error;
-                }
-            },
-            {
-                name: 'posts',
-                check: async () => {
-                    const { error } = await supabase.from('posts').select('id').limit(1);
-                    return !error;
-                }
-            },
-            {
-                name: 'tags',
-                check: async () => {
-                    const { error } = await supabase.from('tags').select('id').limit(1);
-                    return !error;
-                }
-            },
-            {
-                name: 'post_tags',
-                check: async () => {
-                    const { error } = await supabase.from('post_tags').select('id').limit(1);
-                    return !error;
-                }
-            },
-            {
-                name: 'ai_requests',
-                check: async () => {
-                    const { error } = await supabase.from('ai_requests').select('id').limit(1);
-                    return !error;
-                }
-            },
-            {
-                name: 'ai_swarm_logs',
-                check: async () => {
-                    const { error } = await supabase.from('ai_swarm_logs').select('id').limit(1);
-                    return !error;
-                }
-            },
-            {
-                name: 'settings',
-                check: async () => {
-                    const { error } = await supabase.from('settings').select('id').limit(1);
-                    return !error;
-                }
-            }
-        ];
+        console.log('✅ Database connection successful');
 
-        let createdTables = 0;
-        let existingTables = 0;
+        // Execute migration
+        console.log('📄 Executing database schema...');
+        const migrationResult = await MigrationService.executeSQLFile(schemaFilePath);
 
-        for (const table of tables) {
+        if (migrationResult.success) {
+            console.log('🎉 Database migration completed successfully!');
+            
+            // Record migration completion
             try {
-                const exists = await table.check();
-                if (exists) {
-                    console.log(`✅ Table '${table.name}' already exists`);
-                    existingTables++;
-                } else {
-                    console.log(`⚠️ Table '${table.name}' does not exist - requires manual creation in Supabase SQL Editor`);
+                const { error: recordError } = await supabase
+                    .from('migrations')
+                    .insert({
+                        filename: 'rbck_supabase_migration.sql'
+                    });
+
+                if (recordError && !recordError.message.includes('duplicate')) {
+                    console.warn('⚠️ Could not record migration:', recordError.message);
                 }
-            } catch (error) {
-                console.error(`❌ Error checking table '${table.name}':`, error.message);
+            } catch (recordErr) {
+                console.warn('⚠️ Migration recording warning:', recordErr.message);
             }
-        }
 
-        migrationResults.push({
-            step: 'table_verification',
-            success: true,
-            message: `Verified ${existingTables}/${tables.length} tables exist. Missing tables need manual creation in Supabase SQL Editor.`,
-            tables_found: existingTables,
-            total_tables: tables.length,
-            recommendation: existingTables < tables.length ? 
-                'Please create missing tables manually in Supabase SQL Editor using the schema provided in documentation' :
-                'All tables exist and are ready'
-        });
-
-        // 3. Skip index creation (requires SQL functions not available)
-        console.log('📊 Skipping index creation - requires manual setup in Supabase SQL Editor...');
-        
-        migrationResults.push({
-            step: 'indexes',
-            success: true,
-            message: 'Index creation skipped - needs manual setup in Supabase SQL Editor'
-        });
-
-        // 4. Record migration completion
-        try {
-            const { error: recordError } = await supabase
-                .from('migrations')
-                .insert({
-                    filename: '001_initial_schema.sql'
-                });
-
-            if (recordError && !recordError.message.includes('duplicate')) {
-                console.warn('⚠️ Could not record migration:', recordError.message);
-            }
-        } catch (recordErr) {
-            console.warn('⚠️ Migration recording warning:', recordErr.message);
-        }
-
-        totalTime = Date.now() - startTime;
-
-        console.log('🎉 Database migration completed successfully!');
-
-        res.json({
-            success: true,
-            message: 'Database migration completed successfully',
-            data: {
-                migrationResults,
-                totalTime: `${totalTime}ms`,
+            res.json({
+                success: true,
+                message: 'Database migration completed successfully',
+                data: {
+                    ...migrationResult,
+                    timestamp: new Date().toISOString(),
+                    nextSteps: [
+                        'Verify all tables exist in Supabase Table Editor',
+                        'Run health check to confirm schema is complete',
+                        'Check migration status to see current progress',
+                        'Test application functionality'
+                    ]
+                }
+            });
+        } else {
+            console.error('❌ Database migration failed');
+            
+            res.status(500).json({
+                success: false,
+                error: 'Database migration failed',
+                details: migrationResult.error,
+                results: migrationResult.results,
                 timestamp: new Date().toISOString(),
-                nextSteps: [
-                    'If tables are missing, use the database-schema.sql file to create them manually in Supabase SQL Editor',
-                    'Verify all 8 tables exist in Supabase Table Editor',
-                    'Run health check to confirm schema is complete',
-                    'Check migration status to see current progress'
+                troubleshooting: [
+                    'Check SQL syntax in database-schema.sql',
+                    'Verify database permissions',
+                    'Check Supabase logs for details',
+                    'Review failed statements in results'
                 ]
-            }
-        });
+            });
+        }
 
     } catch (error) {
         console.error('❌ Database migration failed:', error.message);
@@ -319,7 +234,6 @@ router.post('/execute', async (req, res) => {
             success: false,
             error: 'Database migration failed',
             details: process.env.NODE_ENV === 'development' ? error.message : 'Contact support for details',
-            migrationResults,
             timestamp: new Date().toISOString(),
             troubleshooting: [
                 'Check Supabase connection',
