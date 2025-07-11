@@ -128,20 +128,29 @@ class AdminMigration {
         }
     }
 
-    // ✅ Get authentication token from Supabase
+    // ✅ Get authentication token (use admin JWT instead of Supabase)
     async getAuthToken() {
         try {
-            // Get Supabase credentials directly from backend
-            const credentials = await this.getSupabaseCredentials();
-            return credentials.serviceKey;
+            // Try to get JWT from localStorage/sessionStorage first
+            const jwtToken = localStorage.getItem('authToken') || 
+                           localStorage.getItem('jwtToken') || 
+                           sessionStorage.getItem('authToken');
+            
+            if (jwtToken) {
+                console.log('✅ [MIGRATION] Using existing JWT token');
+                return jwtToken;
+            }
+            
+            // Show login requirement message
+            throw new Error('Admin login required for migration operations');
             
         } catch (error) {
-            console.error('❌ [MIGRATION] Supabase authentication failed:', error);
+            console.error('❌ [MIGRATION] Authentication failed:', error);
             
-            // ✅ Show fallback UI
+            // ✅ Show login requirement UI
             const statusDiv = document.getElementById('migration-status');
             if (statusDiv) {
-                statusDiv.textContent = '⚠️ ไม่สามารถเชื่อมต่อ Supabase ได้';
+                statusDiv.textContent = '🔐 ต้องเข้าสู่ระบบเพื่อใช้งาน Migration';
             }
             
             const resultsDiv = document.getElementById('migration-results');
@@ -149,29 +158,23 @@ class AdminMigration {
                 resultsDiv.innerHTML = `
                     <div class="migration-status status-error">
                         <div class="status-header">
-                            <h4>🔒 Supabase Authentication Error</h4>
+                            <h4>🔐 Admin Login Required</h4>
                         </div>
                         <div class="status-details">
                             <p>❌ <strong>Error:</strong> ${error.message}</p>
-                            <p>💡 <strong>Required Environment Variables in Render:</strong></p>
+                            <p>💡 <strong>To use Migration features:</strong></p>
                             <ul>
-                                <li>SUPABASE_URL</li>
-                                <li>SUPABASE_SERVICE_KEY</li>
-                                <li>SUPABASE_ANON_KEY</li>
-                            </ul>
-                            <p>🔧 <strong>Check Render Dashboard:</strong></p>
-                            <ul>
-                                <li>Environment Variables section</li>
-                                <li>Supabase project settings</li>
-                                <li>Database connection status</li>
+                                <li>เข้าสู่ระบบด้วย Admin account</li>
+                                <li>ตรวจสอบสิทธิ์ Administrator</li>
+                                <li>รีเฟรชหน้าหลังจาก login</li>
                             </ul>
                         </div>
                         <div class="migration-actions">
-                            <button onclick="window.location.reload()" class="btn btn-primary btn-sm">
-                                🔄 Retry After Fixing
+                            <button onclick="window.location.href='/login.html'" class="btn btn-primary btn-sm">
+                                🔐 เข้าสู่ระบบ
                             </button>
-                            <button onclick="window.open('https://dashboard.render.com', '_blank')" class="btn btn-secondary btn-sm">
-                                🔧 Open Render Dashboard
+                            <button onclick="window.location.reload()" class="btn btn-secondary btn-sm">
+                                🔄 รีเฟรช
                             </button>
                         </div>
                     </div>

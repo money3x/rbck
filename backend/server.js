@@ -146,46 +146,13 @@ app.use(requestMonitoring());
 app.use(blockSuspiciousIPs);
 app.use(generalRateLimit);
 
-// CORS configuration for Netlify frontend
+// CORS configuration for Netlify frontend - SIMPLIFIED
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, Postman, etc.)
-    if (!origin) return callback(null, true);
-    
-    // Check if origin is in allowed list
-    if (config.frontend.allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    
-    // ✅ PRODUCTION FIX: Allow the specific Netlify domain in production
-    if (origin === 'https://flourishing-gumdrop-dffe7a.netlify.app') {
-      console.log('✅ Production: Allowing configured Netlify domain:', origin);
-      return callback(null, true);
-    }
-    
-    // ✅ DEBUGGING: Temporarily allow all .netlify.app domains
-    if (origin && origin.includes('.netlify.app')) {
-      console.log('✅ Debug: Allowing Netlify domain:', origin);
-      return callback(null, true);
-    }
-    
-    // ✅ Development: Allow any .netlify.app domain for testing
-    if (process.env.NODE_ENV === 'development' && origin.includes('.netlify.app')) {
-      console.warn('⚠️ Development: Allowing Netlify domain:', origin);
-      return callback(null, true);
-    }
-    
-    // Log rejected origins for debugging
-    console.warn('⚠️ CORS rejected origin:', origin);
-    callback(new Error('Not allowed by CORS'));
-  },
-  credentials: false, // Set to false for better CORS compatibility
+  origin: ['https://flourishing-gumdrop-dffe7a.netlify.app', 'http://localhost:3000', 'http://127.0.0.1:3000'],
+  credentials: false,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-From', 'Accept', 'Cache-Control', 'Pragma'],
-  exposedHeaders: ['X-Cache', 'X-Cache-Key'],
-  maxAge: 86400, // Cache preflight response for 24 hours
-  preflightContinue: false,
-  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  optionsSuccessStatus: 200
 }));
 
 // Body parsing with validation
