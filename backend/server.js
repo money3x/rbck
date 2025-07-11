@@ -196,6 +196,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use((req, res, next) => {
   // Skip sanitization for auth endpoints that don't need it
   if (req.path.includes('/auth/get-jwt-token') || 
+      req.path.includes('/auth/get-supabase-token') ||
       req.path.includes('/auth/get-encryption-key') ||
       req.path.includes('/auth/verify-session')) {
     console.log('🛡️ [MIDDLEWARE] Skipping sanitization for auth endpoint:', req.path);

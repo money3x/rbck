@@ -62,12 +62,12 @@ class AdminMigration {
         }
     }
 
-    // ✅ Get token directly from backend (fallback method)
-    async getTokenDirectly() {
+    // ✅ Get Supabase credentials from backend
+    async getSupabaseCredentials() {
         try {
-            console.log('🔄 [MIGRATION] Checking if JWT endpoint exists...');
+            console.log('🔄 [MIGRATION] Getting Supabase credentials from backend...');
             
-            const response = await fetch(`${this.apiBase}/auth/get-jwt-token`, {
+            const response = await fetch(`${this.apiBase}/auth/get-supabase-token`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -76,24 +76,25 @@ class AdminMigration {
             });
 
             if (!response.ok) {
-                console.warn('⚠️ [MIGRATION] JWT endpoint not available, using Supabase auth');
-                // Try Supabase-based auth instead
-                return await this.getSupabaseAuth();
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
             const result = await response.json();
             
-            if (result.success && result.jwtToken) {
-                console.log('✅ [MIGRATION] Got JWT token directly from backend');
-                return result.jwtToken;
+            if (result.success && result.supabaseKey) {
+                console.log('✅ [MIGRATION] Got Supabase credentials from backend');
+                return {
+                    serviceKey: result.supabaseKey,
+                    url: result.supabaseUrl,
+                    anonKey: result.anonKey
+                };
             } else {
-                throw new Error(result.error || 'Failed to get JWT token from backend');
+                throw new Error(result.error || 'Failed to get Supabase credentials');
             }
 
         } catch (error) {
-            console.error('❌ [MIGRATION] Direct token fetch failed:', error);
-            console.log('🔄 [MIGRATION] Trying Supabase auth...');
-            return await this.getSupabaseAuth();
+            console.error('❌ [MIGRATION] Supabase credentials fetch failed:', error);
+            throw new Error(`Backend Supabase auth failed: ${error.message}`);
         }
     }
 
@@ -129,48 +130,61 @@ class AdminMigration {
         }
     }
 
-    // ✅ Get authentication token from production backend
+    // ✅ Get authentication token from Supabase
     async getAuthToken() {
         try {
-            // ✅ Phase 1: Try to get fresh JWT token from backend
-            if (!this.configManager) {
-                await this.initializeConfig();
-            }
+            console.log('🔄 [MIGRATION] Getting Supabase authentication...');
             
-            if (this.configManager) {
-                try {
-                    const token = await this.configManager.getJWTToken();
-                    console.log('✅ [MIGRATION] Got fresh JWT from Render backend');
-                    return token;
-                } catch (configError) {
-                    console.error('❌ [MIGRATION] ConfigManager failed:', configError.message);
-                    // Fall through to direct call instead of throwing
-                }
-            }
-
-            // ✅ Try direct backend call
-            console.warn('⚠️ [MIGRATION] Trying direct backend call');
-            try {
-                return await this.getTokenDirectly();
-            } catch (directError) {
-                console.error('❌ [MIGRATION] Direct call failed:', directError.message);
-                
-                // ✅ TEMPORARY WORKAROUND: Use mock token for migration testing
-                console.warn('⚠️ [MIGRATION] Using temporary bypass for testing');
-                return this.getMockToken();
-            }
+            // Get Supabase credentials directly from backend
+            const credentials = await this.getSupabaseCredentials();
+            
+            console.log('✅ [MIGRATION] Using Supabase service key for authentication');
+            return credentials.serviceKey;
             
         } catch (error) {
-            console.error('❌ [MIGRATION] Authentication system error:', error);
+            console.error('❌ [MIGRATION] Supabase authentication failed:', error);
             
             // ✅ Show fallback UI
             const statusDiv = document.getElementById('migration-status');
             if (statusDiv) {
-                statusDiv.textContent = '⚠️ ใช้โหมดทดสอบ - Auth endpoint มีปัญหา';
+                statusDiv.textContent = '⚠️ ไม่สามารถเชื่อมต่อ Supabase ได้';
             }
             
-            // Return mock token to continue testing
-            return this.getMockToken();
+            const resultsDiv = document.getElementById('migration-results');
+            if (resultsDiv) {
+                resultsDiv.innerHTML = `
+                    <div class="migration-status status-error">
+                        <div class="status-header">
+                            <h4>🔒 Supabase Authentication Error</h4>
+                        </div>
+                        <div class="status-details">
+                            <p>❌ <strong>Error:</strong> ${error.message}</p>
+                            <p>💡 <strong>Required Environment Variables in Render:</strong></p>
+                            <ul>
+                                <li>SUPABASE_URL</li>
+                                <li>SUPABASE_SERVICE_KEY</li>
+                                <li>SUPABASE_ANON_KEY</li>
+                            </ul>
+                            <p>🔧 <strong>Check Render Dashboard:</strong></p>
+                            <ul>
+                                <li>Environment Variables section</li>
+                                <li>Supabase project settings</li>
+                                <li>Database connection status</li>
+                            </ul>
+                        </div>
+                        <div class="migration-actions">
+                            <button onclick="window.location.reload()" class="btn btn-primary btn-sm">
+                                🔄 Retry After Fixing
+                            </button>
+                            <button onclick="window.open('https://dashboard.render.com', '_blank')" class="btn btn-secondary btn-sm">
+                                🔧 Open Render Dashboard
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            throw error;
         }
     }
 

@@ -450,55 +450,49 @@ router.post('/logout', (req, res) => {
 });
 
 /**
- * ✅ PRODUCTION: GET /api/auth/get-jwt-token
- * Get fresh JWT token for ConfigManager
+ * ✅ SUPABASE: GET /api/auth/get-supabase-token
+ * Get Supabase service key for admin operations
  */
-router.get('/get-jwt-token', (req, res) => {
-    console.log('🔑 [AUTH] JWT token endpoint accessed from:', req.ip);
-    console.log('🔑 [AUTH] Request headers:', req.headers);
-    console.log('🔑 [AUTH] Request path:', req.path);
+router.get('/get-supabase-token', (req, res) => {
+    console.log('🔑 [AUTH] Supabase token endpoint accessed from:', req.ip);
     
     try {
-        // ✅ ตรวจสอบว่ามี JWT_SECRET ใน environment (หรือชื่ออื่น)
-        const jwtSecret = process.env.JWT_SECRET || process.env.JWT_TOKEN;
-        
-        if (!jwtSecret) {
-            logger.error('❌ JWT_SECRET/JWT_TOKEN not configured in environment');
-            console.log('Available env vars:', Object.keys(process.env).filter(key => key.includes('JWT')));
+        // ✅ ตรวจสอบว่ามี Supabase keys ใน environment
+        if (!process.env.SUPABASE_SERVICE_KEY) {
+            logger.error('❌ SUPABASE_SERVICE_KEY not configured in environment');
             return res.status(500).json({
                 success: false,
-                error: 'JWT configuration missing',
-                code: 'MISSING_JWT_SECRET'
+                error: 'Supabase configuration missing',
+                code: 'MISSING_SUPABASE_SERVICE_KEY'
             });
         }
 
-        // ✅ สร้าง JWT token สำหรับระบบ
-        const jwt = require('jsonwebtoken');
-        const payload = {
-            isAdmin: true,
-            username: 'system',
-            iat: Math.floor(Date.now() / 1000),
-            exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours
-            encryptionKey: process.env.ENCRYPTION_KEY || 'default-key'
-        };
+        if (!process.env.SUPABASE_URL) {
+            logger.error('❌ SUPABASE_URL not configured in environment');
+            return res.status(500).json({
+                success: false,
+                error: 'Supabase URL missing',
+                code: 'MISSING_SUPABASE_URL'
+            });
+        }
 
-        const token = jwt.sign(payload, jwtSecret);
-        
-        logger.info('✅ Fresh JWT token generated for ConfigManager');
+        logger.info('✅ Supabase credentials provided for admin operations');
         
         res.json({
             success: true,
-            jwtToken: token,
-            expiresIn: '24h',
+            supabaseKey: process.env.SUPABASE_SERVICE_KEY,
+            supabaseUrl: process.env.SUPABASE_URL,
+            anonKey: process.env.SUPABASE_ANON_KEY,
+            expiresIn: 'never',
             timestamp: new Date().toISOString()
         });
         
     } catch (error) {
-        logger.error('❌ JWT token generation error:', error);
+        logger.error('❌ Supabase token generation error:', error);
         res.status(500).json({
             success: false,
-            error: 'Failed to generate JWT token',
-            code: 'TOKEN_GENERATION_FAILED'
+            error: 'Failed to get Supabase credentials',
+            code: 'SUPABASE_TOKEN_FAILED'
         });
     }
 });
