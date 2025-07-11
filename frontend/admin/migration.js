@@ -131,12 +131,8 @@ class AdminMigration {
     // ✅ Get authentication token from Supabase
     async getAuthToken() {
         try {
-            console.log('🔄 [MIGRATION] Getting Supabase authentication...');
-            
             // Get Supabase credentials directly from backend
             const credentials = await this.getSupabaseCredentials();
-            
-            console.log('✅ [MIGRATION] Using Supabase service key for authentication');
             return credentials.serviceKey;
             
         } catch (error) {
@@ -257,13 +253,10 @@ class AdminMigration {
 
             // ⚡ ใช้ token จาก ConfigManager แทน localStorage
             const authToken = await this.getAuthToken();
-            console.log('🔑 [MIGRATION] Auth token:', authToken ? `${authToken.substring(0, 20)}...` : 'NULL');
 
             // ✅ ใช้ safeApiCall ถ้ามี เพื่อป้องกัน CORS error
             let result;
             if (window.safeApiCall && typeof window.safeApiCall === 'function') {
-                console.log('🛡️ [MIGRATION] Using APIHelper for CORS protection');
-                console.log('🔑 [MIGRATION] Sending token in Authorization header');
                 result = await window.safeApiCall(`${this.apiBase}/migration/status`, {
                     method: 'GET',
                     headers: {

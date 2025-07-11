@@ -5661,19 +5661,42 @@
     <!-- Original AI Settings Modal (Keep for compatibility) -->
     <!-- Emergency debug fix for showSection ReferenceError -->
     <!-- Production-ready JavaScript -->
-    <script src="api-helper.js?v=2" onload="console.log('✅ api-helper.js v2 loaded')" onerror="console.error('❌ Failed to load api-helper.js')"></script>
-    <script src="main-production.js?v=2" onload="console.log('✅ main-production.js v2 loaded'); console.log('showSection type:', typeof window.showSection);" onerror="console.error('❌ Failed to load main-production.js')"></script>
+    <script src="api-helper.js?v=2&t=1752232000" onload="console.log('✅ api-helper.js v2 loaded')" onerror="console.error('❌ Failed to load api-helper.js')"></script>
+    <script src="main-production.js?v=2&t=1752232000" onload="console.log('✅ main-production.js v2 loaded'); console.log('showSection type:', typeof window.showSection);" onerror="console.error('❌ Failed to load main-production.js')"></script>
     
     <!-- Complete Modal Conflict Fix -->
     <script>
-        // ⚡ Helper function to get auth token from main-production.js or localStorage
-        function getAuthToken() {
+        // ⚡ Helper function to get auth token with Supabase support
+        async function getAuthToken() {
             // Try to get from main-production.js global scope
             if (window.authToken) {
                 return window.authToken;
             }
-            // Fallback to localStorage
-            return localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken') || '';
+            
+            // Try localStorage first
+            const localToken = localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
+            if (localToken) {
+                return localToken;
+            }
+            
+            // Last resort: get Supabase token for migration endpoints
+            try {
+                const response = await fetch(`${window.rbckConfig?.apiBase || 'https://rbck.onrender.com/api'}/auth/get-supabase-token`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success && result.supabaseKey) {
+                        return result.supabaseKey;
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not get Supabase token:', error.message);
+            }
+            
+            return '';
         }
         
         // CRITICAL FIX: Remove the conflicting overlay click handler from main-production.js
@@ -5855,7 +5878,7 @@
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
+                        'Authorization': (await getAuthToken()) ? `Bearer ${await getAuthToken()}` : ''
                     }
                 });
                 
@@ -5955,7 +5978,7 @@
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
+                        'Authorization': (await getAuthToken()) ? `Bearer ${await getAuthToken()}` : ''
                     }
                 });
                 
@@ -6030,7 +6053,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
+                        'Authorization': (await getAuthToken()) ? `Bearer ${await getAuthToken()}` : ''
                     },
                     body: JSON.stringify(configData)
                 });
@@ -6516,7 +6539,7 @@
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
+                        'Authorization': (await getAuthToken()) ? `Bearer ${await getAuthToken()}` : ''
                     }
                 });
                 
@@ -6740,7 +6763,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
+                        'Authorization': (await getAuthToken()) ? `Bearer ${await getAuthToken()}` : ''
                     }
                 });
                 
@@ -6923,7 +6946,7 @@
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
+                            'Authorization': (await getAuthToken()) ? `Bearer ${await getAuthToken()}` : ''
                         }
                     });
                     
@@ -7148,7 +7171,7 @@
                                 method: 'GET',
                                 headers: {
                                     'Content-Type': 'application/json',
-                                    'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
+                                    'Authorization': (await getAuthToken()) ? `Bearer ${await getAuthToken()}` : ''
                                 }
                             });
                             
@@ -7260,7 +7283,7 @@
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
+                            'Authorization': (await getAuthToken()) ? `Bearer ${await getAuthToken()}` : ''
                         }
                     });
                     
@@ -7477,7 +7500,7 @@
                             method: 'GET',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
+                                'Authorization': (await getAuthToken()) ? `Bearer ${await getAuthToken()}` : ''
                             }
                         });
                         
@@ -7805,7 +7828,7 @@
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': getAuthToken() ? `Bearer ${getAuthToken()}` : ''
+                        'Authorization': (await getAuthToken()) ? `Bearer ${await getAuthToken()}` : ''
                     }
                 });
                 
@@ -9620,7 +9643,8 @@
         // ⚡ Load deferred scripts after critical path
         setTimeout(() => {
             // ⚡ Load migration system (always load for admin functionality)
-            import('./migration.js').catch(() => console.warn('Migration script not available'));
+            const timestamp = Date.now();
+            import(`./migration.js?v=${timestamp}`).catch(() => console.warn('Migration script not available'));
         }, 500);
     </script>
     
