@@ -14,60 +14,44 @@ const requireAdmin = (req, res, next) => {
     next();
 };
 
-// ✅ Supabase auth check for migration endpoints
-const supabaseAuth = (req, res, next) => {
-    console.log('🔐 [SUPABASE_AUTH] Checking authentication for:', req.path);
-    console.log('🔐 [SUPABASE_AUTH] Headers received:', {
-        authorization: req.headers.authorization ? 'Present' : 'Missing',
-        authLength: req.headers.authorization?.length || 0
-    });
-    
+// ✅ Migration auth - use internal service or admin token
+const migrationAuth = (req, res, next) => {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
     
     if (!token) {
-        console.log('❌ [SUPABASE_AUTH] No token provided');
         return res.status(401).json({
             success: false,
-            error: 'Supabase token required'
+            error: 'Authentication required for migration operations'
         });
     }
     
-    console.log('🔐 [SUPABASE_AUTH] Token received:', {
-        length: token.length,
-        start: token.substring(0, 20),
-        type: token.startsWith('eyJ') ? 'JWT-like' : 'Other'
-    });
-    
-    // ✅ Check if token matches our SUPABASE_SERVICE_KEY
-    if (token === process.env.SUPABASE_SERVICE_KEY) {
-        req.user = { role: 'admin', username: 'supabase-admin', authType: 'supabase' };
-        req.supabaseKey = token;
-        return next();
+    // Option 1: Use JWT admin token
+    try {
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (decoded.isAdmin) {
+            req.user = { role: 'admin', username: decoded.username, authType: 'jwt' };
+            return next();
+        }
+    } catch (err) {
+        // JWT validation failed, try other methods
     }
     
-    // ✅ Also accept tokens that look like Supabase format as fallback
-    const isSupabaseFormat = token.startsWith('eyJ') && token.length > 100;
-    if (isSupabaseFormat) {
-        req.user = { role: 'admin', username: 'supabase-admin', authType: 'supabase' };
-        req.supabaseKey = token;
+    // Option 2: Internal service token
+    if (token === process.env.INTERNAL_SERVICE_TOKEN) {
+        req.user = { role: 'admin', username: 'internal-service', authType: 'service' };
         return next();
     }
-    
-    console.log('🚨 [SUPABASE_AUTH] Invalid token received:', {
-        tokenLength: token.length,
-        tokenStart: token.substring(0, 20),
-        expectedStart: process.env.SUPABASE_SERVICE_KEY?.substring(0, 20)
-    });
     
     return res.status(401).json({
         success: false,
-        error: 'Invalid Supabase authentication token'
+        error: 'Invalid authentication token'
     });
 };
 
 // ✅ Check migration status
-router.get('/status', supabaseAuth, async (req, res) => {
+router.get('/status', migrationAuth, async (req, res) => {
     try {
         console.log('🔍 Checking migration status...');
         
@@ -157,7 +141,7 @@ router.get('/status', supabaseAuth, async (req, res) => {
 });
 
 // ✅ Execute database migration
-router.post('/execute', supabaseAuth, async (req, res) => {
+router.post('/execute', migrationAuth, async (req, res) => {
     try {
         console.log('🚀 Starting database migration...');
         const migrationResults = [];
@@ -455,7 +439,7 @@ router.post('/execute', supabaseAuth, async (req, res) => {
 });
 
 // ✅ Health check for database schema
-router.get('/health', supabaseAuth, async (req, res) => {
+router.get('/health', migrationAuth, async (req, res) => {
     try {
         console.log('🏥 Running database health check...');
 

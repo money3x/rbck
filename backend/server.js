@@ -264,7 +264,7 @@ app.use('/api/auth', authRoutes); // Authentication routes (validation handled p
 app.use('/api/config', configRoutes);            // ✅ Configuration routes (public for frontend)
 app.use('/api/security', authenticateAdmin, securityRoutes);       // ✅ Security Dashboard routes (admin only)
 app.use('/api/ai', aiRoutes);                   // ✅ PHASE 3: AI provider routes (rate limiting temporarily disabled for debugging)
-app.use('/api/migration', authenticateAdmin, migrationRateLimit, migrationRoutes); // ✅ PHASE 3: Database migration routes (admin only) with strict rate limiting
+app.use('/api/migration', migrationRateLimit, migrationRoutes); // ✅ PHASE 3: Database migration routes (auth handled in routes) with strict rate limiting
 app.use('/api/performance', performanceRoutes); // Performance monitoring routes
 app.use('/api', apiKeyRoutes);                  // Protected API key routes
 app.use('/api/posts', postRoutes);              // Post management routes (mount on /api/posts to avoid conflicts)

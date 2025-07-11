@@ -451,10 +451,29 @@ router.post('/logout', (req, res) => {
 
 /**
  * ✅ SUPABASE: GET /api/auth/get-supabase-token
- * Get Supabase service key for admin operations
+ * Get Supabase service key for admin operations (ADMIN ONLY)
  */
-router.get('/get-supabase-token', (req, res) => {
-    console.log('🔑 [AUTH] Supabase token endpoint accessed from:', req.ip);
+router.get('/get-supabase-token', authenticateAdmin, (req, res) => {
+    // 🚨 SECURITY: Log all access attempts
+    console.log('🚨 [SECURITY] CRITICAL: Supabase credentials requested by:', {
+        ip: req.ip,
+        user: req.user?.username,
+        userAgent: req.get('User-Agent'),
+        timestamp: new Date().toISOString()
+    });
+    
+    // 🚨 SECURITY: Additional admin verification
+    if (!req.user || req.user.role !== 'admin') {
+        logger.error('🚨 [SECURITY] Unauthorized Supabase token access attempt', {
+            ip: req.ip,
+            user: req.user
+        });
+        return res.status(403).json({
+            success: false,
+            error: 'Admin access required',
+            code: 'ADMIN_ONLY'
+        });
+    }
     
     try {
         // ✅ ตรวจสอบว่ามี Supabase keys ใน environment
