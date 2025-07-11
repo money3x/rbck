@@ -16,15 +16,28 @@ const requireAdmin = (req, res, next) => {
 
 // ✅ Supabase auth check for migration endpoints
 const supabaseAuth = (req, res, next) => {
+    console.log('🔐 [SUPABASE_AUTH] Checking authentication for:', req.path);
+    console.log('🔐 [SUPABASE_AUTH] Headers received:', {
+        authorization: req.headers.authorization ? 'Present' : 'Missing',
+        authLength: req.headers.authorization?.length || 0
+    });
+    
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
     
     if (!token) {
+        console.log('❌ [SUPABASE_AUTH] No token provided');
         return res.status(401).json({
             success: false,
             error: 'Supabase token required'
         });
     }
+    
+    console.log('🔐 [SUPABASE_AUTH] Token received:', {
+        length: token.length,
+        start: token.substring(0, 20),
+        type: token.startsWith('eyJ') ? 'JWT-like' : 'Other'
+    });
     
     // ✅ Check if token matches our SUPABASE_SERVICE_KEY
     if (token === process.env.SUPABASE_SERVICE_KEY) {
