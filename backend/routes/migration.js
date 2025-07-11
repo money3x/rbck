@@ -26,14 +26,26 @@ const supabaseAuth = (req, res, next) => {
         });
     }
     
-    // Check if it's a valid Supabase service key format
-    const isSupabaseServiceKey = token.startsWith('eyJ') || token.includes('supabase') || token.length > 40;
-    
-    if (isSupabaseServiceKey) {
+    // ✅ Check if token matches our SUPABASE_SERVICE_KEY
+    if (token === process.env.SUPABASE_SERVICE_KEY) {
         req.user = { role: 'admin', username: 'supabase-admin', authType: 'supabase' };
         req.supabaseKey = token;
         return next();
     }
+    
+    // ✅ Also accept tokens that look like Supabase format as fallback
+    const isSupabaseFormat = token.startsWith('eyJ') && token.length > 100;
+    if (isSupabaseFormat) {
+        req.user = { role: 'admin', username: 'supabase-admin', authType: 'supabase' };
+        req.supabaseKey = token;
+        return next();
+    }
+    
+    console.log('🚨 [SUPABASE_AUTH] Invalid token received:', {
+        tokenLength: token.length,
+        tokenStart: token.substring(0, 20),
+        expectedStart: process.env.SUPABASE_SERVICE_KEY?.substring(0, 20)
+    });
     
     return res.status(401).json({
         success: false,
