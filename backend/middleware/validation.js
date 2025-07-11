@@ -349,11 +349,14 @@ const sanitizeInput = (req, res, next) => {
   console.log('🔍 [VALIDATION] Query params:', req.query);
   console.log('🔍 [VALIDATION] Body:', req.body ? 'Present' : 'None');
   
-  // Skip sanitization for specific auth endpoints
+  // Skip sanitization for specific auth and migration endpoints
   if (req.path.includes('/auth/get-supabase-token') || 
       req.path.includes('/auth/get-encryption-key') ||
-      req.path.includes('/auth/verify-session')) {
-    console.log('🔍 [VALIDATION] Skipping sanitization for auth endpoint:', req.path);
+      req.path.includes('/auth/verify-session') ||
+      req.path.includes('/migration/status') ||
+      req.path.includes('/migration/health') ||
+      req.path.includes('/migration/execute')) {
+    console.log('🔍 [VALIDATION] Skipping sanitization for protected endpoint:', req.path);
     return next();
   }
   

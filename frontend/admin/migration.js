@@ -70,7 +70,6 @@ class AdminMigration {
             const response = await fetch(`${this.apiBase}/auth/get-supabase-token`, {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 }
             });
@@ -107,7 +106,6 @@ class AdminMigration {
             const configResponse = await fetch(`${this.apiBase}/config/supabase`, {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 }
             });
@@ -268,7 +266,7 @@ class AdminMigration {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
-                        'Content-Type': 'application/json'
+                        'Accept': 'application/json'
                     }
                 });
             } else {
@@ -276,7 +274,7 @@ class AdminMigration {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
-                        'Content-Type': 'application/json'
+                        'Accept': 'application/json'
                     }
                 });
 
@@ -411,7 +409,7 @@ class AdminMigration {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
+                    'Accept': 'application/json'
                 }
             });
 
