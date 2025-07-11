@@ -349,6 +349,14 @@ const sanitizeInput = (req, res, next) => {
   console.log('🔍 [VALIDATION] Query params:', req.query);
   console.log('🔍 [VALIDATION] Body:', req.body ? 'Present' : 'None');
   
+  // Skip sanitization for specific auth endpoints
+  if (req.path.includes('/auth/get-supabase-token') || 
+      req.path.includes('/auth/get-encryption-key') ||
+      req.path.includes('/auth/verify-session')) {
+    console.log('🔍 [VALIDATION] Skipping sanitization for auth endpoint:', req.path);
+    return next();
+  }
+  
   // Skip sanitization for GET requests without body/query params
   if (req.method === 'GET' && (!req.query || Object.keys(req.query).length === 0)) {
     console.log('🔍 [VALIDATION] Skipping sanitization for clean GET request');
