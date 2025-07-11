@@ -459,9 +459,12 @@ router.get('/get-jwt-token', (req, res) => {
     console.log('🔑 [AUTH] Request path:', req.path);
     
     try {
-        // ✅ ตรวจสอบว่ามี JWT_SECRET ใน environment
-        if (!process.env.JWT_SECRET) {
-            logger.error('❌ JWT_SECRET not configured in environment');
+        // ✅ ตรวจสอบว่ามี JWT_SECRET ใน environment (หรือชื่ออื่น)
+        const jwtSecret = process.env.JWT_SECRET || process.env.JWT_TOKEN;
+        
+        if (!jwtSecret) {
+            logger.error('❌ JWT_SECRET/JWT_TOKEN not configured in environment');
+            console.log('Available env vars:', Object.keys(process.env).filter(key => key.includes('JWT')));
             return res.status(500).json({
                 success: false,
                 error: 'JWT configuration missing',
@@ -479,7 +482,7 @@ router.get('/get-jwt-token', (req, res) => {
             encryptionKey: process.env.ENCRYPTION_KEY || 'default-key'
         };
 
-        const token = jwt.sign(payload, process.env.JWT_SECRET);
+        const token = jwt.sign(payload, jwtSecret);
         
         logger.info('✅ Fresh JWT token generated for ConfigManager');
         
