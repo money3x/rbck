@@ -9644,7 +9644,7 @@
         setTimeout(() => {
             // ⚡ Load migration system (always load for admin functionality)
             const timestamp = 1752245000; // Fixed timestamp for migration fix
-            import(`./migration.js?v=${timestamp}`).catch(() => console.warn('Migration script not available'));
+            import(`./migration.js?v=1752255000`).catch(() => console.warn('Migration script not available'));
         }, 500);
     </script>
     

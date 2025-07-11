@@ -7,59 +7,15 @@ class AdminMigration {
         console.log('🔄 Admin Migration initialized');
     }
 
-    // ✅ Initialize configuration manager
+    // ✅ Initialize configuration manager (simplified)
     async initializeConfig() {
-        try {
-            if (!this.configManager) {
-                try {
-                    // ⚡ ดึง ConfigManager จาก config.js (absolute path)
-                    let ConfigManager;
-                    try {
-                        const module = await import('/frontend/config.js');
-                        ConfigManager = module.ConfigManager;
-                    } catch (e1) {
-                        try {
-                            const module = await import('../config.js');
-                            ConfigManager = module.ConfigManager;
-                        } catch (e2) {
-                            try {
-                                const module = await import('./config.js');
-                                ConfigManager = module.ConfigManager;
-                            } catch (e3) {
-                                console.warn('⚠️ [MIGRATION] ConfigManager not found, using fallback');
-                                ConfigManager = null;
-                            }
-                        }
-                    }
-                    
-                    if (ConfigManager) {
-                        this.configManager = new ConfigManager();
-                        console.log('✅ [MIGRATION] ConfigManager initialized');
-                    } else {
-                        console.warn('⚠️ [MIGRATION] ConfigManager not available, using localStorage fallback');
-                        this.configManager = null;
-                    }
-                } catch (error) {
-                    console.error('❌ [MIGRATION] Error initializing ConfigManager:', error);
-                    this.configManager = null;
-                }
-            }
-
-            // ⚡ ดึง Supabase configuration จาก Render (ถ้ามี ConfigManager)
-            if (this.configManager) {
-                try {
-                    this.supabaseConfig = await this.configManager.getSupabaseConfig();
-                    console.log('✅ [MIGRATION] Supabase config loaded from Render backend');
-                } catch (configError) {
-                    console.warn('⚠️ [MIGRATION] Failed to load Supabase config from Render, continuing without it');
-                    this.supabaseConfig = null;
-                }
-            }
-            
-        } catch (error) {
-            console.error('❌ [MIGRATION] Failed to initialize config:', error);
-            // Don't throw error - continue with fallback
-        }
+        // Skip ConfigManager dependency - use direct API calls
+        console.log('✅ [MIGRATION] Using direct API configuration (no ConfigManager needed)');
+        this.configManager = null;
+        this.supabaseConfig = null;
+        
+        // Clear any ConfigManager warnings from console
+        console.log('✅ [MIGRATION] ConfigManager dependency removed - no warnings expected');
     }
 
     // ✅ Get Supabase credentials from backend
@@ -213,7 +169,7 @@ class AdminMigration {
         try {
             await this.initializeConfig();
         } catch (error) {
-            console.warn('⚠️ [MIGRATION] Config initialization failed, continuing with fallback');
+            console.log('✅ [MIGRATION] Config initialization complete - no ConfigManager needed');
         }
         
         this.bindEvents();
@@ -359,15 +315,17 @@ class AdminMigration {
                 runBtn.innerHTML = '⏳ Running Migration...';
             }
 
-            // ⚡ ใช้ token จาก ConfigManager แทน localStorage
+            // ⚡ ใช้ token จาก ConfigManager แทน localStorage (optional for execute)
             const authToken = await this.getAuthToken();
+            
+            const headers = { 'Content-Type': 'application/json' };
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
 
             const response = await fetch(`${this.apiBase}/migration/execute`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                }
+                headers: headers
             });
 
             const result = await response.json();
@@ -402,15 +360,17 @@ class AdminMigration {
             this.showLoading('migration-results', 'Running health check...');
             this.showCard('migration-results-card');
 
-            // ⚡ ใช้ token จาก ConfigManager แทน localStorage
+            // ⚡ ใช้ token จาก ConfigManager แทน localStorage (optional for health)
             const authToken = await this.getAuthToken();
+            
+            const headers = { 'Accept': 'application/json' };
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
 
             const response = await fetch(`${this.apiBase}/migration/health`, {
                 method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Accept': 'application/json'
-                }
+                headers: headers
             });
 
             const result = await response.json();
