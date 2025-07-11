@@ -257,7 +257,7 @@ app.delete('/api/cache/clear', (req, res) => {
 });
 
 // API Routes with enhanced middleware
-app.use('/api/auth', validateAuth, authRoutes); // Authentication routes
+app.use('/api/auth', authRoutes); // Authentication routes (validation handled per-route)
 app.use('/api/config', configRoutes);            // ✅ Configuration routes (public for frontend)
 app.use('/api/security', authenticateAdmin, securityRoutes);       // ✅ Security Dashboard routes (admin only)
 app.use('/api/ai', aiRoutes);                   // ✅ PHASE 3: AI provider routes (rate limiting temporarily disabled for debugging)
