@@ -50,8 +50,8 @@ const migrationAuth = (req, res, next) => {
     });
 };
 
-// ✅ Check migration status
-router.get('/status', migrationAuth, async (req, res) => {
+// ✅ Check migration status (PUBLIC for initial setup)
+router.get('/status', async (req, res) => {
     try {
         console.log('🔍 Checking migration status...');
         

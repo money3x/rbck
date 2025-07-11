@@ -128,7 +128,7 @@ class AdminMigration {
         }
     }
 
-    // ✅ Get authentication token (use admin JWT instead of Supabase)
+    // ✅ Get authentication token (optional for status check)
     async getAuthToken() {
         try {
             // Try to get JWT from localStorage/sessionStorage first
@@ -141,8 +141,9 @@ class AdminMigration {
                 return jwtToken;
             }
             
-            // Show login requirement message
-            throw new Error('Admin login required for migration operations');
+            // For status check, return null (endpoint is public)
+            console.log('⚠️ [MIGRATION] No JWT token found, proceeding without auth for status check');
+            return null;
             
         } catch (error) {
             console.error('❌ [MIGRATION] Authentication failed:', error);
@@ -259,21 +260,22 @@ class AdminMigration {
 
             // ✅ ใช้ safeApiCall ถ้ามี เพื่อป้องกัน CORS error
             let result;
+            const headers = { 'Accept': 'application/json' };
+            
+            // เพิ่ม Authorization header เฉพาะเมื่อมี token
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+            
             if (window.safeApiCall && typeof window.safeApiCall === 'function') {
                 result = await window.safeApiCall(`${this.apiBase}/migration/status`, {
                     method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`,
-                        'Accept': 'application/json'
-                    }
+                    headers: headers
                 });
             } else {
                 const response = await fetch(`${this.apiBase}/migration/status`, {
                     method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`,
-                        'Accept': 'application/json'
-                    }
+                    headers: headers
                 });
 
                 if (!response.ok) {

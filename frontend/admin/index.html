@@ -9643,7 +9643,7 @@
         // ⚡ Load deferred scripts after critical path
         setTimeout(() => {
             // ⚡ Load migration system (always load for admin functionality)
-            const timestamp = Date.now();
+            const timestamp = 1752245000; // Fixed timestamp for migration fix
             import(`./migration.js?v=${timestamp}`).catch(() => console.warn('Migration script not available'));
         }, 500);
     </script>
