@@ -3,49 +3,112 @@ const fs = require('fs');
 const path = require('path');
 const winston = require('winston');
 
-class MigrationService {
+class MigrationServiceAlt {
   constructor() {
-    // Handle different connection formats
-    const getDbHost = () => {
-      if (process.env.SUPABASE_DB_HOST) {
-        return process.env.SUPABASE_DB_HOST;
-      }
-      // Extract from SUPABASE_URL if available
-      if (process.env.SUPABASE_URL) {
-        const url = process.env.SUPABASE_URL.replace('https://', '');
-        const projectId = url.split('.')[0];
-        return `db.${projectId}.supabase.co`;
-      }
-      return 'db.yfituqryipsdmqyjxpon.supabase.co';
-    };
-
-    this.dbConfig = {
-      host: getDbHost(),
-      port: parseInt(process.env.SUPABASE_DB_PORT) || 5432,
-      database: process.env.SUPABASE_DB_NAME || 'postgres',
-      user: process.env.SUPABASE_DB_USER || 'postgres',
-      password: process.env.SUPABASE_DB_PASSWORD || process.env.SUPABASE_SERVICE_ROLE_KEY,
-      ssl: { 
-        rejectUnauthorized: false,
-        require: true 
+    // Alternative connection methods for network issues
+    this.connectionConfigs = [
+      // Config 1: Direct connection with IPv4 force
+      {
+        name: 'Direct IPv4',
+        host: 'db.yfituqryipsdmqyjxpon.supabase.co',
+        port: 5432,
+        database: 'postgres',
+        user: 'postgres',
+        password: process.env.SUPABASE_DB_PASSWORD || process.env.SUPABASE_SERVICE_ROLE_KEY,
+        ssl: { rejectUnauthorized: false, require: true },
+        family: 4,
+        connectionTimeoutMillis: 30000
       },
-      // Force IPv4 to avoid IPv6 issues
-      family: 4,
-      // Connection timeout
-      connectionTimeoutMillis: 30000,
-      // Keep alive
-      keepAlive: true
-    };
+      // Config 2: Try alternative port (some providers use 6543)
+      {
+        name: 'Alternative Port',
+        host: 'db.yfituqryipsdmqyjxpon.supabase.co',
+        port: 6543,
+        database: 'postgres',
+        user: 'postgres',
+        password: process.env.SUPABASE_DB_PASSWORD || process.env.SUPABASE_SERVICE_ROLE_KEY,
+        ssl: { rejectUnauthorized: false, require: true },
+        family: 4,
+        connectionTimeoutMillis: 30000
+      },
+      // Config 3: Try without SSL requirement
+      {
+        name: 'No SSL Requirement',
+        host: 'db.yfituqryipsdmqyjxpon.supabase.co',
+        port: 5432,
+        database: 'postgres',
+        user: 'postgres',
+        password: process.env.SUPABASE_DB_PASSWORD || process.env.SUPABASE_SERVICE_ROLE_KEY,
+        ssl: { rejectUnauthorized: false },
+        family: 4,
+        connectionTimeoutMillis: 30000
+      },
+      // Config 4: Use connection string if available
+      {
+        name: 'Connection String',
+        connectionString: process.env.SUPABASE_CONNECTION_STRING,
+        ssl: { rejectUnauthorized: false }
+      }
+    ];
   }
 
-  // Get database connection
+  // Try multiple connection methods
   async getConnection() {
-    const client = new Client(this.dbConfig);
-    await client.connect();
-    return client;
+    for (const config of this.connectionConfigs) {
+      if (config.name === 'Connection String' && !config.connectionString) {
+        continue; // Skip if no connection string
+      }
+      
+      try {
+        winston.info(`🔄 Trying connection method: ${config.name}`);
+        
+        const client = new Client(config);
+        await client.connect();
+        
+        winston.info(`✅ Connected using: ${config.name}`);
+        return { client, method: config.name };
+        
+      } catch (error) {
+        winston.warn(`❌ Connection method '${config.name}' failed: ${error.message}`);
+        continue;
+      }
+    }
+    
+    throw new Error('All connection methods failed');
   }
 
-  // Execute SQL file
+  // Test connection with multiple methods
+  async testConnection() {
+    try {
+      const { client, method } = await this.getConnection();
+      
+      const result = await client.query('SELECT NOW() as current_time, version() as pg_version');
+      await client.end();
+      
+      return {
+        success: true,
+        message: `Database connection successful using ${method}`,
+        method: method,
+        timestamp: result.rows[0].current_time,
+        version: result.rows[0].pg_version
+      };
+      
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        configs: this.connectionConfigs.map(c => ({
+          name: c.name,
+          host: c.host,
+          port: c.port,
+          hasPassword: !!c.password,
+          hasConnectionString: !!c.connectionString
+        }))
+      };
+    }
+  }
+
+  // Execute SQL file with connection retry
   async executeSQLFile(filePath) {
     const startTime = Date.now();
     let client;
@@ -61,9 +124,10 @@ class MigrationService {
       const sqlContent = fs.readFileSync(filePath, 'utf8');
       winston.info(`📄 SQL file loaded: ${sqlContent.length} characters`);
       
-      // Connect to database
-      client = await this.getConnection();
-      winston.info('🔌 Connected to database');
+      // Connect to database with retry
+      const { client: dbClient, method } = await this.getConnection();
+      client = dbClient;
+      winston.info(`🔌 Connected to database using: ${method}`);
       
       // Split SQL into statements
       const statements = this.splitSQLStatements(sqlContent);
@@ -82,7 +146,6 @@ class MigrationService {
         
         try {
           winston.debug(`🔧 Executing statement ${i + 1}/${statements.length}`);
-          winston.debug(`SQL: ${trimmedStatement.substring(0, 100)}...`);
           
           const result = await client.query(trimmedStatement);
           
@@ -99,7 +162,6 @@ class MigrationService {
         } catch (error) {
           winston.error(`❌ Statement ${i + 1} failed: ${error.message}`);
           
-          // Check if it's a non-critical error (like table already exists)
           const isNonCritical = this.isNonCriticalError(error.message);
           
           results.push({
@@ -113,11 +175,6 @@ class MigrationService {
           if (!isNonCritical) {
             errorCount++;
           }
-          
-          // Continue execution for non-critical errors
-          if (!isNonCritical) {
-            winston.warn(`⚠️ Non-critical error, continuing migration...`);
-          }
         }
       }
       
@@ -130,6 +187,7 @@ class MigrationService {
         success: errorCount === 0,
         message: `Migration completed: ${successCount} successful, ${errorCount} errors`,
         duration: `${duration}ms`,
+        connectionMethod: method,
         statistics: {
           totalStatements: statements.length,
           successfulStatements: successCount,
@@ -204,7 +262,7 @@ class MigrationService {
     return statements;
   }
 
-  // Check if error is non-critical (like table already exists)
+  // Check if error is non-critical
   isNonCriticalError(errorMessage) {
     const nonCriticalPatterns = [
       /already exists/i,
@@ -223,122 +281,6 @@ class MigrationService {
     
     return nonCriticalPatterns.some(pattern => pattern.test(errorMessage));
   }
-
-  // Execute single SQL statement
-  async executeSingleSQL(sql) {
-    let client;
-    
-    try {
-      client = await this.getConnection();
-      const result = await client.query(sql);
-      
-      return {
-        success: true,
-        result: result.rows,
-        affectedRows: result.rowCount,
-        command: result.command
-      };
-      
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message
-      };
-      
-    } finally {
-      if (client) {
-        await client.end();
-      }
-    }
-  }
-
-  // Test database connection
-  async testConnection() {
-    let client;
-    
-    try {
-      client = await this.getConnection();
-      const result = await client.query('SELECT NOW() as current_time');
-      
-      return {
-        success: true,
-        message: 'Database connection successful',
-        timestamp: result.rows[0].current_time
-      };
-      
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message,
-        config: {
-          host: this.dbConfig.host,
-          port: this.dbConfig.port,
-          database: this.dbConfig.database,
-          user: this.dbConfig.user,
-          ssl: this.dbConfig.ssl
-        }
-      };
-      
-    } finally {
-      if (client) {
-        await client.end();
-      }
-    }
-  }
-
-  // Get database schema information
-  async getSchemaInfo() {
-    let client;
-    
-    try {
-      client = await this.getConnection();
-      
-      // Get all tables
-      const tablesResult = await client.query(`
-        SELECT table_name, table_schema 
-        FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        ORDER BY table_name
-      `);
-      
-      // Get all columns
-      const columnsResult = await client.query(`
-        SELECT table_name, column_name, data_type, is_nullable 
-        FROM information_schema.columns 
-        WHERE table_schema = 'public' 
-        ORDER BY table_name, ordinal_position
-      `);
-      
-      // Get all indexes
-      const indexesResult = await client.query(`
-        SELECT schemaname, tablename, indexname, indexdef 
-        FROM pg_indexes 
-        WHERE schemaname = 'public' 
-        ORDER BY tablename, indexname
-      `);
-      
-      return {
-        success: true,
-        tables: tablesResult.rows,
-        columns: columnsResult.rows,
-        indexes: indexesResult.rows,
-        totalTables: tablesResult.rows.length,
-        totalColumns: columnsResult.rows.length,
-        totalIndexes: indexesResult.rows.length
-      };
-      
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message
-      };
-      
-    } finally {
-      if (client) {
-        await client.end();
-      }
-    }
-  }
 }
 
-module.exports = new MigrationService();
+module.exports = new MigrationServiceAlt();

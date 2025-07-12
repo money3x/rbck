@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const MigrationService = require('../services/MigrationService');
+const MigrationServiceAlt = require('../services/MigrationServiceAlt');
 const path = require('path');
 const fs = require('fs');
 
@@ -45,6 +46,11 @@ router.get('/debug', async (req, res) => {
         console.log('🔌 Testing database connection...');
         const connectionTest = await MigrationService.testConnection();
         debugInfo.databaseConnection = connectionTest;
+        
+        // Test alternative connection methods
+        console.log('🔌 Testing alternative connection methods...');
+        const altConnectionTest = await MigrationServiceAlt.testConnection();
+        debugInfo.alternativeConnection = altConnectionTest;
         
         // Get current schema info if connection works
         if (connectionTest.success) {
@@ -109,9 +115,17 @@ router.post('/force-execute', async (req, res) => {
         
         console.log('✅ Database connection successful');
         
-        // Step 3: Execute migration with full logging
+        // Step 3: Execute migration with full logging (try alternative service first)
         console.log('📄 Executing database schema...');
-        const migrationResult = await MigrationService.executeSQLFile(schemaFilePath);
+        let migrationResult;
+        
+        // Try alternative service first (better connection handling)
+        try {
+            migrationResult = await MigrationServiceAlt.executeSQLFile(schemaFilePath);
+        } catch (altError) {
+            console.log('⚠️ Alternative service failed, trying original...');
+            migrationResult = await MigrationService.executeSQLFile(schemaFilePath);
+        }
         
         console.log('🎉 Migration execution completed');
         console.log('Result:', JSON.stringify(migrationResult, null, 2));
