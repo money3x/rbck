@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const MigrationService = require('../services/MigrationService');
 const MigrationServiceAlt = require('../services/MigrationServiceAlt');
+const MigrationServiceHTTP = require('../services/MigrationServiceHTTP');
 const path = require('path');
 const fs = require('fs');
 
@@ -16,6 +17,7 @@ router.get('/debug', async (req, res) => {
             environmentVariables: {
                 SUPABASE_URL: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
                 SUPABASE_KEY: process.env.SUPABASE_KEY ? 'SET' : 'NOT SET',
+                SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY ? 'SET' : 'NOT SET',
                 SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'NOT SET',
                 SUPABASE_DB_HOST: process.env.SUPABASE_DB_HOST || 'NOT SET',
                 SUPABASE_DB_PORT: process.env.SUPABASE_DB_PORT || 'NOT SET (default: 5432)',
@@ -51,6 +53,11 @@ router.get('/debug', async (req, res) => {
         console.log('🔌 Testing alternative connection methods...');
         const altConnectionTest = await MigrationServiceAlt.testConnection();
         debugInfo.alternativeConnection = altConnectionTest;
+        
+        // Test HTTP API connection
+        console.log('🌐 Testing HTTP API connection...');
+        const httpConnectionTest = await MigrationServiceHTTP.testConnection();
+        debugInfo.httpApiConnection = httpConnectionTest;
         
         // Get current schema info if connection works
         if (connectionTest.success) {
@@ -119,12 +126,18 @@ router.post('/force-execute', async (req, res) => {
         console.log('📄 Executing database schema...');
         let migrationResult;
         
-        // Try alternative service first (better connection handling)
+        // Try HTTP API service first (works around network restrictions)
         try {
-            migrationResult = await MigrationServiceAlt.executeSQLFile(schemaFilePath);
-        } catch (altError) {
-            console.log('⚠️ Alternative service failed, trying original...');
-            migrationResult = await MigrationService.executeSQLFile(schemaFilePath);
+            console.log('🌐 Trying HTTP API migration...');
+            migrationResult = await MigrationServiceHTTP.executeMigration();
+        } catch (httpError) {
+            console.log('⚠️ HTTP API failed, trying alternative connection...');
+            try {
+                migrationResult = await MigrationServiceAlt.executeSQLFile(schemaFilePath);
+            } catch (altError) {
+                console.log('⚠️ Alternative service failed, trying original...');
+                migrationResult = await MigrationService.executeSQLFile(schemaFilePath);
+            }
         }
         
         console.log('🎉 Migration execution completed');
