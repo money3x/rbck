@@ -5,8 +5,22 @@ const winston = require('winston');
 
 class MigrationService {
   constructor() {
+    // Handle different connection formats
+    const getDbHost = () => {
+      if (process.env.SUPABASE_DB_HOST) {
+        return process.env.SUPABASE_DB_HOST;
+      }
+      // Extract from SUPABASE_URL if available
+      if (process.env.SUPABASE_URL) {
+        const url = process.env.SUPABASE_URL.replace('https://', '');
+        const projectId = url.split('.')[0];
+        return `db.${projectId}.supabase.co`;
+      }
+      return 'db.yfituqryipsdmqyjxpon.supabase.co';
+    };
+
     this.dbConfig = {
-      host: process.env.SUPABASE_DB_HOST || process.env.SUPABASE_URL?.replace('https://', '').replace('.supabase.co', '.supabase.co'),
+      host: getDbHost(),
       port: process.env.SUPABASE_DB_PORT || 5432,
       database: process.env.SUPABASE_DB_NAME || 'postgres',
       user: process.env.SUPABASE_DB_USER || 'postgres',
