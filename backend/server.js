@@ -27,6 +27,7 @@ const authRoutes = require('./routes/auth.js');
 const configRoutes = require('./routes/config.js');
 const aiRoutes = require('./routes/ai.js');
 const migrationRoutes = require('./routes/migration.js');
+const debugMigrationRoutes = require('./routes/debug-migration.js');
 const securityRoutes = require('./routes/security.js');
 const performanceRoutes = require('./routes/performance.js');
 const supabase = require('./supabaseClient');
@@ -232,6 +233,7 @@ app.use('/api/config', configRoutes);            // ✅ Configuration routes (pu
 app.use('/api/security', authenticateAdmin, securityRoutes);       // ✅ Security Dashboard routes (admin only)
 app.use('/api/ai', aiRoutes);                   // ✅ PHASE 3: AI provider routes (rate limiting temporarily disabled for debugging)
 app.use('/api/migration', migrationRoutes); // ✅ PHASE 3: Database migration routes (rate limiting removed for debugging)
+app.use('/api/debug-migration', debugMigrationRoutes); // 🔍 Debug migration routes
 app.use('/api/performance', performanceRoutes); // Performance monitoring routes
 app.use('/api', apiKeyRoutes);                  // Protected API key routes
 app.use('/api/posts', postRoutes);              // Post management routes (mount on /api/posts to avoid conflicts)
