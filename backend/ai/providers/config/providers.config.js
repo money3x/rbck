@@ -132,12 +132,12 @@ const validateConfig = (providerName, config) => {
 };
 
 const getEnabledProviders = () => {
-    const enabled = [];
+    const enabled = {};
     
     Object.keys(providersConfig).forEach(providerName => {
         const config = providersConfig[providerName];
         if (validateConfig(providerName, config)) {
-            enabled.push(providerName); // Return just the name string
+            enabled[providerName] = config; // Return object with config
         }
     });
 
@@ -176,7 +176,8 @@ const getProviderConfig = (providerName) => {
 
 const getDefaultProvider = () => {
     const enabled = getEnabledProviders();
-    return enabled.length > 0 ? enabled[0] : null;
+    const enabledKeys = Object.keys(enabled);
+    return enabledKeys.length > 0 ? enabledKeys[0] : null;
 };
 
 module.exports = {
@@ -195,5 +196,10 @@ module.exports = {
     
     getAllProviders: () => {
         return Object.keys(providersConfig);
+    },
+    
+    // Get just provider names as array (for backward compatibility)
+    getEnabledProviderNames: () => {
+        return Object.keys(getEnabledProviders());
     }
 };
