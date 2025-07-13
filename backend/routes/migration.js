@@ -3,6 +3,7 @@ const router = express.Router();
 const { supabase } = require('../supabaseClient');
 const { authenticateAdmin } = require('../middleware/auth');
 const MigrationService = require('../services/MigrationService');
+const MigrationServiceHTTP = require('../services/MigrationServiceHTTP');
 const path = require('path');
 const fs = require('fs');
 
@@ -150,31 +151,99 @@ router.post('/execute', async (req, res) => {
         
         const schemaFilePath = path.join(__dirname, '..', 'database-schema.sql');
         
-        // Test database connection first
-        console.log('🔌 Testing database connection...');
-        const connectionTest = await MigrationService.testConnection();
+        // Use modern HTTP API migration system (bypasses network restrictions)
+        console.log('🌐 Using HTTP API migration system...');
+        console.log('🔌 Testing connection capabilities...');
         
-        console.log('Connection test result:', connectionTest);
+        // Test HTTP API connection first
+        const httpConnectionTest = await MigrationServiceHTTP.testConnection();
         
-        if (!connectionTest.success) {
+        if (httpConnectionTest.success) {
+            console.log('✅ HTTP API connection successful - using modern migration system');
+            
+            // Execute migration via HTTP API
+            console.log('🚀 Executing migration via Supabase HTTP API...');
+            const migrationResult = await MigrationServiceHTTP.executeMigration();
+            
+            if (migrationResult.success) {
+                console.log('🎉 HTTP API migration completed successfully!');
+                
+                // Record migration completion via Supabase client
+                try {
+                    const { error: recordError } = await supabase
+                        .from('migrations')
+                        .insert({
+                            filename: 'rbck_http_api_migration.sql'
+                        });
+
+                    if (recordError && !recordError.message.includes('duplicate')) {
+                        console.warn('⚠️ Could not record migration:', recordError.message);
+                    }
+                } catch (recordErr) {
+                    console.warn('⚠️ Migration recording warning:', recordErr.message);
+                }
+
+                return res.json({
+                    success: true,
+                    message: '🚀 Modern HTTP API migration completed successfully',
+                    data: {
+                        ...migrationResult,
+                        migrationMethod: 'HTTP API',
+                        networkOptimized: true,
+                        timestamp: new Date().toISOString(),
+                        nextSteps: [
+                            'Verify all tables exist in Supabase Table Editor',
+                            'Run health check to confirm schema is complete',
+                            'Check migration status to see current progress',
+                            'Test application functionality'
+                        ]
+                    }
+                });
+            } else {
+                console.error('❌ HTTP API migration failed');
+                
+                return res.status(500).json({
+                    success: false,
+                    error: 'HTTP API migration failed',
+                    details: migrationResult.error,
+                    results: migrationResult.results,
+                    timestamp: new Date().toISOString(),
+                    troubleshooting: [
+                        'Check Supabase service role key',
+                        'Verify HTTP API permissions',
+                        'Check migration logs for details',
+                        'Try direct SQL execution in Supabase dashboard'
+                    ]
+                });
+            }
+        }
+        
+        // Fallback: Try direct connection if HTTP API fails
+        console.log('⚠️ HTTP API not available, trying direct connection...');
+        const directConnectionTest = await MigrationService.testConnection();
+        
+        if (!directConnectionTest.success) {
             return res.status(500).json({
                 success: false,
-                error: 'Database connection failed',
-                details: connectionTest.error,
+                error: 'All migration methods failed',
+                details: {
+                    httpApi: httpConnectionTest.error,
+                    directConnection: directConnectionTest.error
+                },
                 timestamp: new Date().toISOString(),
                 troubleshooting: [
-                    'Check SUPABASE_DB_HOST environment variable',
-                    'Check SUPABASE_DB_PASSWORD environment variable',
-                    'Verify Supabase database credentials',
-                    'Check network connectivity to Supabase'
+                    'Check SUPABASE_SERVICE_KEY environment variable',
+                    'Verify Supabase project is active',
+                    'Check network connectivity',
+                    'Try manual migration via Supabase SQL Editor'
                 ]
             });
         }
 
-        console.log('✅ Database connection successful');
+        console.log('✅ Direct connection successful - using fallback method');
 
-        // Execute migration
-        console.log('📄 Executing database schema...');
+        // Execute migration via direct connection
+        console.log('📄 Executing database schema via direct connection...');
         const migrationResult = await MigrationService.executeSQLFile(schemaFilePath);
 
         if (migrationResult.success) {
