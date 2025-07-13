@@ -1,7 +1,8 @@
 const axios = require('axios');
 const BaseProvider = require('../base/BaseProvider');
 
-class ChindaAIProvider extends BaseProvider {    constructor(config) {
+class ChindaAIProvider extends BaseProvider {
+    constructor(config) {
         super(config);
         this.baseURL = config.baseURL || config.baseUrl;
         this.apiKey = config.apiKey;

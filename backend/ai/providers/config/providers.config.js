@@ -84,7 +84,7 @@ const providersConfig = {
         model: process.env.CHINDA_MODEL || 'chinda-qwen3-32b',
         maxTokens: parseInt(process.env.CHINDA_MAX_TOKENS) || 2000,
         temperature: parseFloat(process.env.CHINDA_TEMPERATURE) || 0.7,
-        enabled: process.env.CHINDA_ENABLED === 'true',
+        enabled: !!process.env.CHINDA_API_KEY,
         models: ['chinda-qwen3-32b'],
         role: 'Local Authority & Cultural Expert',
         specialties: ['local expertise', 'cultural authority', 'thai context', 'local seo'],
