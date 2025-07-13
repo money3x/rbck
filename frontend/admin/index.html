@@ -9762,6 +9762,30 @@
                             ">📊 Test Monitor</button>
                         </div>
                         
+                        <!-- Additional Debug Buttons -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px;">
+                            <button onclick="window.testChindaConversation && window.testChindaConversation()" style="
+                                background: #8b5cf6;
+                                color: white;
+                                border: none;
+                                border-radius: 6px;
+                                padding: 6px 10px;
+                                font-size: 10px;
+                                cursor: pointer;
+                                font-weight: 600;
+                            ">🚀 Test Chinda</button>
+                            <button onclick="window.simulateAIActivity && window.simulateAIActivity()" style="
+                                background: #06b6d4;
+                                color: white;
+                                border: none;
+                                border-radius: 6px;
+                                padding: 6px 10px;
+                                font-size: 10px;
+                                cursor: pointer;
+                                font-weight: 600;
+                            ">🎭 Simulate AI</button>
+                        </div>
+                        
                         <!-- Deployment Status -->
                         <div style="margin-top: 8px; padding: 6px; background: #f0f9ff; border-radius: 4px; border-left: 3px solid #3b82f6;">
                             <div style="font-size: 10px; color: #1e40af; font-weight: 600;">🚀 Deployment Status</div>
@@ -9803,15 +9827,21 @@
             // Clear any existing interval
             if (window.aiStatusInterval) {
                 clearInterval(window.aiStatusInterval);
+                console.log('🔄 [MONITORING] Cleared existing interval');
             }
+            
+            console.log('🚀 [MONITORING] Starting real-time AI status monitoring...');
             
             // Initial check
             window.refreshAIStatus();
             
             // Set up periodic refresh every 10 seconds
             window.aiStatusInterval = setInterval(() => {
+                console.log('⏰ [MONITORING] Periodic refresh triggered');
                 window.refreshAIStatus();
             }, 10000);
+            
+            console.log('✅ [MONITORING] Real-time monitoring active (10s interval)');
         };
 
         window.refreshAIStatus = async function() {
@@ -9830,6 +9860,18 @@
                 if (response.ok) {
                     const data = await response.json();
                     console.log('✅ [LIVE STATUS] API Response:', data);
+                    
+                    // Debug: Check if chinda is in the response
+                    if (data && data.data && data.data.providers) {
+                        console.log('🔍 [DEBUG] Available providers:', Object.keys(data.data.providers));
+                        
+                        if (data.data.providers.chinda) {
+                            console.log('🚀 [DEBUG] Chinda found in response:', data.data.providers.chinda);
+                        } else {
+                            console.warn('⚠️ [DEBUG] Chinda NOT found in API response');
+                        }
+                    }
+                    
                     window.updateAIStatusDisplay(data);
                     window.updateDeploymentStatus();
                 } else {
@@ -9957,7 +9999,7 @@
                 },
                 chinda: {
                     name: 'ChindaX AI',
-                    icon: '🧠',
+                    icon: '🚀',
                     role: 'ที่ปรึกษาหลายภาษา',
                     expertise: ['แปลภาษา', 'ปรับวัฒนธรรม', 'ภาษาไทย']
                 }

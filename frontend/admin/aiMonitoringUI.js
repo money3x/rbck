@@ -26,7 +26,7 @@ export class AIMonitoringUI {
             openai: { name: 'OpenAI GPT', icon: '🧠', color: '#00a67e' },
             claude: { name: 'Claude AI', icon: '🎭', color: '#ff6b35' },
             deepseek: { name: 'DeepSeek AI', icon: '🔍', color: '#7c3aed' },
-            chinda: { name: 'ChindaX AI', icon: '🧠', color: '#10b981' }
+            chinda: { name: 'ChindaX AI', icon: '🚀', color: '#10b981' }
         };
         
         this.initializeMetrics();
@@ -178,25 +178,34 @@ export class AIMonitoringUI {
     async collectProviderMetrics(provider) {
         const startTime = Date.now();
         
+        console.log(`📊 [AI MONITOR] Collecting metrics for ${provider}...`);
+        
         try {
             // Try to get provider status from backend first
             const statusResponse = await this.getProviderStatus(provider);
+            console.log(`📊 [AI MONITOR] ${provider} status response:`, statusResponse);
             
             // Test provider using API
             const testResponse = await this.testProviderAPI(provider);
+            console.log(`📊 [AI MONITOR] ${provider} test response:`, testResponse);
+            
             const responseTime = Date.now() - startTime;
             
             // Update metrics with both status and test data
-            this.updateProviderMetrics(provider, {
+            const metricsData = {
                 responseTime: testResponse.responseTime || responseTime,
                 success: testResponse.success,
                 quality: testResponse.quality || 0.8,
                 tokensUsed: testResponse.tokensUsed || 0,
                 cost: testResponse.cost || 0,
                 status: statusResponse.status || 'unknown'
-            });
+            };
+            
+            console.log(`📊 [AI MONITOR] Updating ${provider} metrics:`, metricsData);
+            this.updateProviderMetrics(provider, metricsData);
             
         } catch (error) {
+            console.error(`❌ [AI MONITOR] Error collecting ${provider} metrics:`, error);
             const responseTime = Date.now() - startTime;
             this.updateProviderMetrics(provider, {
                 responseTime,

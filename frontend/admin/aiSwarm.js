@@ -763,11 +763,18 @@ export class AISwarmCouncil {
      */
     async executeBackendSwarmProcess(workflow, prompt) {
         try {
-            // Import auth function
-            const { authenticatedFetch } = await import('./auth.js');
+            // Import auth function - fallback if not available
+            let authenticatedFetch;
+            try {
+                const authModule = await import('./auth.js');
+                authenticatedFetch = authModule.authenticatedFetch;
+            } catch (authError) {
+                console.warn('⚠️ [AI SWARM] Auth module not available, using regular fetch');
+                authenticatedFetch = fetch;
+            }
             
-            // Call backend swarm API
-            const response = await authenticatedFetch(`${API_BASE}/ai/swarm/process`, {
+            // Call backend swarm API (now public endpoint)
+            const response = await fetch(`${API_BASE}/ai/swarm/process`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -1016,7 +1023,11 @@ export class AISwarmCouncil {
      */
     addConversationMessage(sender, message) {
         const conversationFeed = document.getElementById('aiConversationLogs');
-        if (!conversationFeed) return;
+        if (!conversationFeed) {
+            console.warn('⚠️ [AI SWARM] Conversation feed not found, creating temporary log');
+            console.log(`📝 [${sender.toUpperCase()}] ${message}`);
+            return;
+        }
 
         // Remove empty state if it exists
         const emptyState = conversationFeed.querySelector('.logs-empty');
@@ -1044,6 +1055,9 @@ export class AISwarmCouncil {
 
         conversationFeed.appendChild(messageDiv);
         conversationFeed.scrollTop = conversationFeed.scrollHeight;
+
+        // Also log to console for debugging
+        console.log(`📝 [AI LOG] ${senderName}: ${message}`);
 
         // Store in conversation history
         this.conversationHistory.push({
@@ -1137,6 +1151,67 @@ export class AISwarmCouncil {
     bindGlobalFunctions() {
         // Make the instance globally available
         window.aiSwarmCouncil = this;
+        
+        // Bind testing functions to debug conversation log issues
+        window.testChindaConversation = () => this.testChindaConversationLog();
+        window.simulateAIActivity = () => this.simulateAIActivity();
+    }
+
+    /**
+     * Test Chinda conversation logging
+     */
+    async testChindaConversationLog() {
+        console.log('🧪 [TEST] Testing Chinda conversation logging...');
+        
+        // Clear existing logs
+        this.clearConversationDisplay();
+        
+        // Test messages
+        this.addConversationMessage('system', '🧪 Testing Chinda AI conversation logging...');
+        await this.delay(500);
+        
+        this.addConversationMessage('chinda', 'สวัสดีครับ! ผม ChindaX AI พร้อมให้บริการแล้วครับ');
+        await this.delay(1000);
+        
+        this.addConversationMessage('gemini', 'Hello! This is Gemini, working alongside ChindaX');
+        await this.delay(1000);
+        
+        this.addConversationMessage('chinda', 'ตอนนี้ระบบ AI Swarm Council ทำงานร่วมกับ Gemini และ ChindaX แล้วครับ');
+        await this.delay(1000);
+        
+        this.addConversationMessage('system', '✅ Chinda conversation logging test completed!');
+        
+        showNotification('🧪 ทดสอบ Chinda conversation log เสร็จสิ้น', 'success');
+    }
+
+    /**
+     * Simulate AI activity for debugging
+     */
+    async simulateAIActivity() {
+        console.log('🎭 [SIMULATE] Simulating AI activity...');
+        
+        this.addConversationMessage('system', '🎭 Simulating AI provider activity...');
+        await this.delay(500);
+        
+        const providers = ['gemini', 'chinda', 'openai', 'claude'];
+        const activities = [
+            'กำลังวิเคราะห์เนื้อหา...',
+            'ปรับปรุงการเขียนให้ดีขึ้น...',
+            'ตรวจสอบความถูกต้อง...',
+            'เพิ่มประสิทธิภาพ SEO...',
+            'แปลเป็นภาษาไทย...'
+        ];
+        
+        for (let i = 0; i < 5; i++) {
+            const randomProvider = providers[Math.floor(Math.random() * providers.length)];
+            const randomActivity = activities[Math.floor(Math.random() * activities.length)];
+            
+            this.addConversationMessage(randomProvider, randomActivity);
+            await this.delay(800);
+        }
+        
+        this.addConversationMessage('system', '🎉 AI activity simulation completed!');
+        showNotification('🎭 จำลองกิจกรรม AI เสร็จสิ้น', 'success');
     }
 
     /**
