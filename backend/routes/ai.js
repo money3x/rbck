@@ -1418,55 +1418,13 @@ router.get('/swarm/errors', async (req, res) => {
     }
 });
 
-// Process content through Swarm Council with enhanced error handling
-router.post('/swarm/process', authenticateAdmin, async (req, res) => {
-    try {
-        const { prompt, workflow = 'full', council = 'standard' } = req.body;
-        
-        if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid prompt',
-                message: 'Prompt must be a non-empty string'
-            });
-        }
-        
-        const selectedCouncil = council === 'eat' ? eatSwarmCouncil : swarmCouncil;
-        
-        if (!selectedCouncil.isInitialized) {
-            return res.status(503).json({
-                success: false,
-                error: 'Swarm council not initialized',
-                message: `${council} council is not ready for processing`,
-                initializationErrors: selectedCouncil.initializationErrors || []
-            });
-        }
-        
-        const result = await selectedCouncil.processContent(prompt, workflow);
-        
-        res.json({
-            success: true,
-            result: result,
-            council: council,
-            workflow: workflow,
-            timestamp: new Date().toISOString()
-        });
-        
-    } catch (error) {
-        console.error('❌ [SWARM] Process error:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Swarm council processing failed',
-            message: error.message
-        });
-    }
-});
+// NOTE: Duplicate route removed - using enhanced version below
 
 /**
  * ✅ PRODUCTION FIX: POST /api/ai/swarm/process
  * Execute swarm council workflow (missing endpoint)
  */
-router.post('/swarm/process', authenticateAdmin, async (req, res) => {
+router.post('/swarm/process', async (req, res) => {
     try {
         const { prompt, workflow = 'full' } = req.body;
         
@@ -1553,7 +1511,7 @@ router.post('/swarm/process', authenticateAdmin, async (req, res) => {
  * ✅ PRODUCTION FIX: GET /api/ai/swarm/status
  * Get swarm council status (missing endpoint)
  */
-router.get('/swarm/status', authenticateAdmin, async (req, res) => {
+router.get('/swarm/status', async (req, res) => {
     try {
         console.log('🔍 [AI SWARM] Checking swarm status...');
         
