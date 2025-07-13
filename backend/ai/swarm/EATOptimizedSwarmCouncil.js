@@ -2,7 +2,7 @@ const ProviderFactory = require('../providers/factory/ProviderFactory');
 const { getEnabledProviders } = require('../providers/config/providers.config');
 
 class EATOptimizedSwarmCouncil {
-    constructor() {
+    constructor(autoInit = false) {
         this.providers = {};
         this.eatRoles = {};
         this.seoGuidelines = {};
@@ -10,7 +10,14 @@ class EATOptimizedSwarmCouncil {
         this.isInitialized = false;
         this.initializationErrors = [];
         this.lastInitializationAttempt = null;
-        this.initializeEATSwarm();
+        
+        // Only auto-initialize if explicitly requested
+        if (autoInit) {
+            console.log('🎯 [E-A-T Swarm] Auto-initialization requested');
+            this.initializeEATSwarm();
+        } else {
+            console.log('🎯 [E-A-T Swarm] Created without auto-initialization');
+        }
     }
     
     async initializeEATSwarm() {

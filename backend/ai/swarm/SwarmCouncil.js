@@ -2,7 +2,7 @@ const ProviderFactory = require('../providers/factory/ProviderFactory');
 const { getEnabledProviders } = require('../providers/config/providers.config');
 
 class SwarmCouncil {
-    constructor() {
+    constructor(autoInit = false) {
         this.providers = {};
         this.roles = {};
         this.isInitialized = false;
@@ -10,8 +10,13 @@ class SwarmCouncil {
         this.lastInitializationAttempt = null;
         this.healthChecks = new Map();
         
-        // Start initialization with error handling
-        this.initializeSwarm();
+        // Only auto-initialize if explicitly requested
+        if (autoInit) {
+            console.log('🤖 [Swarm] Auto-initialization requested');
+            this.initializeSwarm();
+        } else {
+            console.log('🤖 [Swarm] Created without auto-initialization');
+        }
     }
     
     async initializeSwarm() {

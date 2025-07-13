@@ -19,8 +19,8 @@ class SwarmCouncilManager {
      */
     getSwarmCouncil() {
         if (!this.swarmCouncil) {
-            console.log('🤖 [Manager] Creating SwarmCouncil singleton instance...');
-            this.swarmCouncil = new SwarmCouncil();
+            console.log('🤖 [Manager] Creating SwarmCouncil singleton instance (no auto-init)...');
+            this.swarmCouncil = new SwarmCouncil(false); // Disable auto-init
         }
         return this.swarmCouncil;
     }
@@ -30,8 +30,8 @@ class SwarmCouncilManager {
      */
     getEATSwarmCouncil() {
         if (!this.eatSwarmCouncil) {
-            console.log('🎯 [Manager] Creating EATOptimizedSwarmCouncil singleton instance...');
-            this.eatSwarmCouncil = new EATOptimizedSwarmCouncil();
+            console.log('🎯 [Manager] Creating EATOptimizedSwarmCouncil singleton instance (no auto-init)...');
+            this.eatSwarmCouncil = new EATOptimizedSwarmCouncil(false); // Disable auto-init
         }
         return this.eatSwarmCouncil;
     }
@@ -58,12 +58,15 @@ class SwarmCouncilManager {
 
         this.initializationPromise = new Promise(async (resolve, reject) => {
             try {
-                // Initialize councils
-                this.swarmCouncil = new SwarmCouncil();
-                this.eatSwarmCouncil = new EATOptimizedSwarmCouncil();
+                // Create councils without auto-init
+                console.log('🔧 [Manager] Creating councils...');
+                this.swarmCouncil = new SwarmCouncil(false);
+                this.eatSwarmCouncil = new EATOptimizedSwarmCouncil(false);
 
-                // Wait a moment for async initialization to complete
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                // Manual initialization with proper async handling
+                console.log('🔧 [Manager] Starting manual initialization...');
+                await this.swarmCouncil.initializeSwarm();
+                await this.eatSwarmCouncil.initializeEATSwarm();
 
                 console.log('✅ [Manager] All councils initialized successfully');
                 this.isInitializing = false;
