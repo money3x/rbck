@@ -1119,11 +1119,26 @@ app.use(errorHandler);
 // Enhanced server startup
 async function startServer() {
     try {
-        // Initialize AI Swarm Councils (singleton)
-        console.log('🤖 Initializing AI Swarm Councils...');
-        const swarmCouncilManager = require('./services/SwarmCouncilManager');
-        await swarmCouncilManager.initializeAll();
-        console.log('✅ AI Swarm Councils initialized');
+        // Initialize AI services in proper order
+        console.log('🤖 Initializing AI Services...');
+        
+        try {
+            // Initialize AI Provider Service first
+            const aiProviderService = require('./services/AIProviderService');
+            console.log('🔧 Initializing AI Provider Service...');
+            await aiProviderService.initializeProviders();
+            console.log('✅ AI Provider Service initialized');
+            
+            // Initialize AI Swarm Councils (singleton) 
+            console.log('🔧 Initializing AI Swarm Councils...');
+            const swarmCouncilManager = require('./services/SwarmCouncilManager');
+            await swarmCouncilManager.initializeAll();
+            console.log('✅ AI Swarm Councils initialized');
+            
+        } catch (aiError) {
+            console.warn('⚠️ AI Services initialization failed but server will continue:', aiError.message);
+            console.warn('⚠️ AI features may be limited');
+        }
         
         await loadInitialData();
           const server = app.listen(PORT, () => {            logger.info('🚀 ================================');

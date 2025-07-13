@@ -24,7 +24,8 @@ class AIProviderService {
         // Provider priority for fallbacks (based on reliability)
         this.fallbackOrder = ['openai', 'claude', 'deepseek', 'chinda', 'gemini'];
         
-        this.initializeProviders();
+        // Don't auto-initialize - let it be called explicitly when needed
+        // this.initializeProviders();
     }
     
     /**
