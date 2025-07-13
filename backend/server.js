@@ -1,3 +1,4 @@
+console.log('🚀 [INIT] Loading server.js...');
 require('dotenv').config(); // Load environment variables
 
 // ✅ SECURITY FIX: Early environment validation
@@ -234,6 +235,7 @@ app.delete('/api/cache/clear', (req, res) => {
 });
 
 // API Routes with enhanced middleware
+console.log('🔧 [INIT] Setting up API routes...');
 app.use('/api/auth', authRoutes); // Authentication routes (validation handled per-route)
 app.use('/api/config', configRoutes);            // ✅ Configuration routes (public for frontend)
 app.use('/api/security', authenticateAdmin, securityRoutes);       // ✅ Security Dashboard routes (admin only)
@@ -243,6 +245,7 @@ app.use('/api/debug-migration', debugMigrationRoutes); // 🔍 Debug migration r
 app.use('/api/performance', performanceRoutes); // Performance monitoring routes
 app.use('/api', apiKeyRoutes);                  // Protected API key routes
 app.use('/api/posts', postRoutes);              // Post management routes (mount on /api/posts to avoid conflicts)
+console.log('✅ [INIT] API routes configured');
 
 // Static files - Serve frontend files (DISABLED - Frontend served by Netlify)
 // app.use(express.static(path.join(__dirname, '..', 'frontend')));
@@ -1113,14 +1116,17 @@ app.use('/api/*', (req, res) => {
 // app.use('/cms-script.js', express.static(path.join(__dirname, '..', 'frontend', 'js', 'cms-script.js')));
 
 // Error handling middleware (must be last)
+console.log('🔧 [INIT] Setting up error handling middleware...');
 app.use(handleNotFound);
 app.use(errorHandler);
+console.log('✅ [INIT] All middleware configured');
 
 // Enhanced server startup
 async function startServer() {
+    console.log('🚀 [START] startServer() called');
     try {
         // Initialize AI services in proper order
-        console.log('🤖 Initializing AI Services...');
+        console.log('🤖 [START] Initializing AI Services...');
         
         try {
             // Initialize AI Provider Service first
@@ -1211,5 +1217,12 @@ module.exports = app;
 
 // Only start server if this file is run directly (not in tests)
 if (require.main === module) {
-    startServer();
+    console.log('🚀 [MAIN] Starting server...');
+    startServer().catch(error => {
+        console.error('❌ [MAIN] Server startup failed:', error);
+        console.error('❌ [MAIN] Stack trace:', error.stack);
+        process.exit(1);
+    });
+} else {
+    console.log('📦 [MAIN] Module loaded but not executed directly');
 }
