@@ -1,4 +1,4 @@
-console.log('🚀 [INIT] Loading server.js v2025-07-13-swarm-endpoints...');
+console.log('🚀 [INIT] Loading server.js v2025-07-13-swarm-fixed...');
 require('dotenv').config(); // Load environment variables
 
 // ✅ SECURITY FIX: Early environment validation
