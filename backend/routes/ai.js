@@ -174,14 +174,27 @@ let costTracking = {
     providers: {}
 };
 
-// Initialize provider cost tracking
+// Initialize provider cost tracking with comprehensive metrics
 const allProviders = ['gemini', 'openai', 'claude', 'deepseek', 'chinda'];
+const providerMetrics = {};
+const conversationLogs = [];
+
 allProviders.forEach(provider => {
     costTracking.providers[provider] = {
         totalRequests: 0,
         totalTokens: 0,
         totalCost: 0,
         lastUsed: null
+    };
+    
+    // Real-time monitoring metrics
+    providerMetrics[provider] = {
+        responseTimesHistory: [],
+        successCount: 0,
+        errorCount: 0,
+        qualityScores: [],
+        lastUpdateTime: null,
+        isActive: false
     };
 });
 
@@ -238,13 +251,51 @@ router.post('/test/:provider', async (req, res) => {
             error: isSuccess ? null : 'Simulated API error'
         };
         
+        const actualResponseTime = Date.now() - startTime;
+        
+        // Update real-time monitoring metrics
+        const metrics = providerMetrics[provider];
+        metrics.responseTimesHistory.push(actualResponseTime);
+        metrics.successCount++;
+        metrics.qualityScores.push(result.quality);
+        metrics.lastUpdateTime = new Date().toISOString();
+        metrics.isActive = true;
+        
+        // Keep only last 50 entries for performance
+        if (metrics.responseTimesHistory.length > 50) {
+            metrics.responseTimesHistory = metrics.responseTimesHistory.slice(-50);
+            metrics.qualityScores = metrics.qualityScores.slice(-50);
+        }
+        
+        // Log conversation for AI logs system
+        const conversationEntry = {
+            id: Date.now() + Math.random(),
+            timestamp: new Date().toISOString(),
+            provider: provider,
+            providerName: providerConfig.name,
+            type: 'test',
+            prompt: prompt,
+            response: result.content,
+            responseTime: actualResponseTime,
+            tokensUsed: result.tokensUsed,
+            quality: result.quality,
+            success: true,
+            cost: cost
+        };
+        
+        conversationLogs.unshift(conversationEntry); // Add to beginning
+        
+        // Keep only last 100 conversations for memory management
+        if (conversationLogs.length > 100) {
+            conversationLogs.length = 100;
+        }
+        
         console.log(`✅ [AI TEST] ${provider} test result:`, {
             success: result.success,
             tokensUsed: result.tokensUsed,
-            quality: result.quality
+            quality: result.quality,
+            responseTime: actualResponseTime
         });
-        
-        const responseTime = Date.now() - startTime;
         
         // Update cost tracking with safety checks
         const tokens = result.tokensUsed || Math.floor(prompt.length / 4);
@@ -260,7 +311,7 @@ router.post('/test/:provider', async (req, res) => {
         res.json({
             success: true,
             provider: provider,
-            responseTime: responseTime,
+            responseTime: actualResponseTime,
             quality: result.quality || 0.9, // High quality for successful test
             tokensUsed: tokens,
             cost: cost,
@@ -271,6 +322,13 @@ router.post('/test/:provider', async (req, res) => {
     } catch (error) {
         const responseTime = Date.now() - startTime;
         console.error(`❌ [AI TEST] ${provider} test failed:`, error);
+        
+        // Update error metrics
+        const metrics = providerMetrics[provider];
+        if (metrics) {
+            metrics.errorCount++;
+            metrics.lastUpdateTime = new Date().toISOString();
+        }
         
         res.status(500).json({
             success: false,
@@ -835,27 +893,51 @@ router.get('/metrics', async (req, res) => {
                 lastUsed: null
             };
             
-            // Get provider config from SecureConfigService
-            const provider = SecureConfigService.getProviderConfig(key);
-            if (!provider) continue;
+            // Get real-time metrics
+            const realtimeMetrics = providerMetrics[key] || {
+                responseTimesHistory: [],
+                successCount: 0,
+                errorCount: 0,
+                qualityScores: [],
+                lastUpdateTime: null,
+                isActive: false
+            };
+            
+            // Get AI_PROVIDERS config
+            const providerConfig = AI_PROVIDERS[key];
+            if (!providerConfig) continue;
             
             // Check if API key is configured
-            const configured = SecureConfigService.hasValidKey(key);
+            const hasApiKey = !!process.env[`${key.toUpperCase()}_API_KEY`];
+            
+            // Calculate real-time averages
+            const avgResponseTime = realtimeMetrics.responseTimesHistory.length > 0 
+                ? realtimeMetrics.responseTimesHistory.reduce((sum, time) => sum + time, 0) / realtimeMetrics.responseTimesHistory.length
+                : providerConfig.responseTime;
+            
+            const avgQuality = realtimeMetrics.qualityScores.length > 0
+                ? realtimeMetrics.qualityScores.reduce((sum, score) => sum + score, 0) / realtimeMetrics.qualityScores.length
+                : 0.8;
+            
+            const successRate = (realtimeMetrics.successCount + realtimeMetrics.errorCount) > 0
+                ? realtimeMetrics.successCount / (realtimeMetrics.successCount + realtimeMetrics.errorCount)
+                : 0.9;
             
             metrics[key] = {
-                name: provider.name,
-                status: configured ? provider.status : 'not_configured',
-                configured: configured,
-                totalRequests: providerTracking.totalRequests,
-                successfulRequests: Math.floor(providerTracking.totalRequests * provider.successRate),
-                averageResponseTime: provider.responseTime + (Math.random() * 200 - 100),
-                successRate: provider.successRate * 100, // Convert to percentage
-                qualityScore: 3.5 + (provider.successRate * 1.5), // Scale to 3.5-5.0
-                uptime: provider.status === 'active' ? 95 + Math.random() * 5 : 0,
+                name: providerConfig.name,
+                status: hasApiKey && providerConfig.enabled ? 'active' : 'not_configured',
+                configured: hasApiKey,
+                totalRequests: realtimeMetrics.successCount + realtimeMetrics.errorCount,
+                successfulRequests: realtimeMetrics.successCount,
+                averageResponseTime: Math.round(avgResponseTime),
+                successRate: Math.round(successRate * 100), // Convert to percentage
+                qualityScore: Math.round(avgQuality * 100) / 100, // Round to 2 decimals
+                uptime: Math.round(successRate * 100),
                 cost: providerTracking.totalCost,
                 totalTokens: providerTracking.totalTokens,
-                costPerToken: provider.costPerToken * 35, // Convert to THB
-                lastActive: providerTracking.lastUsed || new Date(Date.now() - Math.random() * 3600000).toISOString()
+                costPerToken: providerConfig.costPerToken,
+                lastActive: realtimeMetrics.lastUpdateTime || new Date().toISOString(),
+                isActive: realtimeMetrics.isActive
             };
         }
         
@@ -873,6 +955,43 @@ router.get('/metrics', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to get AI metrics'
+        });
+    }
+});
+
+/**
+ * ✅ CONVERSATION LOGS: GET /api/ai/conversations
+ * Get recent AI conversation logs
+ */
+router.get('/conversations', (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 50;
+        const provider = req.query.provider;
+        
+        let logs = [...conversationLogs];
+        
+        // Filter by provider if specified
+        if (provider) {
+            logs = logs.filter(log => log.provider === provider);
+        }
+        
+        // Limit results
+        logs = logs.slice(0, limit);
+        
+        res.json({
+            success: true,
+            conversations: logs,
+            totalCount: conversationLogs.length,
+            filteredCount: logs.length,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('❌ [CONVERSATIONS] Error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            code: 'CONVERSATIONS_ERROR'
         });
     }
 });

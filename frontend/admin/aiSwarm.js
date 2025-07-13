@@ -1155,6 +1155,51 @@ export class AISwarmCouncil {
         // Bind testing functions to debug conversation log issues
         window.testChindaConversation = () => this.testChindaConversationLog();
         window.simulateAIActivity = () => this.simulateAIActivity();
+        window.loadRealConversationLogs = () => this.loadRealConversationLogs();
+    }
+
+    /**
+     * Load real conversation logs from backend
+     */
+    async loadRealConversationLogs() {
+        try {
+            console.log('📡 [AI SWARM] Loading real conversation logs from backend...');
+            
+            const response = await fetch(`${API_BASE}/ai/conversations?limit=20`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('📡 [AI SWARM] Conversation logs loaded:', data);
+                
+                if (data.success && data.conversations && data.conversations.length > 0) {
+                    // Clear existing logs
+                    this.clearConversationDisplay();
+                    
+                    // Add system message
+                    this.addConversationMessage('system', `📡 Loaded ${data.conversations.length} real conversation logs from backend`);
+                    
+                    // Display each conversation
+                    data.conversations.forEach(conversation => {
+                        const timestamp = new Date(conversation.timestamp).toLocaleTimeString();
+                        const message = `[${timestamp}] ${conversation.response || conversation.prompt}`;
+                        this.addConversationMessage(conversation.provider, message);
+                    });
+                    
+                    showNotification(`📡 Loaded ${data.conversations.length} conversation logs`, 'success');
+                } else {
+                    this.addConversationMessage('system', '📡 No conversation logs found in backend');
+                    showNotification('📡 No conversation logs found', 'info');
+                }
+                
+            } else {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+        } catch (error) {
+            console.error('❌ [AI SWARM] Failed to load conversation logs:', error);
+            this.addConversationMessage('system', `❌ Failed to load conversation logs: ${error.message}`);
+            showNotification('❌ Failed to load conversation logs', 'error');
+        }
     }
 
     /**

@@ -217,17 +217,27 @@ export class AIMonitoringUI {
     }
 
     /**
-     * Get provider status from backend
+     * Get provider status from backend using new metrics API
      */
     async getProviderStatus(provider) {
         try {
-            const { authenticatedFetch } = await import('./auth.js');
-            const response = await authenticatedFetch(`${API_BASE}/ai/status/${provider}`);
+            // Use public metrics endpoint instead of individual status
+            const response = await fetch(`${API_BASE}/ai/metrics`);
             
             if (response.ok) {
                 const data = await response.json();
-                console.log(`📊 [AI Monitor] ${provider} status:`, data);
-                return data.status || { status: 'unknown' };
+                console.log(`📊 [AI Monitor] Metrics response:`, data);
+                
+                if (data.success && data.metrics && data.metrics[provider]) {
+                    const providerMetrics = data.metrics[provider];
+                    return {
+                        status: providerMetrics.status || 'unknown',
+                        responseTime: providerMetrics.averageResponseTime,
+                        successRate: providerMetrics.successRate / 100,
+                        isActive: providerMetrics.isActive
+                    };
+                }
+                return { status: 'unknown' };
             } else {
                 return { status: 'error' };
             }
