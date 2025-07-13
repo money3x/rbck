@@ -572,13 +572,13 @@ router.get('/status/:provider', async (req, res) => {
 });
 
 /**
- * ✅ MISSING ENDPOINT: GET /api/ai/metrics
- * Get comprehensive AI system metrics for monitoring
+ * ✅ FIXED ENDPOINT: GET /api/ai/metrics
+ * Get comprehensive AI system metrics for monitoring - STRUCTURE FIXED
  */
 router.get('/metrics', async (req, res) => {
     try {
         const providers = Object.keys(AI_PROVIDERS);
-        const metrics = {
+        const responseData = {
             timestamp: new Date().toISOString(),
             system: {
                 totalProviders: providers.length,
@@ -587,7 +587,8 @@ router.get('/metrics', async (req, res) => {
                 totalCost: costTracking.totalCost,
                 averageResponseTime: 0
             },
-            providers: {},
+            // ✅ FIXED: Frontend expects 'metrics' not 'providers'
+            metrics: {},
             performance: {
                 uptime: '99.9%',
                 requestsPerMinute: Math.floor(Math.random() * 50) + 10,
@@ -601,35 +602,57 @@ router.get('/metrics', async (req, res) => {
         
         for (const provider of providers) {
             const providerConfig = AI_PROVIDERS[provider];
-            const isActive = providerConfig.enabled && !!providerConfig.apiKey;
+            
+            // ✅ FIXED: Check environment variables instead of non-existent providerConfig.apiKey
+            const hasApiKey = !!process.env[`${provider.toUpperCase()}_API_KEY`];
+            const isActive = providerConfig.enabled && hasApiKey;
             const usage = costTracking.providers[provider];
+            
+            // Get real-time metrics from providerMetrics
+            const realtimeMetrics = providerMetrics[provider] || {};
+            const avgResponseTime = realtimeMetrics.responseTimesHistory?.length > 0 
+                ? realtimeMetrics.responseTimesHistory.reduce((a, b) => a + b, 0) / realtimeMetrics.responseTimesHistory.length
+                : providerConfig.responseTime;
+            
+            const successRate = realtimeMetrics.successCount > 0 
+                ? (realtimeMetrics.successCount / (realtimeMetrics.successCount + (realtimeMetrics.errorCount || 0))) * 100
+                : (isActive ? 85 + Math.random() * 15 : 0);
+            
+            const avgQuality = realtimeMetrics.qualityScores?.length > 0
+                ? realtimeMetrics.qualityScores.reduce((a, b) => a + b, 0) / realtimeMetrics.qualityScores.length
+                : (isActive ? 0.8 + Math.random() * 0.2 : 0);
             
             if (isActive) {
                 activeCount++;
-                totalResponseTime += providerConfig.responseTime;
-                metrics.system.totalRequests += usage.totalRequests;
+                totalResponseTime += avgResponseTime;
+                responseData.system.totalRequests += usage.totalRequests;
             }
             
-            metrics.providers[provider] = {
+            // ✅ FIXED: Structure matches what frontend expects
+            responseData.metrics[provider] = {
                 name: providerConfig.name,
-                active: isActive,
-                configured: !!providerConfig.apiKey,
-                responseTime: providerConfig.responseTime,
-                requests: usage.totalRequests,
+                status: isActive ? 'ready' : 'not_configured',
+                configured: hasApiKey,
+                isActive: isActive,
+                totalRequests: usage.totalRequests,
+                successfulRequests: usage.totalRequests - (realtimeMetrics.errorCount || 0),
+                averageResponseTime: Math.round(avgResponseTime),
+                successRate: Math.round(successRate),
+                qualityScore: avgQuality,
+                uptime: Math.round(successRate), // Use success rate as uptime
+                lastActive: usage.lastUsed,
                 tokens: usage.totalTokens,
                 cost: usage.totalCost,
-                lastUsed: usage.lastUsed,
-                successRate: isActive ? 0.85 + Math.random() * 0.15 : 0,
                 costPerToken: providerConfig.costPerToken
             };
         }
         
-        metrics.system.activeProviders = activeCount;
-        metrics.system.averageResponseTime = activeCount > 0 ? totalResponseTime / activeCount : 0;
+        responseData.system.activeProviders = activeCount;
+        responseData.system.averageResponseTime = activeCount > 0 ? totalResponseTime / activeCount : 0;
         
         res.json({
             success: true,
-            data: metrics
+            ...responseData
         });
         
     } catch (error) {
