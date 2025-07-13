@@ -15,13 +15,12 @@ const ProviderFactory = require('../ai/providers/factory/ProviderFactory');
 const swarmCouncil = swarmCouncilManager.getSwarmCouncil();
 const eatSwarmCouncil = swarmCouncilManager.getEATSwarmCouncil();
 
-// ✅ AI_PROVIDERS configuration (secure version using SecureConfigService)
+// ✅ AI_PROVIDERS configuration (simplified - no dynamic getters)
 const AI_PROVIDERS = {
     gemini: {
         name: 'Google Gemini',
         endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
         model: 'gemini-pro',
-        get apiKey() { return SecureConfigService.getApiKey('gemini'); },
         enabled: !!process.env.GEMINI_API_KEY,
         costPerToken: 0.000002,
         status: 'active',
@@ -31,7 +30,6 @@ const AI_PROVIDERS = {
         name: 'OpenAI GPT',
         endpoint: 'https://api.openai.com/v1/chat/completions',
         model: 'gpt-3.5-turbo',
-        get apiKey() { return SecureConfigService.getApiKey('openai'); },
         enabled: !!process.env.OPENAI_API_KEY,
         costPerToken: 0.000002,
         status: 'active',
@@ -41,7 +39,6 @@ const AI_PROVIDERS = {
         name: 'Anthropic Claude',
         endpoint: 'https://api.anthropic.com/v1/messages',
         model: 'claude-3-sonnet-20240229',
-        get apiKey() { return SecureConfigService.getApiKey('claude'); },
         enabled: !!process.env.CLAUDE_API_KEY,
         costPerToken: 0.000003,
         status: 'active',
@@ -51,7 +48,6 @@ const AI_PROVIDERS = {
         name: 'DeepSeek AI',
         endpoint: 'https://api.deepseek.com/v1/chat/completions',
         model: 'deepseek-chat',
-        get apiKey() { return SecureConfigService.getApiKey('deepseek'); },
         enabled: !!process.env.DEEPSEEK_API_KEY,
         costPerToken: 0.000001,
         status: 'active',
@@ -61,8 +57,6 @@ const AI_PROVIDERS = {
         name: 'Chinda AI',
         endpoint: process.env.CHINDA_BASE_URL || 'https://chindax.iapp.co.th/api/chat/completions',
         model: 'chinda-qwen3-32b',
-        get apiKey() { return SecureConfigService.getApiKey('chinda'); },
-        get jwtToken() { return process.env.CHINDA_JWT_TOKEN; },
         enabled: !!process.env.CHINDA_API_KEY,
         costPerToken: 0.000001,
         status: 'active',
