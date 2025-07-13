@@ -6,45 +6,149 @@ class SwarmCouncil {
         this.providers = {};
         this.roles = {};
         this.isInitialized = false;
+        this.initializationErrors = [];
+        this.lastInitializationAttempt = null;
+        this.healthChecks = new Map();
+        
+        // Start initialization with error handling
         this.initializeSwarm();
     }
     
-    initializeSwarm() {
+    async initializeSwarm() {
+        this.lastInitializationAttempt = new Date().toISOString();
+        this.initializationErrors = [];
+        
         try {
-            const enabledProviders = getEnabledProviders();
             console.log('🤖 [Swarm] Initializing AI Swarm Council...');
             
-            Object.entries(enabledProviders).forEach(([providerName, config]) => {
-                try {
-                    // Create provider instance
-                    const provider = ProviderFactory.createProvider(providerName);
-                    
-                    // Set role and context
-                    provider.setRole(config.role);
-                    provider.setSpecialties(config.specialties);
-                    provider.setCouncilContext(this);
-                    
-                    this.providers[providerName] = provider;
-                    this.roles[config.role] = providerName;
-                    
-                    console.log(`✅ [Swarm] ${config.name} initialized as ${config.role}`);
-                } catch (error) {
-                    console.warn(`⚠️ [Swarm] Failed to initialize ${providerName}:`, error.message);
-                }
-            });
+            const enabledProviders = getEnabledProviders();
             
-            this.isInitialized = true;
-            console.log(`🎯 [Swarm] Council initialized with ${Object.keys(this.providers).length} active members`);
+            if (!enabledProviders || Object.keys(enabledProviders).length === 0) {
+                throw new Error('No enabled providers found in configuration');
+            }
+            
+            let successfulInitializations = 0;
+            let totalProviders = Object.keys(enabledProviders).length;
+            
+            for (const [providerName, config] of Object.entries(enabledProviders)) {
+                try {
+                    console.log(`🔄 [Swarm] Initializing ${providerName}...`);
+                    
+                    // Validate provider config
+                    if (!config || !config.name) {
+                        throw new Error(`Invalid configuration for provider ${providerName}`);
+                    }
+                    
+                    // Create provider instance with timeout
+                    const provider = await this.createProviderWithTimeout(providerName, 10000);
+                    
+                    if (!provider) {
+                        throw new Error(`Failed to create provider instance for ${providerName}`);
+                    }
+                    
+                    // Set provider properties with error handling
+                    try {
+                        if (typeof provider.setRole === 'function') {
+                            provider.setRole(config.role || 'general');
+                        }
+                        if (typeof provider.setSpecialties === 'function') {
+                            provider.setSpecialties(config.specialties || []);
+                        }
+                        if (typeof provider.setCouncilContext === 'function') {
+                            provider.setCouncilContext(this);
+                        }
+                    } catch (setupError) {
+                        console.warn(`⚠️ [Swarm] Provider ${providerName} setup incomplete:`, setupError.message);
+                        // Continue with provider even if setup fails
+                    }
+                    
+                    // Store provider
+                    this.providers[providerName] = provider;
+                    if (config.role) {
+                        this.roles[config.role] = providerName;
+                    }
+                    
+                    // Initialize health check
+                    this.healthChecks.set(providerName, {
+                        lastCheck: new Date(),
+                        status: 'healthy',
+                        responseTime: 0
+                    });
+                    
+                    successfulInitializations++;
+                    console.log(`✅ [Swarm] ${config.name} initialized as ${config.role || 'general'} (${successfulInitializations}/${totalProviders})`);
+                    
+                } catch (error) {
+                    const errorDetails = {
+                        provider: providerName,
+                        error: error.message,
+                        timestamp: new Date().toISOString(),
+                        config: config ? config.name : 'Unknown'
+                    };
+                    
+                    this.initializationErrors.push(errorDetails);
+                    console.error(`❌ [Swarm] Failed to initialize ${providerName}:`, error.message);
+                    
+                    // Log additional debug info for troubleshooting
+                    if (process.env.NODE_ENV === 'development') {
+                        console.error(`❌ [Swarm] ${providerName} debug info:`, {
+                            configExists: !!config,
+                            configKeys: config ? Object.keys(config) : [],
+                            errorStack: error.stack
+                        });
+                    }
+                }
+            }
+            
+            // Determine initialization status
+            if (successfulInitializations === 0) {
+                this.isInitialized = false;
+                const errorMsg = `No providers could be initialized. Errors: ${this.initializationErrors.map(e => e.error).join(', ')}`;
+                console.error(`❌ [Swarm] Complete initialization failure:`, errorMsg);
+                throw new Error(errorMsg);
+            } else if (successfulInitializations < totalProviders) {
+                this.isInitialized = true; // Partial success is still operational
+                console.warn(`⚠️ [Swarm] Partial initialization: ${successfulInitializations}/${totalProviders} providers active`);
+                console.warn(`⚠️ [Swarm] Failed providers: ${this.initializationErrors.map(e => e.provider).join(', ')}`);
+            } else {
+                this.isInitialized = true;
+                console.log(`✅ [Swarm] Complete initialization: ${successfulInitializations}/${totalProviders} providers active`);
+            }
+            
+            console.log(`🎯 [Swarm] Council ready with ${Object.keys(this.providers).length} active members`);
+            
+            // Start periodic health checks
+            this.startHealthMonitoring();
             
         } catch (error) {
-            console.error('❌ [Swarm] Initialization failed:', error);
             this.isInitialized = false;
+            const finalError = {
+                general: 'SwarmCouncil initialization failed',
+                error: error.message,
+                timestamp: new Date().toISOString(),
+                providerErrors: this.initializationErrors
+            };
+            
+            this.initializationErrors.push(finalError);
+            console.error('❌ [Swarm] Fatal initialization error:', error.message);
+            console.error('❌ [Swarm] All errors:', this.initializationErrors);
         }
     }
     
     async processContent(prompt, workflow = 'full') {
         if (!this.isInitialized) {
-            throw new Error('Swarm Council not properly initialized');
+            const errorDetails = {
+                message: 'Swarm Council not properly initialized',
+                errors: this.initializationErrors,
+                lastAttempt: this.lastInitializationAttempt,
+                availableProviders: Object.keys(this.providers)
+            };
+            throw new Error(`Swarm Council not ready: ${JSON.stringify(errorDetails)}`);
+        }
+        
+        // Validate workflow input
+        if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+            throw new Error('Invalid prompt: must be a non-empty string');
         }
         
         const result = {
@@ -64,15 +168,15 @@ class SwarmCouncil {
             
             switch (workflow) {
                 case 'full':
-                    return await this.fullSwarmWorkflow(prompt, result);
+                    return await this.executeWorkflowSafely(() => this.fullSwarmWorkflow(prompt, result), 'full', result);
                 case 'create':
-                    return await this.creationWorkflow(prompt, result);
+                    return await this.executeWorkflowSafely(() => this.creationWorkflow(prompt, result), 'create', result);
                 case 'review':
-                    return await this.reviewWorkflow(prompt, result);
+                    return await this.executeWorkflowSafely(() => this.reviewWorkflow(prompt, result), 'review', result);
                 case 'optimize':
-                    return await this.optimizationWorkflow(prompt, result);
+                    return await this.executeWorkflowSafely(() => this.optimizationWorkflow(prompt, result), 'optimize', result);
                 default:
-                    throw new Error(`Unknown workflow: ${workflow}`);
+                    throw new Error(`Unknown workflow: ${workflow}. Available workflows: full, create, review, optimize`);
             }
         } catch (error) {
             console.error('❌ [Swarm] Processing error:', error);
@@ -271,6 +375,234 @@ class SwarmCouncil {
         }
         
         return await this.providers[memberProvider].generateContent(question);
+    }
+    
+    /**
+     * Create provider with timeout protection
+     */
+    async createProviderWithTimeout(providerName, timeout = 10000) {
+        return new Promise((resolve, reject) => {
+            const timeoutId = setTimeout(() => {
+                reject(new Error(`Provider ${providerName} initialization timeout after ${timeout}ms`));
+            }, timeout);
+            
+            try {
+                const provider = ProviderFactory.createProvider(providerName);
+                clearTimeout(timeoutId);
+                resolve(provider);
+            } catch (error) {
+                clearTimeout(timeoutId);
+                reject(error);
+            }
+        });
+    }
+    
+    /**
+     * Execute workflow with comprehensive error handling
+     */
+    async executeWorkflowSafely(workflowFunction, workflowName, result) {
+        try {
+            const startTime = Date.now();
+            const workflowResult = await workflowFunction();
+            const duration = Date.now() - startTime;
+            
+            workflowResult.metadata = workflowResult.metadata || {};
+            workflowResult.metadata.executionTime = duration;
+            workflowResult.metadata.workflowName = workflowName;
+            
+            return workflowResult;
+        } catch (error) {
+            console.error(`❌ [Swarm] ${workflowName} workflow failed:`, error.message);
+            
+            result.status = 'failed';
+            result.error = error.message;
+            result.metadata = result.metadata || {};
+            result.metadata.failedWorkflow = workflowName;
+            result.metadata.errorTimestamp = new Date().toISOString();
+            
+            // Attempt graceful degradation
+            if (Object.keys(this.providers).length > 0) {
+                console.log(`🔄 [Swarm] Attempting graceful degradation for ${workflowName}...`);
+                result.fallbackContent = await this.attemptFallbackContent(result.originalPrompt);
+                result.status = 'degraded';
+            }
+            
+            return result;
+        }
+    }
+    
+    /**
+     * Attempt fallback content generation with any available provider
+     */
+    async attemptFallbackContent(prompt) {
+        const availableProviders = Object.keys(this.providers);
+        
+        for (const providerName of availableProviders) {
+            try {
+                console.log(`🔄 [Swarm] Trying fallback with ${providerName}...`);
+                const provider = this.providers[providerName];
+                
+                if (provider && typeof provider.generateContent === 'function') {
+                    const content = await provider.generateContent(`${prompt}\n\n[Fallback mode - simple response requested]`);
+                    console.log(`✅ [Swarm] Fallback successful with ${providerName}`);
+                    return content;
+                }
+            } catch (error) {
+                console.warn(`⚠️ [Swarm] Fallback failed with ${providerName}:`, error.message);
+                continue;
+            }
+        }
+        
+        return 'Unable to generate content - all providers failed';
+    }
+    
+    /**
+     * Start periodic health monitoring for providers
+     */
+    startHealthMonitoring() {
+        if (this.healthMonitoringInterval) {
+            clearInterval(this.healthMonitoringInterval);
+        }
+        
+        this.healthMonitoringInterval = setInterval(async () => {
+            await this.performHealthChecks();
+        }, 300000); // Check every 5 minutes
+        
+        console.log('📊 [Swarm] Health monitoring started (5min intervals)');
+    }
+    
+    /**
+     * Perform health checks on all providers
+     */
+    async performHealthChecks() {
+        console.log('💓 [Swarm] Performing health checks...');
+        
+        for (const [providerName, provider] of Object.entries(this.providers)) {
+            try {
+                const startTime = Date.now();
+                
+                // Simple health check
+                if (typeof provider.checkHealth === 'function') {
+                    await provider.checkHealth();
+                } else if (typeof provider.generateContent === 'function') {
+                    await provider.generateContent('Health check');
+                }
+                
+                const responseTime = Date.now() - startTime;
+                
+                this.healthChecks.set(providerName, {
+                    lastCheck: new Date(),
+                    status: 'healthy',
+                    responseTime: responseTime
+                });
+                
+                console.log(`✅ [Swarm] ${providerName} health check passed (${responseTime}ms)`);
+                
+            } catch (error) {
+                this.healthChecks.set(providerName, {
+                    lastCheck: new Date(),
+                    status: 'unhealthy',
+                    error: error.message,
+                    responseTime: null
+                });
+                
+                console.warn(`❌ [Swarm] ${providerName} health check failed:`, error.message);
+            }
+        }
+    }
+    
+    /**
+     * Get comprehensive swarm status including health and errors
+     */
+    getDetailedStatus() {
+        const basicStatus = this.getCouncilStatus();
+        
+        return {
+            ...basicStatus,
+            initialization: {
+                isInitialized: this.isInitialized,
+                lastAttempt: this.lastInitializationAttempt,
+                errors: this.initializationErrors,
+                successfulProviders: Object.keys(this.providers),
+                failedProviders: this.initializationErrors.map(e => e.provider).filter(Boolean)
+            },
+            health: {
+                checks: Object.fromEntries(this.healthChecks),
+                lastMonitoringCheck: new Date().toISOString(),
+                overallHealth: this.calculateOverallHealth()
+            },
+            capabilities: {
+                workflows: ['full', 'create', 'review', 'optimize'],
+                fallbackEnabled: Object.keys(this.providers).length > 0,
+                healthMonitoring: !!this.healthMonitoringInterval
+            }
+        };
+    }
+    
+    /**
+     * Calculate overall health percentage
+     */
+    calculateOverallHealth() {
+        if (this.healthChecks.size === 0) return 0;
+        
+        let healthyCount = 0;
+        for (const [providerName, health] of this.healthChecks) {
+            if (health.status === 'healthy') healthyCount++;
+        }
+        
+        return Math.round((healthyCount / this.healthChecks.size) * 100);
+    }
+    
+    /**
+     * Reinitialize the swarm council
+     */
+    async reinitialize() {
+        console.log('🔄 [Swarm] Reinitializing SwarmCouncil...');
+        
+        // Stop health monitoring
+        if (this.healthMonitoringInterval) {
+            clearInterval(this.healthMonitoringInterval);
+            this.healthMonitoringInterval = null;
+        }
+        
+        // Clear existing state
+        this.providers = {};
+        this.roles = {};
+        this.isInitialized = false;
+        this.initializationErrors = [];
+        this.healthChecks.clear();
+        
+        // Reinitialize
+        await this.initializeSwarm();
+        
+        return this.getDetailedStatus();
+    }
+    
+    /**
+     * Cleanup resources
+     */
+    destroy() {
+        console.log('🗑️ [Swarm] Destroying SwarmCouncil...');
+        
+        if (this.healthMonitoringInterval) {
+            clearInterval(this.healthMonitoringInterval);
+        }
+        
+        // Cleanup providers if they have cleanup methods
+        for (const [providerName, provider] of Object.entries(this.providers)) {
+            if (typeof provider.destroy === 'function') {
+                try {
+                    provider.destroy();
+                } catch (error) {
+                    console.warn(`⚠️ [Swarm] Provider ${providerName} cleanup failed:`, error.message);
+                }
+            }
+        }
+        
+        this.providers = {};
+        this.roles = {};
+        this.healthChecks.clear();
+        this.isInitialized = false;
     }
 }
 

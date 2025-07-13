@@ -700,6 +700,70 @@ function setupDevelopmentAuth() {
     }
 }
 
+// ===== AI SYSTEMS INITIALIZATION =====
+async function initializeAISystems() {
+    console.log('🤖 [AI] Initializing AI systems...');
+    
+    try {
+        // Initialize AI Swarm Council
+        if (!aiSwarmCouncil) {
+            console.log('🌊 [AI] Initializing AI Swarm Council...');
+            aiSwarmCouncil = new AISwarmCouncil();
+            window.aiSwarmCouncil = aiSwarmCouncil;
+            console.log('✅ [AI] AI Swarm Council initialized');
+        }
+        
+        // Initialize AI Monitoring UI
+        if (!aiMonitoringUI) {
+            console.log('📊 [AI] Initializing AI Monitoring UI...');
+            aiMonitoringUI = new AIMonitoringUI();
+            window.aiMonitoringUI = aiMonitoringUI;
+            
+            // Auto-start monitoring if on monitoring section
+            const currentSection = document.querySelector('.content-section.active')?.id;
+            if (currentSection === 'ai-monitoring' || currentSection === 'performance') {
+                await aiMonitoringUI.startMonitoring();
+                console.log('📊 [AI] AI Monitoring started automatically');
+            }
+            
+            console.log('✅ [AI] AI Monitoring UI initialized');
+        }
+        
+        // Bind AI functions to window for global access
+        window.startAIMonitoring = async () => {
+            if (aiMonitoringUI) {
+                await aiMonitoringUI.startMonitoring();
+                showNotification('📊 AI Monitoring เริ่มทำงานแล้ว', 'success');
+            }
+        };
+        
+        window.stopAIMonitoring = () => {
+            if (aiMonitoringUI) {
+                aiMonitoringUI.stopMonitoring();
+                showNotification('🛑 หยุด AI Monitoring แล้ว', 'info');
+            }
+        };
+        
+        window.refreshAllProviderMetrics = async () => {
+            if (aiMonitoringUI) {
+                await aiMonitoringUI.refreshAllProviderMetrics();
+            }
+        };
+        
+        window.exportPerformanceReport = () => {
+            if (aiMonitoringUI) {
+                aiMonitoringUI.exportPerformanceReport();
+            }
+        };
+        
+        console.log('✅ [AI] All AI systems initialized successfully');
+        
+    } catch (error) {
+        console.error('❌ [AI] Failed to initialize AI systems:', error);
+        showNotification('❌ ไม่สามารถเริ่มต้นระบบ AI ได้', 'error');
+    }
+}
+
 // ===== SETUP FUNCTIONS =====
 function setupChatbotHandlers() {
     const chatbotForm = document.getElementById('chatbotForm');

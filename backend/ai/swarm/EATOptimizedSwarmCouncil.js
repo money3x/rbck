@@ -8,46 +8,138 @@ class EATOptimizedSwarmCouncil {
         this.seoGuidelines = {};
         this.eatGuidelines = {};
         this.isInitialized = false;
+        this.initializationErrors = [];
+        this.lastInitializationAttempt = null;
         this.initializeEATSwarm();
     }
     
-    initializeEATSwarm() {
+    async initializeEATSwarm() {
+        this.lastInitializationAttempt = new Date().toISOString();
+        this.initializationErrors = [];
+        
         try {
-            const enabledProviders = getEnabledProviders();
             console.log('🎯 [E-A-T Swarm] Initializing E-A-T Optimized Council...');
+            
+            const enabledProviders = getEnabledProviders();
+            
+            if (!enabledProviders || Object.keys(enabledProviders).length === 0) {
+                throw new Error('No enabled providers found for E-A-T Swarm initialization');
+            }
             
             // Sort providers by priority for E-A-T workflow
             const sortedProviders = Object.entries(enabledProviders)
                 .sort(([,a], [,b]) => (a.priority || 999) - (b.priority || 999));
             
-            sortedProviders.forEach(([providerName, config]) => {
+            let successfulInitializations = 0;
+            const totalProviders = sortedProviders.length;
+            
+            for (const [providerName, config] of sortedProviders) {
                 try {
+                    console.log(`🔄 [E-A-T Swarm] Initializing ${providerName} for E-A-T role...`);
+                    
+                    // Validate config
+                    if (!config || !config.name) {
+                        throw new Error(`Invalid E-A-T configuration for provider ${providerName}`);
+                    }
+                    
                     const provider = ProviderFactory.createProvider(providerName);
                     
-                    // Set E-A-T specific role and capabilities
-                    provider.setRole(config.role);
-                    provider.setSpecialties(config.specialties);
-                    provider.setEATCapabilities(config.eatCapabilities || {});
-                    provider.setCouncilContext(this);
+                    if (!provider) {
+                        throw new Error(`Failed to create E-A-T provider instance for ${providerName}`);
+                    }
+                    
+                    // Set E-A-T specific role and capabilities with error handling
+                    try {
+                        if (typeof provider.setRole === 'function') {
+                            provider.setRole(config.role || 'general');
+                        }
+                        if (typeof provider.setSpecialties === 'function') {
+                            provider.setSpecialties(config.specialties || []);
+                        }
+                        if (typeof provider.setEATCapabilities === 'function') {
+                            provider.setEATCapabilities(config.eatCapabilities || {});
+                        }
+                        if (typeof provider.setCouncilContext === 'function') {
+                            provider.setCouncilContext(this);
+                        }
+                    } catch (setupError) {
+                        console.warn(`⚠️ [E-A-T Swarm] Provider ${providerName} E-A-T setup incomplete:`, setupError.message);
+                        // Continue with provider even if E-A-T setup fails
+                    }
                     
                     this.providers[providerName] = provider;
-                    this.eatRoles[config.role] = providerName;
+                    if (config.role) {
+                        this.eatRoles[config.role] = providerName;
+                    }
                     
-                    console.log(`✅ [E-A-T Swarm] ${config.name} assigned as ${config.role} (Priority: ${config.priority})`);
+                    successfulInitializations++;
+                    console.log(`✅ [E-A-T Swarm] ${config.name} assigned as ${config.role || 'general'} (Priority: ${config.priority || 999}, ${successfulInitializations}/${totalProviders})`);
+                    
                 } catch (error) {
-                    console.warn(`⚠️ [E-A-T Swarm] Failed to initialize ${providerName}:`, error.message);
+                    const errorDetails = {
+                        provider: providerName,
+                        error: error.message,
+                        timestamp: new Date().toISOString(),
+                        config: config ? config.name : 'Unknown',
+                        eatRole: config?.role || 'Unknown'
+                    };
+                    
+                    this.initializationErrors.push(errorDetails);
+                    console.error(`❌ [E-A-T Swarm] Failed to initialize ${providerName}:`, error.message);
+                    
+                    if (process.env.NODE_ENV === 'development') {
+                        console.error(`❌ [E-A-T Swarm] ${providerName} debug info:`, {
+                            configExists: !!config,
+                            eatCapabilities: config?.eatCapabilities,
+                            errorStack: error.stack
+                        });
+                    }
                 }
-            });
+            }
             
-            this.initializeSEOGuidelines();
-            this.initializeEATGuidelines();
-            this.isInitialized = true;
+            // Initialize guidelines regardless of provider failures
+            try {
+                this.initializeSEOGuidelines();
+                this.initializeEATGuidelines();
+                console.log('✅ [E-A-T Swarm] E-A-T and SEO guidelines initialized');
+            } catch (guidelineError) {
+                console.warn('⚠️ [E-A-T Swarm] Guidelines initialization failed:', guidelineError.message);
+                this.initializationErrors.push({
+                    component: 'guidelines',
+                    error: guidelineError.message,
+                    timestamp: new Date().toISOString()
+                });
+            }
             
-            console.log(`🎯 [E-A-T Swarm] Council initialized with ${Object.keys(this.providers).length} E-A-T specialists`);
+            // Determine initialization status
+            if (successfulInitializations === 0) {
+                this.isInitialized = false;
+                const errorMsg = `No E-A-T providers could be initialized. Errors: ${this.initializationErrors.map(e => e.error).join(', ')}`;
+                console.error(`❌ [E-A-T Swarm] Complete initialization failure:`, errorMsg);
+                throw new Error(errorMsg);
+            } else {
+                this.isInitialized = true;
+                if (successfulInitializations < totalProviders) {
+                    console.warn(`⚠️ [E-A-T Swarm] Partial initialization: ${successfulInitializations}/${totalProviders} E-A-T specialists active`);
+                } else {
+                    console.log(`✅ [E-A-T Swarm] Complete initialization: ${successfulInitializations}/${totalProviders} E-A-T specialists active`);
+                }
+            }
+            
+            console.log(`🎯 [E-A-T Swarm] Council ready with ${Object.keys(this.providers).length} E-A-T specialists`);
             
         } catch (error) {
-            console.error('❌ [E-A-T Swarm] Initialization failed:', error);
             this.isInitialized = false;
+            const finalError = {
+                component: 'E-A-T SwarmCouncil',
+                error: error.message,
+                timestamp: new Date().toISOString(),
+                providerErrors: this.initializationErrors
+            };
+            
+            this.initializationErrors.push(finalError);
+            console.error('❌ [E-A-T Swarm] Fatal initialization error:', error.message);
+            console.error('❌ [E-A-T Swarm] All errors:', this.initializationErrors);
         }
     }
     
