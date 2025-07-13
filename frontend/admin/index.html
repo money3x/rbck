@@ -9654,7 +9654,7 @@
                     return sessionToken;
                 }
                 
-                console.warn('⚠️ [AUTH] No authentication token found');
+                // For public endpoints, don't warn about missing token
                 return null;
             } catch (error) {
                 console.error('❌ [AUTH] Error getting auth token:', error);
@@ -9669,7 +9669,7 @@
                 // Ensure headers exist
                 options.headers = options.headers || {};
                 
-                // Add auth token if available
+                // Add auth token if available (but don't require it for public endpoints)
                 const token = await window.getAuthToken();
                 if (token) {
                     options.headers['Authorization'] = `Bearer ${token}`;
@@ -9687,6 +9687,297 @@
                 throw error;
             }
         };
+
+        // ✅ LIVE AI STATUS DASHBOARD: Real-time provider monitoring
+        window.createLiveAIStatusDashboard = function() {
+            const dashboardHtml = `
+                <div id="liveAIStatusDashboard" style="
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    width: 350px;
+                    background: rgba(255, 255, 255, 0.95);
+                    border: 2px solid #4285f4;
+                    border-radius: 12px;
+                    padding: 15px;
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+                    backdrop-filter: blur(10px);
+                    z-index: 9999;
+                    font-family: 'Segoe UI', sans-serif;
+                    max-height: 500px;
+                    overflow-y: auto;
+                ">
+                    <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="margin: 0; color: #1a73e8; font-size: 16px;">🤖 Live AI Status</h3>
+                        <button onclick="window.toggleAIStatusDashboard()" style="
+                            background: none;
+                            border: none;
+                            font-size: 18px;
+                            cursor: pointer;
+                            color: #666;
+                            padding: 0;
+                            margin-left: auto;
+                        ">×</button>
+                    </div>
+                    
+                    <div id="aiStatusGrid" style="display: grid; gap: 8px;">
+                        <!-- Provider status cards will be inserted here -->
+                    </div>
+                    
+                    <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #e0e0e0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <small style="color: #666;">Last Updated: <span id="lastUpdateTime">--</span></small>
+                            <button onclick="window.refreshAIStatus()" style="
+                                background: #4285f4;
+                                color: white;
+                                border: none;
+                                border-radius: 6px;
+                                padding: 6px 12px;
+                                font-size: 12px;
+                                cursor: pointer;
+                            ">Refresh</button>
+                        </div>
+                        
+                        <!-- AI Action Buttons -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+                            <button onclick="window.testAISwarmCouncil()" style="
+                                background: #10b981;
+                                color: white;
+                                border: none;
+                                border-radius: 6px;
+                                padding: 8px 12px;
+                                font-size: 11px;
+                                cursor: pointer;
+                                font-weight: 600;
+                            ">🤖 Test Swarm</button>
+                            <button onclick="window.testAIMonitoring()" style="
+                                background: #f59e0b;
+                                color: white;
+                                border: none;
+                                border-radius: 6px;
+                                padding: 8px 12px;
+                                font-size: 11px;
+                                cursor: pointer;
+                                font-weight: 600;
+                            ">📊 Test Monitor</button>
+                        </div>
+                        
+                        <!-- Test Results -->
+                        <div id="aiTestResults" style="margin-top: 10px; font-size: 11px;"></div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing dashboard if any
+            const existing = document.getElementById('liveAIStatusDashboard');
+            if (existing) {
+                existing.remove();
+            }
+            
+            // Add new dashboard
+            document.body.insertAdjacentHTML('beforeend', dashboardHtml);
+            
+            // Start monitoring
+            window.startAIStatusMonitoring();
+        };
+
+        window.toggleAIStatusDashboard = function() {
+            const dashboard = document.getElementById('liveAIStatusDashboard');
+            if (dashboard) {
+                dashboard.remove();
+                clearInterval(window.aiStatusInterval);
+            } else {
+                window.createLiveAIStatusDashboard();
+            }
+        };
+
+        window.startAIStatusMonitoring = function() {
+            // Clear any existing interval
+            if (window.aiStatusInterval) {
+                clearInterval(window.aiStatusInterval);
+            }
+            
+            // Initial check
+            window.refreshAIStatus();
+            
+            // Set up periodic refresh every 10 seconds
+            window.aiStatusInterval = setInterval(() => {
+                window.refreshAIStatus();
+            }, 10000);
+        };
+
+        window.refreshAIStatus = async function() {
+            try {
+                console.log('🔄 [LIVE STATUS] Refreshing AI provider status...');
+                
+                // Call backend API without authentication (public endpoint)
+                const response = await fetch(`${window.rbckConfig.apiBase}/ai/status?t=${Date.now()}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ [LIVE STATUS] API Response:', data);
+                    window.updateAIStatusDisplay(data);
+                } else {
+                    console.error('❌ [LIVE STATUS] API Error:', response.status);
+                    window.showAIStatusError(`API Error: ${response.status}`);
+                }
+                
+            } catch (error) {
+                console.error('❌ [LIVE STATUS] Network Error:', error);
+                window.showAIStatusError(`Network Error: ${error.message}`);
+            }
+        };
+
+        window.updateAIStatusDisplay = function(data) {
+            const grid = document.getElementById('aiStatusGrid');
+            const timeElement = document.getElementById('lastUpdateTime');
+            
+            if (!grid || !timeElement) return;
+            
+            // Update timestamp
+            timeElement.textContent = new Date().toLocaleTimeString();
+            
+            // Clear existing content
+            grid.innerHTML = '';
+            
+            if (data.success && data.data && data.data.providers) {
+                Object.entries(data.data.providers).forEach(([providerKey, provider]) => {
+                    const isReady = provider.status === 'ready' || provider.configured;
+                    const statusColor = isReady ? '#10b981' : '#ef4444';
+                    const statusText = isReady ? '✅ Ready' : '❌ Not Configured';
+                    
+                    const providerCard = `
+                        <div style="
+                            background: white;
+                            border: 1px solid ${statusColor};
+                            border-radius: 8px;
+                            padding: 10px;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                        ">
+                            <div>
+                                <div style="font-weight: 600; color: #333; font-size: 14px;">${provider.name || providerKey}</div>
+                                <div style="font-size: 12px; color: #666;">${providerKey.toUpperCase()}</div>
+                            </div>
+                            <div style="
+                                background: ${statusColor}20;
+                                color: ${statusColor};
+                                padding: 4px 8px;
+                                border-radius: 6px;
+                                font-size: 11px;
+                                font-weight: 600;
+                            ">${statusText}</div>
+                        </div>
+                    `;
+                    
+                    grid.insertAdjacentHTML('beforeend', providerCard);
+                });
+            } else {
+                window.showAIStatusError('Invalid API response structure');
+            }
+        };
+
+        window.showAIStatusError = function(errorMessage) {
+            const grid = document.getElementById('aiStatusGrid');
+            if (!grid) return;
+            
+            grid.innerHTML = `
+                <div style="
+                    background: #fef2f2;
+                    border: 1px solid #ef4444;
+                    border-radius: 8px;
+                    padding: 15px;
+                    text-align: center;
+                    color: #dc2626;
+                ">
+                    <div style="font-weight: 600; margin-bottom: 5px;">❌ Connection Error</div>
+                    <div style="font-size: 12px;">${errorMessage}</div>
+                </div>
+            `;
+        };
+
+        // ✅ AI SYSTEM TEST FUNCTIONS
+        window.testAISwarmCouncil = async function() {
+            const resultsDiv = document.getElementById('aiTestResults');
+            if (!resultsDiv) return;
+            
+            resultsDiv.innerHTML = '<div style="color: #f59e0b;">🔄 Testing AI Swarm Council...</div>';
+            
+            try {
+                const response = await fetch(`${window.rbckConfig.apiBase}/ai/swarm/process`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        prompt: 'สวัสดีครับ ขอทดสอบระบบ AI Swarm Council',
+                        workflow: 'create'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultsDiv.innerHTML = `
+                        <div style="color: #10b981; font-weight: 600;">✅ Swarm Council Working!</div>
+                        <div style="color: #666; margin-top: 2px;">Execution: ${data.data?.executionTime || 'N/A'}ms</div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `<div style="color: #ef4444;">❌ Swarm Error: ${response.status}</div>`;
+                }
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<div style="color: #ef4444;">❌ Swarm Failed: ${error.message}</div>`;
+            }
+        };
+
+        window.testAIMonitoring = async function() {
+            const resultsDiv = document.getElementById('aiTestResults');
+            if (!resultsDiv) return;
+            
+            resultsDiv.innerHTML = '<div style="color: #f59e0b;">🔄 Testing AI Monitoring...</div>';
+            
+            try {
+                const response = await fetch(`${window.rbckConfig.apiBase}/ai/test/gemini`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        prompt: 'ทดสอบ AI Monitoring System'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultsDiv.innerHTML = `
+                        <div style="color: #10b981; font-weight: 600;">✅ Monitoring Working!</div>
+                        <div style="color: #666; margin-top: 2px;">Response: ${data.responseTime || 'N/A'}ms</div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `<div style="color: #ef4444;">❌ Monitor Error: ${response.status}</div>`;
+                }
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<div style="color: #ef4444;">❌ Monitor Failed: ${error.message}</div>`;
+            }
+        };
+
+        // Auto-create dashboard on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Wait a bit for page to settle
+            setTimeout(() => {
+                window.createLiveAIStatusDashboard();
+            }, 2000);
+        });
 
         console.log('⚡ [PERFORMANCE] Starting optimized RBCK CMS...');
         console.log('⚡ [CONFIG] Environment:', window.rbckConfig.isDevelopment ? 'Development' : 'Production');
