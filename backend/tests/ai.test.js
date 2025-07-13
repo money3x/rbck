@@ -20,7 +20,7 @@ describe('AI Integration Tests', () => {
       const { getEnabledProviders } = require('../ai/providers/config/providers.config');
       
       // Get list of enabled providers
-      const enabledProviders = getEnabledProviders();
+      const enabledProviders = Object.keys(getEnabledProviders());
       
       if (enabledProviders.length > 0) {
         enabledProviders.forEach(providerName => {
