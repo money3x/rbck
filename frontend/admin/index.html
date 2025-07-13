@@ -9644,7 +9644,13 @@
         setTimeout(() => {
             // ⚡ Load migration system (always load for admin functionality)
             const timestamp = 1752245000; // Fixed timestamp for migration fix
-            import(`./migration.js?v=1752255000`).catch(() => console.warn('Migration script not available'));
+            // Load modern migration system
+            import(`./migration-modern.js?v=${Date.now()}`).then(() => {
+                console.log('✅ Modern migration system loaded');
+            }).catch(() => {
+                console.warn('⚠️ Modern migration not available, loading fallback...');
+                import(`./migration.js?v=1752255000`).catch(() => console.warn('Migration script not available'));
+            });
         }, 500);
     </script>
     
