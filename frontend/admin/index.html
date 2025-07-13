@@ -10023,6 +10023,12 @@
                         <div style="color: #10b981; font-weight: 600;">✅ Swarm Council Working!</div>
                         <div style="color: #666; margin-top: 2px;">Execution: ${data.data?.executionTime || 'N/A'}ms</div>
                     `;
+                } else if (response.status === 404) {
+                    // Swarm endpoints not deployed yet
+                    resultsDiv.innerHTML = `
+                        <div style="color: #f59e0b; font-weight: 600;">⚠️ Swarm Not Deployed</div>
+                        <div style="color: #666; margin-top: 2px; font-size: 10px;">Backend needs redeployment</div>
+                    `;
                 } else {
                     resultsDiv.innerHTML = `<div style="color: #ef4444;">❌ Swarm Error: ${response.status}</div>`;
                 }
