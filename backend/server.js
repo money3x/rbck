@@ -1,4 +1,4 @@
-console.log('🚀 [INIT] Loading server.js v2025-07-13-swarm-fixed...');
+console.log('🚀 [INIT] Loading server.js v2025-07-13-auth-removed...');
 require('dotenv').config(); // Load environment variables
 
 // ✅ SECURITY FIX: Early environment validation
