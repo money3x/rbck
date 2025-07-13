@@ -5875,7 +5875,7 @@
                 }
                 
                 // Fetch provider status
-                const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/providers/status`, {
+                const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/status`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -5975,7 +5975,7 @@
             console.log('🔄 [AI Settings] Loading current provider status...');
             
             try {
-                const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/providers/status`, {
+                const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/status`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -6536,7 +6536,7 @@
                 const authToken = localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
                 
                 // Make API call to backend to get provider status
-                const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/providers/status`, {
+                const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/status`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -6943,7 +6943,7 @@
                 let providersData = {};
                 
                 try {
-                    const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/providers/status`, {
+                    const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/status`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
@@ -6953,7 +6953,20 @@
                     
                     if (response.ok) {
                         const data = await response.json();
-                        providersData = data.providers || {};
+                        // Handle the new backend API response structure
+                        if (data.success && data.data && data.data.providers) {
+                            // Convert backend provider status to expected format
+                            providersData = {};
+                            Object.entries(data.data.providers).forEach(([key, provider]) => {
+                                providersData[key] = {
+                                    configured: provider.configured,
+                                    status: provider.status
+                                };
+                            });
+                        } else {
+                            console.warn('⚠️ [DASHBOARD] Invalid backend response structure, using mock data');
+                            providersData = generateMockProviderStatus();
+                        }
                     } else {
                         console.warn('⚠️ [DASHBOARD] Backend not available, using mock data');
                         providersData = generateMockProviderStatus();
@@ -7280,7 +7293,7 @@
             // Get provider status from backend if not provided
             if (!providersData) {
                 try {
-                    const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/providers/status`, {
+                    const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/status`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
@@ -7290,7 +7303,20 @@
                     
                     if (response.ok) {
                         const data = await response.json();
-                        providersData = data.providers || {};
+                        // Handle the new backend API response structure
+                        if (data.success && data.data && data.data.providers) {
+                            // Convert backend provider status to expected format
+                            providersData = {};
+                            Object.entries(data.data.providers).forEach(([key, provider]) => {
+                                providersData[key] = {
+                                    configured: provider.configured,
+                                    status: provider.status
+                                };
+                            });
+                        } else {
+                            console.warn('⚠️ [MONITORING] Invalid backend response structure, using mock data');
+                            providersData = generateMockProviderStatus();
+                        }
                     } else {
                         console.warn('⚠️ [MONITORING] Backend not available, using mock data');
                         providersData = generateMockProviderStatus();
@@ -7838,7 +7864,7 @@
                 if (response.ok) {
                     const data = await response.json();
                     console.log('🔍 [CHATBOT] Provider data received:', data);
-                    // Handle both /ai/status and /ai/providers/status response formats
+                    // Handle both /ai/status and /ai/status response formats
                     providersData = data.data?.providers || data.providers || {};
                 } else {
                     console.warn('⚠️ [CHATBOT] Backend not available, using fallback');
@@ -8846,18 +8872,20 @@
             async checkProviderStatus(providerKey) {
                 try {
                     console.log(`🔍 [AI SWARM] Checking ${providerKey} via API...`);
-                    const response = await fetch(`${window.rbckConfig.apiBase}/ai/status/${providerKey}?t=${Date.now()}`, {
+                    const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/status/${providerKey}?t=${Date.now()}`, {
                         method: 'GET',
                         headers: { 
                             'Content-Type': 'application/json',
-                            'Accept': 'application/json'
+                            'Accept': 'application/json',
+                            'Authorization': (await getAuthToken()) ? `Bearer ${await getAuthToken()}` : ''
                         }
                     });
                     
                     if (response.ok) {
                         const data = await response.json();
                         console.log(`✅ [AI SWARM] ${providerKey} API response:`, data);
-                        return data.connected || data.available || false;
+                        // Check for success and proper status structure
+                        return data.success && (data.data?.status === 'ready' || data.data?.configured === true);
                     } else {
                         console.warn(`⚠️ [AI SWARM] ${providerKey} API returned ${response.status}`);
                     }
@@ -8984,11 +9012,12 @@
                 try {
                     console.log(`[AI MONITOR] Checking ${provider} status...`);
                     
-                    const response = await fetch(`${window.rbckConfig.apiBase}/ai/status/${provider}?t=${Date.now()}`, {
+                    const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/status/${provider}?t=${Date.now()}`, {
                         method: 'GET',
                         headers: { 
                             'Content-Type': 'application/json',
-                            'Accept': 'application/json'
+                            'Accept': 'application/json',
+                            'Authorization': (await getAuthToken()) ? `Bearer ${await getAuthToken()}` : ''
                         }
                     });
                     
@@ -8996,17 +9025,20 @@
                         const data = await response.json();
                         console.log(`[AI MONITOR] ${provider} API response:`, data);
                         
+                        // Check if provider is working based on backend response structure
+                        const isConnected = data.success && (data.data?.status === 'ready' || data.data?.configured === true);
+                        
                         this.metrics[provider] = {
                             ...this.metrics[provider],
-                            status: data.connected ? 'healthy' : 'error',
+                            status: isConnected ? 'healthy' : 'error',
                             lastChecked: new Date(),
-                            averageResponseTime: data.responseTime || 0,
-                            successRate: data.connected ? (data.successRate || 1.0) : 0,
+                            averageResponseTime: data.data?.responseTime || 0,
+                            successRate: isConnected ? (data.data?.successRate || 1.0) : 0,
                             totalRequests: this.metrics[provider].totalRequests + 1,
-                            successfulRequests: data.connected ? this.metrics[provider].successfulRequests + 1 : this.metrics[provider].successfulRequests
+                            successfulRequests: isConnected ? this.metrics[provider].successfulRequests + 1 : this.metrics[provider].successfulRequests
                         };
                         
-                        if (!data.connected) {
+                        if (!isConnected) {
                             this.metrics[provider].failedRequests += 1;
                         }
                         
