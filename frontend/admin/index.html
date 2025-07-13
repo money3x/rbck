@@ -10045,7 +10045,8 @@
             resultsDiv.innerHTML = '<div style="color: #f59e0b;">🔄 Testing AI Monitoring...</div>';
             
             try {
-                const response = await fetch(`${window.rbckConfig.apiBase}/ai/test/gemini`, {
+                // First try the test endpoint
+                let response = await fetch(`${window.rbckConfig.apiBase}/ai/test/gemini`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -10062,6 +10063,24 @@
                         <div style="color: #10b981; font-weight: 600;">✅ Monitoring Working!</div>
                         <div style="color: #666; margin-top: 2px;">Response: ${data.responseTime || 'N/A'}ms</div>
                     `;
+                } else if (response.status === 404) {
+                    // Fallback to basic status check
+                    response = await fetch(`${window.rbckConfig.apiBase}/ai/status/gemini`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        resultsDiv.innerHTML = `
+                            <div style="color: #f59e0b; font-weight: 600;">⚠️ Basic Status Only</div>
+                            <div style="color: #666; margin-top: 2px; font-size: 10px;">Test endpoints not deployed</div>
+                        `;
+                    } else {
+                        resultsDiv.innerHTML = `<div style="color: #ef4444;">❌ Monitor Error: ${response.status}</div>`;
+                    }
                 } else {
                     resultsDiv.innerHTML = `<div style="color: #ef4444;">❌ Monitor Error: ${response.status}</div>`;
                 }
