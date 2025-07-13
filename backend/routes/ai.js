@@ -1462,4 +1462,160 @@ router.post('/swarm/process', authenticateAdmin, async (req, res) => {
     }
 });
 
+/**
+ * ✅ PRODUCTION FIX: POST /api/ai/swarm/process
+ * Execute swarm council workflow (missing endpoint)
+ */
+router.post('/swarm/process', authenticateAdmin, async (req, res) => {
+    try {
+        const { prompt, workflow = 'full' } = req.body;
+        
+        if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Prompt is required and must be a non-empty string',
+                code: 'INVALID_PROMPT'
+            });
+        }
+        
+        const validWorkflows = ['full', 'create', 'review', 'optimize'];
+        if (!validWorkflows.includes(workflow)) {
+            return res.status(400).json({
+                success: false,
+                error: `Invalid workflow. Must be one of: ${validWorkflows.join(', ')}`,
+                code: 'INVALID_WORKFLOW'
+            });
+        }
+        
+        console.log(`🤖 [AI SWARM] Processing request: ${workflow} workflow for "${prompt.substring(0, 50)}..."`);
+        
+        // Get swarm council from singleton manager
+        const swarmCouncil = swarmCouncilManager.getSwarmCouncil();
+        
+        if (!swarmCouncil) {
+            return res.status(503).json({
+                success: false,
+                error: 'Swarm Council not available',
+                code: 'SWARM_NOT_AVAILABLE'
+            });
+        }
+        
+        if (!swarmCouncil.isInitialized) {
+            console.log('🔄 [AI SWARM] Swarm Council not initialized, attempting initialization...');
+            try {
+                await swarmCouncil.initializeSwarm();
+                if (!swarmCouncil.isInitialized) {
+                    throw new Error('Initialization failed');
+                }
+            } catch (initError) {
+                console.error('❌ [AI SWARM] Initialization failed:', initError);
+                return res.status(503).json({
+                    success: false,
+                    error: 'Swarm Council initialization failed',
+                    code: 'SWARM_INIT_FAILED',
+                    details: initError.message
+                });
+            }
+        }
+        
+        const startTime = Date.now();
+        
+        // Execute swarm workflow
+        const result = await swarmCouncil.processContent(prompt, workflow);
+        const executionTime = Date.now() - startTime;
+        
+        console.log(`✅ [AI SWARM] ${workflow} workflow completed in ${executionTime}ms`);
+        
+        res.json({
+            success: true,
+            data: {
+                ...result,
+                executionTime: executionTime,
+                workflow: workflow,
+                requestId: `swarm_${Date.now()}`
+            },
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('❌ [AI SWARM] Process failed:', error);
+        
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            code: 'SWARM_PROCESS_FAILED',
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+/**
+ * ✅ PRODUCTION FIX: GET /api/ai/swarm/status
+ * Get swarm council status (missing endpoint)
+ */
+router.get('/swarm/status', authenticateAdmin, async (req, res) => {
+    try {
+        console.log('🔍 [AI SWARM] Checking swarm status...');
+        
+        // Get swarm council from singleton manager
+        const swarmCouncil = swarmCouncilManager.getSwarmCouncil();
+        const eatSwarmCouncil = swarmCouncilManager.getEATSwarmCouncil();
+        
+        if (!swarmCouncil) {
+            return res.json({
+                success: true,
+                data: {
+                    swarmCouncil: {
+                        available: false,
+                        initialized: false,
+                        error: 'Swarm Council not created'
+                    },
+                    eatSwarmCouncil: {
+                        available: false,
+                        initialized: false,
+                        error: 'EAT Swarm Council not created'
+                    },
+                    manager: swarmCouncilManager.getStatus()
+                }
+            });
+        }
+        
+        // Get detailed status
+        const swarmStatus = swarmCouncil.getDetailedStatus();
+        const eatStatus = eatSwarmCouncil ? eatSwarmCouncil.getDetailedStatus() : null;
+        
+        res.json({
+            success: true,
+            data: {
+                swarmCouncil: {
+                    available: true,
+                    ...swarmStatus
+                },
+                eatSwarmCouncil: eatStatus ? {
+                    available: true,
+                    ...eatStatus
+                } : {
+                    available: false,
+                    initialized: false
+                },
+                manager: swarmCouncilManager.getStatus(),
+                systemHealth: {
+                    totalProviders: Object.keys(AI_PROVIDERS).length,
+                    enabledProviders: Object.values(AI_PROVIDERS).filter(p => p.enabled).length,
+                    timestamp: new Date().toISOString()
+                }
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ [AI SWARM] Status check failed:', error);
+        
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            code: 'SWARM_STATUS_FAILED'
+        });
+    }
+});
+
 module.exports = router;

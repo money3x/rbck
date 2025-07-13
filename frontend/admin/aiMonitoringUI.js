@@ -179,17 +179,21 @@ export class AIMonitoringUI {
         const startTime = Date.now();
         
         try {
+            // Try to get provider status from backend first
+            const statusResponse = await this.getProviderStatus(provider);
+            
             // Test provider using API
-            const response = await this.testProviderAPI(provider);
+            const testResponse = await this.testProviderAPI(provider);
             const responseTime = Date.now() - startTime;
             
-            // Update metrics
+            // Update metrics with both status and test data
             this.updateProviderMetrics(provider, {
-                responseTime,
-                success: response.success,
-                quality: response.quality || 0.8,
-                tokensUsed: response.tokensUsed || 0,
-                cost: response.cost || 0
+                responseTime: testResponse.responseTime || responseTime,
+                success: testResponse.success,
+                quality: testResponse.quality || 0.8,
+                tokensUsed: testResponse.tokensUsed || 0,
+                cost: testResponse.cost || 0,
+                status: statusResponse.status || 'unknown'
             });
             
         } catch (error) {
@@ -197,8 +201,30 @@ export class AIMonitoringUI {
             this.updateProviderMetrics(provider, {
                 responseTime,
                 success: false,
-                error: error.message
+                error: error.message,
+                status: 'error'
             });
+        }
+    }
+
+    /**
+     * Get provider status from backend
+     */
+    async getProviderStatus(provider) {
+        try {
+            const { authenticatedFetch } = await import('./auth.js');
+            const response = await authenticatedFetch(`${API_BASE}/ai/status/${provider}`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log(`📊 [AI Monitor] ${provider} status:`, data);
+                return data.status || { status: 'unknown' };
+            } else {
+                return { status: 'error' };
+            }
+        } catch (error) {
+            console.warn(`⚠️ [AI Monitor] Failed to get ${provider} status:`, error.message);
+            return { status: 'unknown' };
         }
     }
 
@@ -207,7 +233,11 @@ export class AIMonitoringUI {
      */
     async testProviderAPI(provider) {
         try {
-            const response = await fetch(`${API_BASE}/ai/test/${provider}`, {
+            // Import auth functions
+            const { authenticatedFetch } = await import('./auth.js');
+            
+            // Use authenticated fetch to call backend API
+            const response = await authenticatedFetch(`${API_BASE}/ai/test/${provider}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: 'Performance monitoring test' })
@@ -215,16 +245,22 @@ export class AIMonitoringUI {
             
             if (response.ok) {
                 const data = await response.json();
+                console.log(`📊 [AI Monitor] ${provider} API response:`, data);
                 return {
                     success: data.success,
                     quality: data.quality,
                     tokensUsed: data.tokensUsed,
-                    cost: data.cost || 0
+                    cost: data.cost || 0,
+                    responseTime: data.responseTime
                 };
             } else {
-                throw new Error(`HTTP ${response.status}`);
+                const errorData = await response.json().catch(() => ({}));
+                console.error(`❌ [AI Monitor] ${provider} API error:`, response.status, errorData);
+                throw new Error(`HTTP ${response.status}: ${errorData.message || 'Unknown error'}`);
             }
         } catch (error) {
+            console.warn(`⚠️ [AI Monitor] ${provider} API failed, using fallback:`, error.message);
+            
             // Fallback to simulation for demo
             await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1500));
             const isSuccess = Math.random() > 0.1; // 90% success rate
@@ -636,5 +672,9 @@ Tokens ที่ใช้: ${metrics.tokensUsed}
         window.exportPerformanceReport = () => this.exportPerformanceReport();
         window.testProvider = (provider) => this.testProvider(provider);
         window.showProviderDetails = (provider) => this.showProviderDetails(provider);
+        window.startAIMonitoring = () => this.startMonitoring();
+        window.stopAIMonitoring = () => this.stopMonitoring();
+        
+        console.log('✅ [AI MONITOR UI] Global functions bound for external access');
     }
 }

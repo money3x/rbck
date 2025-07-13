@@ -154,7 +154,12 @@ export class AISwarmCouncil {
     async checkExternalProviderStatus(providerKey) {
         try {
             console.log(`🔍 [AI SWARM] Checking ${providerKey} via API...`);
-            const response = await fetch(`${API_BASE}/ai/status/${providerKey}?t=${Date.now()}`, {
+            
+            // Import auth function
+            const { authenticatedFetch } = await import('./auth.js');
+            
+            // Use authenticated fetch
+            const response = await authenticatedFetch(`${API_BASE}/ai/status/${providerKey}?t=${Date.now()}`, {
                 method: 'GET',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -165,9 +170,11 @@ export class AISwarmCouncil {
             if (response.ok) {
                 const data = await response.json();
                 console.log(`✅ [AI SWARM] ${providerKey} API response:`, data);
-                return data.connected || data.available || false;
+                // Check for success in the response data
+                return data.success && (data.data?.status === 'ready' || data.data?.configured === true);
             } else {
-                console.warn(`⚠️ [AI SWARM] ${providerKey} API returned ${response.status}`);
+                const errorData = await response.json().catch(() => ({}));
+                console.warn(`⚠️ [AI SWARM] ${providerKey} API returned ${response.status}:`, errorData);
             }
         } catch (error) {
             console.error(`❌ [AI SWARM] ${providerKey} check failed:`, error);
@@ -183,7 +190,11 @@ export class AISwarmCouncil {
      */
     async getApiKey(providerKey) {
         try {
-            const response = await fetch(`${API_BASE}/apikey`);
+            // Import auth function
+            const { authenticatedFetch } = await import('./auth.js');
+            
+            // Use authenticated fetch
+            const response = await authenticatedFetch(`${API_BASE}/apikey`);
             if (response.ok) {
                 const data = await response.json();
                 return data.data?.[`${providerKey}ApiKey`] || '';
@@ -689,6 +700,32 @@ export class AISwarmCouncil {
     async executeContentCreation(providers) {
         this.addConversationMessage('system', '✨ Starting collaborative content creation...');
         
+        try {
+            // Try to use backend API first
+            const backendResult = await this.executeBackendSwarmProcess('full', 'สร้างเนื้อหาบทความเกี่ยวกับเทคโนโลยี AI ที่น่าสนใจ');
+            
+            if (backendResult.success) {
+                this.addConversationMessage('system', '🔄 Using backend AI Swarm Council...');
+                
+                // Display backend results
+                if (backendResult.data && backendResult.data.steps) {
+                    for (const step of backendResult.data.steps) {
+                        this.addConversationMessage('system', `🔄 Step ${step.step}: ${step.role}`);
+                        this.addConversationMessage(step.provider, step.output);
+                        await this.delay(1000);
+                    }
+                }
+                
+                this.addConversationMessage('system', '🎉 Backend swarm collaboration completed!');
+                showNotification('✨ Content created using backend AI Swarm', 'success');
+                return;
+            }
+        } catch (error) {
+            console.warn('⚠️ [AI SWARM] Backend API failed, falling back to simulation:', error.message);
+            this.addConversationMessage('system', '⚠️ กำลังใช้โหมดจำลอง (backend ไม่พร้อม)...');
+        }
+        
+        // Fallback to simulation
         const creationPhases = [
             { phase: 'brainstorming', leader: providers[0] },
             { phase: 'drafting', leader: providers.find(p => p.role === 'primary_creator') || providers[0] },
@@ -719,6 +756,38 @@ export class AISwarmCouncil {
 
         this.addConversationMessage('system', '🎉 Collaborative content creation completed!');
         showNotification('✨ Content created collaboratively', 'success');
+    }
+
+    /**
+     * Execute backend swarm process
+     */
+    async executeBackendSwarmProcess(workflow, prompt) {
+        try {
+            // Import auth function
+            const { authenticatedFetch } = await import('./auth.js');
+            
+            // Call backend swarm API
+            const response = await authenticatedFetch(`${API_BASE}/ai/swarm/process`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    prompt: prompt,
+                    workflow: workflow 
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('🤖 [AI SWARM] Backend response:', data);
+                return data;
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`HTTP ${response.status}: ${errorData.message || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('❌ [AI SWARM] Backend call failed:', error);
+            throw error;
+        }
     }
 
     /**
