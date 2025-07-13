@@ -9639,6 +9639,55 @@
             version: '2025-07-05-performance-optimized'
         };
 
+        // ✅ UTILITY FUNCTIONS: Auth and API utilities for embedded code
+        window.getAuthToken = async function() {
+            try {
+                // Try to get from localStorage first
+                const token = localStorage.getItem('rbck_token') || localStorage.getItem('token');
+                if (token && token !== 'null' && token !== 'undefined') {
+                    return token;
+                }
+                
+                // Fallback: try to get from session storage
+                const sessionToken = sessionStorage.getItem('rbck_token') || sessionStorage.getItem('token');
+                if (sessionToken && sessionToken !== 'null' && sessionToken !== 'undefined') {
+                    return sessionToken;
+                }
+                
+                console.warn('⚠️ [AUTH] No authentication token found');
+                return null;
+            } catch (error) {
+                console.error('❌ [AUTH] Error getting auth token:', error);
+                return null;
+            }
+        };
+
+        window.safeApiCall = async function(url, options = {}) {
+            try {
+                console.log(`🔗 [API] Calling: ${url}`);
+                
+                // Ensure headers exist
+                options.headers = options.headers || {};
+                
+                // Add auth token if available
+                const token = await window.getAuthToken();
+                if (token) {
+                    options.headers['Authorization'] = `Bearer ${token}`;
+                }
+                
+                // Make the API call
+                const response = await fetch(url, options);
+                
+                console.log(`📡 [API] Response status for ${url}:`, response.status);
+                
+                return response;
+                
+            } catch (error) {
+                console.error(`❌ [API] Failed to call ${url}:`, error);
+                throw error;
+            }
+        };
+
         console.log('⚡ [PERFORMANCE] Starting optimized RBCK CMS...');
         console.log('⚡ [CONFIG] Environment:', window.rbckConfig.isDevelopment ? 'Development' : 'Production');
         console.log('⚡ [CONFIG] API Base:', window.rbckConfig.apiBase);
