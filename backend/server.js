@@ -53,8 +53,12 @@ console.log('✅ [IMPORT] All routes loaded successfully');
 const apiKeyManager = require('./models/apiKeys');
 
 // Import middleware  
+console.log('🔧 [IMPORT] Loading middleware...');
+console.log('🔧 [IMPORT] Loading rateLimiter...');
 const { generalRateLimit, blockSuspiciousIPs, aiEndpointRateLimit, migrationRateLimit } = require('./middleware/rateLimiter');
+console.log('🔧 [IMPORT] Loading errorHandler...');
 const { logger, errorHandler, requestLogger, handleNotFound } = require('./middleware/errorHandler');
+console.log('🔧 [IMPORT] Loading cache...');
 const { 
   cacheMiddleware, 
   clearCache, 
@@ -63,11 +67,17 @@ const {
   isCacheHealthy,
   apiCache
 } = require('./middleware/cache');
+console.log('🔧 [IMPORT] Loading metrics...');
 const { metricsMiddleware, healthCheck, getMetrics } = require('./middleware/metrics');
+console.log('🔧 [IMPORT] Loading validation...');
 const { validatePost, validateAuth, sanitizeInput } = require('./middleware/validation');
+console.log('🔧 [IMPORT] Loading auth...');
 const { authenticateAdmin } = require('./middleware/auth');
+console.log('🔧 [IMPORT] Loading monitoring...');
 const { requestMonitoring, trackError } = require('./middleware/monitoring');
+console.log('🔧 [IMPORT] Loading securityLogger...');
 const { securityAuditMiddleware, SecurityLogger } = require('./middleware/securityLogger');
+console.log('✅ [IMPORT] All middleware loaded');
 
 // Import Swagger config
 const { setupSwagger } = require('./config/swagger');
