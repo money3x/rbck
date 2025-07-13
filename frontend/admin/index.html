@@ -9879,9 +9879,103 @@
                     
                     grid.insertAdjacentHTML('beforeend', providerCard);
                 });
+                
+                // ✅ SYNC: Update AI Swarm Council Table
+                window.updateAISwarmCouncilTable(data.data.providers);
+                
             } else {
                 window.showAIStatusError('Invalid API response structure');
             }
+        };
+
+        // ✅ UPDATE AI SWARM COUNCIL TABLE
+        window.updateAISwarmCouncilTable = function(providers) {
+            const tableBody = document.getElementById('aiProvidersTableBody');
+            if (!tableBody) return;
+            
+            console.log('🔄 [SYNC] Updating AI Swarm Council table...');
+            
+            // Clear existing content
+            tableBody.innerHTML = '';
+            
+            // Provider metadata
+            const providerMeta = {
+                gemini: {
+                    name: 'Gemini 2.0 Flash',
+                    icon: '⚡',
+                    role: 'นักสร้างสรรค์หลัก',
+                    expertise: ['สร้างเนื้อหา', 'เพิ่มประสิทธิภาพ SEO', 'หลายภาษา']
+                },
+                openai: {
+                    name: 'OpenAI GPT',
+                    icon: '🧠',
+                    role: 'ผู้ตรวจสอบคุณภาพ',
+                    expertise: ['ควบคุมคุณภาพ', 'ตรวจสอบข้อเท็จจริง', 'ความสอดคล้อง']
+                },
+                claude: {
+                    name: 'Claude AI',
+                    icon: '🎭',
+                    role: 'ผู้ปรับปรุงเนื้อหา',
+                    expertise: ['ปรับปรุงโครงสร้าง', 'อ่านง่าย', 'น่าสนใจ']
+                },
+                deepseek: {
+                    name: 'DeepSeek AI',
+                    icon: '🔍',
+                    role: 'ผู้ตรวจสอบเทคนิค',
+                    expertise: ['ความถูกต้องทางเทคนิค', 'ตรวจสอบโค้ด', 'ประสิทธิภาพ']
+                },
+                chinda: {
+                    name: 'ChindaX AI',
+                    icon: '🧠',
+                    role: 'ที่ปรึกษาหลายภาษา',
+                    expertise: ['แปลภาษา', 'ปรับวัฒนธรรม', 'ภาษาไทย']
+                }
+            };
+            
+            Object.entries(providers).forEach(([providerKey, provider]) => {
+                const meta = providerMeta[providerKey] || {
+                    name: provider.name || providerKey,
+                    icon: '🤖',
+                    role: 'AI Provider',
+                    expertise: ['AI Processing']
+                };
+                
+                const isReady = provider.status === 'ready' || provider.configured;
+                const statusClass = isReady ? 'connected' : 'disconnected';
+                const statusText = isReady ? 'เชื่อมต่อแล้ว' : 'ไม่ได้เชื่อมต่อ';
+                
+                const row = `
+                    <tr class="provider-row ${providerKey} ${statusClass}" id="provider-${providerKey}">
+                        <td data-label="โมเดล AI">
+                            <div class="provider-info">
+                                <div class="provider-icon">${meta.icon}</div>
+                                <div class="provider-details">
+                                    <h4>${meta.name}</h4>
+                                    <p class="provider-model">${providerKey.charAt(0).toUpperCase() + providerKey.slice(1)} AI</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td data-label="สถานะ" id="status-${providerKey}">
+                            <div class="provider-status">
+                                <div class="status-dot ${statusClass}"></div>
+                                <span class="status-text ${statusClass}">${statusText}</span>
+                            </div>
+                        </td>
+                        <td data-label="หน้าที่ในการทำงาน">
+                            <div class="provider-role">${meta.role}</div>
+                        </td>
+                        <td data-label="ความเชี่ยวชาญ">
+                            <div class="provider-expertise">
+                                ${meta.expertise.map(exp => `<span class="expertise-tag">${exp}</span>`).join('')}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                
+                tableBody.insertAdjacentHTML('beforeend', row);
+            });
+            
+            console.log('✅ [SYNC] AI Swarm Council table updated');
         };
 
         window.showAIStatusError = function(errorMessage) {
@@ -9971,11 +10065,51 @@
             }
         };
 
+        // ✅ MANUAL TRIGGER: Allow users to manually sync AI Swarm Council
+        window.syncAISwarmCouncil = async function() {
+            console.log('🔄 [MANUAL] Manual AI Swarm Council sync requested...');
+            
+            try {
+                const response = await fetch(`${window.rbckConfig.apiBase}/ai/status?t=${Date.now()}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.data && data.data.providers) {
+                        window.updateAISwarmCouncilTable(data.data.providers);
+                        
+                        // Show success notification if function exists
+                        if (typeof window.showNotification === 'function') {
+                            window.showNotification('✅ AI Swarm Council อัพเดตแล้ว', 'success');
+                        } else {
+                            alert('✅ AI Swarm Council อัพเดตแล้ว');
+                        }
+                    }
+                } else {
+                    console.error('❌ [MANUAL] API Error:', response.status);
+                    alert('❌ ไม่สามารถอัพเดต AI Swarm Council ได้');
+                }
+            } catch (error) {
+                console.error('❌ [MANUAL] Network Error:', error);
+                alert('❌ เกิดข้อผิดพลาดในการเชื่อมต่อ');
+            }
+        };
+
         // Auto-create dashboard on page load
         document.addEventListener('DOMContentLoaded', () => {
             // Wait a bit for page to settle
             setTimeout(() => {
                 window.createLiveAIStatusDashboard();
+                
+                // Also trigger initial AI Swarm Council sync
+                setTimeout(() => {
+                    window.syncAISwarmCouncil();
+                }, 3000);
             }, 2000);
         });
 
