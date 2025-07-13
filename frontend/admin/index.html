@@ -9800,6 +9800,21 @@
                             ">📡 Load Real Logs</button>
                         </div>
                         
+                        <!-- Manual Testing (Token Usage) -->
+                        <div style="display: grid; grid-template-columns: 1fr; gap: 6px; margin-top: 6px; padding: 6px; background: #fef3c7; border-radius: 4px; border-left: 3px solid #f59e0b;">
+                            <div style="font-size: 9px; color: #92400e; font-weight: 600;">⚠️ Token Usage</div>
+                            <button onclick="window.aiMonitoringUI && window.aiMonitoringUI.collectAllMetrics()" style="
+                                background: #f59e0b;
+                                color: white;
+                                border: none;
+                                border-radius: 6px;
+                                padding: 6px 10px;
+                                font-size: 10px;
+                                cursor: pointer;
+                                font-weight: 600;
+                            ">🧪 Manual Test All</button>
+                        </div>
+                        
                         <!-- Deployment Status -->
                         <div style="margin-top: 8px; padding: 6px; background: #f0f9ff; border-radius: 4px; border-left: 3px solid #3b82f6;">
                             <div style="font-size: 10px; color: #1e40af; font-weight: 600;">🚀 Deployment Status</div>
@@ -9846,21 +9861,22 @@
             
             console.log('🚀 [MONITORING] Starting real-time AI status monitoring...');
             
-            // Initial check
-            window.refreshAIStatus();
+            // Initial check (status only, no testing)
+            window.refreshAIStatusOnly();
             
-            // Set up periodic refresh every 10 seconds
+            // Set up periodic refresh every 60 seconds (reduced from 10s to save tokens)
             window.aiStatusInterval = setInterval(() => {
-                console.log('⏰ [MONITORING] Periodic refresh triggered');
-                window.refreshAIStatus();
-            }, 10000);
+                console.log('⏰ [MONITORING] Periodic status check (no testing)');
+                window.refreshAIStatusOnly();
+            }, 60000); // Changed to 1 minute
             
-            console.log('✅ [MONITORING] Real-time monitoring active (10s interval)');
+            console.log('✅ [MONITORING] Real-time monitoring active (60s interval, status only)');
         };
 
-        window.refreshAIStatus = async function() {
+        // Status-only refresh (no token usage)
+        window.refreshAIStatusOnly = async function() {
             try {
-                console.log('🔄 [LIVE STATUS] Refreshing AI provider status...');
+                console.log('🔄 [LIVE STATUS] Refreshing AI provider status (no testing)...');
                 
                 // Call backend API without authentication (public endpoint)
                 const response = await fetch(`${window.rbckConfig.apiBase}/ai/status?t=${Date.now()}`, {
@@ -9887,7 +9903,6 @@
                     }
                     
                     window.updateAIStatusDisplay(data);
-                    window.updateDeploymentStatus();
                 } else {
                     console.error('❌ [LIVE STATUS] API Error:', response.status);
                     window.showAIStatusError(`API Error: ${response.status}`);
@@ -9899,22 +9914,33 @@
             }
         };
 
-        // ✅ CHECK DEPLOYMENT STATUS
+        // Manual refresh with testing (only when user clicks)
+        window.refreshAIStatus = async function() {
+            try {
+                console.log('🔄 [MANUAL TEST] Manual AI provider testing...');
+                window.refreshAIStatusOnly(); // Get status first
+                window.updateDeploymentStatus(); // Check deployment
+            } catch (error) {
+                console.error('❌ [MANUAL TEST] Error:', error);
+            }
+        };
+
+        // ✅ CHECK DEPLOYMENT STATUS (no token usage)
         window.updateDeploymentStatus = async function() {
             const statusDiv = document.getElementById('deploymentStatus');
             if (!statusDiv) return;
             
             try {
-                // Check if newer endpoints are available
-                const testSwarm = await fetch(`${window.rbckConfig.apiBase}/ai/swarm/status`, { method: 'GET' });
-                const testEndpoint = await fetch(`${window.rbckConfig.apiBase}/ai/test/gemini`, { method: 'POST' });
+                // Check basic endpoints only (no actual testing)
+                const statusCheck = await fetch(`${window.rbckConfig.apiBase}/ai/status`, { method: 'GET' });
+                const healthCheck = await fetch(`${window.rbckConfig.apiBase}/ai/health`, { method: 'GET' });
                 
-                if (testSwarm.ok && !testEndpoint.ok) {
-                    statusDiv.innerHTML = 'Swarm: ✅ | Test endpoints: ⏳';
-                } else if (testSwarm.ok && testEndpoint.ok) {
-                    statusDiv.innerHTML = 'All endpoints: ✅ Fully deployed!';
+                if (statusCheck.ok && healthCheck.ok) {
+                    statusDiv.innerHTML = 'All endpoints: ✅ Ready (no auto-testing)';
+                } else if (statusCheck.ok) {
+                    statusDiv.innerHTML = 'Basic endpoints: ✅ | Health: ⏳';
                 } else {
-                    statusDiv.innerHTML = 'Some endpoints: ⏳ Still deploying...';
+                    statusDiv.innerHTML = 'Endpoints: ⏳ Still deploying...';
                 }
             } catch (error) {
                 statusDiv.innerHTML = 'Status check: ❌ Failed';

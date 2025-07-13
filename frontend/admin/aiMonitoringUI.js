@@ -77,8 +77,8 @@ export class AIMonitoringUI {
             // Start periodic monitoring
             this.startPeriodicMonitoring();
             
-            // Load initial data
-            await this.collectAllMetrics();
+            // Load initial data (status only, no testing)
+            await this.collectStatusOnlyMetrics();
             
             // Bind global functions
             this.bindGlobalFunctions();
@@ -143,22 +143,62 @@ export class AIMonitoringUI {
     }
 
     /**
-     * Start periodic monitoring
+     * Start periodic monitoring (STATUS ONLY - no token usage)
      */
     startPeriodicMonitoring() {
-        // Monitor every 30 seconds
+        // Monitor every 2 minutes (reduced from 30s to save tokens)
         this.monitoringInterval = setInterval(() => {
             if (this.isMonitoring) {
-                this.collectAllMetrics();
+                console.log('⏰ [AI MONITOR] Periodic status check (no testing)');
+                this.collectStatusOnlyMetrics(); // Changed from collectAllMetrics
             }
-        }, 30000);
+        }, 120000); // Changed to 2 minutes
     }
 
     /**
-     * Collect metrics from all providers
+     * Collect status-only metrics (no actual testing to save tokens)
+     */
+    async collectStatusOnlyMetrics() {
+        console.log('[AI MONITOR UI] Collecting status-only metrics (no testing)...');
+        
+        try {
+            // Get metrics from backend without triggering tests
+            const response = await fetch(`${API_BASE}/ai/metrics`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('[AI MONITOR UI] Backend metrics:', data);
+                
+                if (data.success && data.metrics) {
+                    // Update metrics with backend data
+                    this.providers.forEach(provider => {
+                        const backendMetrics = data.metrics[provider];
+                        if (backendMetrics) {
+                            const metrics = this.metrics[provider];
+                            metrics.totalRequests = backendMetrics.totalRequests || 0;
+                            metrics.successfulRequests = backendMetrics.successfulRequests || 0;
+                            metrics.averageResponseTime = backendMetrics.averageResponseTime || 0;
+                            metrics.successRate = (backendMetrics.successRate || 0) / 100;
+                            metrics.averageQuality = backendMetrics.qualityScore || 0;
+                            metrics.uptime = backendMetrics.uptime || 0;
+                            metrics.status = backendMetrics.status || 'unknown';
+                            metrics.lastRequestTime = backendMetrics.lastActive ? new Date(backendMetrics.lastActive) : null;
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('[AI MONITOR UI] Error collecting backend metrics:', error);
+        }
+
+        this.updateAllDisplays();
+    }
+
+    /**
+     * Collect metrics from all providers (WITH TESTING - manual only)
      */
     async collectAllMetrics() {
-        console.log('[AI MONITOR UI] Collecting metrics...');
+        console.log('[AI MONITOR UI] Collecting metrics with testing (manual only)...');
         
         for (const provider of this.providers) {
             try {
