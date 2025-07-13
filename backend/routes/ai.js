@@ -189,7 +189,7 @@ allProviders.forEach(provider => {
  * ✅ MISSING ENDPOINT: POST /api/ai/test/:provider  
  * Test specific provider with performance monitoring
  */
-router.post('/test/:provider', authenticateAdmin, async (req, res) => {
+router.post('/test/:provider', async (req, res) => {
     const { provider } = req.params;
     const { prompt = 'Performance monitoring test' } = req.body;
     const startTime = Date.now();
