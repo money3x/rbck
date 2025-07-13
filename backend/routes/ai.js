@@ -206,10 +206,15 @@ router.post('/test/:provider', async (req, res) => {
         }
         
         const providerConfig = AI_PROVIDERS[provider];
-        if (!providerConfig.enabled || !providerConfig.apiKey) {
+        
+        // Check if provider has API key in environment
+        const apiKeyEnvVar = `${provider.toUpperCase()}_API_KEY`;
+        const hasApiKey = !!process.env[apiKeyEnvVar];
+        
+        if (!providerConfig.enabled || !hasApiKey) {
             return res.status(400).json({
                 success: false,
-                error: `Provider ${provider} not configured or disabled`,
+                error: `Provider ${provider} not configured or disabled (API key: ${hasApiKey}, enabled: ${providerConfig.enabled})`,
                 code: 'PROVIDER_NOT_CONFIGURED'
             });
         }
@@ -266,7 +271,10 @@ router.get('/status/:provider', async (req, res) => {
         }
         
         const providerConfig = AI_PROVIDERS[provider];
-        const hasApiKey = !!providerConfig.apiKey;
+        
+        // Check if provider has API key in environment
+        const apiKeyEnvVar = `${provider.toUpperCase()}_API_KEY`;
+        const hasApiKey = !!process.env[apiKeyEnvVar];
         const isEnabled = providerConfig.enabled;
         
         // Get usage stats from cost tracking
