@@ -224,19 +224,25 @@ router.post('/test/:provider', async (req, res) => {
         
         // Simulate realistic response times and random success/failure
         const baseResponseTime = providerConfig.responseTime || 1500;
-        const simulatedDelay = Math.random() * 1000; // Add random variance
-        const isSuccess = Math.random() > 0.1; // 90% success rate
+        const simulatedDelay = Math.random() * 500; // Reduce delay for testing
+        const isSuccess = true; // 100% success rate for testing phase
         
         // Simulate processing delay
         await new Promise(resolve => setTimeout(resolve, Math.min(simulatedDelay, 2000)));
         
         const result = {
-            content: isSuccess ? `Hello! This is a test response from ${providerConfig.name}. Prompt: "${prompt}"` : null,
+            content: isSuccess ? `✅ Test successful! Response from ${providerConfig.name}. Prompt: "${prompt}"` : null,
             tokensUsed: Math.floor(prompt.length / 4) + Math.floor(Math.random() * 50),
             quality: isSuccess ? 0.7 + Math.random() * 0.3 : 0, // 0.7-1.0 for success
             success: isSuccess,
             error: isSuccess ? null : 'Simulated API error'
         };
+        
+        console.log(`✅ [AI TEST] ${provider} test result:`, {
+            success: result.success,
+            tokensUsed: result.tokensUsed,
+            quality: result.quality
+        });
         
         if (!isSuccess) {
             throw new Error(result.error);
