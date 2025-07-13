@@ -316,6 +316,9 @@ router.get('/test/:provider', async (req, res) => {
             metrics.qualityScores = metrics.qualityScores.slice(-50);
         }
         
+        // Calculate cost
+        const cost = result.tokensUsed * (providerConfig.costPerToken || 0.000001);
+        
         // Log conversation
         const conversationEntry = {
             id: Date.now() + Math.random(),
@@ -329,7 +332,7 @@ router.get('/test/:provider', async (req, res) => {
             tokensUsed: result.tokensUsed,
             quality: result.quality,
             success: true,
-            cost: result.tokensUsed * (providerConfig.costPerToken || 0.000001)
+            cost: cost
         };
         
         conversationLogs.unshift(conversationEntry);
@@ -344,6 +347,7 @@ router.get('/test/:provider', async (req, res) => {
             responseTime: actualResponseTime,
             quality: result.quality,
             tokensUsed: result.tokensUsed,
+            cost: cost,
             result: result.content,
             timestamp: new Date().toISOString()
         });
@@ -432,7 +436,25 @@ router.post('/test/:provider', async (req, res) => {
             metrics.qualityScores = metrics.qualityScores.slice(-50);
         }
         
-        // Log conversation for AI logs system
+        console.log(`✅ [AI TEST] ${provider} test result:`, {
+            success: result.success,
+            tokensUsed: result.tokensUsed,
+            quality: result.quality,
+            responseTime: actualResponseTime
+        });
+        
+        // Update cost tracking with safety checks
+        const tokens = result.tokensUsed || Math.floor(prompt.length / 4);
+        let cost = 0;
+        try {
+            cost = calculateCost(provider, tokens);
+            updateCostTracking(provider, tokens, cost);
+        } catch (costError) {
+            console.warn(`⚠️ [AI TEST] Cost tracking failed for ${provider}:`, costError.message);
+            cost = tokens * (providerConfig.costPerToken || 0.000001);
+        }
+        
+        // Log conversation for AI logs system (after cost calculation)
         const conversationEntry = {
             id: Date.now() + Math.random(),
             timestamp: new Date().toISOString(),
@@ -453,24 +475,6 @@ router.post('/test/:provider', async (req, res) => {
         // Keep only last 100 conversations for memory management
         if (conversationLogs.length > 100) {
             conversationLogs.length = 100;
-        }
-        
-        console.log(`✅ [AI TEST] ${provider} test result:`, {
-            success: result.success,
-            tokensUsed: result.tokensUsed,
-            quality: result.quality,
-            responseTime: actualResponseTime
-        });
-        
-        // Update cost tracking with safety checks
-        const tokens = result.tokensUsed || Math.floor(prompt.length / 4);
-        let cost = 0;
-        try {
-            cost = calculateCost(provider, tokens);
-            updateCostTracking(provider, tokens, cost);
-        } catch (costError) {
-            console.warn(`⚠️ [AI TEST] Cost tracking failed for ${provider}:`, costError.message);
-            cost = tokens * (providerConfig.costPerToken || 0.000001);
         }
         
         res.json({
