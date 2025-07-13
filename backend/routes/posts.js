@@ -4,12 +4,11 @@ const express = require('express');
 const router = express.Router();
 const supabase = require('../supabaseClient');
 const { authenticateAdmin } = require('../middleware/auth');
-const SwarmCouncil = require('../ai/swarm/SwarmCouncil');
-const EATOptimizedSwarmCouncil = require('../ai/swarm/EATOptimizedSwarmCouncil');
+const swarmCouncilManager = require('../services/SwarmCouncilManager');
 
-// Initialize AI Swarm Councils for content optimization
-const swarmCouncil = new SwarmCouncil();
-const eatSwarmCouncil = new EATOptimizedSwarmCouncil();
+// Get AI Swarm Councils from singleton manager
+const swarmCouncil = swarmCouncilManager.getSwarmCouncil();
+const eatSwarmCouncil = swarmCouncilManager.getEATSwarmCouncil();
 
 // Test Supabase connection function
 const testSupabaseConnection = async () => {

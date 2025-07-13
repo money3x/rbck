@@ -1119,6 +1119,12 @@ app.use(errorHandler);
 // Enhanced server startup
 async function startServer() {
     try {
+        // Initialize AI Swarm Councils (singleton)
+        console.log('🤖 Initializing AI Swarm Councils...');
+        const swarmCouncilManager = require('./services/SwarmCouncilManager');
+        await swarmCouncilManager.initializeAll();
+        console.log('✅ AI Swarm Councils initialized');
+        
         await loadInitialData();
           const server = app.listen(PORT, () => {            logger.info('🚀 ================================');
             logger.info(`🚀   ${config.api.title} v${config.api.version}`);
@@ -1139,6 +1145,14 @@ async function startServer() {
         // Graceful shutdown handling
         const gracefulShutdown = (signal) => {
             logger.info(`📢 Received ${signal}. Starting graceful shutdown...`);
+            
+            // Cleanup AI Swarm Councils
+            try {
+                swarmCouncilManager.destroy();
+                logger.info('✅ AI Swarm Councils cleaned up');
+            } catch (error) {
+                logger.error('❌ Error cleaning up AI councils:', error);
+            }
             
             server.close((err) => {
                 if (err) {

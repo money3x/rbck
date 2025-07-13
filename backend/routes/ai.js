@@ -6,15 +6,14 @@ const express = require('express');
 const router = express.Router();
 const { authenticateAdmin } = require('../middleware/auth');
 const SecureConfigService = require('../services/SecureConfigService');
-const SwarmCouncil = require('../ai/swarm/SwarmCouncil');
-const EATOptimizedSwarmCouncil = require('../ai/swarm/EATOptimizedSwarmCouncil');
+const swarmCouncilManager = require('../services/SwarmCouncilManager');
 const { getProviderConfig } = require('../ai/providers/config/providers.config');
 const aiProviderService = require('../services/AIProviderService');
 const ProviderFactory = require('../ai/providers/factory/ProviderFactory');
 
-// Initialize AI Swarm Councils
-const swarmCouncil = new SwarmCouncil();
-const eatSwarmCouncil = new EATOptimizedSwarmCouncil();
+// Get AI Swarm Councils from singleton manager
+const swarmCouncil = swarmCouncilManager.getSwarmCouncil();
+const eatSwarmCouncil = swarmCouncilManager.getEATSwarmCouncil();
 
 // ✅ AI_PROVIDERS configuration (secure version using SecureConfigService)
 const AI_PROVIDERS = {
