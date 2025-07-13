@@ -28,16 +28,28 @@ const config = require('./config/config');
 config.validateConfig();
 
 // Import routes
+console.log('🔧 [IMPORT] Loading routes...');
+console.log('🔧 [IMPORT] Loading apiKey routes...');
 const apiKeyRoutes = require('./apiKey.js');
+console.log('🔧 [IMPORT] Loading posts routes...');
 const postRoutes = require('./routes/posts');
+console.log('🔧 [IMPORT] Loading auth routes...');
 const authRoutes = require('./routes/auth.js');
+console.log('🔧 [IMPORT] Loading config routes...');
 const configRoutes = require('./routes/config.js');
+console.log('🔧 [IMPORT] Loading ai routes...');
 const aiRoutes = require('./routes/ai.js');
+console.log('🔧 [IMPORT] Loading migration routes...');
 const migrationRoutes = require('./routes/migration.js');
+console.log('🔧 [IMPORT] Loading debug-migration routes...');
 const debugMigrationRoutes = require('./routes/debug-migration.js');
+console.log('🔧 [IMPORT] Loading security routes...');
 const securityRoutes = require('./routes/security.js');
+console.log('🔧 [IMPORT] Loading performance routes...');
 const performanceRoutes = require('./routes/performance.js');
+console.log('🔧 [IMPORT] Loading supabase client...');
 const supabase = require('./supabaseClient');
+console.log('✅ [IMPORT] All routes loaded successfully');
 
 // Import secure API key manager
 const apiKeyManager = require('./models/apiKeys');
