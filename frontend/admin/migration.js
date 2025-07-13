@@ -400,13 +400,32 @@ class AdminMigration {
             return;
         }
         
-        // Update main status display
+        // Update main status display with celebration for complete
         const statusDiv = document.getElementById('migration-status');
         if (statusDiv) {
-            const statusText = status.isFullyMigrated ? 
-                `✅ พร้อมใช้งาน (${status.existingTables || 0}/${status.totalRequiredTables || 0})` : 
-                `⚠️ ต้อง Migration (${status.existingTables || 0}/${status.totalRequiredTables || 0})`;
-            statusDiv.textContent = statusText;
+            if (status.isFullyMigrated) {
+                statusDiv.innerHTML = `
+                    <div class="migration-complete-banner">
+                        <div class="celebration-icon">🎉</div>
+                        <div class="completion-text">
+                            <h3>Database Migration Complete!</h3>
+                            <p>All ${status.totalRequiredTables} tables are ready and operational</p>
+                        </div>
+                        <div class="completion-badge">✅ READY</div>
+                    </div>
+                `;
+            } else {
+                statusDiv.innerHTML = `
+                    <div class="migration-pending-banner">
+                        <div class="warning-icon">⚠️</div>
+                        <div class="pending-text">
+                            <h3>Migration Required</h3>
+                            <p>${status.existingTables}/${status.totalRequiredTables} tables ready</p>
+                        </div>
+                        <div class="pending-badge">PENDING</div>
+                    </div>
+                `;
+            }
         }
 
         // Update results area with detailed status
@@ -447,14 +466,36 @@ class AdminMigration {
                     </div>
                     
                     <div class="recommendation">
-                        <strong>💡 Recommendation:</strong> ${status.recommendation || 'No recommendation available'}
+                        <strong>💡 Status:</strong> ${status.recommendation || 'No recommendation available'}
                     </div>
                     
-                    ${(status.missingTables || 0) > 0 ? `
+                    ${status.isFullyMigrated ? `
+                        <div class="migration-complete-section">
+                            <div class="complete-header">
+                                <h4>🎉 Database Migration Complete!</h4>
+                                <p>Your system is fully ready and operational.</p>
+                            </div>
+                            <div class="complete-features">
+                                <div class="feature">✅ All ${totalRequiredTables} tables created successfully</div>
+                                <div class="feature">✅ Posts table extended with new columns</div>
+                                <div class="feature">✅ Performance indexes optimized</div>
+                                <div class="feature">✅ Security policies applied</div>
+                                <div class="feature">✅ Database relationships established</div>
+                            </div>
+                            <div class="complete-actions">
+                                <button class="btn btn-success" onclick="window.adminMigration?.handleCheckStatus()">
+                                    🔄 Refresh Status
+                                </button>
+                                <button class="btn btn-info" onclick="window.adminMigration?.handleHealthCheck()">
+                                    ❤️ Run Health Check
+                                </button>
+                            </div>
+                        </div>
+                    ` : `
                         <div class="next-action">
                             <strong>🚀 Next Action:</strong> Click "Run Migration" to create missing tables
                         </div>
-                    ` : ''}
+                    `}
                 </div>
             `;
         }
