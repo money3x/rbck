@@ -2,13 +2,14 @@
 // Real-time monitoring and performance tracking for AI providers
 // Tracks response times, success rates, usage statistics, and quality metrics
 
-import { showNotification } from './uiHelpers.js';
-import { API_BASE } from '../config.js';
+// FIXED: Removed ES6 imports to prevent module conflicts
+// These will be loaded via global scope instead
 
 /**
  * AI Monitoring System - Tracks AI provider performance and usage
+ * FIXED: Removed ES6 export for script loading compatibility
  */
-export class AIMonitoringSystem {
+class AIMonitoringSystem {
     constructor() {
         this.providers = ['gemini', 'openai', 'claude', 'deepseek', 'chinda'];
         this.metrics = {};
@@ -626,7 +627,8 @@ export class AIMonitoringSystem {
             console.log(`[AI MONITOR] Checking ${provider} status...`);
             
             // Call real API endpoint
-            const response = await fetch(`${API_BASE}/ai/status/${provider}?t=${Date.now()}`, {
+            const apiBase = window.rbckConfig?.apiBase || 'https://rbck.onrender.com/api';
+            const response = await fetch(`${apiBase}/ai/status/${provider}?t=${Date.now()}`, {
                 method: 'GET',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -805,3 +807,8 @@ Recent Errors: ${metrics.errors.length}
         window.aiMonitor = this;
     }
 }
+
+// Make AIMonitoringSystem available globally
+window.AIMonitoringSystem = AIMonitoringSystem;
+
+console.log('✅ [AI MONITOR] AIMonitoringSystem class loaded and available globally');

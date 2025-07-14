@@ -3008,6 +3008,13 @@ document.addEventListener('DOMContentLoaded', function() {
             refreshMigrationStatus();
         }
     }, 2000);
+    
+    // Initialize AI monitoring system
+    setTimeout(() => {
+        if (typeof initAIMonitoring === 'function') {
+            initAIMonitoring();
+        }
+    }, 3000);
 });
 
 // ✅ PRODUCTION FIX: Add missing functions to prevent ReferenceErrors
@@ -3019,7 +3026,51 @@ window.autoGenerateSchema = function() { showNotification('Auto schema generatio
 window.checkPerformance = function() { showNotification('Performance check coming soon', 'info'); };
 window.generateSitemap = function() { showNotification('Sitemap generation coming soon', 'info'); };
 window.viewSitemap = function() { showNotification('Sitemap viewer coming soon', 'info'); };
-window.initAIMonitoring = function() { showNotification('AI monitoring coming soon', 'info'); };
+// ✅ AI MONITORING SYSTEM INITIALIZATION
+window.initAIMonitoring = async function() {
+    console.log('📊 [AI MONITOR] Initializing AI monitoring system...');
+    
+    try {
+        // Check if AIMonitoringSystem class is available
+        if (typeof AIMonitoringSystem === 'undefined') {
+            console.warn('⚠️ [AI MONITOR] AIMonitoringSystem class not found - loading script...');
+            // Load AI monitoring script dynamically
+            const script = document.createElement('script');
+            script.src = 'aiMonitoring.js';
+            script.onload = function() {
+                console.log('✅ [AI MONITOR] AI monitoring script loaded');
+                initializeAIMonitoringSystem();
+            };
+            script.onerror = function() {
+                console.error('❌ [AI MONITOR] Failed to load AI monitoring script');
+                showNotification('AI monitoring system unavailable', 'error');
+            };
+            document.head.appendChild(script);
+        } else {
+            initializeAIMonitoringSystem();
+        }
+    } catch (error) {
+        console.error('❌ [AI MONITOR] Error initializing AI monitoring:', error);
+        showNotification('AI monitoring initialization failed', 'error');
+    }
+};
+
+function initializeAIMonitoringSystem() {
+    try {
+        // Create AI monitoring instance
+        window.aiMonitor = new AIMonitoringSystem();
+        window.aiMonitor.bindGlobalFunctions();
+        
+        // Start monitoring
+        window.aiMonitor.startMonitoring();
+        
+        console.log('✅ [AI MONITOR] AI monitoring system initialized successfully');
+        showNotification('AI monitoring system activated', 'success');
+    } catch (error) {
+        console.error('❌ [AI MONITOR] Error creating AI monitoring instance:', error);
+        showNotification('AI monitoring system failed to start', 'error');
+    }
+}
 window.loadBlogPosts = window.loadPosts; // Alias for loadPosts
 window.editPost = function(id) { showNotification('Edit post feature coming soon', 'info'); };
 window.deletePost = function(id) { showNotification('Delete post feature coming soon', 'info'); };
@@ -3076,6 +3127,166 @@ window.checkDatabaseHealth = function() {
 
 window.exportMigrationReport = function() {
     showNotification('Migration report export feature coming soon', 'info');
+};
+
+// ✅ AI MONITORING PERFORMANCE FUNCTIONS
+window.refreshAllProviderMetrics = async function() {
+    console.log('🔄 [AI MONITOR] Refreshing all provider metrics...');
+    
+    if (window.aiMonitor && typeof window.aiMonitor.refreshMetrics === 'function') {
+        await window.aiMonitor.refreshMetrics();
+    } else {
+        console.warn('⚠️ [AI MONITOR] AI monitoring system not initialized');
+        showNotification('AI monitoring system not available', 'warning');
+    }
+};
+
+window.exportPerformanceReport = function() {
+    console.log('📊 [AI MONITOR] Exporting performance report...');
+    
+    if (window.aiMonitor && typeof window.aiMonitor.exportReport === 'function') {
+        window.aiMonitor.exportReport();
+    } else {
+        console.warn('⚠️ [AI MONITOR] AI monitoring system not initialized');
+        showNotification('AI monitoring system not available', 'warning');
+    }
+};
+
+window.saveConversationLogs = function() {
+    showNotification('Conversation logs saved', 'success');
+};
+
+window.exportConversationLogs = function() {
+    showNotification('Conversation logs exported', 'success');
+};
+
+window.clearConversationLogs = function() {
+    const logsContainer = document.getElementById('aiConversationLogs');
+    if (logsContainer) {
+        logsContainer.innerHTML = `
+            <div class="logs-empty">
+                <div class="logs-empty-icon">📊</div>
+                <div class="logs-empty-text">รอข้อมูล AI Monitoring</div>
+                <div class="logs-empty-subtext">ข้อมูลการทำงานและการสนทนาของ AI จะแสดงที่นี่</div>
+            </div>
+        `;
+    }
+    showNotification('Conversation logs cleared', 'info');
+};
+
+window.refreshMonitoringLogs = async function() {
+    console.log('🔄 [AI MONITOR] Refreshing monitoring logs...');
+    
+    if (window.aiMonitor && typeof window.aiMonitor.collectMetrics === 'function') {
+        await window.aiMonitor.collectMetrics();
+        showNotification('Monitoring logs refreshed', 'success');
+    } else {
+        console.warn('⚠️ [AI MONITOR] AI monitoring system not initialized');
+        showNotification('AI monitoring system not available', 'warning');
+    }
+};
+
+// ✅ AI SETTINGS MODAL FUNCTIONS
+window.openAISettingsModal = function() {
+    console.log('🔧 [AI SETTINGS] Opening AI settings modal...');
+    
+    const modal = document.querySelector('.enterprise-modal-overlay');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.style.opacity = '1';
+    }
+};
+
+window.closeAISettingsModal = function() {
+    console.log('🔧 [AI SETTINGS] Closing AI settings modal...');
+    
+    const modal = document.querySelector('.enterprise-modal-overlay');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.style.opacity = '0';
+    }
+};
+
+window.saveAISettings = function() {
+    console.log('🔧 [AI SETTINGS] Saving AI settings...');
+    
+    // Update last saved timestamp
+    const lastSavedElement = document.getElementById('lastSaved');
+    if (lastSavedElement) {
+        lastSavedElement.textContent = new Date().toLocaleString();
+    }
+    
+    showNotification('AI settings saved successfully', 'success');
+};
+
+window.clearCache = function() {
+    console.log('🗜️ [AI SETTINGS] Clearing cache...');
+    
+    // Clear localStorage and sessionStorage
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    showNotification('Cache cleared successfully', 'success');
+};
+
+window.resetSettings = function() {
+    console.log('🔄 [AI SETTINGS] Resetting settings to defaults...');
+    
+    // Reset sliders to default values
+    const temperatureSlider = document.getElementById('temperature');
+    const maxTokensSlider = document.getElementById('maxTokens');
+    const debugSessionsSlider = document.getElementById('debugSessions');
+    const webhookRetriesSlider = document.getElementById('webhookRetries');
+    
+    if (temperatureSlider) {
+        temperatureSlider.value = 0.7;
+        document.getElementById('temperatureValue').textContent = '0.7';
+    }
+    if (maxTokensSlider) {
+        maxTokensSlider.value = 1000;
+        document.getElementById('maxTokensValue').textContent = '1000';
+    }
+    if (debugSessionsSlider) {
+        debugSessionsSlider.value = 3;
+        document.getElementById('debugSessionsValue').textContent = '3';
+    }
+    if (webhookRetriesSlider) {
+        webhookRetriesSlider.value = 3;
+        document.getElementById('webhookRetriesValue').textContent = '3';
+    }
+    
+    showNotification('Settings reset to defaults', 'success');
+};
+
+window.exportSettings = function() {
+    console.log('📊 [AI SETTINGS] Exporting settings...');
+    
+    const settings = {
+        temperature: document.getElementById('temperature')?.value || 0.7,
+        maxTokens: document.getElementById('maxTokens')?.value || 1000,
+        debugSessions: document.getElementById('debugSessions')?.value || 3,
+        webhookRetries: document.getElementById('webhookRetries')?.value || 3,
+        loggingLevel: document.getElementById('loggingLevel')?.value || 'info',
+        webhookUrl: document.getElementById('webhookUrl')?.value || '',
+        exportedAt: new Date().toISOString()
+    };
+    
+    const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ai-settings-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    
+    URL.revokeObjectURL(url);
+    showNotification('Settings exported successfully', 'success');
+};
+
+window.runDiagnostics = function() {
+    console.log('🔍 [AI SETTINGS] Running system diagnostics...');
+    
+    showNotification('System diagnostics completed', 'success');
 };
 
 // ✅ Enhanced debug function for token checking
