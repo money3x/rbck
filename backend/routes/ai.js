@@ -133,55 +133,36 @@ router.get('/status', async (req, res) => {
         
         console.log('🔍 [AI STATUS] Checking providers status...');
         
-        // FIXED: Use actual provider configuration instead of simple pattern
-        const { getProviderConfig } = require('../ai/providers/config/providers.config');
-        
+        // FIXED: Direct environment variable check (simple and reliable)
         for (const provider of providers) {
-            try {
-                const config = getProviderConfig(provider);
-                let isConfigured = false;
-                let status = 'needs_configuration';
-                
-                if (config) {
-                    // Check provider-specific requirements
-                    switch (provider) {
-                        case 'chinda':
-                            // Chinda needs both API key and JWT token
-                            isConfigured = !!(config.apiKey && config.jwtToken);
-                            break;
-                        case 'gemini':
-                        case 'openai':
-                        case 'claude':
-                        case 'deepseek':
-                            // Other providers need only API key
-                            isConfigured = !!config.apiKey;
-                            break;
-                        default:
-                            isConfigured = !!config.apiKey;
-                    }
-                    
-                    if (isConfigured && config.enabled !== false) {
-                        status = 'ready';
-                    }
-                }
-                
-                status.providers[provider] = {
-                    name: config?.name || provider,
-                    configured: isConfigured,
-                    status: status,
-                    enabled: config?.enabled || false
-                };
-                
-            } catch (error) {
-                console.error(`[AI STATUS] Error checking ${provider}:`, error);
-                status.providers[provider] = {
-                    name: provider,
-                    configured: false,
-                    status: 'error',
-                    enabled: false,
-                    error: error.message
-                };
+            let hasApiKey = false;
+            
+            // Check the actual environment variables that work with chatbot
+            switch (provider) {
+                case 'chinda':
+                    hasApiKey = !!process.env.CHINDA_API_KEY;
+                    break;
+                case 'gemini':
+                    hasApiKey = !!process.env.GEMINI_API_KEY;
+                    break;
+                case 'openai':
+                    hasApiKey = !!process.env.OPENAI_API_KEY;
+                    break;
+                case 'claude':
+                    hasApiKey = !!process.env.CLAUDE_API_KEY;
+                    break;
+                case 'deepseek':
+                    hasApiKey = !!process.env.DEEPSEEK_API_KEY;
+                    break;
+                default:
+                    hasApiKey = !!process.env[`${provider.toUpperCase()}_API_KEY`];
             }
+            
+            status.providers[provider] = {
+                name: provider,
+                configured: hasApiKey,
+                status: hasApiKey ? 'ready' : 'needs_configuration'
+            };
         }
         
         res.json({
