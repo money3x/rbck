@@ -9,6 +9,8 @@
     <link rel="modulepreload" href="core/bootstrap.js">
     <link rel="modulepreload" href="core/auth.js">
     <link rel="modulepreload" href="core/api-client.js">
+    <link rel="modulepreload" href="unified-status-manager.js">
+    <link rel="modulepreload" href="real-time-conversation-logs.js">
     <link rel="preload" href="css/luxury-sidebar.css" as="style">
     <link rel="dns-prefetch" href="https://rbck.onrender.com">
     <link rel="preconnect" href="https://rbck.onrender.com" crossorigin>
@@ -10250,6 +10252,24 @@
         // ⚡ Load bootstrap module (this will load other modules as needed)
         import('./core/bootstrap.js').then(() => {
             console.log('⚡ [PERFORMANCE] Bootstrap initialization complete');
+            
+            // ✅ INITIALIZE NEW UNIFIED SYSTEMS
+            return Promise.all([
+                import('./unified-status-manager.js'),
+                import('./real-time-conversation-logs.js')
+            ]);
+        }).then(() => {
+            console.log('🎯 [TROUBLESHOOT FIX] Unified systems loaded');
+            
+            // Start unified status monitoring (prevents flickering)
+            if (window.unifiedStatusManager) {
+                window.unifiedStatusManager.startMonitoring();
+                console.log('✅ [TROUBLESHOOT FIX] Unified status manager started');
+            }
+            
+            // Real-time conversation logs will auto-start if container exists
+            console.log('✅ [TROUBLESHOOT FIX] All monitoring systems initialized');
+            
         }).catch(error => {
             console.error('❌ [PERFORMANCE] Bootstrap failed:', error);
             

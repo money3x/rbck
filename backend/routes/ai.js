@@ -824,75 +824,10 @@ router.get('/providers/status', async (req, res) => {
 });
 
 /**
- * Get status of specific AI provider
- * GET /api/ai/status/:provider
+ * ✅ REMOVED: Duplicate status route that caused conflicts
+ * The primary /status/:provider endpoint is defined earlier (lines 517-572)
+ * This duplicate was causing status flickering issues
  */
-router.get('/status/:provider', async (req, res) => {
-    try {
-        const { provider } = req.params;
-        
-        const providerConfig = SecureConfigService.getProviderConfig(provider);
-        if (!providerConfig) {
-            return res.status(404).json({
-                success: false,
-                error: 'AI provider not found'
-            });
-        }
-        
-        // Real status check using actual API validation
-        let isConnected = false;
-        let responseTime = null;
-        let apiKeyValid = false;
-        
-        try {
-            // Check if API key is configured using SecureConfigService
-            const apiKey = SecureConfigService.getApiKey(provider);
-            const configured = !!(apiKey && apiKey.length > 10);
-            
-            if (configured && providerConfig.status === 'active') {
-                const ProviderFactory = require('../ai/providers/factory/ProviderFactory');
-                const startTime = Date.now();
-                
-                // Try to create provider instance and test connection
-                const providerInstance = ProviderFactory.createProvider(provider);
-                
-                if (providerInstance) {
-                    // Simple test with a basic prompt
-                    await providerInstance.generateResponse("Test connection", { maxTokens: 10 });
-                    responseTime = Date.now() - startTime;
-                    isConnected = true;
-                    apiKeyValid = true;
-                    console.log(`✅ [AI STATUS] ${provider} test successful (${responseTime}ms)`);
-                }
-            }
-        } catch (testError) {
-            console.error(`❌ [AI STATUS] ${provider} test failed:`, testError.message);
-            isConnected = false;
-            responseTime = null;
-            apiKeyValid = false;
-        }
-        
-        res.json({
-            success: true,
-            provider: provider,
-            name: providerConfig.name,
-            connected: isConnected,
-            status: isConnected ? 'active' : 'error',
-            responseTime: responseTime,
-            successRate: isConnected ? providerConfig.successRate : 0,
-            lastChecked: new Date().toISOString(),
-            apiKeyValid: apiKeyValid,
-            configured: !!(providerConfig.apiKey && providerConfig.apiKey.length > 10)
-        });
-        
-    } catch (error) {
-        console.error(`[AI ROUTES] Error checking ${req.params.provider} status:`, error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to check AI provider status'
-        });
-    }
-});
 
 // Provider test result caching to reduce API calls
 const providerTestCache = new Map();
@@ -1251,6 +1186,31 @@ router.post('/chat-optimized', async (req, res) => {
         
         const totalTime = Date.now() - requestStart;
         
+        // ✅ LOG CONVERSATION FOR REAL-TIME MONITORING
+        if (result.success && result.content) {
+            const conversationEntry = {
+                id: Date.now() + Math.random(),
+                timestamp: new Date().toISOString(),
+                provider: provider,
+                providerName: AI_PROVIDERS[provider]?.name || provider,
+                type: 'chat',
+                prompt: message.trim(),
+                response: result.content,
+                responseTime: totalTime,
+                tokensUsed: result.tokensUsed || 0,
+                quality: result.quality || 0.9,
+                success: true,
+                cost: result.cost || 0
+            };
+            
+            conversationLogs.unshift(conversationEntry);
+            if (conversationLogs.length > 100) {
+                conversationLogs.length = 100;
+            }
+            
+            console.log('📝 [AI CHAT] Conversation logged for real-time monitoring');
+        }
+        
         // Success response
         res.json({
             ...result,
@@ -1422,6 +1382,31 @@ router.post('/chat', async (req, res) => {
         });
         
         const totalTime = Date.now() - requestStart;
+        
+        // ✅ LOG CONVERSATION FOR REAL-TIME MONITORING
+        if (result.success && result.content) {
+            const conversationEntry = {
+                id: Date.now() + Math.random(),
+                timestamp: new Date().toISOString(),
+                provider: provider,
+                providerName: AI_PROVIDERS[provider]?.name || provider,
+                type: 'chat',
+                prompt: message.trim(),
+                response: result.content,
+                responseTime: totalTime,
+                tokensUsed: result.tokensUsed || 0,
+                quality: result.quality || 0.9,
+                success: true,
+                cost: result.cost || 0
+            };
+            
+            conversationLogs.unshift(conversationEntry);
+            if (conversationLogs.length > 100) {
+                conversationLogs.length = 100;
+            }
+            
+            console.log('📝 [AI CHAT] Conversation logged for real-time monitoring');
+        }
         
         // Success response
         res.json({
