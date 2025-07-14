@@ -2508,23 +2508,31 @@ async function getEnhancedAuthToken() {
     // ⚡ Phase 1: Try existing token first (backward compatibility)
     let token = authToken || localStorage.getItem('jwtToken') || sessionStorage.getItem('authToken');
     
-    // ⚡ Phase 2: If no local token, try ConfigManager (enhancement)
+    // ⚡ Phase 2: If no local token, try backend direct auth (FIXED: no ES6 import)
     if (!token) {
         try {
-            console.log('🔄 [AUTH] No local token, trying ConfigManager...');
-            const { getToken } = await import('../config.js');
-            const freshToken = await getToken();
+            console.log('🔄 [AUTH] No local token, trying backend direct auth...');
+            const response = await fetch(`${rbckConfig.apiBase}/auth/get-jwt-token`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
             
-            if (freshToken) {
-                console.log('✅ [AUTH] Fresh token obtained from Render backend');
-                // ⚡ Store for future use (hybrid approach)
-                localStorage.setItem('jwtToken', freshToken);
-                authToken = freshToken; // Update global variable
-                window.authToken = authToken;
-                token = freshToken;
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success && result.jwtToken) {
+                    console.log('✅ [AUTH] Fresh token obtained from backend');
+                    // ⚡ Store for future use (hybrid approach)
+                    localStorage.setItem('jwtToken', result.jwtToken);
+                    authToken = result.jwtToken; // Update global variable
+                    window.authToken = authToken;
+                    token = result.jwtToken;
+                }
             }
         } catch (configError) {
-            console.warn('⚠️ [AUTH] ConfigManager failed, continuing with existing flow:', configError);
+            console.warn('⚠️ [AUTH] Backend token fetch failed, continuing with existing flow:', configError);
         }
     }
     
@@ -2540,15 +2548,18 @@ async function getEnhancedAuthToken() {
 window.loadSecurityDashboard = async function() {
     console.log('🔒 [SECURITY] Loading security dashboard...');
     
-    // ✅ Get fresh token from ConfigManager (production approach)
+    // ✅ FIXED: Use global getAuthToken() instead of ES6 import
     let currentToken;
     try {
-        const { getToken } = await import('../config.js');
-        currentToken = await getToken();
-        console.log('✅ [SECURITY] Got fresh token from ConfigManager');
+        // Try multiple auth token sources in order of preference
+        currentToken = await getAuthToken();
+        if (!currentToken) {
+            throw new Error('No authentication token available');
+        }
+        console.log('✅ [SECURITY] Got authentication token for dashboard');
     } catch (error) {
         console.error('❌ [SECURITY] Failed to get authentication token:', error);
-        showNotification('Authentication required - Backend configuration error', 'error');
+        showNotification('Authentication required - Please login first', 'error');
         return;
     }
     
@@ -2990,6 +3001,13 @@ window.stopSecurityAutoRefresh = function() {
 // Auto-start security refresh when page loads
 document.addEventListener('DOMContentLoaded', function() {
     startSecurityAutoRefresh();
+    
+    // Initialize migration status
+    setTimeout(() => {
+        if (typeof refreshMigrationStatus === 'function') {
+            refreshMigrationStatus();
+        }
+    }, 2000);
 });
 
 // ✅ PRODUCTION FIX: Add missing functions to prevent ReferenceErrors
@@ -3005,6 +3023,60 @@ window.initAIMonitoring = function() { showNotification('AI monitoring coming so
 window.loadBlogPosts = window.loadPosts; // Alias for loadPosts
 window.editPost = function(id) { showNotification('Edit post feature coming soon', 'info'); };
 window.deletePost = function(id) { showNotification('Delete post feature coming soon', 'info'); };
+
+// ✅ DATABASE MIGRATION FUNCTIONS
+window.refreshMigrationStatus = async function() {
+    console.log('🔄 [MIGRATION] Refreshing migration status...');
+    
+    const statusElement = document.getElementById('migration-status');
+    if (statusElement) {
+        statusElement.textContent = 'กำลังตรวจสอบ...';
+    }
+    
+    try {
+        const response = await fetch(`${rbckConfig.apiBase}/migration/status`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': (await getAuthToken()) ? `Bearer ${await getAuthToken()}` : ''
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (statusElement) {
+                statusElement.textContent = data.success ? 'Status Checked Complete' : 'Status check failed';
+            }
+            
+            showNotification('Migration status refreshed', 'success');
+        } else {
+            throw new Error('Failed to get migration status');
+        }
+    } catch (error) {
+        console.error('❌ [MIGRATION] Error refreshing status:', error);
+        if (statusElement) {
+            statusElement.textContent = 'Status check failed';
+        }
+        showNotification('Migration status refresh failed', 'error');
+    }
+};
+
+window.runPendingMigrations = function() {
+    showNotification('Migration execution feature coming soon', 'info');
+};
+
+window.rollbackLastMigration = function() {
+    showNotification('Migration rollback feature coming soon', 'info');
+};
+
+window.checkDatabaseHealth = function() {
+    showNotification('Database health check feature coming soon', 'info');
+};
+
+window.exportMigrationReport = function() {
+    showNotification('Migration report export feature coming soon', 'info');
+};
 
 // ✅ Enhanced debug function for token checking
 window.debugAuth = async function() {

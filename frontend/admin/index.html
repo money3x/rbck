@@ -6550,7 +6550,26 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    providersData = data.providers || {};
+                    console.log('📊 [BACKEND] Raw API response:', data);
+                    
+                    // Handle the new backend API response structure
+                    if (data.success && data.data && data.data.providers) {
+                        // Convert backend provider status to expected format
+                        providersData = {};
+                        Object.entries(data.data.providers).forEach(([key, provider]) => {
+                            providersData[key] = {
+                                configured: provider.configured,
+                                status: provider.status,
+                                lastCheck: new Date().toISOString(),
+                                responseTime: 500 + Math.random() * 1000, // Mock response time
+                                apiKeyValid: provider.configured
+                            };
+                        });
+                        console.log('✅ [BACKEND] Converted provider data:', providersData);
+                    } else {
+                        console.warn('⚠️ [BACKEND] Invalid response structure, using mock data');
+                        providersData = generateMockProviderStatus();
+                    }
                 } else {
                     console.warn('⚠️ [BACKEND] Backend not available, using mock data');
                     // Fallback to mock data for development
@@ -6709,13 +6728,23 @@
                 };
             }
             
+            // FIXED: Handle backend status values properly
             switch (data.status) {
+                case 'ready':
                 case 'connected':
                     return {
                         text: 'Connected',
                         badgeColor: '#28a745',
                         textColor: 'white',
                         bgColor: '#f8fff9'
+                    };
+                case 'needs_configuration':
+                case 'not_configured':
+                    return {
+                        text: 'Not Configured',
+                        badgeColor: '#dc3545',
+                        textColor: 'white',
+                        bgColor: '#fff8f8'
                     };
                 case 'error':
                     return {
@@ -8232,18 +8261,30 @@
             }
         }
         
-        // Get provider status directly without testing
+        // Get provider status with standardized response handling
         async function getProviderStatusDirect(provider) {
             try {
-                const response = await fetch(`${API_BASE}/ai/status/${provider}`);
+                const apiBase = window.rbckConfig?.apiBase || 'https://rbck.onrender.com/api';
+                const response = await fetch(`${apiBase}/ai/status/${provider}`);
                 if (response.ok) {
                     const data = await response.json();
-                    return data.success && data.connected;
+                    // Standardized status interpretation
+                    if (data.success) {
+                        // Map backend status to consistent frontend values
+                        const status = data.status || 'unknown';
+                        const configured = data.configured !== false;
+                        const connected = data.connected !== false;
+                        
+                        if (status === 'ready' && configured && connected) return 'Connected';
+                        if (configured && !connected) return 'Error';
+                        if (!configured) return 'Not Configured';
+                        return 'Checking...';
+                    }
                 }
-                return false;
+                return 'Not Configured';
             } catch (error) {
                 console.error(`Failed to get ${provider} status:`, error);
-                return false;
+                return 'Error';
             }
         }
 
@@ -8264,16 +8305,27 @@
                     if (currentStatus !== 'Testing...' && currentStatus !== 'Checking...') {
                         try {
                             // Get immediate status without testing
-                            const testResult = await getProviderStatusDirect(provider);
+                            // Get standardized status
+                            const statusText = await getProviderStatusDirect(provider);
                             
-                            if (testResult !== null) {
-                                if (testResult) {
-                                    badge.textContent = 'Connected';
+                            badge.textContent = statusText;
+                            
+                            // Apply appropriate styling based on status
+                            switch (statusText) {
+                                case 'Connected':
                                     badge.style.background = '#10b981';
-                                } else {
-                                    badge.textContent = 'Failed';
+                                    break;
+                                case 'Error':
                                     badge.style.background = '#ef4444';
-                                }
+                                    break;
+                                case 'Not Configured':
+                                    badge.style.background = '#6c757d';
+                                    break;
+                                case 'Checking...':
+                                    badge.style.background = '#ffc107';
+                                    break;
+                                default:
+                                    badge.style.background = '#6c757d';
                             }
                         } catch (error) {
                             console.error(`❌ [${provider}] Silent check failed:`, error);
