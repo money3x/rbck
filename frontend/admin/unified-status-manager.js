@@ -18,8 +18,8 @@ export class UnifiedAIStatusManager {
         this.pendingUpdates = new Set();
         this.lastUpdate = null;
         
-        // Debouncing to prevent rapid status changes
-        this.debounceDelay = 2000; // 2 seconds
+        // Professional status management without artificial delays
+        this.debounceDelay = 100; // Minimal delay for UI smoothness only
         this.statusLock = false;
         
         // Initialize status for all providers
@@ -39,7 +39,7 @@ export class UnifiedAIStatusManager {
             this.providerStatus[provider] = {
                 id: provider,
                 name: this.getProviderDisplayName(provider),
-                status: 'unknown',
+                status: 'checking', // Professional loading state
                 connected: false,
                 configured: false,
                 responseTime: null,
@@ -66,9 +66,9 @@ export class UnifiedAIStatusManager {
     }
     
     /**
-     * Start unified monitoring with debouncing
+     * Start professional monitoring with intelligent intervals
      */
-    async startMonitoring(updateIntervalMs = 120000) { // 2 minutes default
+    async startMonitoring(updateIntervalMs = 60000) { // 1 minute default - professional frequency
         if (this.isMonitoring) {
             console.log('🔄 [UNIFIED STATUS] Already monitoring');
             return;
@@ -320,17 +320,27 @@ export class UnifiedAIStatusManager {
                 }
             }
             
-            // Update AI Monitoring performance table
+            // Update AI Monitoring performance table with professional status
             const statusBadge = document.getElementById(`statusBadge-${provider}`);
             if (statusBadge) {
-                const statusClass = status.connected ? 'healthy' : 'error';
-                const statusTextMap = {
-                    healthy: 'ปกติ',
-                    error: 'ข้อผิดพลาด'
-                };
+                let statusClass, statusText;
+                
+                if (status.status === 'checking') {
+                    statusClass = 'warning';
+                    statusText = 'กำลังตรวจสอบ';
+                } else if (status.connected && status.configured) {
+                    statusClass = 'healthy';
+                    statusText = 'ปกติ';
+                } else if (status.configured && !status.connected) {
+                    statusClass = 'error';
+                    statusText = 'ข้อผิดพลาด';
+                } else {
+                    statusClass = 'warning';
+                    statusText = 'ไม่ได้กำหนดค่า';
+                }
                 
                 statusBadge.className = `provider-status-badge ${statusClass}`;
-                statusBadge.textContent = statusTextMap[statusClass] || 'ไม่ทราบ';
+                statusBadge.textContent = statusText;
             }
             
             // Update dashboard cards

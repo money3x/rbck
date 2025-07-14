@@ -14,7 +14,7 @@ export class RealTimeConversationLogs {
         this.conversations = [];
         this.isMonitoring = false;
         this.pollInterval = null;
-        this.pollFrequency = 15000; // 15 seconds for real-time feel
+        this.pollFrequency = 30000; // 30 seconds - professional balance of real-time vs efficiency
         this.maxDisplayLogs = 50;
         this.listeners = [];
         
@@ -520,14 +520,9 @@ const conversationLogs = new RealTimeConversationLogs();
 // Global access
 window.conversationLogs = conversationLogs;
 
-// Auto-start if container exists
-if (document.getElementById('aiConversationLogs')) {
-    console.log('🚀 [CONVERSATION LOGS] Auto-initializing...');
-    // Start monitoring automatically after page load
-    setTimeout(() => {
-        conversationLogs.startMonitoring();
-    }, 2000);
-}
+// Professional initialization - only when user explicitly requests
+// Note: No auto-start to prevent unnecessary server load
+console.log('✅ [CONVERSATION LOGS] Ready for manual activation');
 
 // Export for module use
 export default conversationLogs;

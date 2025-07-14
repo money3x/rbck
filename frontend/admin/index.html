@@ -10232,17 +10232,13 @@
             }
         };
 
-        // Auto-create dashboard on page load
+        // Professional initialization - no redundant systems
         document.addEventListener('DOMContentLoaded', () => {
-            // Wait a bit for page to settle
+            // Single initialization point - unified system handles all monitoring
             setTimeout(() => {
                 window.createLiveAIStatusDashboard();
-                
-                // Also trigger initial AI Swarm Council sync
-                setTimeout(() => {
-                    window.syncAISwarmCouncil();
-                }, 3000);
-            }, 2000);
+                // Note: AI Swarm Council sync now handled by unified status manager
+            }, 500); // Reduced from 2 seconds for professional responsiveness
         });
 
         console.log('⚡ [PERFORMANCE] Starting optimized RBCK CMS...');
