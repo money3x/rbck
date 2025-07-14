@@ -2450,14 +2450,14 @@
         }
         
         /* Special ChindaX styling */
-        .ai-provider-section.chindax-special {
+        .ai-provider-section.chinda-special {
             border: 2px solid rgba(251, 188, 5, 0.3);
             background: linear-gradient(145deg, 
                 rgba(251, 188, 5, 0.05) 0%,
                 rgba(255, 255, 255, 0.9) 100%);
         }
         
-        .ai-provider-section.chindax-special::before {
+        .ai-provider-section.chinda-special::before {
             background: linear-gradient(90deg, 
                 transparent, 
                 rgba(251, 188, 5, 0.2), 
@@ -5045,7 +5045,7 @@
               <div class="ai-card">
                 <div class="ai-card-header">
                   <h3 class="ai-card-title">🤖 OpenAI Models</h3>
-                  <span class="ai-card-badge" id="openai-badge">Not Connected</span>
+                  <span class="ai-card-badge" id="openai-badge">Checking...</span>
                 </div>
                 <div class="ai-card-content">
                   <div class="ai-form-group">
@@ -5070,7 +5070,7 @@
               <div class="ai-card">
                 <div class="ai-card-header">
                   <h3 class="ai-card-title">🧠 Claude Models</h3>
-                  <span class="ai-card-badge" id="claude-badge">Not Connected</span>
+                  <span class="ai-card-badge" id="claude-badge">Checking...</span>
                 </div>
                 <div class="ai-card-content">
                   <div class="ai-form-group">
@@ -5095,7 +5095,7 @@
               <div class="ai-card">
                 <div class="ai-card-header">
                   <h3 class="ai-card-title">✨ Gemini Models</h3>
-                  <span class="ai-card-badge" id="gemini-badge">Not Connected</span>
+                  <span class="ai-card-badge" id="gemini-badge">Checking...</span>
                 </div>
                 <div class="ai-card-content">
                   <div class="ai-form-group">
@@ -5178,23 +5178,23 @@
                 <div class="ai-card-content">
                   <div class="ai-form-group">
                     <label class="ai-form-label">ChindaX API Key</label>
-                    <input type="password" id="chindaxApiKey" class="ai-form-input" placeholder="Enter API Key" autocomplete="off">
+                    <input type="password" id="chindaApiKey" class="ai-form-input" placeholder="Enter API Key" autocomplete="off">
                   </div>
                   <div class="ai-form-group">
                     <label class="ai-form-label">ChindaX JWT Token</label>
-                    <input type="password" id="chindaxJwtToken" class="ai-form-input" placeholder="Enter JWT Token" autocomplete="off">
+                    <input type="password" id="chindaJwtToken" class="ai-form-input" placeholder="Enter JWT Token" autocomplete="off">
                   </div>
                   <div class="ai-form-group">
                     <label class="ai-form-label">Available Models</label>
-                    <select class="ai-form-input" id="chindaxModel">
-                      <option value="chindax-gpt">ChindaX-GPT</option>
-                      <option value="chindax-pro">ChindaX-Pro</option>
-                      <option value="chindax-turbo">ChindaX-Turbo</option>
+                    <select class="ai-form-input" id="chindaModel">
+                      <option value="chinda-gpt">ChindaX-GPT</option>
+                      <option value="chinda-pro">ChindaX-Pro</option>
+                      <option value="chinda-turbo">ChindaX-Turbo</option>
                     </select>
                   </div>
                   <div class="ai-form-group">
                     <div class="ai-form-actions">
-                      <button class="ai-button secondary" onclick="testProvider('chindax')">
+                      <button class="ai-button secondary" onclick="testProvider('chinda')">
                         <i class="fas fa-plug"></i> Test Connection
                       </button>
                     </div>
@@ -6114,7 +6114,7 @@
         window.saveAllAISettings = async function() {
             console.log('💾 [AI Settings] Saving all AI settings...');
             
-            const providers = ['openai', 'claude', 'google', 'deepseek', 'chindax'];
+            const providers = ['openai', 'claude', 'google', 'deepseek', 'chinda'];
             let savedCount = 0;
             let errors = 0;
             
@@ -6398,7 +6398,7 @@
                     { id: 'testConfigClaudeApi', provider: 'claude' },
                     { id: 'testConfigGoogleApi', provider: 'google' },
                     { id: 'testConfigDeepSeekApi', provider: 'deepseek' },
-                    { id: 'testConfigChindaXApi', provider: 'chindax' }
+                    { id: 'testConfigChindaXApi', provider: 'chinda' }
                 ];
                 
                 testButtons.forEach(button => {
@@ -6613,7 +6613,7 @@
                     responseTime: null,
                     apiKeyValid: false
                 },
-                chindax: {
+                chinda: {
                     configured: true,
                     status: 'error',
                     lastCheck: new Date().toISOString(),
@@ -6633,7 +6633,7 @@
                 { id: 'claude', name: 'Claude', model: 'Anthropic', icon: '🧠' },
                 { id: 'gemini', name: 'Gemini', model: '2.0 Flash', icon: '✨' },
                 { id: 'deepseek', name: 'DeepSeek', model: 'V2', icon: '🔍' },
-                { id: 'chindax', name: 'ChindaX', model: 'qwen3-32b', icon: '🚀' }
+                { id: 'chinda', name: 'ChindaX', model: 'qwen3-32b', icon: '🚀' }
             ];
             
             let html = '';
@@ -6824,14 +6824,14 @@
                 let apiKey = '';
                 let jwtToken = '';
                 
-                if (providerId === 'chindax') {
-                    apiKey = document.getElementById('chindaxApiKeyInput')?.value;
-                    jwtToken = document.getElementById('chindaxJwtTokenInput')?.value;
+                if (providerId === 'chinda') {
+                    apiKey = document.getElementById('chindaApiKeyInput')?.value;
+                    jwtToken = document.getElementById('chindaJwtTokenInput')?.value;
                 } else {
                     apiKey = document.getElementById(`${providerId}ApiKeyInput`)?.value;
                 }
                 
-                if (!apiKey || (providerId === 'chindax' && !jwtToken)) {
+                if (!apiKey || (providerId === 'chinda' && !jwtToken)) {
                     throw new Error('API key is required');
                 }
                 
@@ -6858,7 +6858,7 @@
                         case 'deepseek':
                             isValid = apiKey.startsWith('sk-');
                             break;
-                        case 'chindax':
+                        case 'chinda':
                             isValid = apiKey.length > 0 && jwtToken.length > 0;
                             break;
                     }
@@ -7013,12 +7013,12 @@
                         status: providersData.deepseek?.status || 'not_configured'
                     },
                     {
-                        id: 'chindax',
+                        id: 'chinda',
                         name: 'ChindaX',
                         model: 'qwen3-32b',
                         icon: '🚀',
-                        hasKey: providersData.chindax?.configured || false,
-                        status: providersData.chindax?.status || 'not_configured'
+                        hasKey: providersData.chinda?.configured || false,
+                        status: providersData.chinda?.status || 'not_configured'
                     }
                 ];
                 
@@ -7359,11 +7359,11 @@
                     hasKey: providersData.deepseek?.configured || false
                 },
                 {
-                    id: 'chindax',
+                    id: 'chinda',
                     name: 'ChindaX',
                     model: 'qwen3-32b',
                     icon: '🚀',
-                    hasKey: providersData.chindax?.configured || false
+                    hasKey: providersData.chinda?.configured || false
                 }
             ];
             
@@ -7466,7 +7466,7 @@
                     cost: Math.random() * 60 + 20,
                     status: { class: 'error', text: 'Connection Issues' }
                 },
-                chindax: {
+                chinda: {
                     requests: Math.floor(Math.random() * 1500) + 300,
                     successRate: 92 + Math.random() * 5,
                     responseTime: 900 + Math.random() * 400,
@@ -8033,8 +8033,8 @@
                     case 'deepseek':
                         testResult = await testDeepSeekConnection(apiKey);
                         break;
-                    case 'chindax':
-                        const jwtToken = document.getElementById('chindaxJwtToken')?.value || '';
+                    case 'chinda':
+                        const jwtToken = document.getElementById('chindaJwtToken')?.value || '';
                         testResult = await testChindaXConnection(apiKey, jwtToken);
                         break;
                     default:
@@ -8177,7 +8177,7 @@
             try {
                 console.log('🔍 [ChindaX] Testing connection...');
                 // ChindaX API endpoint - adjust as needed
-                const response = await fetch('https://api.chindax.com/v1/test', {
+                const response = await fetch('https://api.chinda.com/v1/test', {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${apiKey}`,
@@ -8232,11 +8232,26 @@
             }
         }
         
+        // Get provider status directly without testing
+        async function getProviderStatusDirect(provider) {
+            try {
+                const response = await fetch(`${API_BASE}/ai/status/${provider}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.success && data.connected;
+                }
+                return false;
+            } catch (error) {
+                console.error(`Failed to get ${provider} status:`, error);
+                return false;
+            }
+        }
+
         // Silent status update (no notifications)
         async function updateConnectionStatusSilent() {
             console.log('🔄 [AI Settings] Silent status update...');
             
-            const providers = ['openai', 'claude', 'gemini', 'deepseek', 'chindax'];
+            const providers = ['openai', 'claude', 'gemini', 'deepseek', 'chinda'];
             
             for (const provider of providers) {
                 const badge = document.getElementById(`${provider}-badge`);
@@ -8246,10 +8261,10 @@
                     const currentStatus = badge.textContent;
                     
                     // Only check if not already checking
-                    if (currentStatus !== 'Testing...') {
+                    if (currentStatus !== 'Testing...' && currentStatus !== 'Checking...') {
                         try {
-                            // Test connection silently
-                            const testResult = await testProviderSilent(provider);
+                            // Get immediate status without testing
+                            const testResult = await getProviderStatusDirect(provider);
                             
                             if (testResult !== null) {
                                 if (testResult) {
@@ -8265,7 +8280,7 @@
                         }
                     }
                 } else if (badge && badge.textContent !== 'No API Key') {
-                    badge.textContent = 'Not Connected';
+                    badge.textContent = 'Not Configured';
                     badge.style.background = '#6c757d';
                 }
             }
@@ -8288,8 +8303,8 @@
                         return await testGeminiConnection(apiKey);
                     case 'deepseek':
                         return await testDeepSeekConnection(apiKey);
-                    case 'chindax':
-                        const jwtToken = document.getElementById('chindaxJwtToken')?.value || '';
+                    case 'chinda':
+                        const jwtToken = document.getElementById('chindaJwtToken')?.value || '';
                         return await testChindaXConnection(apiKey, jwtToken);
                     default:
                         return null;
@@ -8302,7 +8317,7 @@
         
         // Auto-test on API key input
         function setupAutoTesting() {
-            const providers = ['openai', 'claude', 'gemini', 'deepseek', 'chindax'];
+            const providers = ['openai', 'claude', 'gemini', 'deepseek', 'chinda'];
             
             providers.forEach(provider => {
                 const apiKeyInput = document.getElementById(`${provider}ApiKey`);
@@ -8340,11 +8355,11 @@
                 }
                 
                 // Also set up for JWT token input (ChindaX)
-                if (provider === 'chindax') {
-                    const jwtInput = document.getElementById('chindaxJwtToken');
+                if (provider === 'chinda') {
+                    const jwtInput = document.getElementById('chindaJwtToken');
                     if (jwtInput) {
                         jwtInput.addEventListener('input', function() {
-                            const badge = document.getElementById('chindax-badge');
+                            const badge = document.getElementById('chinda-badge');
                             if (badge && this.value.trim()) {
                                 badge.textContent = 'Ready to Test';
                                 badge.style.background = '#3b82f6';
@@ -8364,9 +8379,9 @@
                 claude: document.getElementById('claudeApiKey')?.value || '',
                 gemini: document.getElementById('geminiApiKey')?.value || '',
                 deepseek: document.getElementById('deepseekApiKey')?.value || '',
-                chindax: {
-                    apiKey: document.getElementById('chindaxApiKey')?.value || '',
-                    jwtToken: document.getElementById('chindaxJwtToken')?.value || ''
+                chinda: {
+                    apiKey: document.getElementById('chindaApiKey')?.value || '',
+                    jwtToken: document.getElementById('chindaJwtToken')?.value || ''
                 },
                 requestTimeout: document.getElementById('requestTimeout')?.value || 30,
                 cacheDuration: document.getElementById('cacheDuration')?.value || 15,
@@ -8409,8 +8424,8 @@
                     if (settings.claude) document.getElementById('claudeApiKey').value = settings.claude;
                     if (settings.gemini) document.getElementById('geminiApiKey').value = settings.gemini;
                     if (settings.deepseek) document.getElementById('deepseekApiKey').value = settings.deepseek;
-                    if (settings.chindax?.apiKey) document.getElementById('chindaxApiKey').value = settings.chindax.apiKey;
-                    if (settings.chindax?.jwtToken) document.getElementById('chindaxJwtToken').value = settings.chindax.jwtToken;
+                    if (settings.chinda?.apiKey) document.getElementById('chindaApiKey').value = settings.chinda.apiKey;
+                    if (settings.chinda?.jwtToken) document.getElementById('chindaJwtToken').value = settings.chinda.jwtToken;
                     
                     // Load other settings
                     if (settings.requestTimeout) {
@@ -8433,7 +8448,7 @@
         }
 
         function updateProviderStatus() {
-            const providers = ['openai', 'claude', 'gemini', 'deepseek', 'chindax'];
+            const providers = ['openai', 'claude', 'gemini', 'deepseek', 'chinda'];
             
             providers.forEach(provider => {
                 const statusIndicator = document.getElementById(`${provider}-status`);
@@ -8442,9 +8457,9 @@
                 if (statusIndicator && statusText) {
                     let hasKey = false;
                     
-                    if (provider === 'chindax') {
-                        const apiKey = document.getElementById('chindaxApiKey')?.value;
-                        const jwtToken = document.getElementById('chindaxJwtToken')?.value;
+                    if (provider === 'chinda') {
+                        const apiKey = document.getElementById('chindaApiKey')?.value;
+                        const jwtToken = document.getElementById('chindaJwtToken')?.value;
                         hasKey = apiKey && jwtToken;
                     } else {
                         const apiKeyField = document.getElementById(`${provider}ApiKey`);
@@ -8527,7 +8542,7 @@
             updateSliderValues();
             
             // Setup input change listeners for real-time status updates
-            const inputs = ['openaiApiKey', 'claudeApiKey', 'geminiApiKey', 'deepseekApiKey', 'chindaxApiKey', 'chindaxJwtToken'];
+            const inputs = ['openaiApiKey', 'claudeApiKey', 'geminiApiKey', 'deepseekApiKey', 'chindaApiKey', 'chindaJwtToken'];
             inputs.forEach(inputId => {
                 const input = document.getElementById(inputId);
                 if (input) {
@@ -8795,7 +8810,7 @@
             
             // Test 2: Connection status elements
             console.log('🧪 [TEST] Phase 2: Testing connection status elements...');
-            const providers = ['openai', 'claude', 'gemini', 'deepseek', 'chindax'];
+            const providers = ['openai', 'claude', 'gemini', 'deepseek', 'chinda'];
             
             for (const provider of providers) {
                 const badge = document.getElementById(`${provider}-badge`);
@@ -10264,6 +10279,11 @@
             }
             
             // Real-time conversation logs will auto-start if container exists
+            if (window.conversationLogs && document.getElementById('aiConversationLogs')) {
+                window.conversationLogs.startMonitoring();
+                console.log('🎯 [FIX] Conversation logs started');
+            }
+            
             console.log('✅ [TROUBLESHOOT FIX] All monitoring systems initialized');
             
         }).catch(error => {

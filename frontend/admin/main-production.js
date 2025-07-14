@@ -333,7 +333,7 @@ const AI_PROVIDERS = [
         description: 'AI สำหรับตรวจสอบความถูกต้องทางเทคนิคและประสิทธิภาพระบบ'
     },
     {
-        id: 'chindax',
+        id: 'chinda',
         name: 'ChindaX AI',
         type: 'ChindaX',
         icon: '🧠',
@@ -1662,7 +1662,7 @@ window.switchAITab = function(tabName) {
 window.updateConnectionStatus = async function() {
     console.log('🔄 [AI Settings] Updating connection status...');
     
-    const providers = ['openai', 'claude', 'gemini', 'deepseek', 'chindax'];
+    const providers = ['openai', 'claude', 'gemini', 'deepseek', 'chinda'];
     
     for (const provider of providers) {
         const badge = document.getElementById(`${provider}-badge`);
