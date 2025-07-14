@@ -42,7 +42,13 @@ window.addEventListener('unhandledrejection', function(event) {
 
 // ===== CONFIGURATION =====
 // ✅ Unified configuration system (browser-compatible)
-const rbckConfig = {
+// Check if window.rbckConfig already exists (declared in index.html)
+if (typeof window.window.rbckConfig === 'undefined') {
+    window.window.rbckConfig = {};
+}
+
+// Merge or set configuration
+Object.assign(window.window.rbckConfig, {
     apiBase: (() => {
         const hostname = window.location.hostname;
         const port = window.location.port;
@@ -80,9 +86,9 @@ const rbckConfig = {
             'Accept': 'application/json'
         }
     }
-};
+});
 
-console.log('🔧 [CONFIG] API Base:', rbckConfig.apiBase);
+console.log('🔧 [CONFIG] API Base:', window.window.rbckConfig.apiBase);
 
 // ===== GLOBAL VARIABLES =====
 let currentUser = null;
@@ -158,7 +164,7 @@ window.checkAuthentication = async function() {
         let result;
         if (window.safeApiCall && typeof window.safeApiCall === 'function') {
             console.log('🛡️ [AUTH] Using APIHelper for auth verification');
-            result = await window.safeApiCall(`${rbckConfig.apiBase}/auth/verify-session`, {
+            result = await window.safeApiCall(`${window.rbckConfig.apiBase}/auth/verify-session`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -166,7 +172,7 @@ window.checkAuthentication = async function() {
                 }
             });
         } else {
-            const response = await fetch(`${rbckConfig.apiBase}/auth/verify-session`, {
+            const response = await fetch(`${window.rbckConfig.apiBase}/auth/verify-session`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -279,11 +285,11 @@ document.addEventListener('DOMContentLoaded', function() {
 setInterval(async () => {
     try {
         if (window.safeApiCall && typeof window.safeApiCall === 'function') {
-            await window.safeApiCall(`${rbckConfig.apiBase}/ai/status`, { 
+            await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/status`, { 
                 method: 'GET'
             });
         } else {
-            await fetch(`${rbckConfig.apiBase}/ai/status`, { 
+            await fetch(`${window.rbckConfig.apiBase}/ai/status`, { 
                 method: 'GET',
                 mode: 'no-cors' // Avoid CORS preflight for warming
             });
@@ -406,7 +412,7 @@ function debounce(func, wait) {
 
 // ===== API UTILITY FUNCTIONS =====
 async function apiRequest(endpoint, options = {}) {
-    const url = `${rbckConfig.apiBase}${endpoint}`;
+    const url = `${window.rbckConfig.apiBase}${endpoint}`;
     const defaultOptions = {
         headers: {
             'Content-Type': 'application/json',
@@ -814,7 +820,7 @@ async function checkAIProvidersStatus() {
         
         try {
             // ⚡ Use safe API call to prevent CORS and rate limiting issues
-            const data = await window.safeApiCall(`${rbckConfig.apiBase}/ai/status`);
+            const data = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/status`);
             
             if (data && data.success !== false) {
                 const providerStatus = data.providers?.[provider.id];
@@ -2512,7 +2518,7 @@ async function getEnhancedAuthToken() {
     if (!token) {
         try {
             console.log('🔄 [AUTH] No local token, trying backend direct auth...');
-            const response = await fetch(`${rbckConfig.apiBase}/auth/get-jwt-token`, {
+            const response = await fetch(`${window.rbckConfig.apiBase}/auth/get-jwt-token`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -2567,7 +2573,7 @@ window.loadSecurityDashboard = async function() {
         let result;
         if (window.safeApiCall && typeof window.safeApiCall === 'function') {
             console.log('🛡️ [SECURITY] Using APIHelper for dashboard');
-            result = await window.safeApiCall(`${rbckConfig.apiBase}/security/dashboard`, {
+            result = await window.safeApiCall(`${window.rbckConfig.apiBase}/security/dashboard`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${currentToken}`,
@@ -2575,7 +2581,7 @@ window.loadSecurityDashboard = async function() {
                 }
             });
         } else {
-            const response = await fetch(`${rbckConfig.apiBase}/security/dashboard`, {
+            const response = await fetch(`${window.rbckConfig.apiBase}/security/dashboard`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${currentToken}`,
@@ -2721,7 +2727,7 @@ window.loadAuthLogs = async function() {
         let result;
         if (window.safeApiCall && typeof window.safeApiCall === 'function') {
             console.log('🛡️ [SECURITY] Using APIHelper for auth logs');
-            result = await window.safeApiCall(`${rbckConfig.apiBase}/security/auth-logs`, {
+            result = await window.safeApiCall(`${window.rbckConfig.apiBase}/security/auth-logs`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${currentToken}`,
@@ -2729,7 +2735,7 @@ window.loadAuthLogs = async function() {
                 }
             });
         } else {
-            const response = await fetch(`${rbckConfig.apiBase}/security/auth-logs`, {
+            const response = await fetch(`${window.rbckConfig.apiBase}/security/auth-logs`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${currentToken}`,
@@ -2811,9 +2817,9 @@ window.loadBlockedIPs = async function() {
     }
     
     try {
-        console.log('🔗 [BLOCKED] Fetching from:', `${rbckConfig.apiBase}/security/blocked-ips`);
+        console.log('🔗 [BLOCKED] Fetching from:', `${window.rbckConfig.apiBase}/security/blocked-ips`);
         
-        const response = await fetch(`${rbckConfig.apiBase}/security/blocked-ips`, {
+        const response = await fetch(`${window.rbckConfig.apiBase}/security/blocked-ips`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${currentToken}`,
@@ -2907,7 +2913,7 @@ window.unblockIP = async function(ipAddress) {
     console.log('🔓 [UNBLOCK] Unblocking IP:', ipAddress);
     
     try {
-        const response = await fetch(`${rbckConfig.apiBase}/security/unblock-ip`, {
+        const response = await fetch(`${window.rbckConfig.apiBase}/security/unblock-ip`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
@@ -3085,7 +3091,7 @@ window.refreshMigrationStatus = async function() {
     }
     
     try {
-        const response = await fetch(`${rbckConfig.apiBase}/migration/status`, {
+        const response = await fetch(`${window.rbckConfig.apiBase}/migration/status`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -3311,7 +3317,7 @@ window.debugAuth = async function() {
             
             // ⚡ Test token with backend
             console.log('\n🔄 [DEBUG] Testing token verification...');
-            const response = await fetch(`${rbckConfig.apiBase}/auth/verify-session`, {
+            const response = await fetch(`${window.rbckConfig.apiBase}/auth/verify-session`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${enhancedToken}`,
@@ -3367,7 +3373,7 @@ console.log('🔑 [DEBUG] Use window.debugAuth() to check authentication status'
 // ✅ Debug function for testing API connections
 window.testSecurityAPI = async function() {
     console.log('🧪 [TEST] Testing Security API connections...');
-    console.log('🔧 [TEST] Config:', rbckConfig);
+    console.log('🔧 [TEST] Config:', window.rbckConfig);
     console.log('🔑 [TEST] Auth token:', authToken ? 'Present' : 'Missing');
     
     const endpoints = [
@@ -3378,8 +3384,8 @@ window.testSecurityAPI = async function() {
     
     for (const endpoint of endpoints) {
         try {
-            console.log(`🔗 [TEST] Testing: ${rbckConfig.apiBase}${endpoint}`);
-            const response = await fetch(`${rbckConfig.apiBase}${endpoint}`, {
+            console.log(`🔗 [TEST] Testing: ${window.rbckConfig.apiBase}${endpoint}`);
+            const response = await fetch(`${window.rbckConfig.apiBase}${endpoint}`, {
                 method: 'GET',
                 headers: authToken ? {
                     'Authorization': `Bearer ${authToken}`,
@@ -3409,11 +3415,11 @@ window.debugBackendConfig = async function() {
     console.log('🧪 [DEBUG] Testing backend configuration...');
     
     const tests = {
-        'Health Check': `${rbckConfig.apiBase}/health`,
-        'JWT Token Endpoint': `${rbckConfig.apiBase}/auth/get-jwt-token`,
-        'Encryption Key Endpoint': `${rbckConfig.apiBase}/auth/get-encryption-key`,
-        'Supabase Config Endpoint': `${rbckConfig.apiBase}/config/supabase`,
-        'Auth Verification': `${rbckConfig.apiBase}/auth/verify-session`
+        'Health Check': `${window.rbckConfig.apiBase}/health`,
+        'JWT Token Endpoint': `${window.rbckConfig.apiBase}/auth/get-jwt-token`,
+        'Encryption Key Endpoint': `${window.rbckConfig.apiBase}/auth/get-encryption-key`,
+        'Supabase Config Endpoint': `${window.rbckConfig.apiBase}/config/supabase`,
+        'Auth Verification': `${window.rbckConfig.apiBase}/auth/verify-session`
     };
     
     for (const [name, url] of Object.entries(tests)) {

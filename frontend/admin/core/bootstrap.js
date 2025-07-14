@@ -137,12 +137,7 @@ class PerformanceBootstrap {
 
         // ⚡ Load sidebar when first interaction
         let sidebarLoaded = false;
-        document.addEventListener('click', (e) => {
-            if (!sidebarLoaded && e.target.closest('.sidebar')) {
-                sidebarLoaded = true;
-                this.loadModule('sidebar', '../js/luxury-sidebar.js');
-            }
-        });
+        // REMOVED: luxury-sidebar.js loading (unused component)
     }
 
     /**
@@ -169,7 +164,6 @@ class PerformanceBootstrap {
         // ⚡ Preload likely modules after critical path
         setTimeout(() => {
             this.preloadModules([
-                '../js/luxury-sidebar.js',
                 '../modals.js'
             ]);
         }, 1000);
