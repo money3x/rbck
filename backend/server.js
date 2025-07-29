@@ -1161,7 +1161,8 @@ async function startServer() {
             
             // Initialize AI Swarm Councils (singleton) 
             console.log('🔧 Initializing AI Swarm Councils...');
-            const swarmCouncilManager = require('./services/SwarmCouncilManager');
+            const SwarmCouncilManager = require('./services/SwarmCouncilManager');
+            const swarmCouncilManager = SwarmCouncilManager.getInstance();
             await swarmCouncilManager.initializeAll();
             console.log('✅ AI Swarm Councils initialized');
             
@@ -1195,7 +1196,7 @@ async function startServer() {
             
             // Cleanup AI Swarm Councils
             try {
-                swarmCouncilManager.destroy();
+                SwarmCouncilManager.destroy();
                 logger.info('✅ AI Swarm Councils cleaned up');
             } catch (error) {
                 logger.error('❌ Error cleaning up AI councils:', error);
