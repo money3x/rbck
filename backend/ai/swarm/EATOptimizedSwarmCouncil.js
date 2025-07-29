@@ -784,9 +784,9 @@ Target Keyword: "${keyword}"
             let successfulInitializations = 0;
             for (const [providerName, providerInfo] of Object.entries(availableProviders)) {
                 try {
-                    if (providerInfo.status === 'healthy' && providerInfo.provider) {
-                        // Get provider instance from pool
-                        const provider = await this.providerPool.getProvider(providerName);
+                    if (providerInfo.status === 'healthy') {
+                        // Get provider instance from pool (sync method)
+                        const provider = this.providerPool.getProvider(providerName);
                         
                         if (provider) {
                             this.providers[providerName] = provider;
@@ -796,7 +796,11 @@ Target Keyword: "${keyword}"
                             
                             successfulInitializations++;
                             console.log(`✅ [E-A-T Swarm] Shared provider ${providerName} added with E-A-T role`);
+                        } else {
+                            throw new Error(`Provider ${providerName} not available from pool`);
                         }
+                    } else {
+                        console.warn(`⚠️ [E-A-T Swarm] Skipping unhealthy provider ${providerName}: ${providerInfo.status}`);
                     }
                 } catch (error) {
                     console.warn(`⚠️ [E-A-T Swarm] Failed to add shared provider ${providerName}:`, error.message);

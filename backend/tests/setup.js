@@ -1,6 +1,8 @@
-// Test setup configuration
-process.env.NODE_ENV = 'test';
-process.env.PORT = '0'; // Use random available port for testing
+// Test setup configuration - Only override in test environment
+if (process.env.NODE_ENV !== 'development') {
+    process.env.NODE_ENV = 'test';
+}
+process.env.PORT = process.env.PORT || '0'; // Use random available port for testing
 
 // Set up test environment variables
 process.env.JWT_SECRET = 'test-jwt-secret-for-testing-only';
@@ -15,16 +17,18 @@ process.env.ENCRYPTION_KEY = 'test-encryption-key-32-bytes-1234';
 process.env.SUPABASE_URL = 'mock-supabase-url';
 process.env.SUPABASE_SERVICE_KEY = 'mock-supabase-key';
 
-// Enable ChindaX for AI tests
-process.env.GEMINI_ENABLED = 'false';
-process.env.OPENAI_ENABLED = 'false';
-process.env.CLAUDE_ENABLED = 'false';
-process.env.DEEPSEEK_ENABLED = 'false';
-process.env.QWEN_ENABLED = 'false';
-process.env.CHINDA_ENABLED = 'true';
-process.env.CHINDA_API_KEY = 'test-chinda-api-key';
-process.env.CHINDA_JWT_TOKEN = 'test-jwt-token-for-chinda-testing-minimum-length-required-by-validation';
-process.env.CHINDA_BASE_URL = 'https://test-chinda.example.com/api';
+// Enable ChindaX for AI tests - Only in test environment
+if (process.env.NODE_ENV === 'test') {
+    process.env.GEMINI_ENABLED = 'false';
+    process.env.OPENAI_ENABLED = 'false';
+    process.env.CLAUDE_ENABLED = 'false';
+    process.env.DEEPSEEK_ENABLED = 'false';
+    process.env.QWEN_ENABLED = 'false';
+    process.env.CHINDA_ENABLED = 'true';
+    process.env.CHINDA_API_KEY = 'test-chinda-api-key';
+    process.env.CHINDA_JWT_TOKEN = 'test-jwt-token-for-chinda-testing-minimum-length-required-by-validation';
+    process.env.CHINDA_BASE_URL = 'https://test-chinda.example.com/api';
+}
 
 // Test utilities
 const jwt = require('jsonwebtoken');

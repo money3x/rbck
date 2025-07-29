@@ -229,7 +229,8 @@ class ProviderPool {
             status.providers[providerName] = {
                 status: healthCheck.status,
                 lastCheck: this.lastHealthCheck.get(providerName),
-                circuitBreakerStatus: ProviderFactory.getProviderCircuitBreakerStatus(providerName)
+                circuitBreakerStatus: ProviderFactory.getProviderCircuitBreakerStatus(providerName),
+                provider: this.providers.get(providerName) // Add provider reference
             };
             
             if (isHealthy) {

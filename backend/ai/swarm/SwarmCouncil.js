@@ -172,15 +172,16 @@ class SwarmCouncil {
             let successfulInitializations = 0;
             for (const [providerName, providerInfo] of Object.entries(availableProviders)) {
                 try {
-                    if (providerInfo.status === 'healthy' && providerInfo.provider) {
-                        // Get provider instance from pool
-                        const provider = await this.providerPool.getProvider(providerName);
+                    if (providerInfo.status === 'healthy') {
+                        // Get provider instance from pool (sync method)
+                        const provider = this.providerPool.getProvider(providerName);
                         
                         if (provider) {
                             this.providers[providerName] = provider;
                             
-                            // Set role based on provider configuration
-                            const config = providerInfo.config || {};
+                            // Set role based on provider configuration  
+                            const enabledProviders = require('../providers/config/providers.config').getEnabledProviders();
+                            const config = enabledProviders[providerName] || {};
                             if (config.role) {
                                 this.roles[config.role] = providerName;
                             }
@@ -194,7 +195,11 @@ class SwarmCouncil {
                             
                             successfulInitializations++;
                             console.log(`✅ [Swarm] Shared provider ${providerName} added to council`);
+                        } else {
+                            throw new Error(`Provider ${providerName} not available from pool`);
                         }
+                    } else {
+                        console.warn(`⚠️ [Swarm] Skipping unhealthy provider ${providerName}: ${providerInfo.status}`);
                     }
                 } catch (error) {
                     console.warn(`⚠️ [Swarm] Failed to add shared provider ${providerName}:`, error.message);

@@ -100,7 +100,7 @@ const config = {
         // ✅ REMOVED: apiKey and jwtToken (use SecureConfigService.getApiKey('chinda'))
         baseURL: process.env.CHINDA_BASE_URL,
         model: process.env.CHINDA_MODEL || 'chinda-qwen3-32b',
-        enabled: !!(process.env.CHINDA_API_KEY && process.env.CHINDA_JWT_TOKEN)
+        enabled: !!process.env.CHINDA_API_KEY  // Only require API key, JWT token is optional
       }
     }
   },
