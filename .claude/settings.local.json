@@ -30,7 +30,9 @@
       "Bash(curl:*)",
       "Bash(git commit:*)",
       "Bash(git config:*)",
-      "Bash(curl -s \"https://rbck.onrender.com/api/ai/status\")"
+      "Bash(curl -s \"https://rbck.onrender.com/api/ai/status\")",
+      "Bash(timeout:*)",
+      "Bash(cat:*)"
     ],
     "deny": []
   }
