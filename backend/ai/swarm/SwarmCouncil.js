@@ -2,7 +2,11 @@ const ProviderFactory = require('../providers/factory/ProviderFactory');
 const { getEnabledProviders } = require('../providers/config/providers.config');
 
 class SwarmCouncil {
-    constructor(autoInit = false) {
+    constructor(options = {}) {
+        // Handle both old boolean parameter and new options object
+        const autoInit = typeof options === 'boolean' ? options : options.autoInit || false;
+        this.providerPool = options.providerPool || null;
+        
         this.providers = {};
         this.roles = {};
         this.isInitialized = false;
@@ -137,6 +141,92 @@ class SwarmCouncil {
             this.initializationErrors.push(finalError);
             console.error('❌ [Swarm] Fatal initialization error:', error.message);
             console.error('❌ [Swarm] All errors:', this.initializationErrors);
+        }
+    }
+    
+    /**
+     * Initialize SwarmCouncil using shared provider pool from manager
+     */
+    async initializeWithSharedPool() {
+        if (!this.providerPool) {
+            console.warn('⚠️ [Swarm] No provider pool available, falling back to standard initialization');
+            return await this.initializeSwarm();
+        }
+        
+        console.log('🤖 [Swarm] Initializing with shared provider pool...');
+        this.lastInitializationAttempt = new Date().toISOString();
+        this.initializationErrors = [];
+        
+        try {
+            // Get providers from shared pool
+            const poolStatus = this.providerPool.getStatus();
+            const availableProviders = poolStatus.providers || {};
+            
+            if (Object.keys(availableProviders).length === 0) {
+                throw new Error('No providers available in shared pool');
+            }
+            
+            console.log(`🤖 [Swarm] Found ${Object.keys(availableProviders).length} providers in pool`);
+            
+            // Use providers from the pool
+            let successfulInitializations = 0;
+            for (const [providerName, providerInfo] of Object.entries(availableProviders)) {
+                try {
+                    if (providerInfo.status === 'healthy' && providerInfo.provider) {
+                        // Get provider instance from pool
+                        const provider = await this.providerPool.getProvider(providerName);
+                        
+                        if (provider) {
+                            this.providers[providerName] = provider;
+                            
+                            // Set role based on provider configuration
+                            const config = providerInfo.config || {};
+                            if (config.role) {
+                                this.roles[config.role] = providerName;
+                            }
+                            
+                            // Initialize health check
+                            this.healthChecks.set(providerName, {
+                                lastCheck: new Date(),
+                                status: 'healthy',
+                                responseTime: 0
+                            });
+                            
+                            successfulInitializations++;
+                            console.log(`✅ [Swarm] Shared provider ${providerName} added to council`);
+                        }
+                    }
+                } catch (error) {
+                    console.warn(`⚠️ [Swarm] Failed to add shared provider ${providerName}:`, error.message);
+                    this.initializationErrors.push({
+                        provider: providerName,
+                        error: error.message,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            }
+            
+            // Determine initialization status
+            if (successfulInitializations === 0) {
+                this.isInitialized = false;
+                throw new Error('No providers could be initialized from shared pool');
+            } else {
+                this.isInitialized = true;
+                console.log(`✅ [Swarm] Shared pool initialization complete: ${successfulInitializations} providers active`);
+                
+                // Start health monitoring
+                this.startHealthMonitoring();
+            }
+            
+        } catch (error) {
+            this.isInitialized = false;
+            console.error('❌ [Swarm] Shared pool initialization failed:', error.message);
+            this.initializationErrors.push({
+                general: 'Shared pool initialization failed',
+                error: error.message,
+                timestamp: new Date().toISOString()
+            });
+            throw error;
         }
     }
     

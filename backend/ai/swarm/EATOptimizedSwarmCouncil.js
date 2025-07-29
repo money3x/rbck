@@ -2,7 +2,11 @@ const ProviderFactory = require('../providers/factory/ProviderFactory');
 const { getEnabledProviders } = require('../providers/config/providers.config');
 
 class EATOptimizedSwarmCouncil {
-    constructor(autoInit = false) {
+    constructor(options = {}) {
+        // Handle both old boolean parameter and new options object
+        const autoInit = typeof options === 'boolean' ? options : options.autoInit || false;
+        this.providerPool = options.providerPool || null;
+        
         this.providers = {};
         this.eatRoles = {};
         this.seoGuidelines = {};
@@ -747,6 +751,124 @@ Target Keyword: "${keyword}"
                 eat: Object.keys(this.eatGuidelines).length
             }
         };
+    }
+    
+    /**
+     * Initialize EATOptimizedSwarmCouncil using shared provider pool from manager
+     */
+    async initializeWithSharedPool() {
+        if (!this.providerPool) {
+            console.warn('⚠️ [E-A-T Swarm] No provider pool available, falling back to standard initialization');
+            return await this.initializeEATSwarm();
+        }
+        
+        console.log('🎯 [E-A-T Swarm] Initializing with shared provider pool...');
+        this.lastInitializationAttempt = new Date().toISOString();
+        this.initializationErrors = [];
+        
+        try {
+            // Get providers from shared pool
+            const poolStatus = this.providerPool.getStatus();
+            const availableProviders = poolStatus.providers || {};
+            
+            if (Object.keys(availableProviders).length === 0) {
+                throw new Error('No providers available in shared pool for E-A-T Swarm');
+            }
+            
+            console.log(`🎯 [E-A-T Swarm] Found ${Object.keys(availableProviders).length} providers in pool`);
+            
+            // Initialize E-A-T specific guidelines first
+            this.initializeEATGuidelines();
+            
+            // Use providers from the pool with E-A-T specific roles
+            let successfulInitializations = 0;
+            for (const [providerName, providerInfo] of Object.entries(availableProviders)) {
+                try {
+                    if (providerInfo.status === 'healthy' && providerInfo.provider) {
+                        // Get provider instance from pool
+                        const provider = await this.providerPool.getProvider(providerName);
+                        
+                        if (provider) {
+                            this.providers[providerName] = provider;
+                            
+                            // Assign E-A-T specific roles based on provider
+                            this.assignEATRole(providerName, provider);
+                            
+                            successfulInitializations++;
+                            console.log(`✅ [E-A-T Swarm] Shared provider ${providerName} added with E-A-T role`);
+                        }
+                    }
+                } catch (error) {
+                    console.warn(`⚠️ [E-A-T Swarm] Failed to add shared provider ${providerName}:`, error.message);
+                    this.initializationErrors.push({
+                        provider: providerName,
+                        error: error.message,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            }
+            
+            // Determine initialization status
+            if (successfulInitializations === 0) {
+                this.isInitialized = false;
+                throw new Error('No providers could be initialized from shared pool for E-A-T Swarm');
+            } else {
+                this.isInitialized = true;
+                console.log(`✅ [E-A-T Swarm] Shared pool initialization complete: ${successfulInitializations} providers active`);
+            }
+            
+        } catch (error) {
+            this.isInitialized = false;
+            console.error('❌ [E-A-T Swarm] Shared pool initialization failed:', error.message);
+            this.initializationErrors.push({
+                general: 'E-A-T Swarm shared pool initialization failed',
+                error: error.message,
+                timestamp: new Date().toISOString()
+            });
+            throw error;
+        }
+    }
+    
+    /**
+     * Initialize E-A-T specific guidelines
+     */
+    initializeEATGuidelines() {
+        this.eatGuidelines = {
+            expertise: 'Demonstrate deep knowledge and technical accuracy',
+            authoritativeness: 'Cite credible sources and show credentials',
+            trustworthiness: 'Provide balanced, fact-based information'
+        };
+        
+        this.seoGuidelines = {
+            structure: 'Use proper heading hierarchy and semantic HTML',
+            keywords: 'Natural keyword integration without stuffing',
+            readability: 'Clear, engaging, and scannable content'
+        };
+    }
+    
+    /**
+     * Assign E-A-T specific role to provider
+     */
+    assignEATRole(providerName, provider) {
+        const eatRoleMapping = {
+            'gemini': 'expertise_specialist',
+            'openai': 'content_authority',
+            'claude': 'trustworthiness_reviewer',
+            'deepseek': 'technical_expert',
+            'chinda': 'local_authority'
+        };
+        
+        const role = eatRoleMapping[providerName] || 'general_specialist';
+        this.eatRoles[role] = providerName;
+        
+        // Set provider-specific E-A-T context if provider supports it
+        if (typeof provider.setEATContext === 'function') {
+            provider.setEATContext({
+                role: role,
+                guidelines: this.eatGuidelines,
+                seoGuidelines: this.seoGuidelines
+            });
+        }
     }
 }
 
