@@ -1,11 +1,12 @@
 /**
- * Circuit Breaker Pattern Implementation
- * Prevents cascading failures by monitoring provider health
+ * Thread-Safe Circuit Breaker Pattern Implementation
+ * Prevents cascading failures with shared state management
  */
 
 class CircuitBreaker {
     constructor(provider, options = {}) {
         this.provider = provider;
+        this.providerId = `${provider}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`; // Unique ID
         this.options = {
             threshold: options.threshold || 5, // Number of failures before opening circuit
             timeout: options.timeout || 60000, // Time to wait before trying again (1 minute)
@@ -20,6 +21,13 @@ class CircuitBreaker {
         this.lastFailureTime = null;
         this.successCount = 0;
         this.isMonitoring = false;
+        this.createdAt = Date.now();
+        this.requestQueue = [];
+        this.activeRequests = new Set();
+        
+        // Thread-safe state management
+        this.stateLock = false;
+        this.stateChangeListeners = [];
         
         // Performance tracking
         this.stats = {
@@ -28,279 +36,331 @@ class CircuitBreaker {
             totalSuccesses: 0,
             averageResponseTime: 0,
             lastResponseTime: 0,
-            uptime: 100
+            uptime: 100,
+            concurrentRequests: 0,
+            maxConcurrentRequests: 0
         };
         
-        console.log(`🔌 [Circuit Breaker] Initialized for ${provider} with threshold: ${this.options.threshold}`);
+        console.log(`🔌 [Circuit Breaker] Initialized for ${provider} [${this.providerId}] with threshold: ${this.options.threshold}`);
     }
     
     /**
-     * Execute an operation through the circuit breaker
+     * Execute an operation through the circuit breaker (thread-safe)
      * @param {Function} operation - The operation to execute
+     * @param {string} requestId - Optional request identifier
      * @returns {Promise} - Result of the operation
      */
-    async execute(operation) {
+    async execute(operation, requestId = null) {
+        const reqId = requestId || `req_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
         const startTime = Date.now();
-        this.stats.totalAttempts++;
         
-        // Check circuit state
-        if (this.state === 'OPEN') {
-            if (Date.now() < this.nextAttempt) {
-                const error = new Error(`Circuit breaker is OPEN for ${this.provider}. Next attempt in ${Math.ceil((this.nextAttempt - Date.now()) / 1000)}s`);
-                error.code = 'CIRCUIT_BREAKER_OPEN';
-                error.provider = this.provider;
-                error.retryAfter = Math.ceil((this.nextAttempt - Date.now()) / 1000);
+        // Thread-safe state check
+        await this.waitForStateLockRelease();
+        
+        this.stats.totalAttempts++;
+        this.stats.concurrentRequests++;
+        this.stats.maxConcurrentRequests = Math.max(this.stats.maxConcurrentRequests, this.stats.concurrentRequests);
+        
+        this.activeRequests.add(reqId);
+        
+        try {
+            // Check circuit state
+            if (this.state === 'OPEN') {
+                if (Date.now() < this.nextAttempt) {
+                    const error = new Error(`Circuit breaker is OPEN for ${this.provider} [${this.providerId}]. Next attempt in ${Math.ceil((this.nextAttempt - Date.now()) / 1000)}s`);
+                    error.code = 'CIRCUIT_BREAKER_OPEN';
+                    error.providerId = this.providerId;
+                    error.requestId = reqId;
+                    this.stats.totalFailures++;
+                    throw error;
+                } else {
+                    // Circuit is opening, try half-open
+                    await this.changeState('HALF_OPEN');
+                    console.log(`🔄 [Circuit Breaker] ${this.provider} [${this.providerId}] transitioning to HALF_OPEN`);
+                }
+            }
+            
+            try {
+                console.log(`⚡ [Circuit Breaker] Executing operation for ${this.provider} [${reqId}] (State: ${this.state})`);
+                const result = await Promise.race([
+                    operation(),
+                    this.createTimeoutPromise(this.options.timeout)
+                ]);
+                
+                // Success
+                const responseTime = Date.now() - startTime;
+                await this.onSuccess(responseTime, reqId);
+                
+                return result;
+                
+            } catch (error) {
+                // Failure
+                const responseTime = Date.now() - startTime;
+                await this.onFailure(error, responseTime, reqId);
                 throw error;
             }
             
-            // Transition to HALF_OPEN
-            this.state = 'HALF_OPEN';
-            this.successCount = 0;
-            console.log(`🔄 [Circuit Breaker] ${this.provider} transitioning to HALF_OPEN state`);
+        } finally {
+            this.activeRequests.delete(reqId);
+            this.stats.concurrentRequests--;
         }
+    }
+    
+    /**
+     * Create timeout promise for operation
+     * @param {number} timeout 
+     * @returns {Promise}
+     */
+    createTimeoutPromise(timeout) {
+        return new Promise((_, reject) => {
+            setTimeout(() => {
+                const error = new Error(`Operation timeout after ${timeout}ms for ${this.provider}`);
+                error.code = 'CIRCUIT_BREAKER_TIMEOUT';
+                error.providerId = this.providerId;
+                reject(error);
+            }, timeout);
+        });
+    }
+    
+    /**
+     * Wait for state lock to be released
+     */
+    async waitForStateLockRelease() {
+        while (this.stateLock) {
+            await new Promise(resolve => setTimeout(resolve, 10));
+        }
+    }
+    
+    /**
+     * Thread-safe state change
+     * @param {string} newState 
+     */
+    async changeState(newState) {
+        this.stateLock = true;
         
         try {
-            // Execute the operation
-            const result = await operation();
-            const responseTime = Date.now() - startTime;
+            const oldState = this.state;
+            this.state = newState;
             
-            // Operation succeeded
-            this.onSuccess(responseTime);
-            return result;
+            // Notify listeners
+            this.stateChangeListeners.forEach(listener => {
+                try {
+                    listener(oldState, newState, this.providerId);
+                } catch (error) {
+                    console.error(`❌ [Circuit Breaker] State change listener error:`, error);
+                }
+            });
             
-        } catch (error) {
-            const responseTime = Date.now() - startTime;
-            this.onFailure(error, responseTime);
-            throw error;
+            console.log(`🔄 [Circuit Breaker] ${this.provider} [${this.providerId}] state: ${oldState} -> ${newState}`);
+            
+        } finally {
+            this.stateLock = false;
         }
     }
     
     /**
-     * Handle successful operation
-     * @param {number} responseTime - Time taken for the operation
+     * Handle successful operation (thread-safe)
+     * @param {number} responseTime - Response time in milliseconds
+     * @param {string} requestId - Request identifier
      */
-    onSuccess(responseTime) {
-        this.failureCount = 0;
-        this.successCount++;
+    async onSuccess(responseTime, requestId) {
+        await this.waitForStateLockRelease();
+        
         this.stats.totalSuccesses++;
         this.stats.lastResponseTime = responseTime;
-        
-        // Update average response time
-        this.updateAverageResponseTime(responseTime);
+        this.stats.averageResponseTime = (
+            (this.stats.averageResponseTime * (this.stats.totalSuccesses - 1)) + responseTime
+        ) / this.stats.totalSuccesses;
         
         if (this.state === 'HALF_OPEN') {
-            // Need multiple successes to close circuit
-            if (this.successCount >= 3) {
-                this.state = 'CLOSED';
-                console.log(`✅ [Circuit Breaker] ${this.provider} circuit CLOSED - recovered after ${this.successCount} successes`);
+            this.successCount++;
+            if (this.successCount >= 3) { // Require 3 successful calls to close circuit
+                await this.changeState('CLOSED');
+                this.failureCount = 0;
+                this.successCount = 0;
+                console.log(`✅ [Circuit Breaker] ${this.provider} [${this.providerId}] circuit CLOSED after successful recovery`);
             }
-        } else if (this.state === 'OPEN') {
-            // Shouldn't happen, but handle gracefully
-            this.state = 'CLOSED';
-            console.log(`✅ [Circuit Breaker] ${this.provider} circuit unexpectedly CLOSED`);
+        } else if (this.state === 'CLOSED') {
+            // Reset failure count on success
+            this.failureCount = Math.max(0, this.failureCount - 1);
         }
         
-        // Update uptime
         this.updateUptime();
-        
-        console.log(`✅ [Circuit Breaker] ${this.provider} operation succeeded (${responseTime}ms) - State: ${this.state}`);
+        console.log(`✅ [Circuit Breaker] ${this.provider} [${requestId}] operation succeeded (${responseTime}ms)`);
     }
     
     /**
-     * Handle failed operation
+     * Handle failed operation (thread-safe)
      * @param {Error} error - The error that occurred
-     * @param {number} responseTime - Time taken for the operation
+     * @param {number} responseTime - Response time in milliseconds
+     * @param {string} requestId - Request identifier
      */
-    onFailure(error, responseTime) {
-        this.failureCount++;
+    async onFailure(error, responseTime, requestId) {
+        await this.waitForStateLockRelease();
+        
         this.stats.totalFailures++;
         this.stats.lastResponseTime = responseTime;
+        this.failureCount++;
         this.lastFailureTime = Date.now();
         
-        // Update average response time (even for failures)
-        this.updateAverageResponseTime(responseTime);
-        
-        console.warn(`❌ [Circuit Breaker] ${this.provider} operation failed (${responseTime}ms) - Failure count: ${this.failureCount}/${this.options.threshold}`);
-        console.warn(`❌ [Circuit Breaker] Error:`, error.message);
+        console.error(`❌ [Circuit Breaker] ${this.provider} [${requestId}] operation failed (${responseTime}ms):`, error.message);
         
         if (this.failureCount >= this.options.threshold) {
-            this.state = 'OPEN';
-            this.nextAttempt = Date.now() + this.options.timeout;
+            await this.changeState('OPEN');
+            this.nextAttempt = Date.now() + this.options.resetTimeout;
+            this.successCount = 0;
             
-            console.error(`🚨 [Circuit Breaker] ${this.provider} circuit OPENED due to ${this.failureCount} failures`);
-            console.error(`🚨 [Circuit Breaker] Next attempt in ${this.options.timeout / 1000} seconds`);
-        } else if (this.state === 'HALF_OPEN') {
-            // Failed while in HALF_OPEN, go back to OPEN
-            this.state = 'OPEN';
-            this.nextAttempt = Date.now() + this.options.timeout;
-            
-            console.error(`🚨 [Circuit Breaker] ${this.provider} failed in HALF_OPEN, returning to OPEN state`);
+            console.error(`🚫 [Circuit Breaker] ${this.provider} [${this.providerId}] circuit OPENED due to ${this.failureCount} failures`);
+            console.error(`🚫 [Circuit Breaker] ${this.provider} [${this.providerId}] will retry after ${new Date(this.nextAttempt).toISOString()}`);
         }
         
-        // Update uptime
         this.updateUptime();
     }
     
     /**
-     * Update average response time using exponential moving average
-     * @param {number} responseTime - New response time
-     */
-    updateAverageResponseTime(responseTime) {
-        if (this.stats.averageResponseTime === 0) {
-            this.stats.averageResponseTime = responseTime;
-        } else {
-            // Exponential moving average with alpha = 0.1
-            this.stats.averageResponseTime = (0.9 * this.stats.averageResponseTime) + (0.1 * responseTime);
-        }
-    }
-    
-    /**
-     * Update uptime percentage
-     */
-    updateUptime() {
-        if (this.stats.totalAttempts === 0) {
-            this.stats.uptime = 100;
-        } else {
-            this.stats.uptime = (this.stats.totalSuccesses / this.stats.totalAttempts) * 100;
-        }
-    }
-    
-    /**
-     * Get current circuit breaker status
-     * @returns {Object} - Current status information
-     */
-    getStatus() {
-        const now = Date.now();
-        const timeSinceLastFailure = this.lastFailureTime ? now - this.lastFailureTime : null;
-        const timeUntilNextAttempt = this.state === 'OPEN' ? Math.max(0, this.nextAttempt - now) : 0;
-        
-        return {
-            provider: this.provider,
-            state: this.state,
-            isHealthy: this.state === 'CLOSED' || (this.state === 'HALF_OPEN' && this.successCount > 0),
-            failureCount: this.failureCount,
-            successCount: this.successCount,
-            threshold: this.options.threshold,
-            nextAttempt: this.state === 'OPEN' ? new Date(this.nextAttempt).toISOString() : null,
-            timeUntilNextAttempt: Math.ceil(timeUntilNextAttempt / 1000),
-            timeSinceLastFailure: timeSinceLastFailure ? Math.ceil(timeSinceLastFailure / 1000) : null,
-            stats: {
-                ...this.stats,
-                averageResponseTime: Math.round(this.stats.averageResponseTime),
-                uptime: Math.round(this.stats.uptime * 100) / 100
-            },
-            lastCheck: new Date().toISOString()
-        };
-    }
-    
-    /**
-     * Check if the circuit breaker allows requests
-     * @returns {boolean} - Whether requests are allowed
+     * Check if requests are allowed (thread-safe)
+     * @returns {boolean}
      */
     allowsRequests() {
-        if (this.state === 'CLOSED') return true;
-        if (this.state === 'HALF_OPEN') return true;
-        if (this.state === 'OPEN') return Date.now() >= this.nextAttempt;
-        return false;
+        if (this.stateLock) {
+            return false; // Don't allow requests during state changes
+        }
+        return this.state !== 'OPEN' || Date.now() >= this.nextAttempt;
     }
     
     /**
-     * Manually reset the circuit breaker
+     * Add state change listener
+     * @param {Function} listener 
      */
-    reset() {
-        console.log(`🔄 [Circuit Breaker] Manually resetting ${this.provider} circuit breaker`);
-        this.state = 'CLOSED';
-        this.failureCount = 0;
-        this.successCount = 0;
-        this.nextAttempt = Date.now();
-        this.lastFailureTime = null;
+    addStateChangeListener(listener) {
+        this.stateChangeListeners.push(listener);
     }
     
     /**
-     * Start health monitoring
+     * Remove state change listener
+     * @param {Function} listener 
+     */
+    removeStateChangeListener(listener) {
+        const index = this.stateChangeListeners.indexOf(listener);
+        if (index > -1) {
+            this.stateChangeListeners.splice(index, 1);
+        }
+    }
+    
+    /**
+     * Update uptime calculation
+     */
+    updateUptime() {
+        const total = this.stats.totalAttempts;
+        if (total > 0) {
+            this.stats.uptime = ((this.stats.totalSuccesses / total) * 100).toFixed(2);
+        }
+    }
+    
+    /**
+     * Start monitoring circuit breaker health
      */
     startMonitoring() {
         if (this.isMonitoring) {
-            console.warn(`⚠️ [Circuit Breaker] ${this.provider} monitoring already started`);
             return;
         }
         
         this.isMonitoring = true;
-        this.monitoringInterval = setInterval(() => {
-            this.performHealthCheck();
+        this.monitorInterval = setInterval(() => {
+            const status = this.getStatus();
+            console.log(`📊 [Circuit Breaker] ${this.provider} [${this.providerId}] Status:`, {
+                state: status.state,
+                uptime: status.stats.uptime + '%',
+                failures: status.failureCount,
+                activeRequests: status.activeRequests
+            });
         }, this.options.monitor);
         
-        console.log(`📊 [Circuit Breaker] Started monitoring ${this.provider} every ${this.options.monitor / 1000}s`);
+        console.log(`📊 [Circuit Breaker] ${this.provider} [${this.providerId}] monitoring started`);
     }
     
     /**
-     * Stop health monitoring
+     * Stop monitoring circuit breaker health
      */
-    stopMonitoring() {
-        if (this.monitoringInterval) {
-            clearInterval(this.monitoringInterval);
-            this.monitoringInterval = null;
-        }
-        this.isMonitoring = false;
-        console.log(`🛑 [Circuit Breaker] Stopped monitoring ${this.provider}`);
-    }
-    
-    /**
-     * Perform a health check (lightweight operation)
-     */
-    async performHealthCheck() {
-        if (this.state === 'OPEN') {
-            // Don't perform health checks when circuit is open
+    async stopMonitoring() {
+        if (!this.isMonitoring) {
             return;
         }
         
-        try {
-            // This should be implemented by each provider as a lightweight check
-            console.log(`💓 [Circuit Breaker] Health check for ${this.provider}...`);
-            
-            // For now, just update the last check timestamp
-            // In a real implementation, this would make a lightweight API call
-            
-        } catch (error) {
-            console.warn(`⚠️ [Circuit Breaker] Health check failed for ${this.provider}:`, error.message);
+        this.isMonitoring = false;
+        
+        if (this.monitorInterval) {
+            clearInterval(this.monitorInterval);
+            this.monitorInterval = null;
         }
+        
+        console.log(`🛑 [Circuit Breaker] ${this.provider} [${this.providerId}] monitoring stopped`);
     }
     
     /**
-     * Get detailed statistics
-     * @returns {Object} - Detailed statistics
+     * Get circuit breaker status
+     * @returns {Object}
      */
-    getDetailedStats() {
-        const status = this.getStatus();
-        const now = Date.now();
-        
+    getStatus() {
         return {
-            ...status,
-            options: this.options,
-            performance: {
-                successRate: this.stats.totalAttempts > 0 ? 
-                    Math.round((this.stats.totalSuccesses / this.stats.totalAttempts) * 10000) / 100 : 0,
-                failureRate: this.stats.totalAttempts > 0 ? 
-                    Math.round((this.stats.totalFailures / this.stats.totalAttempts) * 10000) / 100 : 0,
-                totalAttempts: this.stats.totalAttempts,
-                averageResponseTime: Math.round(this.stats.averageResponseTime),
-                lastResponseTime: this.stats.lastResponseTime
-            },
-            circuitBreakerConfig: {
-                threshold: this.options.threshold,
-                timeout: this.options.timeout,
-                resetTimeout: this.options.resetTimeout,
-                monitorInterval: this.options.monitor
-            }
+            provider: this.provider,
+            providerId: this.providerId,
+            state: this.state,
+            failureCount: this.failureCount,
+            successCount: this.successCount,
+            nextAttempt: this.nextAttempt,
+            lastFailureTime: this.lastFailureTime,
+            isMonitoring: this.isMonitoring,
+            createdAt: this.createdAt,
+            activeRequests: this.activeRequests.size,
+            stateLock: this.stateLock,
+            stats: { ...this.stats },
+            options: { ...this.options }
         };
     }
     
     /**
-     * Cleanup resources
+     * Reset circuit breaker (thread-safe)
      */
-    destroy() {
-        this.stopMonitoring();
-        console.log(`🗑️ [Circuit Breaker] ${this.provider} circuit breaker destroyed`);
+    async reset() {
+        await this.changeState('CLOSED');
+        
+        this.failureCount = 0;
+        this.successCount = 0;
+        this.nextAttempt = Date.now();
+        this.lastFailureTime = null;
+        
+        // Reset stats
+        this.stats = {
+            totalAttempts: 0,
+            totalFailures: 0,
+            totalSuccesses: 0,
+            averageResponseTime: 0,
+            lastResponseTime: 0,
+            uptime: 100,
+            concurrentRequests: 0,
+            maxConcurrentRequests: 0
+        };
+        
+        console.log(`🔄 [Circuit Breaker] ${this.provider} [${this.providerId}] reset to CLOSED state`);
+    }
+    
+    /**
+     * Cleanup circuit breaker resources (thread-safe)
+     */
+    async destroy() {
+        await this.stopMonitoring();
+        
+        // Wait for active requests to complete
+        while (this.activeRequests.size > 0) {
+            console.log(`⏳ [Circuit Breaker] ${this.provider} [${this.providerId}] waiting for ${this.activeRequests.size} active requests...`);
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        this.stateChangeListeners = [];
+        this.requestQueue = [];
+        
+        console.log(`🗑️ [Circuit Breaker] ${this.provider} [${this.providerId}] destroyed`);
     }
 }
 
