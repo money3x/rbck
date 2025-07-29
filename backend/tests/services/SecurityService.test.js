@@ -307,14 +307,19 @@ describe('SecurityService', () => {
     });
 
     describe('generateFingerprint', () => {
-      it('should generate consistent fingerprints for same input', () => {
+      it('should generate consistent fingerprints for same input', (done) => {
         const fp1 = securityService.generateFingerprint('127.0.0.1', 'admin');
-        const fp2 = securityService.generateFingerprint('127.0.0.1', 'admin');
         
-        // Should be different due to timestamp
-        expect(fp1).not.toBe(fp2);
-        expect(fp1).toHaveLength(64); // SHA-256 hex
-        expect(fp2).toHaveLength(64);
+        // Add small delay to ensure different timestamp
+        setTimeout(() => {
+          const fp2 = securityService.generateFingerprint('127.0.0.1', 'admin');
+          
+          // Should be different due to timestamp
+          expect(fp1).not.toBe(fp2);
+          expect(fp1).toHaveLength(64); // SHA-256 hex
+          expect(fp2).toHaveLength(64);
+          done();
+        }, 2); // 2ms delay to ensure different Date.now()
       });
     });
   });

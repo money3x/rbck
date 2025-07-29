@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(npm install:*)",
+      "Bash(npm test:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm test)",
+      "Bash(gh pr:*)",
+      "Bash(npm run test:*)",
+      "Bash(mkdir:*)",
+      "Bash(mv:*)",
+      "Bash(rm:*)",
+      "Bash(rmdir:*)",
+      "Bash(true)",
+      "Bash(chmod:*)",
+      "Bash(npm ls:*)",
+      "Bash(ls:*)",
+      "Bash(npm install)",
+      "Bash(npm run build:*)",
+      "Bash(npm install:*)",
+      "Bash(sed:*)",
+      "Bash(awk:*)",
+      "Bash(cp:*)",
+      "Bash(node:*)",
+      "Bash(git add:*)",
+      "Bash(curl:*)",
+      "Bash(git commit:*)",
+      "Bash(git config:*)",
+      "Bash(curl -s \"https://rbck.onrender.com/api/ai/status\")"
+    ],
+    "deny": []
+  }
+}
