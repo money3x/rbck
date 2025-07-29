@@ -6,14 +6,29 @@ const express = require('express');
 const router = express.Router();
 const { authenticateAdmin } = require('../middleware/auth');
 const SecureConfigService = require('../services/SecureConfigService');
-const swarmCouncilManager = require('../services/SwarmCouncilManager');
+const SwarmCouncilManager = require('../services/SwarmCouncilManager');
 const { getProviderConfig } = require('../ai/providers/config/providers.config');
 const aiProviderService = require('../services/AIProviderService');
 const ProviderFactory = require('../ai/providers/factory/ProviderFactory');
 
-// Get AI Swarm Councils from singleton manager
-const swarmCouncil = swarmCouncilManager.getSwarmCouncil();
-const eatSwarmCouncil = swarmCouncilManager.getEATSwarmCouncil();
+// Get AI Swarm Councils from singleton manager (lazy initialization)
+let swarmCouncil = null;
+let eatSwarmCouncil = null;
+
+// Helper function to get initialized councils
+const getInitializedCouncils = () => {
+    try {
+        const manager = SwarmCouncilManager.getInstance();
+        if (manager.isInitialized) {
+            swarmCouncil = manager.getSwarmCouncil();
+            eatSwarmCouncil = manager.getEATSwarmCouncil();
+        }
+        return { swarmCouncil, eatSwarmCouncil };
+    } catch (error) {
+        console.warn('⚠️ SwarmCouncil not initialized, AI features disabled:', error.message);
+        return { swarmCouncil: null, eatSwarmCouncil: null };
+    }
+};
 
 // ✅ AI_PROVIDERS configuration (simplified - no dynamic getters)
 const AI_PROVIDERS = {

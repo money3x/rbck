@@ -4,11 +4,26 @@ const express = require('express');
 const router = express.Router();
 const supabase = require('../supabaseClient');
 const { authenticateAdmin } = require('../middleware/auth');
-const swarmCouncilManager = require('../services/SwarmCouncilManager');
+const SwarmCouncilManager = require('../services/SwarmCouncilManager');
 
-// Get AI Swarm Councils from singleton manager
-const swarmCouncil = swarmCouncilManager.getSwarmCouncil();
-const eatSwarmCouncil = swarmCouncilManager.getEATSwarmCouncil();
+// Get AI Swarm Councils from singleton manager (lazy initialization)
+let swarmCouncil = null;
+let eatSwarmCouncil = null;
+
+// Helper function to get initialized councils
+const getInitializedCouncils = () => {
+    try {
+        const manager = SwarmCouncilManager.getInstance();
+        if (manager.isInitialized) {
+            swarmCouncil = manager.getSwarmCouncil();
+            eatSwarmCouncil = manager.getEATSwarmCouncil();
+        }
+        return { swarmCouncil, eatSwarmCouncil };
+    } catch (error) {
+        console.warn('⚠️ SwarmCouncil not initialized, AI features disabled:', error.message);
+        return { swarmCouncil: null, eatSwarmCouncil: null };
+    }
+};
 
 // Test Supabase connection function
 const testSupabaseConnection = async () => {

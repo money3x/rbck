@@ -316,6 +316,24 @@ class SwarmCouncilManager {
         }
         return SwarmCouncilManager.instance;
     }
+
+    /**
+     * Initialize all councils (alias for initializeCouncils)
+     */
+    async initializeAll() {
+        return this.initializeCouncils();
+    }
+
+    /**
+     * Destroy singleton instance
+     */
+    static destroy() {
+        if (SwarmCouncilManager.instance) {
+            SwarmCouncilManager.instance.cleanup().catch(console.error);
+            SwarmCouncilManager.instance = null;
+        }
+    }
 }
 
+// Export both class and singleton instance getter
 module.exports = SwarmCouncilManager;

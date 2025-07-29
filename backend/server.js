@@ -793,7 +793,9 @@ app.get('/api/blog-html', cacheMiddleware(300), async (req, res) => {
         logger.debug(`Local published posts found: ${localPublishedPosts.length}`);
         
         let finalPosts = [];
-        let source = 'local';        try {
+        let source = 'local';
+        
+        try {
             // Try to fetch from Supabase (only if properly initialized)
             if (supabase && typeof supabase.from === 'function') {
                 const { data: supabasePosts, error } = await supabase
@@ -862,7 +864,8 @@ app.get('/api/blog-html', cacheMiddleware(300), async (req, res) => {
                         <p class="ai-generated-notice">*บทความจากระบบ CMS</p>
                     </div>
                 </article>
-            `;        }).join('');
+            `;
+        }).join('');
         
         logger.debug(`Generated HTML for ${finalPosts.length} posts from ${source}`);
         
@@ -946,7 +949,9 @@ app.get('/blog/:slug', cacheMiddleware(1800), (req, res) => {
             slug: req.params.slug,
             views: post.views,
             ip: req.ip 
-        });        // Return HTML page
+        });
+        
+        // Return HTML page
         const html = `
         <!DOCTYPE html>
         <html lang="th">
@@ -1166,7 +1171,9 @@ async function startServer() {
         }
         
         await loadInitialData();
-          const server = app.listen(PORT, () => {            logger.info('🚀 ================================');
+        
+        const server = app.listen(PORT, () => {
+            logger.info('🚀 ================================');
             logger.info(`🚀   ${config.api.title} v${config.api.version}`);
             logger.info('🚀 ================================');
             logger.info(`🌐 API Server: http://localhost:${PORT}`);
