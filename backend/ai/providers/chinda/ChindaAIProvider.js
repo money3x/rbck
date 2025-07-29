@@ -6,29 +6,15 @@ class ChindaAIProvider extends BaseProvider {
         super(config);
         this.baseURL = config.baseURL || config.baseUrl;
         this.apiKey = config.apiKey;
-        this.jwtToken = config.jwtToken;
         
-        // Configure axios instance with timeout for ChindaX API  
-        // Try multiple authentication methods
-        const headers = {
-            'Content-Type': 'application/json'
-        };
-        
-        // Method 1: Standard Bearer token
-        if (this.jwtToken && this.jwtToken !== 'test-chinda-jwt-replace-with-real-token') {
-            headers['Authorization'] = `Bearer ${this.jwtToken}`;
-        } else {
-            // Method 2: API Key as Bearer token (fallback)
-            headers['Authorization'] = `Bearer ${this.apiKey}`;
-        }
-        
-        // Method 3: Also try X-API-Key (some APIs use this)
-        headers['X-API-Key'] = this.apiKey;
-        
+        // Configure axios instance for ChindaX API
         this.client = axios.create({
             baseURL: this.baseURL,
             timeout: 30000, // 30 seconds for AI processing
-            headers: headers
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${this.apiKey}` // ChindaX uses API key as Bearer token
+            }
         });
         
         if (!this.baseURL || !this.apiKey) {
@@ -41,7 +27,6 @@ class ChindaAIProvider extends BaseProvider {
             console.log(`🤖 [ChindaX] Generating response via ChindaX API...`);
             console.log(`🔐 [ChindaX] Using baseURL: ${this.baseURL}`);
             console.log(`🔐 [ChindaX] API Key: ${this.apiKey.substring(0, 8)}...`);
-            console.log(`🔐 [ChindaX] JWT Token: ${this.jwtToken ? this.jwtToken.substring(0, 8) + '...' : 'none'}`);
             
             // Convert prompt to OpenAI-compatible messages format
             const messages = [

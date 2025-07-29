@@ -78,7 +78,6 @@ const providersConfig = {
         name: 'ChindaX AI',
         provider: 'ChindaAIProvider',
         apiKey: process.env.CHINDA_API_KEY,
-        jwtToken: process.env.CHINDA_JWT_TOKEN,
         baseURL: process.env.CHINDA_BASE_URL || 'https://chindax.iapp.co.th/api',
         defaultModel: 'chinda-qwen3-32b',
         model: process.env.CHINDA_MODEL || 'chinda-qwen3-32b',
@@ -117,10 +116,7 @@ const validateConfig = (providerName, config) => {
         return false;
     }
 
-    // ChindaX requires only API key (JWT token is optional)
-    if (providerName === 'chinda' && !config.jwtToken) {
-        console.warn(`⚠️  Provider ${providerName}: JWT token not configured, using API key only`);
-    }
+    // ChindaX only requires API key
 
     if (!config.baseURL) {
         console.error(`❌ Provider ${providerName}: Base URL is required`);

@@ -33,7 +33,8 @@
       "Bash(curl -s \"https://rbck.onrender.com/api/ai/status\")",
       "Bash(timeout:*)",
       "Bash(cat:*)",
-      "Bash(npm start)"
+      "Bash(npm start)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }
