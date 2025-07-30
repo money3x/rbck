@@ -9810,14 +9810,32 @@
                 console.log('🎯 [REAL-TIME] Conversation logs started');
             }
             
-            // 🚀 Add global performance testing functions
+            // 🚀 Add global performance testing functions - FAST & FURIOUS EDITION ⚡
             window.testUltraFastPerformance = async () => {
-                console.log('⚡ [PERFORMANCE TEST] Starting ultra-fast performance test...');
+                console.log('🏁 [FAST & FURIOUS] Starting comprehensive ultra-fast performance test...');
                 
-                if (window.unifiedStatusManager) {
-                    const result = await window.unifiedStatusManager.testAllProviders();
-                    console.log('⚡ [PERFORMANCE TEST] Parallel test results:', result);
-                    return result;
+                try {
+                    // Test unified status manager first
+                    if (window.unifiedStatusManager) {
+                        console.log('⚡ [TEST] Testing unified status manager...');
+                        const unifiedResult = await window.unifiedStatusManager.testAllProviders();
+                        console.log('⚡ [TEST] Unified manager results:', unifiedResult);
+                    }
+                    
+                    // Test AI Swarm Council Fast & Furious system
+                    if (window.aiSwarmCouncil && window.aiSwarmCouncil.testFastAndFuriousPerformance) {
+                        console.log('🏎️ [TEST] Running AI Swarm Council Fast & Furious test...');
+                        const swarmResult = await window.aiSwarmCouncil.testFastAndFuriousPerformance();
+                        console.log('🏆 [FAST & FURIOUS] Complete test results:', swarmResult);
+                        return swarmResult;
+                    } else {
+                        console.warn('⚠️ [TEST] AI Swarm Council Fast & Furious test not available');
+                        return { error: 'AI Swarm Council not initialized or Fast & Furious test not available' };
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ [FAST & FURIOUS] Test failed:', error);
+                    return { error: error.message };
                 }
             };
             

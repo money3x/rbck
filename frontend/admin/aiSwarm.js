@@ -5,6 +5,16 @@
 import { showNotification } from './uiHelpers.js';
 import { API_BASE } from '../config.js';
 
+// 🏎️ FAST & FURIOUS: Import ultra-fast performance modules
+let cacheManager, realTimeWS, unifiedStatusManager;
+try {
+    cacheManager = window.cacheManager;
+    realTimeWS = window.realTimeWS;
+    unifiedStatusManager = window.unifiedStatusManager;
+} catch (e) {
+    console.log('⚡ [FAST] Performance modules loading...');
+}
+
 /**
  * AI Swarm Council - Orchestrates multiple AI providers for collaborative tasks
  */
@@ -87,43 +97,229 @@ export class AISwarmCouncil {
             showNotification('❌ AI Swarm initialization failed', 'error');
         }
     }    /**
-     * Update status of all AI providers
+     * 🏎️ FAST & FURIOUS: Ultra-fast parallel provider status update
      */
     async updateProviderStatus() {
-        console.log('🔄 [AI SWARM] Updating provider status...');
-        const connectedProviders = [];
+        console.log('🏎️ [FAST & FURIOUS] Ultra-fast parallel status update...');
         
-        for (const [key, provider] of Object.entries(this.providers)) {
+        const startTime = Date.now();
+        
+        // 🚀 INSTANT FEEDBACK: Show loading immediately
+        this.showFastLoadingState();
+        
+        // 🏎️ TRY UNIFIED STATUS MANAGER FIRST (Lightning fast!)
+        if (unifiedStatusManager && unifiedStatusManager.getAllProviderStatus) {
             try {
-                console.log(`🔍 [AI SWARM] Checking ${key} status...`);
-                const isConnected = await this.checkProviderStatus(key);
-                this.providers[key].status = isConnected;
+                const unifiedStatus = unifiedStatusManager.getAllProviderStatus();
                 
-                if (isConnected) {
-                    connectedProviders.push(key);
-                    console.log(`✅ [AI SWARM] ${key} is connected`);
-                } else {
-                    console.log(`❌ [AI SWARM] ${key} is disconnected`);
+                if (unifiedStatus && Object.keys(unifiedStatus).length > 0) {
+                    console.log('⚡ [LIGHTNING] Using unified status manager data!');
+                    
+                    // Update from unified status instantly
+                    const connectedProviders = [];
+                    
+                    Object.keys(this.providers).forEach(key => {
+                        const status = unifiedStatus[key];
+                        if (status) {
+                            this.providers[key].status = status.connected;
+                            this.providers[key].responseTime = status.responseTime;
+                            this.providers[key].lastUpdate = status.lastUpdate;
+                            
+                            if (status.connected) {
+                                connectedProviders.push(key);
+                            }
+                        }
+                    });
+                    
+                    this.hideFastLoadingState();
+                    this.renderProviders();
+                    this.updateSwarmStatusDisplay(connectedProviders.length);
+                    
+                    const totalTime = Date.now() - startTime;
+                    console.log(`⚡ [LIGHTNING] Completed in ${totalTime}ms using unified status!`);
+                    
+                    return connectedProviders;
                 }
             } catch (error) {
-                console.error(`[AI SWARM] Error checking ${key} status:`, error);
-                this.providers[key].status = false;
+                console.log('⚠️ [FALLBACK] Unified status unavailable, using parallel method');
             }
         }
         
-        console.log(`🔗 [AI SWARM] Connected providers: ${connectedProviders.length}/5`);
+        // 🏎️ FALLBACK: PARALLEL CHECK (Still Fast & Furious!)
+        const checkPromises = Object.keys(this.providers).map(async (key) => {
+            try {
+                const isConnected = await this.fastCheckProviderStatus(key);
+                return { key, connected: isConnected, success: true };
+            } catch (error) {
+                console.error(`❌ [FAST] ${key} check failed:`, error);
+                return { key, connected: false, success: false, error };
+            }
+        });
         
-        // Always render the providers table regardless of connection status
+        // 🚀 EXECUTE ALL IN PARALLEL
+        const results = await Promise.allSettled(checkPromises);
+        
+        // 🏎️ PROCESS RESULTS AT LIGHTSPEED
+        const connectedProviders = [];
+        let successCount = 0;
+        
+        results.forEach((result, index) => {
+            const key = Object.keys(this.providers)[index];
+            
+            if (result.status === 'fulfilled') {
+                const { connected } = result.value;
+                this.providers[key].status = connected;
+                
+                if (connected) {
+                    connectedProviders.push(key);
+                    successCount++;
+                }
+            } else {
+                this.providers[key].status = false;
+            }
+        });
+        
+        const totalTime = Date.now() - startTime;
+        
+        // 🏎️ HIDE LOADING & SHOW RESULTS
+        this.hideFastLoadingState();
         this.renderProviders();
-        
         this.updateSwarmStatusDisplay(connectedProviders.length);
+        
+        console.log(`🏎️ [FAST & FURIOUS] Parallel check completed in ${totalTime}ms!`);
+        
         return connectedProviders;
     }
 
     /**
-     * Check individual provider status
+     * 🏎️ FAST CHECK: Ultra-fast provider status with cache
      */
-    async checkProviderStatus(providerKey) {        switch (providerKey) {
+    async fastCheckProviderStatus(providerKey) {
+        // 🚀 CACHE FIRST: Try cache for lightning speed
+        if (cacheManager) {
+            const cacheKey = `swarm_status_${providerKey}`;
+            const cached = cacheManager.get(cacheKey);
+            if (cached !== null) {
+                console.log(`⚡ [CACHE] ${providerKey} status from cache`);
+                return cached;
+            }
+        }
+        
+        // 🏎️ FAST API CHECK with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout (Fast & Furious!)
+        
+        try {
+            const isConnected = await this.quickProviderCheck(providerKey, controller.signal);
+            
+            // 💾 CACHE RESULT for ultra-fast future access
+            if (cacheManager) {
+                cacheManager.set(`swarm_status_${providerKey}`, isConnected, { ttl: 10000 }); // 10s cache
+            }
+            
+            clearTimeout(timeoutId);
+            return isConnected;
+            
+        } catch (error) {
+            clearTimeout(timeoutId);
+            console.error(`❌ [FAST] ${providerKey} quick check failed:`, error);
+            return false;
+        }
+    }
+    
+    /**
+     * 🚀 QUICK CHECK: Lightning-fast provider verification
+     */
+    async quickProviderCheck(providerKey, signal) {
+        switch (providerKey) {
+            case 'gemini':
+                return await this.quickGeminiCheck(signal);
+            case 'openai':
+            case 'claude':
+            case 'deepseek':
+            case 'chinda':
+                return await this.quickExternalProviderCheck(providerKey, signal);
+            default:
+                return false;
+        }
+    }
+    
+    /**
+     * ⚡ LIGHTNING GEMINI CHECK
+     */
+    async quickGeminiCheck(signal) {
+        try {
+            const response = await fetch(`${API_BASE}/ai/status`, { 
+                method: 'GET',
+                signal,
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                return data.success && data.data?.providers?.gemini?.isActive;
+            }
+            return false;
+        } catch (error) {
+            return false;
+        }
+    }
+    
+    /**
+     * ⚡ LIGHTNING EXTERNAL PROVIDER CHECK
+     */
+    async quickExternalProviderCheck(providerKey, signal) {
+        try {
+            const response = await fetch(`${API_BASE}/ai/status`, { 
+                method: 'GET',
+                signal,
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                return data.success && data.data?.providers?.[providerKey]?.isActive;
+            }
+            return false;
+        } catch (error) {
+            return false;
+        }
+    }
+    
+    /**
+     * 🏎️ FAST LOADING STATES (Fast & Furious style!)
+     */
+    showFastLoadingState() {
+        Object.keys(this.providers).forEach(provider => {
+            const statusElement = document.getElementById(`status-${provider}`);
+            if (statusElement) {
+                const statusDot = statusElement.querySelector('.status-dot');
+                const statusText = statusElement.querySelector('.status-text');
+                
+                if (statusDot && statusText) {
+                    statusDot.className = 'status-dot loading fast-spin';
+                    statusText.className = 'status-text loading';
+                    statusText.textContent = 'เร็วเหมือนสายฟ้า...';
+                }
+            }
+        });
+        
+        console.log('🏎️ [FAST] Loading states activated - Fast & Furious mode!');
+    }
+    
+    /**
+     * 🏁 HIDE FAST LOADING STATES
+     */
+    hideFastLoadingState() {
+        // Loading will be replaced by actual status in renderProviders()
+        console.log('🏁 [FAST] Loading states deactivated');
+    }
+    
+    /**
+     * Check individual provider status (legacy fallback)
+     */
+    async checkProviderStatus(providerKey) {        
+        switch (providerKey) {
             case 'gemini':
                 return await this.checkGeminiStatus();
             case 'openai':
@@ -1134,15 +1330,78 @@ export class AISwarmCouncil {
     }
 
     /**
-     * Start background status monitoring
+     * Start background status monitoring - FAST & FURIOUS EDITION ⚡
+     * Ultra-fast real-time monitoring like poe.com
      */
     startStatusMonitoring() {
-        // Check status every 2 minutes
-        setInterval(async () => {
+        console.log('⚡ [FAST & FURIOUS] Starting ultra-fast status monitoring...');
+        
+        // 🚀 LEVEL 1: Ultra-fast primary monitoring (5 seconds like poe.com)
+        this.primaryMonitoringInterval = setInterval(async () => {
             if (!this.isProcessing) {
+                console.log('⚡ [FAST & FURIOUS] Primary status check...');
                 await this.updateProviderStatus();
             }
-        }, 120000);
+        }, 5000); // 5 seconds - 24x faster than before!
+        
+        // 🚀 LEVEL 2: Instant cache refresh (every 10 seconds)
+        this.cacheRefreshInterval = setInterval(async () => {
+            if (!this.isProcessing && window.unifiedStatusManager) {
+                console.log('💾 [FAST & FURIOUS] Cache refresh check...');
+                // Trigger unified status manager update for fresh cache
+                await window.unifiedStatusManager.updateAllProviderStatus();
+            }
+        }, 10000); // 10 seconds for cache refresh
+        
+        // 🚀 LEVEL 3: WebSocket connection check (every 30 seconds)
+        this.websocketCheckInterval = setInterval(() => {
+            if (window.realtimeWS && window.realtimeWS.readyState !== WebSocket.OPEN) {
+                console.log('🔌 [FAST & FURIOUS] WebSocket reconnection check...');
+                window.realtimeWS.connect();
+            }
+        }, 30000); // 30 seconds WebSocket health check
+        
+        // 🚀 LEVEL 4: Visual feedback update (every 2 seconds for smooth UI)
+        this.visualUpdateInterval = setInterval(() => {
+            this.updateStatusSummary();
+            console.log('🎨 [FAST & FURIOUS] Visual update complete');
+        }, 2000); // 2 seconds for smooth visual updates
+        
+        console.log('🏁 [FAST & FURIOUS] All monitoring systems activated!');
+        console.log('📊 [FAST & FURIOUS] Intervals: Primary(5s), Cache(10s), WebSocket(30s), Visual(2s)');
+    }
+
+    /**
+     * Stop all monitoring intervals - FAST & FURIOUS CLEANUP ⚡
+     */
+    stopStatusMonitoring() {
+        console.log('🛑 [FAST & FURIOUS] Stopping all monitoring systems...');
+        
+        if (this.primaryMonitoringInterval) {
+            clearInterval(this.primaryMonitoringInterval);
+            this.primaryMonitoringInterval = null;
+            console.log('🛑 Primary monitoring stopped');
+        }
+        
+        if (this.cacheRefreshInterval) {
+            clearInterval(this.cacheRefreshInterval);
+            this.cacheRefreshInterval = null;
+            console.log('🛑 Cache refresh stopped');
+        }
+        
+        if (this.websocketCheckInterval) {
+            clearInterval(this.websocketCheckInterval);
+            this.websocketCheckInterval = null;
+            console.log('🛑 WebSocket monitoring stopped');
+        }
+        
+        if (this.visualUpdateInterval) {
+            clearInterval(this.visualUpdateInterval);
+            this.visualUpdateInterval = null;
+            console.log('🛑 Visual updates stopped');
+        }
+        
+        console.log('✅ [FAST & FURIOUS] All monitoring systems stopped');
     }
 
     /**
@@ -1541,6 +1800,139 @@ export class AISwarmCouncil {
             console.error('[AI SWARM] Enhanced task execution error:', error);
             this.addConversationMessage('system', `❌ Backend processing failed: ${error.message}`);
             throw error;
+        }
+    }
+
+    /**
+     * ===== FAST & FURIOUS PERFORMANCE TESTING =====
+     */
+    
+    /**
+     * Test all performance optimizations - FAST & FURIOUS EDITION ⚡
+     * Tests all 4 levels of poe.com-style performance
+     */
+    async testFastAndFuriousPerformance() {
+        console.log('🏁 [FAST & FURIOUS] Starting comprehensive performance test...');
+        const startTime = Date.now();
+        
+        this.addConversationMessage('system', '🏁 FAST & FURIOUS Performance Test Starting...');
+        this.showFastLoadingState();
+        
+        try {
+            // 🚀 LEVEL 1 TEST: Parallel provider status checking
+            console.log('⚡ [TEST LEVEL 1] Testing parallel provider status...');
+            this.addConversationMessage('system', '⚡ Level 1: Testing parallel provider checking...');
+            
+            const level1Start = Date.now();
+            await this.updateProviderStatus(); // Uses parallel Promise.allSettled
+            const level1Time = Date.now() - level1Start;
+            
+            this.addConversationMessage('system', `✅ Level 1: Parallel checking completed (${level1Time}ms)`);
+            
+            // 🚀 LEVEL 2 TEST: Cache performance
+            console.log('💾 [TEST LEVEL 2] Testing cache performance...');
+            this.addConversationMessage('system', '💾 Level 2: Testing ultra-fast cache...');
+            
+            const level2Start = Date.now();
+            
+            // Test cache hits with multiple rapid requests
+            const cachePromises = [];
+            for (let i = 0; i < 10; i++) {
+                cachePromises.push(
+                    window.cacheManager.getOrSet(`test_key_${i}`, async () => {
+                        return { testData: `cached_${i}`, timestamp: Date.now() };
+                    }, { ttl: 10000 })
+                );
+            }
+            
+            await Promise.all(cachePromises);
+            const level2Time = Date.now() - level2Start;
+            const cacheStats = window.cacheManager.getStats();
+            
+            this.addConversationMessage('system', `✅ Level 2: Cache test completed (${level2Time}ms, ${cacheStats.hitRatio}% hit rate)`);
+            
+            // 🚀 LEVEL 3 TEST: WebSocket real-time connection
+            console.log('🔌 [TEST LEVEL 3] Testing WebSocket connection...');
+            this.addConversationMessage('system', '🔌 Level 3: Testing WebSocket real-time...');
+            
+            const level3Start = Date.now();
+            let websocketStatus = 'disconnected';
+            
+            if (window.realtimeWS) {
+                websocketStatus = window.realtimeWS.readyState === WebSocket.OPEN ? 'connected' : 'disconnected';
+                if (websocketStatus === 'disconnected') {
+                    await window.realtimeWS.connect();
+                    websocketStatus = 'reconnected';
+                }
+            }
+            
+            const level3Time = Date.now() - level3Start;
+            this.addConversationMessage('system', `✅ Level 3: WebSocket ${websocketStatus} (${level3Time}ms)`);
+            
+            // 🚀 LEVEL 4 TEST: Unified status manager integration
+            console.log('🎯 [TEST LEVEL 4] Testing unified status manager...');
+            this.addConversationMessage('system', '🎯 Level 4: Testing unified status manager...');
+            
+            const level4Start = Date.now();
+            
+            if (window.unifiedStatusManager) {
+                // Test parallel testing capability
+                const parallelResults = await window.unifiedStatusManager.testAllProviders();
+                const level4Time = Date.now() - level4Start;
+                
+                this.addConversationMessage('system', 
+                    `✅ Level 4: Unified manager test completed (${level4Time}ms, ${parallelResults.successCount}/${parallelResults.successCount + parallelResults.failCount} success)`
+                );
+            } else {
+                this.addConversationMessage('system', '⚠️ Level 4: Unified status manager not available');
+            }
+            
+            // 🏁 FINAL RESULTS
+            const totalTime = Date.now() - startTime;
+            const fastFuriousScore = Math.max(0, 100 - (totalTime / 100)); // Performance score
+            
+            console.log('🏆 [FAST & FURIOUS] Performance test completed!');
+            console.log(`📊 [PERFORMANCE] Total time: ${totalTime}ms`);
+            console.log(`🏆 [PERFORMANCE] Fast & Furious Score: ${fastFuriousScore.toFixed(1)}/100`);
+            
+            this.addConversationMessage('system', '🏆 FAST & FURIOUS Test Results:');
+            this.addConversationMessage('system', `⏱️ Total time: ${totalTime}ms`);
+            this.addConversationMessage('system', `🏆 Performance score: ${fastFuriousScore.toFixed(1)}/100`);
+            this.addConversationMessage('system', `📊 Cache hit rate: ${cacheStats.hitRatio}%`);
+            this.addConversationMessage('system', `🔌 WebSocket: ${websocketStatus}`);
+            
+            if (fastFuriousScore >= 80) {
+                this.addConversationMessage('system', '🎉 FAST & FURIOUS PERFORMANCE ACHIEVED! เร็วเหมือนสายฟ้า! ⚡');
+                showNotification('🏆 Fast & Furious performance achieved!', 'success');
+            } else if (fastFuriousScore >= 60) {
+                this.addConversationMessage('system', '🚀 Good performance, but not quite Fast & Furious level yet');
+                showNotification('🚀 Good performance achieved', 'info');
+            } else {
+                this.addConversationMessage('system', '⚠️ Performance needs optimization');
+                showNotification('⚠️ Performance needs improvement', 'warning');
+            }
+            
+            return {
+                totalTime,
+                fastFuriousScore,
+                levels: {
+                    level1Time,
+                    level2Time,
+                    level3Time,
+                    level4Time: level4Start ? Date.now() - level4Start : 0
+                },
+                cacheStats,
+                websocketStatus
+            };
+            
+        } catch (error) {
+            console.error('❌ [FAST & FURIOUS] Performance test failed:', error);
+            this.addConversationMessage('system', `❌ Performance test failed: ${error.message}`);
+            showNotification('❌ Performance test failed', 'error');
+            throw error;
+            
+        } finally {
+            this.hideFastLoadingState();
         }
     }
 
