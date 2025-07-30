@@ -1940,3 +1940,8 @@ export class AISwarmCouncil {
      * ===== END BACKEND INTEGRATION =====
      */
 }
+
+// Make class globally available
+window.AISwarmCouncil = AISwarmCouncil;
+
+console.log('✅ [AI SWARM] AISwarmCouncil class loaded and available globally');
