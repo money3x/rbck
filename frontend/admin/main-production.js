@@ -91,7 +91,7 @@ Object.assign(window.window.rbckConfig, {
 console.log('🔧 [CONFIG] API Base:', window.window.rbckConfig.apiBase);
 
 // ===== GLOBAL VARIABLES =====
-let currentUser = null;
+window.currentUser = window.currentUser || null;
 let authToken = null; // ✅ No localStorage - server manages sessions
 window.authToken = authToken; // Make globally accessible
 let aiSwarmCouncil = null;
@@ -191,7 +191,7 @@ window.checkAuthentication = async function() {
         
         if (result.success && result.user && result.user.encryptionVerified) {
             // ✅ Authentication valid with ENCRYPTION_KEY verified
-            currentUser = result.user;
+            window.currentUser = result.user;
             authToken = token;
             window.authToken = authToken;
             
@@ -255,7 +255,7 @@ window.logout = function() {
     // Reset global variables
     authToken = null;
     window.authToken = authToken;
-    currentUser = null;
+    window.currentUser = null;
     
     // Show notification
     showNotification('ออกจากระบบสำเร็จ', 'success');
@@ -3302,7 +3302,7 @@ window.debugAuth = async function() {
     console.log('  localStorage.loginData:', localStorage.getItem('loginData'));
     console.log('  sessionStorage.authToken:', sessionStorage.getItem('authToken'));
     console.log('  sessionStorage.isLoggedIn:', sessionStorage.getItem('isLoggedIn'));
-    console.log('  currentUser:', currentUser);
+    console.log('  currentUser:', window.currentUser);
     console.log('  authToken:', authToken);
     
     // ⚡ Test enhanced token retrieval

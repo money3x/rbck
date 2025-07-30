@@ -26,7 +26,7 @@ export class UnifiedAIStatusManager {
         this.initializeProviderStatus();
         
         // Bind methods
-        this.updateStatus = this.updateStatus.bind(this);
+        this.updateAllProviderStatus = this.updateAllProviderStatus.bind(this);
         this.startMonitoring = this.startMonitoring.bind(this);
         this.stopMonitoring = this.stopMonitoring.bind(this);
     }

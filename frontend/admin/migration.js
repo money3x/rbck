@@ -4,6 +4,7 @@ class AdminMigration {
         this.logs = [];
         this.configManager = null;
         this.supabaseConfig = null;
+        this.connectionFailed = false; // Track if connection has failed
         console.log('🔄 Admin Migration initialized');
     }
 
@@ -203,10 +204,25 @@ class AdminMigration {
         if (clearLogsBtn) {
             clearLogsBtn.addEventListener('click', () => this.clearLogs());
         }
+        
+        // Add manual retry button functionality
+        const retryBtn = document.getElementById('migration-retry-btn');
+        if (retryBtn) {
+            retryBtn.addEventListener('click', () => {
+                this.connectionFailed = false; // Reset connection flag
+                this.handleCheckStatus();
+            });
+        }
     }
 
     // ✅ Check migration status
     async handleCheckStatus() {
+        // If connection has already failed, don't retry automatically
+        if (this.connectionFailed) {
+            console.log('⚠️ [MIGRATION] Skipping status check - connection previously failed');
+            return;
+        }
+        
         try {
             this.log('🔍 Checking migration status...');
             this.showLoading('migration-status', 'กำลังตรวจสอบ...');
@@ -251,6 +267,12 @@ class AdminMigration {
         } catch (error) {
             console.error('❌ [MIGRATION] Status check error:', error);
             this.log(`❌ Status check failed: ${error.message}`);
+            
+            // Check if this is a database connection error
+            if (error.message.includes('Status check failed') || error.message.includes('Failed to check migration status')) {
+                this.connectionFailed = true;
+                console.warn('⚠️ [MIGRATION] Database connection failed - disabling auto-retry');
+            }
             
             // ✅ แสดง fallback status แทนการ error
             const statusDiv = document.getElementById('migration-status');
