@@ -9776,25 +9776,52 @@
         import('./core/bootstrap.js').then(() => {
             console.log('⚡ [PERFORMANCE] Bootstrap initialization complete');
             
-            // ✅ INITIALIZE NEW UNIFIED SYSTEMS
+            // ✅ INITIALIZE NEW UNIFIED SYSTEMS (poe.com style)
             return Promise.all([
                 import('./unified-status-manager.js'),
-                import('./real-time-conversation-logs.js')
+                import('./real-time-conversation-logs.js'),
+                import('./cache-manager.js'),
+                import('./realtime-websocket.js')
             ]);
         }).then(() => {
-            console.log('🎯 [TROUBLESHOOT FIX] Unified systems loaded');
+            console.log('🎯 [ULTRA-FAST] All systems loaded (poe.com speed!)');
             
-            // Start unified status monitoring (prevents flickering)
+            // 🚀 Start unified status monitoring with ultra-fast updates
             if (window.unifiedStatusManager) {
                 window.unifiedStatusManager.startMonitoring();
-                console.log('✅ [TROUBLESHOOT FIX] Unified status manager started');
+                console.log('✅ [REAL-TIME] Unified status manager started (5s intervals)');
+            }
+            
+            // 🚀 Start WebSocket real-time connection 
+            if (window.realTimeWS) {
+                window.realTimeWS.connect();
+                console.log('⚡ [WEBSOCKET] Real-time WebSocket connecting...');
+            }
+            
+            // 🚀 Cache manager is automatically initialized
+            if (window.cacheManager) {
+                console.log('💾 [CACHE] Advanced cache manager ready');
+                console.log(`💾 [CACHE] Stats:`, window.cacheManager.getStats());
             }
             
             // Real-time conversation logs will auto-start if container exists
             if (window.conversationLogs && document.getElementById('aiConversationLogs')) {
                 window.conversationLogs.startMonitoring();
-                console.log('🎯 [FIX] Conversation logs started');
+                console.log('🎯 [REAL-TIME] Conversation logs started');
             }
+            
+            // 🚀 Add global performance testing functions
+            window.testUltraFastPerformance = async () => {
+                console.log('⚡ [PERFORMANCE TEST] Starting ultra-fast performance test...');
+                
+                if (window.unifiedStatusManager) {
+                    const result = await window.unifiedStatusManager.testAllProviders();
+                    console.log('⚡ [PERFORMANCE TEST] Parallel test results:', result);
+                    return result;
+                }
+            };
+            
+            console.log('🚀 [READY] Ultra-fast system ready! Performance like poe.com activated!');
         }).catch(error => {
             console.error('❌ [PERFORMANCE] Bootstrap failed:', error);
         });

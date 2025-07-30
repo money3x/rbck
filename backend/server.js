@@ -1190,6 +1190,28 @@ async function startServer() {
             logger.info('✅ API Server is ready and operational!');
         });
 
+        // 🚀 REAL-TIME WEBSOCKET: Initialize after server starts (poe.com style)
+        let realTimeWS = null;
+        try {
+            const RealTimeWebSocketServer = require('./websocket/websocket-server');
+            realTimeWS = new RealTimeWebSocketServer(server);
+            
+            // Setup real-time AI status broadcasting
+            realTimeWS.on('client_connected', ({ clientInfo }) => {
+                logger.info(`⚡ [WEBSOCKET] Client ${clientInfo.id} connected for real-time updates`);
+            });
+            
+            // Make globally available for broadcasting updates
+            global.realTimeWS = realTimeWS;
+            
+            logger.info('⚡ [WEBSOCKET] Real-time server active on /ws');
+            logger.info('⚡ [WEBSOCKET] Ultra-fast updates enabled (poe.com style)');
+            
+        } catch (error) {
+            logger.warn('⚠️ [WEBSOCKET] Real-time server failed to initialize:', error.message);
+            logger.warn('⚠️ [WEBSOCKET] Falling back to HTTP polling');
+        }
+
         // Graceful shutdown handling
         const gracefulShutdown = (signal) => {
             logger.info(`📢 Received ${signal}. Starting graceful shutdown...`);
