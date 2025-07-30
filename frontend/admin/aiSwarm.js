@@ -107,27 +107,45 @@ export class AISwarmCouncil {
         // 🚀 INSTANT FEEDBACK: Show loading immediately
         this.showFastLoadingState();
         
-        // 🏎️ TRY UNIFIED STATUS MANAGER FIRST (Lightning fast!)
-        if (unifiedStatusManager && unifiedStatusManager.getAllProviderStatus) {
+        // 🏎️ PRIMARY METHOD: SYNC WITH AI MONITORING (Same data source!)
+        if (window.unifiedStatusManager) {
             try {
-                const unifiedStatus = unifiedStatusManager.getAllProviderStatus();
+                console.log('⚡ [SYNC] Forcing fresh data from AI Monitoring source...');
+                
+                // Force fresh update from same source as AI Monitoring
+                await window.unifiedStatusManager.updateAllProviderStatus();
+                const unifiedStatus = window.unifiedStatusManager.getAllProviderStatus();
                 
                 if (unifiedStatus && Object.keys(unifiedStatus).length > 0) {
-                    console.log('⚡ [LIGHTNING] Using unified status manager data!');
+                    console.log('📊 [SYNC] Got fresh AI Monitoring data:', unifiedStatus);
                     
-                    // Update from unified status instantly
+                    // Update AI Swarm to match AI Monitoring exactly
                     const connectedProviders = [];
                     
                     Object.keys(this.providers).forEach(key => {
                         const status = unifiedStatus[key];
                         if (status) {
-                            this.providers[key].status = status.connected;
-                            this.providers[key].responseTime = status.responseTime;
-                            this.providers[key].lastUpdate = status.lastUpdate;
+                            // 🎯 EXACT MATCH: Same logic as AI Monitoring badges
+                            const isConnected = status.connected && status.configured && status.status !== 'checking';
                             
-                            if (status.connected) {
+                            this.providers[key].status = isConnected;
+                            this.providers[key].connected = status.connected;
+                            this.providers[key].configured = status.configured;
+                            this.providers[key].responseTime = status.responseTime;
+                            this.providers[key].successRate = status.successRate;
+                            this.providers[key].lastUpdate = status.lastUpdate;
+                            this.providers[key].backendStatus = status.status; // Keep original status
+                            this.providers[key].isActive = status.isActive;
+                            
+                            if (isConnected) {
                                 connectedProviders.push(key);
                             }
+                            
+                            console.log(`✅ [SYNC] ${key}: ${isConnected ? 'เชื่อมต่อแล้ว' : 'ไม่ได้เชื่อมต่อ'} (backend: ${status.status}, configured: ${status.configured})`);
+                        } else {
+                            console.log(`⚠️ [SYNC] ${key}: No unified data`);
+                            this.providers[key].status = false;
+                            this.providers[key].connected = false;
                         }
                     });
                     
@@ -136,13 +154,15 @@ export class AISwarmCouncil {
                     this.updateSwarmStatusDisplay(connectedProviders.length);
                     
                     const totalTime = Date.now() - startTime;
-                    console.log(`⚡ [LIGHTNING] Completed in ${totalTime}ms using unified status!`);
+                    console.log(`⚡ [SYNC] AI Swarm synced with AI Monitoring in ${totalTime}ms! (${connectedProviders.length} connected)`);
                     
                     return connectedProviders;
                 }
             } catch (error) {
-                console.log('⚠️ [FALLBACK] Unified status unavailable, using parallel method');
+                console.error('❌ [SYNC] Failed to sync with AI Monitoring:', error);
             }
+        } else {
+            console.warn('⚠️ [SYNC] Unified status manager not available - need to initialize');
         }
         
         // 🏎️ FALLBACK: PARALLEL CHECK (Still Fast & Furious!)
@@ -554,6 +574,14 @@ export class AISwarmCouncil {
                         <i class="fas fa-sync"></i> Refresh Status
                     </button>
                 </div>
+                <div class="control-group">
+                    <button class="btn btn-secondary" onclick="window.aiSwarmCouncil.forceSyncWithAIMonitoring()" id="syncBtn">
+                        <i class="fas fa-link"></i> Sync with AI Monitoring
+                    </button>
+                    <button class="btn btn-primary" onclick="window.testUltraFastPerformance()" id="testPerfBtn">
+                        <i class="fas fa-bolt"></i> Test Performance
+                    </button>
+                </div>
             </div>
         `;
     }
@@ -658,7 +686,20 @@ export class AISwarmCouncil {
             <td data-label="สถานะ" id="status-${key}">
                 <div class="provider-status">
                     <div class="status-dot ${provider.status ? 'connected' : 'disconnected'}"></div>
-                    <span class="status-text ${provider.status ? 'connected' : 'disconnected'}">${provider.status ? 'เชื่อมต่อแล้ว' : 'ไม่ได้เชื่อมต่อ'}</span>
+                    <div class="status-details">
+                        <span class="status-text ${provider.status ? 'connected' : 'disconnected'}">
+                            ${provider.status ? 'เชื่อมต่อแล้ว' : 'ไม่ได้เชื่อมต่อ'}
+                        </span>
+                        <div class="status-info">
+                            ${provider.configured ? 
+                                `<small>✅ Configured${provider.backendStatus ? ` (${provider.backendStatus})` : ''}</small>` : 
+                                '<small>⚠️ Not configured</small>'
+                            }
+                            ${provider.responseTime ? 
+                                `<small>⚡ ${provider.responseTime}ms</small>` : ''
+                            }
+                        </div>
+                    </div>
                 </div>
             </td>
             <td data-label="หน้าที่ในการทำงาน">
@@ -1330,6 +1371,37 @@ export class AISwarmCouncil {
     }
 
     /**
+     * 🔄 SYNC NOW: Force immediate sync with AI Monitoring
+     */
+    async forceSyncWithAIMonitoring() {
+        console.log('🔄 [FORCE SYNC] Forcing immediate sync with AI Monitoring...');
+        
+        try {
+            this.addConversationMessage('system', '🔄 Force syncing with AI Monitoring...');
+            
+            if (window.unifiedStatusManager) {
+                // Force fresh update from AI Monitoring source
+                await window.unifiedStatusManager.updateAllProviderStatus();
+                
+                // Then sync our data
+                await this.updateProviderStatus();
+                
+                this.addConversationMessage('system', '✅ AI Swarm Council synced with AI Monitoring!');
+                showNotification('🔄 Synced with AI Monitoring', 'success');
+                
+                console.log('✅ [FORCE SYNC] Sync completed successfully');
+            } else {
+                throw new Error('Unified Status Manager not available');
+            }
+            
+        } catch (error) {
+            console.error('❌ [FORCE SYNC] Failed:', error);
+            this.addConversationMessage('system', `❌ Sync failed: ${error.message}`);
+            showNotification('❌ Sync with AI Monitoring failed', 'error');
+        }
+    }
+
+    /**
      * Start background status monitoring - FAST & FURIOUS EDITION ⚡
      * Ultra-fast real-time monitoring like poe.com
      */
@@ -1415,6 +1487,12 @@ export class AISwarmCouncil {
         window.testChindaConversation = () => this.testChindaConversationLog();
         window.simulateAIActivity = () => this.simulateAIActivity();
         window.loadRealConversationLogs = () => this.loadRealConversationLogs();
+        
+        // 🔄 Bind sync functions for easy debugging
+        window.syncAISwarmWithMonitoring = () => this.forceSyncWithAIMonitoring();
+        window.refreshAISwarmStatus = () => this.refreshProviderStatus();
+        
+        console.log('🔗 [GLOBAL] AI Swarm functions bound - use syncAISwarmWithMonitoring() to force sync');
     }
 
     /**
