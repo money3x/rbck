@@ -612,6 +612,13 @@ class SwarmCouncil {
     }
     
     /**
+     * Get basic status (alias for getCouncilStatus for compatibility)
+     */
+    getStatus() {
+        return this.getCouncilStatus();
+    }
+    
+    /**
      * Get comprehensive swarm status including health and errors
      */
     getDetailedStatus() {

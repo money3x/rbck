@@ -1818,7 +1818,8 @@ router.post('/swarm/process', async (req, res) => {
         console.log(`🤖 [AI SWARM] Processing request: ${workflow} workflow for "${prompt.substring(0, 50)}..."`);
         
         // Get swarm council from singleton manager
-        const swarmCouncil = swarmCouncilManager.getSwarmCouncil();
+        const manager = SwarmCouncilManager.getInstance();
+        const swarmCouncil = manager.getSwarmCouncil();
         
         if (!swarmCouncil) {
             return res.status(503).json({
@@ -1886,8 +1887,9 @@ router.get('/swarm/status', async (req, res) => {
         console.log('🔍 [AI SWARM] Checking swarm status...');
         
         // Get swarm council from singleton manager
-        const swarmCouncil = swarmCouncilManager.getSwarmCouncil();
-        const eatSwarmCouncil = swarmCouncilManager.getEATSwarmCouncil();
+        const manager = SwarmCouncilManager.getInstance();
+        const swarmCouncil = manager.getSwarmCouncil();
+        const eatSwarmCouncil = manager.getEATSwarmCouncil();
         
         if (!swarmCouncil) {
             return res.json({
@@ -1903,7 +1905,7 @@ router.get('/swarm/status', async (req, res) => {
                         initialized: false,
                         error: 'EAT Swarm Council not created'
                     },
-                    manager: swarmCouncilManager.getStatus()
+                    manager: manager.getStatus()
                 }
             });
         }

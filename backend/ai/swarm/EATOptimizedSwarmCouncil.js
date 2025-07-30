@@ -754,6 +754,13 @@ Target Keyword: "${keyword}"
     }
     
     /**
+     * Get basic status (alias for getCouncilStatus for compatibility)
+     */
+    getStatus() {
+        return this.getCouncilStatus();
+    }
+    
+    /**
      * Initialize EATOptimizedSwarmCouncil using shared provider pool from manager
      */
     async initializeWithSharedPool() {
