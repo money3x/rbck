@@ -6965,45 +6965,35 @@
         };
         
         async function loadAIProvidersStatus() {
-            console.log('📊 [DASHBOARD] Loading AI providers status from backend...');
+            console.log('📊 [DASHBOARD] Loading AI providers status from unified status manager...');
             
             try {
                 const container = document.getElementById('aiProvidersStatusContainer');
                 
-                // Get provider status from backend instead of localStorage
+                // 🚀 USE UNIFIED STATUS MANAGER instead of direct API calls
                 let providersData = {};
                 
-                try {
-                    const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/status`, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': (await getAuthToken()) ? `Bearer ${await getAuthToken()}` : ''
-                        }
-                    });
+                if (window.unifiedStatusManager) {
+                    console.log('✅ [DASHBOARD] Using unified status manager data');
+                    const unifiedStatus = window.unifiedStatusManager.getAllProviderStatus();
                     
-                    if (response.ok) {
-                        const data = await response.json();
-                        // Handle the new backend API response structure
-                        if (data.success && data.data && data.data.providers) {
-                            // Convert backend provider status to expected format
-                            providersData = {};
-                            Object.entries(data.data.providers).forEach(([key, provider]) => {
-                                providersData[key] = {
-                                    configured: provider.configured,
-                                    status: provider.status
-                                };
-                            });
-                        } else {
-                            console.warn('⚠️ [DASHBOARD] Invalid backend response structure, using mock data');
-                            providersData = generateMockProviderStatus();
-                        }
+                    if (unifiedStatus && Object.keys(unifiedStatus).length > 0) {
+                        // Convert unified status to expected format
+                        Object.entries(unifiedStatus).forEach(([key, provider]) => {
+                            providersData[key] = {
+                                configured: provider.configured,
+                                status: provider.status,
+                                connected: provider.connected,
+                                isActive: provider.isActive
+                            };
+                        });
+                        console.log('✅ [DASHBOARD] Using real unified status data:', providersData);
                     } else {
-                        console.warn('⚠️ [DASHBOARD] Backend not available, using mock data');
+                        console.warn('⚠️ [DASHBOARD] Unified status manager has no data yet, using mock data');
                         providersData = generateMockProviderStatus();
                     }
-                } catch (error) {
-                    console.error('❌ [DASHBOARD] Error fetching provider status:', error);
+                } else {
+                    console.warn('⚠️ [DASHBOARD] Unified status manager not available, using mock data');
                     providersData = generateMockProviderStatus();
                 }
                 
@@ -7321,39 +7311,30 @@
         }
         
         async function getConfiguredProviders(providersData = null) {
-            // Get provider status from backend if not provided
+            // 🚀 USE UNIFIED STATUS MANAGER instead of direct API calls
             if (!providersData) {
-                try {
-                    const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/status`, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': (await getAuthToken()) ? `Bearer ${await getAuthToken()}` : ''
-                        }
-                    });
+                if (window.unifiedStatusManager) {
+                    console.log('✅ [MONITORING] Using unified status manager data');
+                    const unifiedStatus = window.unifiedStatusManager.getAllProviderStatus();
                     
-                    if (response.ok) {
-                        const data = await response.json();
-                        // Handle the new backend API response structure
-                        if (data.success && data.data && data.data.providers) {
-                            // Convert backend provider status to expected format
-                            providersData = {};
-                            Object.entries(data.data.providers).forEach(([key, provider]) => {
-                                providersData[key] = {
-                                    configured: provider.configured,
-                                    status: provider.status
-                                };
-                            });
-                        } else {
-                            console.warn('⚠️ [MONITORING] Invalid backend response structure, using mock data');
-                            providersData = generateMockProviderStatus();
-                        }
+                    if (unifiedStatus && Object.keys(unifiedStatus).length > 0) {
+                        // Convert unified status to expected format
+                        providersData = {};
+                        Object.entries(unifiedStatus).forEach(([key, provider]) => {
+                            providersData[key] = {
+                                configured: provider.configured,
+                                status: provider.status,
+                                connected: provider.connected,
+                                isActive: provider.isActive
+                            };
+                        });
+                        console.log('✅ [MONITORING] Using real unified status data');
                     } else {
-                        console.warn('⚠️ [MONITORING] Backend not available, using mock data');
+                        console.warn('⚠️ [MONITORING] Unified status manager has no data yet, using mock data');
                         providersData = generateMockProviderStatus();
                     }
-                } catch (error) {
-                    console.error('❌ [MONITORING] Error fetching provider status:', error);
+                } else {
+                    console.warn('⚠️ [MONITORING] Unified status manager not available, using mock data');
                     providersData = generateMockProviderStatus();
                 }
             }
@@ -7881,25 +7862,34 @@
             if (!modelSelect) return;
             
             try {
-                // Get provider status from backend (using available endpoint) - with cache busting
-                const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/status?t=${Date.now()}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': (await getAuthToken()) ? `Bearer ${await getAuthToken()}` : ''
-                    }
-                });
-                
+                // 🚀 USE UNIFIED STATUS MANAGER instead of direct API calls
                 let providersData = {};
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('🔍 [CHATBOT] Provider data received:', data);
-                    // Handle both /ai/status and /ai/status response formats
-                    providersData = data.data?.providers || data.providers || {};
+                if (window.unifiedStatusManager) {
+                    console.log('✅ [CHATBOT] Using unified status manager data');
+                    const unifiedStatus = window.unifiedStatusManager.getAllProviderStatus();
+                    
+                    if (unifiedStatus && Object.keys(unifiedStatus).length > 0) {
+                        // Convert unified status to expected format
+                        Object.entries(unifiedStatus).forEach(([key, provider]) => {
+                            providersData[key] = {
+                                configured: provider.configured,
+                                status: provider.configured && provider.connected ? 'ready' : 'needs_configuration'
+                            };
+                        });
+                        console.log('✅ [CHATBOT] Using real unified status data:', providersData);
+                    } else {
+                        console.warn('⚠️ [CHATBOT] Unified status manager has no data yet, using fallback');
+                        providersData = {
+                            gemini: { configured: true, status: 'ready' },
+                            openai: { configured: false, status: 'needs_configuration' },
+                            claude: { configured: false, status: 'needs_configuration' },
+                            deepseek: { configured: false, status: 'needs_configuration' },
+                            chinda: { configured: true, status: 'ready' }
+                        };
+                    }
                 } else {
-                    console.warn('⚠️ [CHATBOT] Backend not available, using fallback');
-                    // Fallback: use basic providers as ready (especially Gemini and ChindaX)
+                    console.warn('⚠️ [CHATBOT] Unified status manager not available, using fallback');
                     providersData = {
                         gemini: { configured: true, status: 'ready' },
                         openai: { configured: false, status: 'needs_configuration' },
