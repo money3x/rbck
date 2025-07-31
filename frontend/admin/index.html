@@ -8934,100 +8934,6 @@
         // Temporary placeholder - will be replaced by actual class instance
         window.aiSwarmCouncil = null;
         
-        // ===== AI MONITORING FUNCTIONS =====
-        
-        window.aiMonitoringSystem = {
-            providers: ['gemini', 'openai', 'claude', 'deepseek', 'chinda'],
-            metrics: {},
-            
-            init() {
-                this.providers.forEach(provider => {
-                    this.metrics[provider] = {
-                        totalRequests: 0,
-                        successfulRequests: 0,
-                        failedRequests: 0,
-                        averageResponseTime: 0,
-                        successRate: 1.0,
-                        status: 'unknown',
-                        lastChecked: null
-                    };
-                });
-            },
-            
-            async collectProviderMetrics(provider) {
-                try {
-                    console.log(`[AI MONITOR] Checking ${provider} status...`);
-                    
-                    const response = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/status/${provider}?t=${Date.now()}`, {
-                        method: 'GET',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'Authorization': (await getAuthToken()) ? `Bearer ${await getAuthToken()}` : ''
-                        }
-                    });
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        console.log(`[AI MONITOR] ${provider} API response:`, data);
-                        
-                        // Check if provider is working based on backend response structure
-                        const isConnected = data.success && (data.data?.status === 'ready' || data.data?.configured === true);
-                        
-                        this.metrics[provider] = {
-                            ...this.metrics[provider],
-                            status: isConnected ? 'healthy' : 'error',
-                            lastChecked: new Date(),
-                            averageResponseTime: data.data?.responseTime || 0,
-                            successRate: isConnected ? (data.data?.successRate || 1.0) : 0,
-                            totalRequests: this.metrics[provider].totalRequests + 1,
-                            successfulRequests: isConnected ? this.metrics[provider].successfulRequests + 1 : this.metrics[provider].successfulRequests
-                        };
-                        
-                        if (!isConnected) {
-                            this.metrics[provider].failedRequests += 1;
-                        }
-                        
-                    } else {
-                        this.metrics[provider].status = 'error';
-                        this.metrics[provider].failedRequests += 1;
-                        this.metrics[provider].totalRequests += 1;
-                    }
-                    
-                } catch (error) {
-                    console.error(`[AI MONITOR] ${provider} check failed:`, error);
-                    this.metrics[provider].status = 'error';
-                    this.metrics[provider].failedRequests += 1;
-                    this.metrics[provider].totalRequests += 1;
-                }
-            },
-            
-            async refreshMetrics() {
-                console.log('[AI MONITOR] Refreshing all metrics...');
-                for (const provider of this.providers) {
-                    await this.collectProviderMetrics(provider);
-                }
-                this.updateDisplay();
-            },
-            
-            updateDisplay() {
-                // Update overview metrics
-                const healthyProviders = Object.values(this.metrics).filter(m => m.status === 'healthy');
-                const avgResponseTime = healthyProviders.reduce((sum, m) => sum + m.averageResponseTime, 0) / (healthyProviders.length || 1);
-                const overallSuccessRate = healthyProviders.reduce((sum, m) => sum + m.successRate, 0) / (healthyProviders.length || 1);
-                
-                const avgDisplay = document.getElementById('avgResponseTimeDisplay');
-                const successDisplay = document.getElementById('overallSuccessRateDisplay');
-                
-                if (avgDisplay) avgDisplay.textContent = Math.round(avgResponseTime) + 'ms';
-                if (successDisplay) successDisplay.textContent = Math.round(overallSuccessRate * 100) + '%';
-                
-                console.log('[AI MONITOR] Display updated with live data');
-            }
-        };
-        
-        // Initialize AI Monitoring
-        window.aiMonitoringSystem.init();
         
         // Auto-refresh every 30 seconds for AI Swarm Council
         setInterval(() => {
@@ -9659,7 +9565,8 @@
                 import('./real-time-conversation-logs.js'),
                 import('./cache-manager.js'),
                 import('./realtime-websocket.js'),
-                import('./aiSwarm.js')  // Load class-based AI Swarm Council
+                import('./aiSwarm.js'),  // Load class-based AI Swarm Council
+                import('./aiMonitoring.js')  // Load class-based AI Monitoring
             ]);
         }).then(() => {
             console.log('🎯 [ULTRA-FAST] All systems loaded (poe.com speed!)');
@@ -9687,6 +9594,19 @@
                 });
             } else {
                 console.warn('⚠️ [AI SWARM] AISwarmCouncil class not loaded');
+            }
+            
+            // 📊 Initialize AI Monitoring with class-based system
+            if (window.AIMonitoringSystem) {
+                console.log('📊 [AI MONITOR] Initializing class-based AI Monitoring...');
+                window.aiMonitor = new window.AIMonitoringSystem();
+                window.aiMonitor.initialize().then(() => {
+                    console.log('✅ [AI MONITOR] Class-based AI Monitoring initialized');
+                }).catch(error => {
+                    console.error('❌ [AI MONITOR] Failed to initialize:', error);
+                });
+            } else {
+                console.warn('⚠️ [AI MONITOR] AIMonitoringSystem class not loaded');
             }
             
             // 🚀 Cache manager is automatically initialized

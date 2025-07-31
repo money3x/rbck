@@ -172,7 +172,17 @@ export class UnifiedAIStatusManager {
      * Process metrics data (from cache or API)
      */
     processMetricsData(data) {
-        if (data.success && data.metrics) {
+        console.log('🔍 [DEBUG] Processing metrics data:', {
+            hasData: !!data,
+            hasSuccess: !!data?.success,
+            successValue: data?.success,
+            hasMetrics: !!data?.metrics,
+            metricsKeys: data?.metrics ? Object.keys(data.metrics) : null
+        });
+        
+        if (data && data.success === true && data.metrics && typeof data.metrics === 'object') {
+            console.log('✅ [UNIFIED STATUS] Valid response structure, processing...');
+            
             // Update all providers from unified response
             this.providers.forEach(provider => {
                 const backendData = data.metrics[provider];
@@ -195,8 +205,16 @@ export class UnifiedAIStatusManager {
             // Notify all registered listeners
             this.notifyStatusUpdate();
             this.lastUpdate = new Date();
+            
+            console.log('✅ [UNIFIED STATUS] Metrics processing completed');
         } else {
-            console.error('❌ [UNIFIED STATUS] Invalid response structure:', data);
+            console.error('❌ [UNIFIED STATUS] Invalid response structure:', {
+                data: data,
+                success: data?.success,
+                successType: typeof data?.success,
+                metrics: data?.metrics,
+                metricsType: typeof data?.metrics
+            });
         }
     }
     

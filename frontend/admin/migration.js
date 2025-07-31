@@ -239,26 +239,59 @@ class AdminMigration {
                 headers['Authorization'] = `Bearer ${authToken}`;
             }
             
+            console.log('🔍 [MIGRATION] Checking status with:', {
+                apiBase: this.apiBase,
+                endpoint: `${this.apiBase}/migration/status`,
+                hasAuthToken: !!authToken,
+                hasSafeApiCall: !!(window.safeApiCall && typeof window.safeApiCall === 'function')
+            });
+
             if (window.safeApiCall && typeof window.safeApiCall === 'function') {
                 result = await window.safeApiCall(`${this.apiBase}/migration/status`, {
                     method: 'GET',
                     headers: headers
                 });
+                console.log('✅ [MIGRATION] safeApiCall result:', result);
             } else {
+                console.log('⚠️ [MIGRATION] Using fallback fetch method');
                 const response = await fetch(`${this.apiBase}/migration/status`, {
                     method: 'GET',
                     headers: headers
                 });
 
+                console.log('📊 [MIGRATION] Response status:', response.status, response.statusText);
+
                 if (!response.ok) {
+                    // Check if it's a 404 - migration endpoint might not be implemented
+                    if (response.status === 404) {
+                        console.warn('⚠️ [MIGRATION] Migration endpoint not found - skipping status check');
+                        this.log('⚠️ Migration endpoint not available');
+                        return;
+                    }
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
                 result = await response.json();
+                console.log('📊 [MIGRATION] Response data:', result);
+            }
+            
+            // Enhanced validation
+            if (!result) {
+                throw new Error('Empty response from migration status endpoint');
+            }
+            
+            if (result.success === false) {
+                throw new Error(result.error || result.message || 'Status check failed');
+            }
+            
+            // If no explicit success field, assume success if we have data
+            if (result.success === undefined && result.data) {
+                console.log('⚠️ [MIGRATION] No success field, assuming success based on data presence');
+                result.success = true;
             }
             
             if (!result.success) {
-                throw new Error(result.error || 'Status check failed');
+                throw new Error(result.error || 'Status check failed - unknown error');
             }
 
             this.displayStatus(result.data);
@@ -266,12 +299,22 @@ class AdminMigration {
 
         } catch (error) {
             console.error('❌ [MIGRATION] Status check error:', error);
-            this.log(`❌ Status check failed: ${error.message}`);
             
-            // Check if this is a database connection error
-            if (error.message.includes('Status check failed') || error.message.includes('Failed to check migration status')) {
+            // Enhanced error handling with specific error types
+            if (error.message.includes('HTTP 404') || error.message.includes('not found')) {
+                this.log('⚠️ Migration system not available - this is normal for new installations');
+                console.log('💡 [MIGRATION] Migration endpoint not implemented - gracefully handling');
+            } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                this.log(`❌ Network error: ${error.message}`);
                 this.connectionFailed = true;
-                console.warn('⚠️ [MIGRATION] Database connection failed - disabling auto-retry');
+                console.warn('⚠️ [MIGRATION] Network connection failed - disabling auto-retry');
+            } else if (error.message.includes('Status check failed') || error.message.includes('Failed to check migration status')) {
+                this.log(`❌ Migration status check failed: ${error.message}`);
+                this.connectionFailed = true;
+                console.warn('⚠️ [MIGRATION] Migration check failed - disabling auto-retry');
+            } else {
+                this.log(`❌ Unexpected error: ${error.message}`);
+                console.warn('⚠️ [MIGRATION] Unexpected error - gracefully continuing');
             }
             
             // ✅ แสดง fallback status แทนการ error
