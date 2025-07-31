@@ -144,7 +144,19 @@ export class UnifiedAIStatusManager {
             
             if (response.ok) {
                 data = await response.json();
-                console.log('📊 [UNIFIED STATUS] Backend response:', data);
+                console.log('📊 [UNIFIED STATUS] Raw backend response:', data);
+                
+                // 🔧 FIX: Handle double-wrapped JSON response
+                if (data && typeof data.data === 'string') {
+                    try {
+                        console.log('🔧 [UNIFIED STATUS] Unwrapping double-wrapped JSON response');
+                        data = JSON.parse(data.data);
+                        console.log('✅ [UNIFIED STATUS] Parsed nested JSON:', data);
+                    } catch (parseError) {
+                        console.error('❌ [UNIFIED STATUS] Failed to parse nested JSON:', parseError);
+                        return;
+                    }
+                }
                 
                 // 🚀 CACHE: Store for ultra-fast future access
                 cacheManager.set(cacheKey, data, { ttl: 5000 }); // 5-second cache

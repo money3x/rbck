@@ -8935,19 +8935,30 @@
         window.aiSwarmCouncil = null;
         
         
-        // Auto-refresh every 30 seconds for AI Swarm Council
-        setInterval(() => {
-            if (document.getElementById('ai-swarm').style.display !== 'none') {
-                window.aiSwarmCouncil.refreshProviders();
-            }
-        }, 30000);
+        // Legacy auto-refresh intervals removed - new class-based systems handle their own monitoring
+        // AI Swarm Council and AI Monitoring now use their internal monitoring systems
         
-        // Auto-refresh every 60 seconds for AI Monitoring  
-        setInterval(() => {
-            if (document.getElementById('ai-monitoring').style.display !== 'none') {
-                window.aiMonitoringSystem.refreshMetrics();
+        // Legacy functions for UI button compatibility
+        window.refreshAISwarmProviders = function() {
+            if (window.aiSwarmCouncil && window.aiSwarmCouncil.updateProviderStatus) {
+                console.log('🔄 [LEGACY] Calling AI Swarm Council updateProviderStatus');
+                window.aiSwarmCouncil.updateProviderStatus();
+            } else {
+                console.warn('⚠️ [LEGACY] AI Swarm Council not initialized yet');
             }
-        }, 60000);
+        };
+        
+        window.debugAISwarm = function() {
+            if (window.aiSwarmCouncil) {
+                console.log('🐛 [LEGACY DEBUG] AI Swarm Council instance:', window.aiSwarmCouncil);
+                console.log('🐛 [LEGACY DEBUG] Providers:', window.aiSwarmCouncil.providers);
+                if (window.aiSwarmCouncil.updateProviderStatus) {
+                    window.aiSwarmCouncil.updateProviderStatus();
+                }
+            } else {
+                console.log('🐛 [LEGACY DEBUG] AI Swarm Council not initialized');
+            }
+        };
         
         // Debug tab content issues
         window.debugTabContent = function() {
@@ -9600,11 +9611,12 @@
             if (window.AIMonitoringSystem) {
                 console.log('📊 [AI MONITOR] Initializing class-based AI Monitoring...');
                 window.aiMonitor = new window.AIMonitoringSystem();
-                window.aiMonitor.initialize().then(() => {
-                    console.log('✅ [AI MONITOR] Class-based AI Monitoring initialized');
-                }).catch(error => {
-                    console.error('❌ [AI MONITOR] Failed to initialize:', error);
-                });
+                try {
+                    await window.aiMonitor.startMonitoring();
+                    console.log('✅ [AI MONITOR] Class-based AI Monitoring started');
+                } catch (error) {
+                    console.error('❌ [AI MONITOR] Failed to start monitoring:', error);
+                }
             } else {
                 console.warn('⚠️ [AI MONITOR] AIMonitoringSystem class not loaded');
             }
