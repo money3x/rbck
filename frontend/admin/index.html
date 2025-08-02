@@ -4533,9 +4533,6 @@
                     <button class="btn btn-primary" onclick="refreshAllProviderMetrics()">
                         <i class="fas fa-sync"></i> รีเฟรชข้อมูล
                     </button>
-                    <button class="btn btn-secondary" onclick="exportPerformanceReport()">
-                        <i class="fas fa-download"></i> Export รายงาน
-                    </button>
                 </div>
                 
                 <div class="performance-table-container">
@@ -4977,9 +4974,6 @@
           <button class="ai-settings-tab" data-tab="models" onclick="switchAITab('models')">
             Models
           </button>
-          <button class="ai-settings-tab" data-tab="performance" onclick="switchAITab('performance')">
-            Performance
-          </button>
           <button class="ai-settings-tab" data-tab="security" onclick="switchAITab('security')">
             Security
           </button>
@@ -5224,140 +5218,6 @@
             </div>
           </div>
 
-          <!-- Performance Tab -->
-          <div class="ai-tab-content" id="performance-tab">
-            <div class="ai-card-grid">
-              <!-- System Performance -->
-              <div class="ai-card">
-                <div class="ai-card-header">
-                  <h3 class="ai-card-title">📊 System Performance</h3>
-                  <span class="ai-card-badge">Live</span>
-                </div>
-                <div class="ai-card-content">
-                  <div class="ai-stats-grid">
-                    <div class="ai-stat-item">
-                      <div class="ai-stat-value-primary">847ms</div>
-                      <div class="ai-stat-label">Avg Response Time</div>
-                    </div>
-                    <div class="ai-stat-item">
-                      <div class="ai-stat-value-success">98.7%</div>
-                      <div class="ai-stat-label">Success Rate</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Request Analytics -->
-              <div class="ai-card">
-                <div class="ai-card-header">
-                  <h3 class="ai-card-title">📈 Request Analytics</h3>
-                  <span class="ai-card-badge">Today</span>
-                </div>
-                <div class="ai-card-content">
-                  <div class="ai-stats-grid">
-                    <div class="ai-stat-item">
-                      <div class="ai-stat-value-primary">15,247</div>
-                      <div class="ai-stat-label">Total Requests</div>
-                    </div>
-                    <div class="ai-stat-item">
-                      <div class="ai-stat-value-success">87.4%</div>
-                      <div class="ai-stat-label">Cache Hit Rate</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Performance Settings -->
-              <div class="ai-card">
-                <div class="ai-card-header">
-                  <h3 class="ai-card-title">⚡ Performance Settings</h3>
-                  <span class="ai-card-badge">Configure</span>
-                </div>
-                <div class="ai-card-content">
-                  <div class="ai-form-group">
-                    <label class="ai-form-label">Cache Duration (minutes)</label>
-                    <div class="ai-slider-container">
-                      <input type="range" class="ai-slider" min="5" max="60" value="15" id="cacheDuration">
-                      <span id="cacheValue">15 min</span>
-                    </div>
-                  </div>
-                  <div class="ai-form-group">
-                    <label class="ai-form-label">Max Concurrent Requests</label>
-                    <div class="ai-slider-container">
-                      <input type="range" class="ai-slider" min="1" max="20" value="5" id="maxRequests">
-                      <span id="requestsValue">5</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Provider Performance -->
-              <div class="ai-card">
-                <div class="ai-card-header">
-                  <h3 class="ai-card-title">🚀 Provider Performance</h3>
-                  <span class="ai-card-badge">24h</span>
-                </div>
-                <div class="ai-card-content">
-                  <div class="ai-form-group">
-                    <label class="ai-form-label">Best Performing Provider</label>
-                    <select class="ai-form-input" disabled>
-                      <option>Claude 3.5 Sonnet - 98.9% Success</option>
-                    </select>
-                  </div>
-                  <div class="ai-form-group">
-                    <label class="ai-form-label">Fastest Response</label>
-                    <select class="ai-form-input" disabled>
-                      <option>OpenAI GPT-4 - 542ms Average</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Optimization Features -->
-              <div class="ai-card">
-                <div class="ai-card-header">
-                  <h3 class="ai-card-title">🎛️ Optimization</h3>
-                  <span class="ai-card-badge">Auto</span>
-                </div>
-                <div class="ai-card-content">
-                  <div class="ai-form-group">
-                    <label class="ai-form-label">Request Caching</label>
-                    <select class="ai-form-input">
-                      <option value="enabled" selected>Enabled</option>
-                      <option value="disabled">Disabled</option>
-                    </select>
-                  </div>
-                  <div class="ai-form-group">
-                    <label class="ai-form-label">Load Balancing</label>
-                    <select class="ai-form-input">
-                      <option value="enabled" selected>Enabled</option>
-                      <option value="disabled">Disabled</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <!-- System Health -->
-              <div class="ai-card">
-                <div class="ai-card-header">
-                  <h3 class="ai-card-title">💓 System Health</h3>
-                  <span class="ai-card-badge">Excellent</span>
-                </div>
-                <div class="ai-card-content">
-                  <div class="ai-stats-grid">
-                    <div class="ai-stat-item">
-                      <div class="ai-stat-value-primary">23%</div>
-                      <div class="ai-stat-label">CPU Usage</div>
-                    </div>
-                    <div class="ai-stat-item">
-                      <div class="ai-stat-value-success">47%</div>
-                      <div class="ai-stat-label">Memory Usage</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
 
           <!-- Security Tab -->
           <div class="ai-tab-content" id="security-tab">
@@ -7595,72 +7455,6 @@
             }
         }
         
-        window.exportPerformanceReport = async function() {
-            console.log('📤 [AI MONITORING] Exporting performance report...');
-            
-            try {
-                // Get providers from backend instead of localStorage
-                const providers = await getConfiguredProviders();
-                
-                if (providers.length === 0) {
-                    if (window.showNotification) {
-                        window.showNotification('⚠️ No configured providers to export', 'warning');
-                    } else {
-                        alert('No configured providers to export');
-                    }
-                    return;
-                }
-                
-                // Generate CSV data
-                const headers = ['Provider', 'Model', 'Status', 'Requests', 'Success Rate (%)', 'Response Time (ms)', 'Quality Score', 'Uptime (%)', 'Cost (฿)', 'Last Activity'];
-                let csvContent = headers.join(',') + '\\n';
-                
-                for (const provider of providers) {
-                    const performance = await generateProviderPerformanceData(provider);
-                    const row = [
-                        provider.name,
-                        provider.model,
-                        performance.status.text,
-                        performance.requests,
-                        performance.successRate.toFixed(1),
-                        performance.responseTime,
-                        performance.qualityScore.toFixed(1),
-                        performance.uptime.toFixed(1),
-                        performance.cost.toFixed(2),
-                        performance.lastActivity.action + ' (' + performance.lastActivity.time + ')'
-                    ];
-                    csvContent += row.join(',') + '\\n';
-                }
-                
-                // Download CSV
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                const url = URL.createObjectURL(blob);
-                link.setAttribute('href', url);
-                link.setAttribute('download', `ai_performance_report_${new Date().toISOString().split('T')[0]}.csv`);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                if (window.showNotification) {
-                    window.showNotification('✅ Performance report exported successfully', 'success');
-                } else {
-                    alert('Performance report exported successfully');
-                }
-                
-                console.log('✅ [AI MONITORING] Performance report exported');
-                
-            } catch (error) {
-                console.error('❌ [AI MONITORING] Error exporting report:', error);
-                
-                if (window.showNotification) {
-                    window.showNotification('❌ Error exporting performance report', 'error');
-                } else {
-                    alert('Error exporting performance report');
-                }
-            }
-        };
         
         // ===== BACKEND-INTEGRATED CHATBOT FUNCTIONALITY =====
         
@@ -7993,34 +7787,6 @@
             };
         }
         
-        // DEBUG: Test function for Performance tab
-        window.debugPerformanceTab = function() {
-            console.log('🔧 [DEBUG] Manual Performance Tab Test');
-            const perfTab = document.getElementById('performance-tab');
-            const perfButton = document.querySelector('[data-tab="performance"]');
-            
-            console.log('Performance tab element:', perfTab);
-            console.log('Performance button element:', perfButton);
-            
-            if (perfTab) {
-                console.log('Performance tab HTML:', perfTab.innerHTML.substring(0, 200) + '...');
-                console.log('Performance tab computed styles:', {
-                    display: window.getComputedStyle(perfTab).display,
-                    visibility: window.getComputedStyle(perfTab).visibility,
-                    opacity: window.getComputedStyle(perfTab).opacity,
-                    height: window.getComputedStyle(perfTab).height
-                });
-            }
-            
-            // Force show Performance tab
-            if (perfTab) {
-                perfTab.style.display = 'block !important';
-                perfTab.style.visibility = 'visible !important';
-                perfTab.style.opacity = '1 !important';
-                perfTab.classList.add('active');
-                console.log('✅ Forced Performance tab to show');
-            }
-        };
 
         // Modern AI Settings Functions
         // switchAITab function ถูกย้ายไปใน main-production.js แล้ว
@@ -8614,171 +8380,14 @@
             }
         };
 
-        // Performance Tab Functions
-        function refreshPerformanceData() {
-            console.log('🔄 [Performance] Refreshing performance data...');
-            
-            // Simulate data refresh with animation
-            const refreshBtn = document.querySelector('.performance-refresh-btn');
-            if (refreshBtn) {
-                refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
-                refreshBtn.disabled = true;
-                
-                setTimeout(() => {
-                    // Update metrics with new values
-                    updatePerformanceMetrics();
-                    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
-                    refreshBtn.disabled = false;
-                    showNotification('Performance data refreshed successfully!', 'success');
-                }, 2000);
-            }
-        }
 
-        function updatePerformanceMetrics() {
-            // Simulate real-time metric updates
-            const metrics = {
-                avgResponseTime: Math.floor(Math.random() * 300 + 700) + 'ms',
-                successRate: (Math.random() * 2 + 97).toFixed(1) + '%',
-                totalRequests: (Math.floor(Math.random() * 5000) + 12000).toLocaleString(),
-                cacheHitRate: (Math.random() * 10 + 85).toFixed(1) + '%'
-            };
-
-            Object.keys(metrics).forEach(metricId => {
-                const element = document.getElementById(metricId);
-                if (element) {
-                    element.textContent = metrics[metricId];
-                }
-            });
-
-            // Animate usage bars
-            animateUsageBars();
-            
-            // Animate health metrics
-            animateHealthMetrics();
-        }
-
-        function animateUsageBars() {
-            document.querySelectorAll('.usage-fill').forEach(bar => {
-                const width = bar.getAttribute('data-width');
-                bar.style.width = '0%';
-                setTimeout(() => {
-                    bar.style.width = width + '%';
-                }, 100);
-            });
-        }
-
-        function animateHealthMetrics() {
-            document.querySelectorAll('.health-metric-fill').forEach(fill => {
-                const percentage = fill.getAttribute('data-percentage');
-                fill.style.width = '0%';
-                setTimeout(() => {
-                    fill.style.width = percentage + '%';
-                }, 200);
-            });
-        }
-
-        function exportPerformanceReport() {
-            console.log('📤 [Performance] Exporting performance report...');
-            
-            const reportData = {
-                timestamp: new Date().toISOString(),
-                metrics: {
-                    avgResponseTime: document.getElementById('avgResponseTime')?.textContent || 'N/A',
-                    successRate: document.getElementById('successRate')?.textContent || 'N/A',
-                    totalRequests: document.getElementById('totalRequests')?.textContent || 'N/A',
-                    cacheHitRate: document.getElementById('cacheHitRate')?.textContent || 'N/A'
-                },
-                providers: [
-                    { name: 'OpenAI GPT-4', usage: '32%', requests: '4,879' },
-                    { name: 'Claude 3.5', usage: '28%', requests: '4,269' },
-                    { name: 'Gemini 2.0', usage: '23%', requests: '3,507' },
-                    { name: 'ChindaX', usage: '12%', requests: '1,829' },
-                    { name: 'DeepSeek V2', usage: '5%', requests: '763' }
-                ]
-            };
-
-            const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `performance-report-${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            
-            showNotification('Performance report exported successfully!', 'success');
-        }
-
-        function toggleProviderDetails() {
-            console.log('👁️ [Performance] Toggling provider details...');
-            showNotification('Provider details view coming soon!', 'info');
-        }
-
-        function initializePerformanceTab() {
-            console.log('🚀 [Performance] Initializing performance tab...');
-            
-            // Initialize usage bar animations
-            setTimeout(animateUsageBars, 500);
-            
-            // Initialize health metrics
-            setTimeout(animateHealthMetrics, 800);
-            
-            // Setup chart control buttons
-            document.querySelectorAll('.chart-control-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.chart-control-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    const period = this.getAttribute('data-period');
-                    console.log(`📊 [Performance] Switching chart to ${period} view`);
-                    showNotification(`Chart switched to ${period} view`, 'info');
-                });
-            });
-            
-            // Setup optimization checkboxes
-            document.querySelectorAll('.optimization-checkbox').forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    const feature = this.id;
-                    const isEnabled = this.checked;
-                    const statusElement = this.closest('.optimization-item').querySelector('.optimization-status');
-                    
-                    if (statusElement) {
-                        if (isEnabled) {
-                            statusElement.className = 'optimization-status enabled';
-                            statusElement.innerHTML = '<i class="fas fa-check"></i> Enabled';
-                        } else {
-                            statusElement.className = 'optimization-status disabled';
-                            statusElement.innerHTML = '<i class="fas fa-times"></i> Disabled';
-                        }
-                    }
-                    
-                    console.log(`⚙️ [Performance] ${feature} ${isEnabled ? 'enabled' : 'disabled'}`);
-                    showNotification(`${feature.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} ${isEnabled ? 'enabled' : 'disabled'}`, 'success');
-                });
-            });
-            
-            console.log('✅ [Performance] Performance tab initialized successfully');
-        }
-
-        // Override tab switching to initialize performance tab
-        const originalSwitchAITab = switchAITab;
-        function enhancedSwitchAITab(tabName) {
-            originalSwitchAITab(tabName);
-            
-            if (tabName === 'performance') {
-                setTimeout(initializePerformanceTab, 100);
-            }
-        }
 
         // Make new functions globally available
-        window.switchAITab = enhancedSwitchAITab;
         window.testProvider = testProvider;
         window.saveAISettings = saveAISettings;
         window.clearCache = clearCache;
         window.resetSettings = resetSettings;
         window.exportSettings = exportSettings;
-        window.refreshPerformanceData = refreshPerformanceData;
-        window.exportPerformanceReport = exportPerformanceReport;
-        window.toggleProviderDetails = toggleProviderDetails;
         
         // Make monitoring functions globally available
         // Real-time monitoring functions removed from global scope
@@ -8852,7 +8461,6 @@
                 'testProvider',
                 'setupAutoTesting',
                 'updateConnectionStatus',
-                'loadPerformanceData',
                 'loadGeneralTabData'
             ];
             
@@ -9717,13 +9325,10 @@
             }
         };
 
-        // ✅ REMOVED: Live AI Status Dashboard - Live monitoring moved to AI Monitoring section only
-        
-        // Professional initialization - no redundant systems
+        // Professional initialization - unified system only
         document.addEventListener('DOMContentLoaded', () => {
             // Single initialization point - unified system handles all monitoring
             setTimeout(() => {
-                // Removed: window.createLiveAIStatusDashboard(); - Live monitoring moved to AI Monitoring section only
                 // Note: AI Swarm Council sync now handled by unified status manager
             }, 500); // Reduced from 2 seconds for professional responsiveness
         });
