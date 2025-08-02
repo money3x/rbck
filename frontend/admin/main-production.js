@@ -3039,16 +3039,33 @@ window.initAIMonitoring = async function() {
     try {
         // Check if AIMonitoringSystem class is available
         if (typeof AIMonitoringSystem === 'undefined') {
+            // Check if script is already loading to prevent duplicates
+            if (window.aiMonitoringLoading) {
+                console.log('⏳ [AI MONITOR] AI monitoring script already loading...');
+                return;
+            }
+            
+            // Check if script is already loaded
+            const existingScript = document.querySelector('script[src="aiMonitoring.js"]');
+            if (existingScript) {
+                console.log('⏳ [AI MONITOR] AI monitoring script already exists');
+                return;
+            }
+            
             console.warn('⚠️ [AI MONITOR] AIMonitoringSystem class not found - loading script...');
+            window.aiMonitoringLoading = true;
+            
             // Load AI monitoring script dynamically
             const script = document.createElement('script');
             script.src = 'aiMonitoring.js';
             script.onload = function() {
                 console.log('✅ [AI MONITOR] AI monitoring script loaded');
+                window.aiMonitoringLoading = false;
                 initializeAIMonitoringSystem();
             };
             script.onerror = function() {
                 console.error('❌ [AI MONITOR] Failed to load AI monitoring script');
+                window.aiMonitoringLoading = false;
                 showNotification('AI monitoring system unavailable', 'error');
             };
             document.head.appendChild(script);

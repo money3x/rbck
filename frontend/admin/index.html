@@ -8932,7 +8932,7 @@
         console.log('🚀 [INIT] AI Swarm Council will be initialized by aiSwarm.js module');
         
         // Temporary placeholder - will be replaced by actual class instance
-        window.aiSwarmCouncil = null;
+        window.aiSwarmCouncil = {
             providers: {
                 gemini: { name: 'Gemini 2.0 Flash', status: false, role: 'primary_creator' },
                 openai: { name: 'OpenAI GPT', status: false, role: 'quality_reviewer' },
@@ -9705,6 +9705,13 @@
                     return 'http://localhost:10000/api';
                 }
                 return 'https://rbck.onrender.com/api';
+            })(),
+            wsBase: (() => {
+                const hostname = window.location.hostname;
+                if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('192.168.')) {
+                    return 'ws://localhost:10000/ws';
+                }
+                return 'wss://rbck.onrender.com/ws';
             })(),
             isDevelopment: window.location.hostname.includes('localhost'),
             isProduction: !window.location.hostname.includes('localhost'),

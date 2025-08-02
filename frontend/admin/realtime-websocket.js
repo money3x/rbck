@@ -26,6 +26,12 @@ class RealTimeWebSocket {
      * Connect to WebSocket server with auto-reconnect
      */
     async connect() {
+        // Don't attempt connection if max reconnects reached
+        if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+            console.log('⚠️ [WEBSOCKET] Max reconnect attempts reached, not attempting connection');
+            return;
+        }
+        
         try {
             const wsUrl = this.getWebSocketUrl();
             console.log(`⚡ [WEBSOCKET] Connecting to ${wsUrl}...`);
@@ -254,8 +260,9 @@ class RealTimeWebSocket {
      */
     handleReconnect() {
         if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-            console.error('❌ [WEBSOCKET] Max reconnection attempts reached');
+            console.error('❌ [WEBSOCKET] Max reconnection attempts reached - stopping reconnect attempts');
             this.emit('max_reconnect_attempts');
+            this.isConnecting = false;
             return;
         }
         
