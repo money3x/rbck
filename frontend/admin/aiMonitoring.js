@@ -107,21 +107,15 @@ class AIMonitoringSystem {
      * Setup monitoring UI
      */
     setupMonitoringUI() {
-        let monitoringPanel = document.getElementById('aiMonitoringPanel');
-        if (!monitoringPanel) {
-            monitoringPanel = document.createElement('div');
-            monitoringPanel.id = 'aiMonitoringPanel';
-            monitoringPanel.className = 'ai-monitoring-panel';
-            monitoringPanel.innerHTML = this.generateMonitoringPanelHTML();
-            
-            // Add to dashboard
-            const dashboard = document.getElementById('dashboard');
-            if (dashboard) {
-                dashboard.appendChild(monitoringPanel);
-            }
-        }
+        // AI monitoring UI is only available in the dedicated AI Monitoring section
+        // Do not create monitoring panel in dashboard
+        console.log('📊 [AI MONITOR] Monitoring UI available in AI Monitoring menu only');
         
-        this.updateMonitoringDisplay();
+        // Only update display if monitoring panel exists (in AI Monitoring section)
+        const monitoringPanel = document.getElementById('aiMonitoringPanel');
+        if (monitoringPanel) {
+            this.updateMonitoringDisplay();
+        }
     }
 
     /**
