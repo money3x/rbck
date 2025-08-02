@@ -6,21 +6,87 @@
 // These will be loaded via global scope instead
 
 /**
+ * @typedef {Object} ProviderMetrics
+ * @property {number} responseTime - Response time in milliseconds
+ * @property {boolean} success - Whether the request was successful
+ * @property {number} quality - Quality score (0-1)
+ * @property {number} tokensUsed - Number of tokens used
+ * @property {number} cost - Cost in currency units
+ * @property {string} status - Provider status (healthy, degraded, error)
+ * @property {number} successRate - Success rate percentage
+ * @property {number} uptime - Uptime percentage
+ * @property {number} totalRequests - Total number of requests
+ * @property {number} successfulRequests - Number of successful requests
+ * @property {number} failedRequests - Number of failed requests
+ * @property {number} averageResponseTime - Average response time
+ * @property {Array<{message: string, timestamp: Date}>} errors - Error history
+ * @property {string} [error] - Error message if any
+ */
+
+/**
+ * @typedef {Object} PerformanceHistoryEntry
+ * @property {string} provider - Provider name
+ * @property {number} timestamp - Timestamp of the entry
+ * @property {number} responseTime - Response time in milliseconds
+ * @property {boolean} success - Whether the request was successful
+ * @property {number} quality - Quality score
+ */
+
+/**
+ * @typedef {Object.<string, ProviderMetrics>} MetricsMap
+ */
+
+/**
+ * @typedef {Object} AlertData
+ * @property {string} type - Alert type
+ * @property {string} provider - Provider name
+ * @property {string} message - Alert message
+ * @property {number} timestamp - Alert timestamp
+ * @property {string} severity - Alert severity level
+ */
+
+/**
+ * @typedef {Object} WindowExtensions
+ * @property {function(string, string): void} [showNotification] - Show notification function
+ * @property {Object} [rbckConfig] - RBCK configuration object
+ * @property {string} rbckConfig.apiBase - API base URL
+ * @property {AIMonitoringSystem} [aiMonitor] - AI monitoring instance
+ * @property {typeof AIMonitoringSystem} [AIMonitoringSystem] - AI monitoring class
+ */
+
+// Extend window object type checking
+/** @type {Window & WindowExtensions} */
+const windowExt = window;
+
+/**
  * AI Monitoring System - Tracks AI provider performance and usage
  * FIXED: Removed ES6 export for script loading compatibility
  */
 class AIMonitoringSystem {
     constructor() {
+        /** @type {string[]} */
         this.providers = ['gemini', 'openai', 'claude', 'deepseek', 'chinda'];
+        
+        /** @type {MetricsMap} */
         this.metrics = {};
+        
+        /** @type {boolean} */
         this.isMonitoring = false;
+        
+        /** @type {number|null} */
         this.monitoringInterval = null;
+        
+        /** @type {{responseTime: number, successRate: number, errorRate: number}} */
         this.alertThresholds = {
             responseTime: 10000, // 10 seconds
             successRate: 0.85,   // 85%
             errorRate: 0.15      // 15%
         };
+        
+        /** @type {any} */
         this.realtimeChart = null;
+        
+        /** @type {PerformanceHistoryEntry[]} */
         this.performanceHistory = [];
         
         // Initialize metrics for each provider
@@ -79,11 +145,15 @@ class AIMonitoringSystem {
             await this.loadHistoricalData();
             
             console.log('✅ [AI MONITOR] Monitoring system activated');
-            showNotification('📊 AI Monitoring activated', 'success');
+            if (typeof windowExt.showNotification === 'function') {
+                windowExt.showNotification('📊 AI Monitoring activated', 'success');
+            }
             
         } catch (error) {
             console.error('❌ [AI MONITOR] Failed to start monitoring:', error);
-            showNotification('❌ AI Monitoring startup failed', 'error');
+            if (typeof windowExt.showNotification === 'function') {
+                windowExt.showNotification('❌ AI Monitoring startup failed', 'error');
+            }
             this.isMonitoring = false;
         }
     }
@@ -100,7 +170,9 @@ class AIMonitoringSystem {
             this.monitoringInterval = null;
         }
         
-        showNotification('🛑 AI Monitoring stopped', 'info');
+        if (typeof windowExt.showNotification === 'function') {
+            windowExt.showNotification('🛑 AI Monitoring stopped', 'info');
+        }
     }
 
     /**
@@ -126,10 +198,10 @@ class AIMonitoringSystem {
             <div class="monitoring-header">
                 <h3>📊 AI Performance Monitor</h3>
                 <div class="monitoring-controls">
-                    <button class="btn btn-sm btn-primary" onclick="window.aiMonitor.refreshMetrics()" id="refreshMetricsBtn">
+                    <button class="btn btn-sm btn-primary" onclick="windowExt.aiMonitor.refreshMetrics()" id="refreshMetricsBtn">
                         <i class="fas fa-sync"></i> Refresh
                     </button>
-                    <button class="btn btn-sm btn-secondary" onclick="window.aiMonitor.exportReport()" id="exportReportBtn">
+                    <button class="btn btn-sm btn-secondary" onclick="windowExt.aiMonitor.exportReport()" id="exportReportBtn">
                         <i class="fas fa-download"></i> Export
                     </button>
                     <div class="monitoring-status" id="monitoringStatus">
@@ -215,6 +287,8 @@ class AIMonitoringSystem {
 
     /**
      * Generate provider row HTML
+     * @param {string} provider - Provider name
+     * @returns {string} HTML string for provider row
      */
     generateProviderRow(provider) {
         return `
@@ -233,10 +307,10 @@ class AIMonitoringSystem {
                 <div class="provider-quality" id="quality-${provider}">--</div>
                 <div class="provider-uptime" id="uptime-${provider}">--</div>
                 <div class="provider-actions">
-                    <button class="btn btn-xs btn-info" onclick="window.aiMonitor.showProviderDetails('${provider}')">
+                    <button class="btn btn-xs btn-info" onclick="windowExt.aiMonitor.showProviderDetails('${provider}')">
                         <i class="fas fa-info"></i>
                     </button>
-                    <button class="btn btn-xs btn-warning" onclick="window.aiMonitor.testProvider('${provider}')">
+                    <button class="btn btn-xs btn-warning" onclick="windowExt.aiMonitor.testProvider('${provider}')">
                         <i class="fas fa-play"></i>
                     </button>
                 </div>
@@ -246,12 +320,16 @@ class AIMonitoringSystem {
 
     /**
      * Get provider icon
+     * @param {string} provider - Provider name
+     * @returns {string} Icon emoji for provider
      */
     getProviderIcon(provider) {
+        /** @type {{[key: string]: string}} */
         const icons = {
             gemini: '⚡',
             openai: '🧠',
-            claude: '🎭',            deepseek: '🔍',
+            claude: '🎭',
+            deepseek: '🔍',
             chinda: '🧠'
         };
         return icons[provider] || '🤖';
@@ -259,9 +337,13 @@ class AIMonitoringSystem {
 
     /**
      * Get provider display name
+     * @param {string} provider - Provider name
+     * @returns {string} Display name for provider
      */
     getProviderDisplayName(provider) {
-        const names = {            gemini: 'Gemini 2.0',
+        /** @type {{[key: string]: string}} */
+        const names = {
+            gemini: 'Gemini 2.0',
             openai: 'OpenAI GPT',
             claude: 'Claude AI',
             deepseek: 'DeepSeek',
@@ -283,60 +365,11 @@ class AIMonitoringSystem {
         this.collectMetrics();
     }
 
-    /**
-     * Collect metrics from all providers
-     */
-    async collectMetrics() {
-        if (!this.isMonitoring) return;
-
-        console.log('[AI MONITOR] Collecting metrics...');
-        
-        for (const provider of this.providers) {
-            try {
-                await this.collectProviderMetrics(provider);
-            } catch (error) {
-                console.error(`[AI MONITOR] Error collecting metrics for ${provider}:`, error);
-                this.recordError(provider, error);
-            }
-        }
-
-        this.updateMonitoringDisplay();
-        this.checkAlerts();
-        this.updateCharts();
-    }
-
-    /**
-     * Collect metrics for specific provider
-     */
-    async collectProviderMetrics(provider) {
-        const startTime = Date.now();
-        
-        try {
-            // Test provider availability and response time
-            const response = await this.pingProvider(provider);
-            const responseTime = Date.now() - startTime;
-            
-            // Update metrics
-            this.updateProviderMetrics(provider, {
-                responseTime,
-                success: response.success,
-                quality: response.quality || 0.8,
-                tokensUsed: response.tokensUsed || 0,
-                cost: response.cost || 0
-            });
-            
-        } catch (error) {
-            const responseTime = Date.now() - startTime;
-            this.updateProviderMetrics(provider, {
-                responseTime,
-                success: false,
-                error: error.message
-            });
-        }
-    }
 
     /**
      * Ping provider to test availability
+     * @param {string} provider - Provider name
+     * @returns {Promise<Object>} Provider response data
      */
     async pingProvider(provider) {
         // Simulate provider ping with realistic responses
@@ -357,8 +390,11 @@ class AIMonitoringSystem {
 
     /**
      * Update provider metrics
+     * @param {string} provider - Provider name
+     * @param {ProviderMetrics} data - Metrics data to update
      */
     updateProviderMetrics(provider, data) {
+        /** @type {ProviderMetrics} */
         const metrics = this.metrics[provider];
         
         // Update request counts
@@ -396,7 +432,10 @@ class AIMonitoringSystem {
             if (metrics.qualityScores.length > 20) {
                 metrics.qualityScores = metrics.qualityScores.slice(-20);
             }
-            metrics.averageQuality = metrics.qualityScores.reduce((sum, score) => sum + score, 0) / metrics.qualityScores.length;
+            metrics.averageQuality = metrics.qualityScores.reduce(
+                /** @param {number} sum @param {number} score @returns {number} */
+                (sum, score) => sum + score, 0
+            ) / metrics.qualityScores.length;
         }
         
         // Update usage and cost
@@ -424,6 +463,8 @@ class AIMonitoringSystem {
 
     /**
      * Record error for provider
+     * @param {string} provider - Provider name
+     * @param {Error} error - Error object
      */
     recordError(provider, error) {
         const metrics = this.metrics[provider];
@@ -551,6 +592,7 @@ class AIMonitoringSystem {
 
     /**
      * Update alerts display
+     * @param {AlertData[]} alerts - Array of alerts to display
      */
     updateAlertsDisplay(alerts) {
         const alertsContainer = document.getElementById('alertsContainer');
@@ -567,7 +609,7 @@ class AIMonitoringSystem {
                     <strong>${this.getProviderDisplayName(alert.provider)}</strong>
                     <span>${alert.message}</span>
                 </div>
-                <div class="alert-time">${alert.timestamp.toLocaleTimeString()}</div>
+                <div class="alert-time">${new Date(alert.timestamp).toLocaleTimeString()}</div>
             </div>
         `).join('');
     }
@@ -621,7 +663,7 @@ class AIMonitoringSystem {
             console.log(`[AI MONITOR] Checking ${provider} status...`);
             
             // Call real API endpoint
-            const apiBase = window.rbckConfig?.apiBase || 'https://rbck.onrender.com/api';
+            const apiBase = windowExt.rbckConfig?.apiBase || 'https://rbck.onrender.com/api';
             const response = await fetch(`${apiBase}/ai/status/${provider}?t=${Date.now()}`, {
                 method: 'GET',
                 headers: { 
@@ -687,28 +729,40 @@ class AIMonitoringSystem {
      * Refresh metrics manually
      */
     async refreshMetrics() {
-        showNotification('🔄 Refreshing AI metrics...', 'info');
+        if (typeof windowExt.showNotification === 'function') {
+            windowExt.showNotification('🔄 Refreshing AI metrics...', 'info');
+        }
         await this.collectMetrics();
-        showNotification('✅ Metrics refreshed', 'success');
+        if (typeof windowExt.showNotification === 'function') {
+            windowExt.showNotification('✅ Metrics refreshed', 'success');
+        }
     }
 
     /**
      * Test specific provider
+     * @param {string} provider - Provider name
      */
     async testProvider(provider) {
-        showNotification(`🧪 Testing ${this.getProviderDisplayName(provider)}...`, 'info');
+        if (typeof windowExt.showNotification === 'function') {
+            windowExt.showNotification(`🧪 Testing ${this.getProviderDisplayName(provider)}...`, 'info');
+        }
         
         try {
             await this.collectProviderMetrics(provider);
             this.updateMonitoringDisplay();
-            showNotification(`✅ ${this.getProviderDisplayName(provider)} test completed`, 'success');
+            if (typeof windowExt.showNotification === 'function') {
+                windowExt.showNotification(`✅ ${this.getProviderDisplayName(provider)} test completed`, 'success');
+            }
         } catch (error) {
-            showNotification(`❌ ${this.getProviderDisplayName(provider)} test failed`, 'error');
+            if (typeof windowExt.showNotification === 'function') {
+                windowExt.showNotification(`❌ ${this.getProviderDisplayName(provider)} test failed`, 'error');
+            }
         }
     }
 
     /**
      * Show detailed provider information
+     * @param {string} provider - Provider name
      */
     showProviderDetails(provider) {
         const metrics = this.metrics[provider];
@@ -753,21 +807,37 @@ Recent Errors: ${metrics.errors.length}
         a.click();
         
         URL.revokeObjectURL(url);
-        showNotification('📊 Monitoring report exported', 'success');
+        if (typeof windowExt.showNotification === 'function') {
+            windowExt.showNotification('📊 Monitoring report exported', 'success');
+        }
     }
 
     /**
      * Get current alerts
+     * @returns {AlertData[]} Array of current alerts
      */
     getCurrentAlerts() {
+        /** @type {AlertData[]} */
         const alerts = [];
         
         Object.entries(this.metrics).forEach(([provider, metrics]) => {
             if (metrics.averageResponseTime > this.alertThresholds.responseTime) {
-                alerts.push({ type: 'performance', provider, metric: 'response_time', value: metrics.averageResponseTime });
+                alerts.push({ 
+                    type: 'performance', 
+                    provider, 
+                    message: `High response time: ${metrics.averageResponseTime}ms`,
+                    timestamp: Date.now(),
+                    severity: 'warning'
+                });
             }
             if (metrics.successRate < this.alertThresholds.successRate) {
-                alerts.push({ type: 'reliability', provider, metric: 'success_rate', value: metrics.successRate });
+                alerts.push({ 
+                    type: 'reliability', 
+                    provider, 
+                    message: `Low success rate: ${(metrics.successRate * 100).toFixed(1)}%`,
+                    timestamp: Date.now(),
+                    severity: 'error'
+                });
             }
         });
         
@@ -798,11 +868,11 @@ Recent Errors: ${metrics.errors.length}
      * Initialize global access
      */
     bindGlobalFunctions() {
-        window.aiMonitor = this;
+        windowExt.aiMonitor = this;
     }
 }
 
 // Make AIMonitoringSystem available globally
-window.AIMonitoringSystem = AIMonitoringSystem;
+windowExt.AIMonitoringSystem = AIMonitoringSystem;
 
 console.log('✅ [AI MONITOR] AIMonitoringSystem class loaded and available globally');
