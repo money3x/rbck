@@ -19,6 +19,7 @@
     "validate-imports": "node scripts/validate-imports.js",
     "fix-production": "node scripts/fix-production-html.js",
     "check-production": "node scripts/quick-production-check.js",
+    "test-sidebar": "node scripts/test-sidebar-fix.js",
     "analyze": "webpack-bundle-analyzer dist/js/*.js",
     "test": "jest",
     "test:watch": "jest --watch",

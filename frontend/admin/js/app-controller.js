@@ -46,6 +46,9 @@ class AdminDashboard {
             
             console.log('✅ [AdminDashboard] Application initialized successfully');
             
+            // Dispatch ready event for queued navigation
+            window.dispatchEvent(new CustomEvent('dashboard-ready'));
+            
             // Show dashboard by default
             this.showSection('dashboard');
             
@@ -95,8 +98,8 @@ class AdminDashboard {
         console.log(`🔄 [Navigation] Switching to section: ${sectionId}`);
 
         try {
-            // Hide all sections
-            const sections = document.querySelectorAll('.dashboard-section');
+            // Hide all sections - FIX: use correct selector
+            const sections = document.querySelectorAll('.content-section, .dashboard-section, .section');
             sections.forEach(section => {
                 section.style.display = 'none';
                 section.classList.remove('active');
@@ -174,14 +177,51 @@ class AdminDashboard {
      * Initialize navigation system
      */
     initializeNavigation() {
-        // Setup sidebar navigation
-        const navLinks = document.querySelectorAll('.nav-link[data-action="show-section"]');
+        // Setup sidebar navigation - handle both data-action and onclick approaches
+        const navLinks = document.querySelectorAll('.nav-link, [data-action="show-section"]');
         navLinks.forEach(link => {
+            // Remove existing onclick handlers and replace with unified system
+            if (link.onclick) {
+                link.onclick = null;
+            }
+            
             link.addEventListener('click', (event) => {
                 event.preventDefault();
-                const section = link.getAttribute('data-section');
-                this.showSection(section);
+                
+                // Get section from data-section attribute or onclick attribute
+                let section = link.getAttribute('data-section');
+                
+                // If no data-section, try to extract from onclick
+                if (!section && link.getAttribute('onclick')) {
+                    const onclickContent = link.getAttribute('onclick');
+                    const match = onclickContent.match(/showSection\(['"]([^'"]+)['"]\)/);
+                    if (match) {
+                        section = match[1];
+                    }
+                }
+                
+                if (section) {
+                    this.showSection(section);
+                    this.updateNavigationState(section);
+                } else {
+                    console.warn('⚠️ [Navigation] No section found for link:', link);
+                }
             });
+        });
+
+        // Also handle direct button clicks
+        const actionButtons = document.querySelectorAll('[onclick*="showSection"]');
+        actionButtons.forEach(button => {
+            const onclickContent = button.getAttribute('onclick');
+            const match = onclickContent.match(/showSection\(['"]([^'"]+)['"]\)/);
+            if (match) {
+                const section = match[1];
+                button.onclick = null; // Remove old handler
+                button.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    this.showSection(section);
+                });
+            }
         });
 
         console.log('✅ [Navigation] Navigation system initialized');
@@ -195,10 +235,45 @@ class AdminDashboard {
         const navLinks = document.querySelectorAll('.nav-link');
         navLinks.forEach(link => {
             link.classList.remove('active');
+            
+            // Check data-section attribute
             if (link.getAttribute('data-section') === sectionId) {
                 link.classList.add('active');
             }
+            
+            // Also check onclick attribute for legacy links
+            const onclickContent = link.getAttribute('onclick');
+            if (onclickContent) {
+                const match = onclickContent.match(/showSection\(['"]([^'"]+)['"]\)/);
+                if (match && match[1] === sectionId) {
+                    link.classList.add('active');
+                }
+            }
         });
+        
+        // Update page title if needed
+        const pageTitle = document.getElementById('pageTitle');
+        if (pageTitle) {
+            const sectionTitles = {
+                'dashboard': '🚀 Gemini 2.0 Flash Dashboard',
+                'ai-chatbot': '💬 AI Chatbot',
+                'blog-manage': '📝 Blog Management',
+                'blog-create': '✍️ Create Article',
+                'seo-tools': '🔍 SEO Tools',
+                'analytics': '📊 Analytics',
+                'ai-swarm': '🤖 AI Swarm Council',
+                'ai-monitoring': '📊 AI Monitoring',
+                'migration': '🗄️ Database Migration',
+                'security-dashboard': '🛡️ Security Dashboard',
+                'auth-logs': '🔒 Authentication Logs',
+                'blocked-ips': '🚫 Blocked IPs',
+                'security-alerts': '⚠️ Security Alerts'
+            };
+            
+            if (sectionTitles[sectionId]) {
+                pageTitle.textContent = sectionTitles[sectionId];
+            }
+        }
     }
 
     /**
@@ -215,6 +290,21 @@ class AdminDashboard {
 
 // Make available globally
 window.AdminDashboard = AdminDashboard;
+
+// Expose global showSection function for backward compatibility
+window.showSection = function(sectionId) {
+    if (window.adminDashboard && window.adminDashboard.showSection) {
+        window.adminDashboard.showSection(sectionId);
+    } else {
+        console.warn('⚠️ [Navigation] AdminDashboard not ready, queuing navigation to:', sectionId);
+        // Queue the navigation for when dashboard is ready
+        window.addEventListener('dashboard-ready', () => {
+            if (window.adminDashboard) {
+                window.adminDashboard.showSection(sectionId);
+            }
+        });
+    }
+};
 
 // Export for module system
 export default AdminDashboard;
