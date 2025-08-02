@@ -34,7 +34,8 @@
       "Bash(timeout:*)",
       "Bash(cat:*)",
       "Bash(npm start)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(npm run check-production:*)"
     ],
     "deny": []
   }

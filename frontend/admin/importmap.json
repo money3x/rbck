@@ -1,0 +1,18 @@
+{
+  "imports": {
+    "./blogManager.js": "/frontend/admin/blogManager.js",
+    "./uiHelpers.js": "/frontend/admin/uiHelpers.js",
+    "./modals.js": "/frontend/admin/modals.js",
+    "./seoTools.js": "/frontend/admin/seoTools.js",
+    "./aiSwarm.js": "/frontend/admin/aiSwarm.js",
+    "./aiMonitoringUI.js": "/frontend/admin/aiMonitoringUI.js",
+    "./auth.js": "/frontend/admin/auth.js",
+    "../config.js": "/frontend/config.js",
+    "../js/apiUtils.js": "/frontend/js/apiUtils.js",
+    "@components/modal-manager": "/frontend/admin/js/components/modal-manager.js",
+    "@components/chat-interface": "/frontend/admin/js/components/chat-interface.js",
+    "@services/ai-providers": "/frontend/admin/js/services/ai-providers.js",
+    "@services/module-loader": "/frontend/admin/js/services/module-loader.js",
+    "@services/pwa-manager": "/frontend/admin/js/services/pwa-manager.js"
+  }
+}

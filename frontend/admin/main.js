@@ -1,3 +1,9 @@
+/**
+ * 🚀 RBCK Admin Dashboard - Main Entry Point
+ * Enhanced modular architecture with proper error handling
+ */
+
+// Core module imports with proper error handling
 import { loadBlogPosts, savePost, editPost, deletePost, previewPost, processAISuggestions, publishPost } from './blogManager.js';
 import { showNotification, showSection, updateCharacterCounters, toggleSidebar, logout } from './uiHelpers.js';
 import { createOrGetGeminiModal, closeGeminiModal, showModal, closeModal } from './modals.js';

@@ -1,0 +1,350 @@
+/* 🚀 Modern CSS Features */
+
+/* 🎯 Container Queries for Advanced Responsive Design */
+.dashboard-main {
+    container-type: inline-size;
+    container-name: dashboard;
+}
+
+.card-grid {
+    container-type: inline-size;
+    container-name: cards;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+    gap: var(--fluid-space-md);
+}
+
+.sidebar-container {
+    container-type: inline-size;
+    container-name: sidebar;
+}
+
+.content-area {
+    container-type: inline-size;
+    container-name: content;
+}
+
+/* Container-based responsive layouts */
+@container dashboard (min-width: 768px) {
+    .dashboard-content {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: var(--fluid-space-lg);
+    }
+    
+    .mobile-only { display: none; }
+    .desktop-hidden { display: block; }
+}
+
+@container dashboard (min-width: 1200px) {
+    .dashboard-content {
+        grid-template-columns: 320px 1fr 280px;
+    }
+    
+    .sidebar { min-width: 320px; }
+    .aside-panel { display: block; }
+}
+
+/* Card grid responsive behavior */
+@container cards (min-width: 480px) {
+    .card-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@container cards (min-width: 720px) {
+    .card-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@container cards (min-width: 960px) {
+    .card-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Content area typography scaling */
+@container content (min-width: 400px) {
+    .content-title { font-size: var(--fluid-text-lg); }
+}
+
+@container content (min-width: 600px) {
+    .content-title { font-size: var(--fluid-text-xl); }
+    .content-description { display: block; }
+}
+
+/* Sidebar adaptive behavior */
+@container sidebar (max-width: 280px) {
+    .sidebar-item { justify-content: center; padding: var(--fluid-space-sm); }
+    .sidebar-text { display: none; }
+    .sidebar-icon { margin: 0; }
+}
+
+/* 🎬 View Transitions API Styles */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 0.3s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom transition names for different elements */
+.theme-toggle { view-transition-name: theme-toggle; }
+.modal-overlay { view-transition-name: modal-overlay; }
+.dashboard-section { view-transition-name: dashboard-content; }
+
+/* Theme transition styles */
+::view-transition-old(theme-toggle),
+::view-transition-new(theme-toggle) {
+    animation-duration: 0.4s;
+}
+
+/* Modal transition styles */
+::view-transition-old(modal-overlay) {
+    animation: slide-out-down 0.3s ease-in forwards;
+}
+
+::view-transition-new(modal-overlay) {
+    animation: slide-in-up 0.3s ease-out forwards;
+}
+
+/* Content transition styles */
+::view-transition-old(dashboard-content) {
+    animation: fade-out-left 0.25s ease-in forwards;
+}
+
+::view-transition-new(dashboard-content) {
+    animation: fade-in-right 0.25s ease-out forwards;
+}
+
+/* Transition keyframes */
+@keyframes slide-out-down {
+    to { transform: translateY(100%); opacity: 0; }
+}
+
+@keyframes slide-in-up {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fade-out-left {
+    to { transform: translateX(-30px); opacity: 0; }
+}
+
+@keyframes fade-in-right {
+    from { transform: translateX(30px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation-duration: 0.1s !important;
+    }
+}
+
+/* 🎭 CSS Subgrid Support */
+@supports (grid-template-rows: subgrid) {
+    .card-grid {
+        display: grid;
+        grid-template-rows: subgrid;
+    }
+    
+    .card {
+        display: grid;
+        grid-template-rows: subgrid;
+        grid-row: span 3;
+    }
+}
+
+/* 🎨 CSS Color Functions */
+@supports (color: color(display-p3 1 0 0)) {
+    :root {
+        --primary-color: color(display-p3 0.2 0.4 0.9);
+        --success-color: color(display-p3 0.2 0.8 0.3);
+        --warning-color: color(display-p3 0.9 0.7 0.1);
+        --error-color: color(display-p3 0.9 0.2 0.2);
+    }
+}
+
+/* 🔧 CSS Nesting */
+.card {
+    & .card-header {
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: var(--fluid-space-sm);
+        margin-bottom: var(--fluid-space-md);
+        
+        & .card-title {
+            font-size: var(--fluid-text-lg);
+            font-weight: 600;
+        }
+        
+        & .card-subtitle {
+            color: var(--text-secondary);
+            font-size: var(--fluid-text-sm);
+        }
+    }
+    
+    & .card-actions {
+        display: flex;
+        gap: var(--fluid-space-sm);
+        margin-top: var(--fluid-space-md);
+        
+        & .btn {
+            flex: 1;
+        }
+    }
+}
+
+/* 📐 CSS Anchor Positioning */
+@supports (anchor-name: --anchor) {
+    .tooltip-anchor {
+        anchor-name: --tooltip;
+    }
+    
+    .tooltip {
+        position: absolute;
+        position-anchor: --tooltip;
+        bottom: anchor(top);
+        left: anchor(center);
+        transform: translateX(-50%);
+    }
+}
+
+/* 🌈 CSS Cascade Layers Enhanced */
+@layer reset {
+    /* Enhanced reset styles */
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+    
+    body, h1, h2, h3, h4, p, figure, blockquote, dl, dd {
+        margin: 0;
+    }
+    
+    ul[role='list'], ol[role='list'] {
+        list-style: none;
+    }
+    
+    html:focus-within {
+        scroll-behavior: smooth;
+    }
+    
+    body {
+        min-height: 100vh;
+        text-rendering: optimizeSpeed;
+        line-height: 1.5;
+    }
+    
+    a:not([class]) {
+        text-decoration-skip-ink: auto;
+    }
+    
+    img, picture {
+        max-width: 100%;
+        display: block;
+    }
+    
+    input, button, textarea, select {
+        font: inherit;
+    }
+    
+    @media (prefers-reduced-motion: reduce) {
+        html:focus-within {
+            scroll-behavior: auto;
+        }
+        
+        *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
+    }
+}
+
+/* 🎯 CSS :has() Selector */
+@supports selector(:has(*)) {
+    .card:has(.card-image) {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+    }
+    
+    .form-group:has(.form-input:invalid) {
+        --border-color: var(--error-color);
+    }
+    
+    .form-group:has(.form-input:valid) {
+        --border-color: var(--success-color);
+    }
+    
+    .sidebar:has(.sidebar-item.active) {
+        border-left: 3px solid var(--primary-color);
+    }
+}
+
+/* 🔍 CSS Container Style Queries */
+@supports (container-type: style) {
+    @container style(--theme: dark) {
+        .card {
+            box-shadow: var(--shadow-lg);
+        }
+    }
+    
+    @container style(--high-contrast: true) {
+        .btn {
+            border: 2px solid currentColor;
+            font-weight: 600;
+        }
+    }
+}
+
+/* 🎨 Modern Gradients and Patterns */
+.gradient-mesh {
+    background: 
+        radial-gradient(circle at 20% 80%, var(--primary-color) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, var(--secondary-color) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, var(--success-color) 0%, transparent 50%);
+    background-size: 100% 100%;
+    animation: gradient-shift 10s ease infinite;
+}
+
+@keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+/* 🎪 CSS Trigonometric Functions */
+@supports (transform: rotate(sin(45deg))) {
+    .wave-animation {
+        transform: translateY(calc(sin(var(--animation-time)) * 10px));
+    }
+}
+
+/* 📱 CSS Environment Variables */
+@supports (padding: env(safe-area-inset-top)) {
+    .safe-area-top {
+        padding-top: env(safe-area-inset-top);
+    }
+    
+    .safe-area-bottom {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    .safe-area-left {
+        padding-left: env(safe-area-inset-left);
+    }
+    
+    .safe-area-right {
+        padding-right: env(safe-area-inset-right);
+    }
+}
+
+/* 🌟 Advanced CSS Features */
+@supports (animation-timeline: scroll()) {
+    .scroll-driven-animation {
+        animation: fade-in-scroll linear;
+        animation-timeline: scroll();
+        animation-range: entry 0% cover 50%;
+    }
+    
+    @keyframes fade-in-scroll {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+}

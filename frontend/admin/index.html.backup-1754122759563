@@ -16,15 +16,6 @@
     
     <!-- ⚡ PERFORMANCE: Critical resource preloading -->
     <link rel="modulepreload" href="core/bootstrap.js">
-
-    <!-- ⚡ UPDATED: Module Preloading for New System -->
-    <link rel="modulepreload" href="js/app-controller.js">
-    <link rel="modulepreload" href="js/components/modal-manager.js">
-    <link rel="modulepreload" href="js/components/chat-interface.js">
-    <link rel="modulepreload" href="js/services/ai-providers.js">
-    <link rel="modulepreload" href="js/services/module-loader.js">
-    <link rel="modulepreload" href="js/services/pwa-manager.js">
-    <link rel="modulepreload" href="main.js">
     <link rel="modulepreload" href="core/auth.js">
     <link rel="modulepreload" href="core/api-client.js">
     <link rel="modulepreload" href="unified-status-manager.js">
@@ -5698,57 +5689,7 @@
     <!-- Emergency debug fix for showSection ReferenceError -->
     <!-- Production-ready JavaScript -->
     <script src="api-helper.js?v=2&t=1752240000" nonce="secure-admin-scripts"></script>
-    
-    <!-- 🆕 UPDATED: New Modular System replacing main-production.js -->
-    <script type="importmap">
-    {
-      "imports": {
-        "@components/": "./js/components/",
-        "@services/": "./js/services/",
-        "@utils/": "./js/utils/",
-        "./aiSwarm.js": "./aiSwarm.js",
-        "./aiMonitoringUI.js": "./aiMonitoringUI.js",
-        "./blogManager.js": "./blogManager.js",
-        "./uiHelpers.js": "./uiHelpers.js",
-        "./modals.js": "./modals.js",
-        "./seoTools.js": "./seoTools.js",
-        "./auth.js": "./auth.js",
-        "../config.js": "../config.js",
-        "../js/apiUtils.js": "../js/apiUtils.js"
-      }
-    }
-    </script>
-    
-    <!-- 🚀 Main Application Entry Point (replaces main-production.js) -->
-    <script type="module" nonce="secure-admin-scripts">
-      // Initialize new modular system
-      import('./js/app-controller.js').then(({ AdminDashboard }) => {
-        window.adminDashboard = new AdminDashboard();
-        console.log('✅ [NEW SYSTEM] Admin Dashboard initialized');
-      }).catch(error => {
-        console.error('❌ [NEW SYSTEM] Failed to load:', error);
-        
-        // Fallback to old system if new system fails
-        console.log('🔄 [FALLBACK] Loading main.js as fallback...');
-        const script = document.createElement('script');
-        script.type = 'module';
-        script.src = './main.js';
-        script.onerror = () => {
-          console.error('❌ [FALLBACK] Both systems failed to load');
-          alert('เกิดข้อผิดพลาดในการโหลดระบบ กรุณารีเฟรชหน้าเว็บ');
-        };
-        document.head.appendChild(script);
-      });
-    </script>
-    
-    <!-- 📦 Legacy Browser Support -->
-    <script nomodule nonce="secure-admin-scripts">
-      // For older browsers that don't support ES modules
-      console.warn('⚠️ [LEGACY] Browser does not support ES modules, using compatibility mode');
-      var script = document.createElement('script');
-      script.src = 'main-production.js?v=legacy';
-      document.head.appendChild(script);
-    </script>
+    <script src="main-production.js?v=2&t=1752240000" nonce="secure-admin-scripts"></script>
     
     <!-- 🛡️ SECURITY FRAMEWORK -->
     <script nonce="secure-admin-scripts">
