@@ -125,8 +125,8 @@ export class AISwarmCouncil {
                     Object.keys(this.providers).forEach(key => {
                         const status = unifiedStatus[key];
                         if (status) {
-                            // 🎯 EXACT MATCH: Same logic as AI Monitoring badges
-                            const isConnected = status.connected && status.configured && status.status !== 'checking';
+                            // 🚀 SIMPLIFIED LOGIC: Same as aiMonitoring.js
+                            const isConnected = status.connected || (status.success && status.configured);
                             
                             this.providers[key].status = isConnected;
                             this.providers[key].connected = status.connected;
@@ -286,11 +286,12 @@ export class AISwarmCouncil {
     }
     
     /**
-     * ⚡ LIGHTNING EXTERNAL PROVIDER CHECK
+     * ⚡ LIGHTNING EXTERNAL PROVIDER CHECK - SIMPLIFIED
      */
     async quickExternalProviderCheck(providerKey, signal) {
         try {
-            const response = await fetch(`${API_BASE}/ai/status`, { 
+            // 🚀 SIMPLIFIED: Use same endpoint as aiMonitoring for consistency
+            const response = await fetch(`${API_BASE}/ai/status/${providerKey}`, { 
                 method: 'GET',
                 signal,
                 headers: { 'Content-Type': 'application/json' }
@@ -298,7 +299,8 @@ export class AISwarmCouncil {
             
             if (response.ok) {
                 const data = await response.json();
-                return data.success && data.data?.providers?.[providerKey]?.isActive;
+                // 🎯 SIMPLIFIED LOGIC: Same check as aiMonitoring
+                return data.connected || (data.success && data.data?.connected);
             }
             return false;
         } catch (error) {
@@ -365,17 +367,14 @@ export class AISwarmCouncil {
             return false;
         }
     }    /**
-     * Check external provider status
+     * Check external provider status - SIMPLIFIED VERSION
      */
     async checkExternalProviderStatus(providerKey) {
         try {
             console.log(`🔍 [AI SWARM] Checking ${providerKey} via API...`);
             
-            // Import auth function
-            const { authenticatedFetch } = await import('./auth.js');
-            
-            // Use authenticated fetch
-            const response = await authenticatedFetch(`${API_BASE}/ai/status/${providerKey}?t=${Date.now()}`, {
+            // 🚀 SIMPLIFIED: Use same logic as aiMonitoring.js for consistency
+            const response = await fetch(`${API_BASE}/ai/status/${providerKey}?t=${Date.now()}`, {
                 method: 'GET',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -386,19 +385,23 @@ export class AISwarmCouncil {
             if (response.ok) {
                 const data = await response.json();
                 console.log(`✅ [AI SWARM] ${providerKey} API response:`, data);
-                // Check for success in the response data
-                return data.success && (data.data?.status === 'ready' || data.data?.configured === true);
+                
+                // 🎯 SIMPLIFIED LOGIC: Same as aiMonitoring.js
+                // Check for connected status - simple and reliable
+                const isConnected = data.connected || (data.success && data.data?.connected);
+                
+                console.log(`📊 [AI SWARM] ${providerKey} status: ${isConnected ? 'เชื่อมต่อแล้ว' : 'ไม่ได้เชื่อมต่อ'}`);
+                return isConnected;
+                
             } else {
                 const errorData = await response.json().catch(() => ({}));
                 console.warn(`⚠️ [AI SWARM] ${providerKey} API returned ${response.status}:`, errorData);
+                return false;
             }
         } catch (error) {
             console.error(`❌ [AI SWARM] ${providerKey} check failed:`, error);
+            return false;
         }
-        
-        // Default to disconnected if check fails, but still show the provider
-        console.log(`📊 [AI SWARM] ${providerKey} defaulting to disconnected state`);
-        return false;
     }
 
     /**

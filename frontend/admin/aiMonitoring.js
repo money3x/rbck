@@ -21,12 +21,19 @@
  * @property {number} averageResponseTime - Average response time
  * @property {Array<{message: string, timestamp: Date}>} errors - Error history
  * @property {string} [error] - Error message if any
+ * @property {number} totalResponseTime - Total response time for averaging
+ * @property {number} lastResponseTime - Last response time recorded
+ * @property {number} lastRequestTime - Timestamp of last request
+ * @property {number} errorRate - Error rate percentage
+ * @property {number[]} qualityScores - Array of quality scores
+ * @property {number} averageQuality - Average quality score
+ * @property {number} costEstimate - Estimated cost
  */
 
 /**
  * @typedef {Object} PerformanceHistoryEntry
  * @property {string} provider - Provider name
- * @property {number} timestamp - Timestamp of the entry
+ * @property {Date} timestamp - Timestamp of the entry
  * @property {number} responseTime - Response time in milliseconds
  * @property {boolean} success - Whether the request was successful
  * @property {number} quality - Quality score
@@ -73,7 +80,7 @@ class AIMonitoringSystem {
         /** @type {boolean} */
         this.isMonitoring = false;
         
-        /** @type {number|null} */
+        /** @type {NodeJS.Timeout|null} */
         this.monitoringInterval = null;
         
         /** @type {{responseTime: number, successRate: number, errorRate: number}} */
@@ -106,8 +113,8 @@ class AIMonitoringSystem {
                 averageResponseTime: 0,
                 successRate: 1.0,
                 errorRate: 0.0,
-                lastRequestTime: null,
-                lastResponseTime: null,
+                lastRequestTime: 0,
+                lastResponseTime: 0,
                 status: 'unknown',
                 errors: [],
                 uptime: 100,
@@ -371,7 +378,7 @@ class AIMonitoringSystem {
      * @param {string} provider - Provider name
      * @returns {Promise<Object>} Provider response data
      */
-    async pingProvider(provider) {
+    async pingProvider(_provider) {
         // Simulate provider ping with realistic responses
         const delay = 500 + Math.random() * 2000; // 0.5-2.5 seconds
         await new Promise(resolve => setTimeout(resolve, delay));
@@ -396,6 +403,10 @@ class AIMonitoringSystem {
     updateProviderMetrics(provider, data) {
         /** @type {ProviderMetrics} */
         const metrics = this.metrics[provider];
+        if (!metrics) {
+            console.error(`Metrics not found for provider: ${provider}`);
+            return;
+        }
         
         // Update request counts
         metrics.totalRequests++;
@@ -419,7 +430,7 @@ class AIMonitoringSystem {
         metrics.totalResponseTime += data.responseTime;
         metrics.averageResponseTime = metrics.totalResponseTime / metrics.totalRequests;
         metrics.lastResponseTime = data.responseTime;
-        metrics.lastRequestTime = new Date();
+        metrics.lastRequestTime = Date.now();
         
         // Update rates
         metrics.successRate = metrics.successfulRequests / metrics.totalRequests;
@@ -468,6 +479,11 @@ class AIMonitoringSystem {
      */
     recordError(provider, error) {
         const metrics = this.metrics[provider];
+        if (!metrics) {
+            console.error(`Metrics not found for provider: ${provider}`);
+            return;
+        }
+        
         metrics.errors.push({
             message: error.message,
             timestamp: new Date()
@@ -520,6 +536,7 @@ class AIMonitoringSystem {
     updateProviderTable() {
         this.providers.forEach(provider => {
             const metrics = this.metrics[provider];
+            if (!metrics) return;
             
             // Update status
             const statusElement = document.getElementById(`status-${provider}`);
@@ -544,7 +561,7 @@ class AIMonitoringSystem {
             
             Object.entries(updates).forEach(([id, value]) => {
                 const element = document.getElementById(id);
-                if (element) element.textContent = value;
+                if (element) element.textContent = String(value);
             });
         });
     }
@@ -553,6 +570,7 @@ class AIMonitoringSystem {
      * Check for performance alerts
      */
     checkAlerts() {
+        /** @type {AlertData[]} */
         const alerts = [];
         
         Object.entries(this.metrics).forEach(([provider, metrics]) => {
@@ -658,6 +676,9 @@ class AIMonitoringSystem {
     /**
      * Collect metrics from specific provider
      */
+    /**
+     * @param {string} provider - Provider name
+     */
     async collectProviderMetrics(provider) {
         try {
             console.log(`[AI MONITOR] Checking ${provider} status...`);
@@ -677,51 +698,63 @@ class AIMonitoringSystem {
                 console.log(`[AI MONITOR] ${provider} API response:`, data);
                 
                 // Update metrics with real data
-                this.metrics[provider] = {
-                    ...this.metrics[provider],
-                    status: data.connected ? 'healthy' : 'error',
-                    lastRequestTime: new Date(),
-                    lastResponseTime: data.responseTime || null,
-                    averageResponseTime: data.responseTime || 0,
-                    successRate: data.connected ? (data.successRate || 1.0) : 0,
-                    errorRate: data.connected ? (1 - (data.successRate || 1.0)) : 1,
-                    uptime: data.connected ? 100 : 0,
-                    totalRequests: this.metrics[provider].totalRequests + 1,
-                    successfulRequests: data.connected ? this.metrics[provider].successfulRequests + 1 : this.metrics[provider].successfulRequests
-                };
+                const currentMetrics = this.metrics[provider];
+                if (currentMetrics) {
+                    this.metrics[provider] = {
+                        ...currentMetrics,
+                        status: data.connected ? 'healthy' : 'error',
+                        lastRequestTime: Date.now(),
+                        lastResponseTime: data.responseTime || null,
+                        averageResponseTime: data.responseTime || 0,
+                        successRate: data.connected ? (data.successRate || 1.0) : 0,
+                        errorRate: data.connected ? (1 - (data.successRate || 1.0)) : 1,
+                        uptime: data.connected ? 100 : 0,
+                        totalRequests: currentMetrics.totalRequests + 1,
+                        successfulRequests: data.connected ? currentMetrics.successfulRequests + 1 : currentMetrics.successfulRequests
+                    };
+                }
                 
                 if (!data.connected) {
-                    this.metrics[provider].failedRequests += 1;
-                    this.metrics[provider].errors.push({
-                        timestamp: new Date(),
-                        error: 'Connection failed'
-                    });
-                    // Keep only last 10 errors
-                    if (this.metrics[provider].errors.length > 10) {
-                        this.metrics[provider].errors.shift();
+                    const metrics = this.metrics[provider];
+                    if (metrics) {
+                        metrics.failedRequests += 1;
+                        metrics.errors.push({
+                            message: 'Connection failed',
+                            timestamp: new Date()
+                        });
+                        // Keep only last 10 errors
+                        if (metrics.errors.length > 10) {
+                            metrics.errors.shift();
+                        }
                     }
                 }
                 
             } else {
                 console.warn(`[AI MONITOR] ${provider} API returned ${response.status}`);
                 // Mark as error
-                this.metrics[provider].status = 'error';
-                this.metrics[provider].failedRequests += 1;
-                this.metrics[provider].totalRequests += 1;
-                this.metrics[provider].successRate = this.metrics[provider].successfulRequests / this.metrics[provider].totalRequests;
+                const metrics = this.metrics[provider];
+                if (metrics) {
+                    metrics.status = 'error';
+                    metrics.failedRequests += 1;
+                    metrics.totalRequests += 1;
+                    metrics.successRate = metrics.successfulRequests / metrics.totalRequests;
+                }
             }
             
         } catch (error) {
             console.error(`[AI MONITOR] ${provider} check failed:`, error);
             // Mark as error
-            this.metrics[provider].status = 'error';
-            this.metrics[provider].failedRequests += 1;
-            this.metrics[provider].totalRequests += 1;
-            this.metrics[provider].successRate = this.metrics[provider].successfulRequests / this.metrics[provider].totalRequests;
-            this.metrics[provider].errors.push({
-                timestamp: new Date(),
-                error: error.message
-            });
+            const metrics = this.metrics[provider];
+            if (metrics) {
+                metrics.status = 'error';
+                metrics.failedRequests += 1;
+                metrics.totalRequests += 1;
+                metrics.successRate = metrics.successfulRequests / metrics.totalRequests;
+                metrics.errors.push({
+                    message: error instanceof Error ? error.message : String(error),
+                    timestamp: new Date()
+                });
+            }
         }
     }
 
@@ -766,6 +799,11 @@ class AIMonitoringSystem {
      */
     showProviderDetails(provider) {
         const metrics = this.metrics[provider];
+        if (!metrics) {
+            alert(`No metrics available for ${provider}`);
+            return;
+        }
+        
         const details = `
 Provider: ${this.getProviderDisplayName(provider)}
 Status: ${metrics.status}
