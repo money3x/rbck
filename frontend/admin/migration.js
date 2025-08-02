@@ -328,8 +328,15 @@ class AdminMigration {
                 throw new Error(result.error || result.message || 'Migration status validation failed');
             }
 
-            this.displayStatus(result.data);
-            this.log(`✅ Status check completed. ${result.data.existingTables}/${result.data.totalRequiredTables} tables exist`);
+            // Check if result.data exists before accessing properties
+            if (result.data && typeof result.data === 'object') {
+                this.displayStatus(result.data);
+                this.log(`✅ Status check completed. ${result.data.existingTables || 0}/${result.data.totalRequiredTables || 0} tables exist`);
+            } else {
+                console.warn('⚠️ [MIGRATION] result.data is missing or invalid:', result);
+                this.displayStatus(null);
+                this.log('⚠️ Status check completed but data format is invalid');
+            }
 
         } catch (error) {
             console.error('❌ [MIGRATION] Status check error:', error);

@@ -8715,8 +8715,8 @@
         
         // Auto-refresh every 30 seconds for AI Swarm Council
         setInterval(() => {
-            if (document.getElementById('ai-swarm').style.display !== 'none') {
-                window.aiSwarmCouncil.refreshProviders();
+            if (document.getElementById('ai-swarm').style.display !== 'none' && window.aiSwarmCouncil) {
+                window.aiSwarmCouncil.refreshProviderStatus();
             }
         }, 30000);
         
