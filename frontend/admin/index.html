@@ -4581,7 +4581,7 @@
                 <div class="panel-header logs">
                     <h3 class="panel-title">
                         <i class="fas fa-comments"></i>
-                        AI Conversation Logs & Real-time Monitoring
+                        AI Conversation Logs & Status Dashboard
                     </h3>
                 </div>
                 <div class="panel-content">
@@ -8228,38 +8228,7 @@
             }
         }
 
-        // Real-time status monitoring
-        let connectionStatusInterval = null;
-        
-        function startRealTimeMonitoring() {
-            console.log('🔄 [AI Settings] Starting real-time monitoring...');
-            
-            // Clear existing interval
-            if (connectionStatusInterval) {
-                clearInterval(connectionStatusInterval);
-            }
-            
-            // Check status every 30 seconds
-            connectionStatusInterval = setInterval(async () => {
-                const currentTab = document.querySelector('.ai-settings-tab.active')?.getAttribute('data-tab');
-                
-                if (currentTab === 'models') {
-                    await updateConnectionStatusSilent();
-                } else if (currentTab === 'general') {
-                    window.loadGeneralTabData?.();
-                } else if (currentTab === 'performance') {
-                    window.loadPerformanceData?.();
-                }
-            }, 30000); // 30 seconds
-        }
-        
-        function stopRealTimeMonitoring() {
-            console.log('⏹️ [AI Settings] Stopping real-time monitoring...');
-            if (connectionStatusInterval) {
-                clearInterval(connectionStatusInterval);
-                connectionStatusInterval = null;
-            }
-        }
+        // Real-time monitoring functions removed - dashboard now uses manual refresh only
         
         // Get provider status with standardized response handling
         async function getProviderStatusDirect(provider) {
@@ -8630,10 +8599,7 @@
         window.closeAISettingsModal = function() {
             console.log('🔧 [Modern AI Settings] Closing modern modal...');
             
-            // Stop real-time monitoring when modal closes
-            if (typeof window.stopRealTimeMonitoring === 'function') {
-                window.stopRealTimeMonitoring();
-            }
+            // Real-time monitoring removed - no cleanup needed
             
             const modal = document.getElementById('aiSettingsModal');
             if (modal) {
@@ -8815,8 +8781,7 @@
         window.toggleProviderDetails = toggleProviderDetails;
         
         // Make monitoring functions globally available
-        window.startRealTimeMonitoring = startRealTimeMonitoring;
-        window.stopRealTimeMonitoring = stopRealTimeMonitoring;
+        // Real-time monitoring functions removed from global scope
         window.setupAutoTesting = setupAutoTesting;
         window.updateConnectionStatusSilent = updateConnectionStatusSilent;
         
@@ -8885,8 +8850,6 @@
             const requiredFunctions = [
                 'switchAITab',
                 'testProvider',
-                'startRealTimeMonitoring',
-                'stopRealTimeMonitoring',
                 'setupAutoTesting',
                 'updateConnectionStatus',
                 'loadPerformanceData',
@@ -8901,26 +8864,13 @@
                 }
             }
             
-            // Test 4: Real-time monitoring
-            console.log('🧪 [TEST] Phase 4: Testing real-time monitoring...');
-            window.startRealTimeMonitoring();
-            
-            setTimeout(() => {
-                if (connectionStatusInterval) {
-                    console.log('✅ [TEST] Real-time monitoring started');
-                    window.stopRealTimeMonitoring();
-                    
-                    setTimeout(() => {
-                        if (!connectionStatusInterval) {
-                            console.log('✅ [TEST] Real-time monitoring stopped');
-                        } else {
-                            console.error('❌ [TEST] Real-time monitoring failed to stop');
-                        }
-                    }, 100);
-                } else {
-                    console.error('❌ [TEST] Real-time monitoring failed to start');
-                }
-            }, 100);
+            // Test 4: Manual refresh functionality (real-time monitoring removed)
+            console.log('🧪 [TEST] Phase 4: Testing manual refresh functionality...');
+            if (typeof window.updateConnectionStatus === 'function') {
+                console.log('✅ [TEST] Manual refresh available');
+            } else {
+                console.error('❌ [TEST] Manual refresh function missing');
+            }
             
             console.log('🎉 [TEST] Comprehensive test completed!');
             console.log('💡 [TEST] Use window.testProvider("gemini") to test actual API connections');
