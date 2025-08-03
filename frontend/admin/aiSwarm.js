@@ -136,6 +136,16 @@ class AIProviderManager {
 
     async checkProviderStatus(providerKey) {
         try {
+            // 🚀 PRIMARY: Try unified status manager first (same as AI Monitoring)
+            if (window.unifiedStatusManager) {
+                const unifiedStatus = window.unifiedStatusManager.getProviderStatus(providerKey);
+                if (unifiedStatus && unifiedStatus.lastUpdate) {
+                    const isConnected = unifiedStatus.connected && unifiedStatus.configured && unifiedStatus.isActive;
+                    console.log(`✅ [UNIFIED SYNC] ${providerKey}: ${isConnected ? 'Connected' : 'Disconnected'} from unified manager`);
+                    return isConnected;
+                }
+            }
+
             // Check cache first
             const cacheKey = `status_${providerKey}`;
             if (this.statusCache.has(cacheKey)) {
@@ -151,11 +161,8 @@ class AIProviderManager {
             let isConnected = false;
 
             try {
-                if (providerKey === 'gemini') {
-                    isConnected = await this.checkGeminiStatus(controller.signal);
-                } else {
-                    isConnected = await this.checkExternalProviderStatus(providerKey, controller.signal);
-                }
+                // 🔧 FIXED: Use unified metrics endpoint like AI Monitoring
+                isConnected = await this.checkProviderViaMetrics(providerKey, controller.signal);
 
                 // Cache result
                 this.statusCache.set(cacheKey, {
@@ -191,7 +198,47 @@ class AIProviderManager {
         }
     }
 
+    /**
+     * 🔧 NEW: Check provider status via unified metrics endpoint (same as AI Monitoring)
+     */
+    async checkProviderViaMetrics(providerKey, signal) {
+        try {
+            const response = await fetch(`${API_BASE}/ai/metrics`, { 
+                method: 'GET',
+                signal,
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            if (response.ok) {
+                const data = SecurityUtils.validateAPIResponse(await response.json());
+                
+                if (data.success && data.metrics && data.metrics[providerKey]) {
+                    const providerData = data.metrics[providerKey];
+                    // ✅ FIXED: Use same logic as unified status manager
+                    const isConnected = providerData.isActive && providerData.configured;
+                    
+                    console.log(`📊 [METRICS API] ${providerKey}:`, {
+                        isActive: providerData.isActive,
+                        configured: providerData.configured,
+                        status: providerData.status,
+                        connected: isConnected
+                    });
+                    
+                    return isConnected;
+                }
+                
+                console.warn(`⚠️ [METRICS API] No data for ${providerKey}`);
+                return false;
+            }
+            return false;
+        } catch (error) {
+            console.error(`❌ [METRICS API] ${providerKey} check failed:`, error);
+            return false;
+        }
+    }
+
     async checkExternalProviderStatus(providerKey, signal) {
+        // 🔧 DEPRECATED: Fallback to old individual endpoint method
         try {
             const response = await fetch(`${API_BASE}/ai/status/${providerKey}`, { 
                 method: 'GET',
@@ -210,6 +257,59 @@ class AIProviderManager {
     }
 
     async updateAllProviderStatus() {
+        console.log('🔄 [AI SWARM] Updating all provider status...');
+        
+        // 🚀 PRIMARY: Try unified status manager first (same data source as AI Monitoring)
+        if (window.unifiedStatusManager) {
+            try {
+                console.log('⚡ [UNIFIED SYNC] Syncing with unified status manager...');
+                
+                // Force fresh update from unified manager
+                await window.unifiedStatusManager.updateAllProviderStatus();
+                const allStatus = window.unifiedStatusManager.getAllProviderStatus();
+                
+                if (allStatus && Object.keys(allStatus).length > 0) {
+                    console.log('✅ [UNIFIED SYNC] Got unified status data:', allStatus);
+                    
+                    const connectedProviders = [];
+                    
+                    Object.keys(this.providers).forEach(key => {
+                        const unifiedData = allStatus[key];
+                        if (unifiedData) {
+                            const isConnected = unifiedData.connected && unifiedData.configured && unifiedData.isActive;
+                            
+                            // Update provider with unified data
+                            this.providers[key].status = isConnected;
+                            this.providers[key].connected = unifiedData.connected;
+                            this.providers[key].configured = unifiedData.configured;
+                            this.providers[key].isActive = unifiedData.isActive;
+                            this.providers[key].responseTime = unifiedData.responseTime;
+                            this.providers[key].successRate = unifiedData.successRate;
+                            this.providers[key].lastUpdate = unifiedData.lastUpdate;
+                            
+                            if (isConnected) {
+                                connectedProviders.push(key);
+                            }
+                            
+                            console.log(`🔄 [UNIFIED SYNC] ${key}: ${isConnected ? 'Connected' : 'Disconnected'} (unified source)`);
+                        } else {
+                            this.providers[key].status = false;
+                        }
+                    });
+                    
+                    console.log(`✅ [UNIFIED SYNC] AI Swarm synced (${connectedProviders.length}/${Object.keys(this.providers).length} connected)`);
+                    return connectedProviders;
+                }
+            } catch (error) {
+                console.error('❌ [UNIFIED SYNC] Failed:', error);
+            }
+        } else {
+            console.warn('⚠️ [UNIFIED SYNC] Unified status manager not available');
+        }
+        
+        // 🔧 FALLBACK: Direct API check if unified manager unavailable
+        console.log('🔄 [FALLBACK] Using direct API check...');
+        
         const checkPromises = Object.keys(this.providers).map(async (key) => {
             try {
                 const isConnected = await this.checkProviderStatus(key);
@@ -233,6 +333,7 @@ class AIProviderManager {
             }
         });
 
+        console.log(`✅ [FALLBACK] Direct check completed (${connectedProviders.length}/${Object.keys(this.providers).length} connected)`);
         return connectedProviders;
     }
 
@@ -682,7 +783,15 @@ export class AISwarmCouncilRefactored {
 
     async initialize() {
         try {
-            console.log('🤖 [AI SWARM] Initializing refactored AI Swarm Council...');
+            console.log('🤖 [AI SWARM] Initializing AI Swarm Council with unified backend sync...');
+            
+            // 🔧 WAIT: Ensure unified status manager is ready first
+            if (window.unifiedStatusManager && !window.unifiedStatusManager.isMonitoring) {
+                console.log('⏳ [INIT] Starting unified status manager...');
+                await window.unifiedStatusManager.startMonitoring();
+                // Brief delay to ensure data is populated
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
             
             // Initialize provider status
             await this.providerManager.updateAllProviderStatus();
@@ -696,8 +805,8 @@ export class AISwarmCouncilRefactored {
             // Bind global functions
             this.bindGlobalFunctions();
             
-            console.log('✅ [AI SWARM] Refactored council initialized successfully');
-            showNotification('🤖 AI Swarm Council (Refactored) activated', 'success');
+            console.log('✅ [AI SWARM] Council initialized with unified backend sync');
+            showNotification('🤖 AI Swarm Council (Backend Sync) activated', 'success');
             
         } catch (error) {
             console.error('❌ [AI SWARM] Initialization failed:', error);
@@ -750,7 +859,73 @@ export class AISwarmCouncilRefactored {
         window.exportAIConversation = () => this.conversationLogger.exportConversation();
         window.getAISwarmReport = () => this.getStatusReport();
         
-        console.log('🔗 [GLOBAL] Refactored AI Swarm functions bound');
+        // 🔧 NEW: Add backend sync testing functions
+        window.testAISwarmSync = () => this.testBackendSync();
+        window.forceAISwarmSync = () => this.forceUnifiedSync();
+        
+        console.log('🔗 [GLOBAL] AI Swarm functions bound with backend sync support');
+    }
+
+    /**
+     * 🔧 NEW: Test backend sync functionality
+     */
+    async testBackendSync() {
+        console.log('🧪 [TEST SYNC] Testing AI Swarm backend synchronization...');
+        this.conversationLogger.addMessage('system', '🧪 Testing backend sync...');
+        
+        try {
+            // Test unified status manager connection
+            if (window.unifiedStatusManager) {
+                await window.unifiedStatusManager.updateAllProviderStatus();
+                const allStatus = window.unifiedStatusManager.getAllProviderStatus();
+                console.log('✅ [TEST SYNC] Unified status manager data:', allStatus);
+                this.conversationLogger.addMessage('system', `✅ Unified manager: ${Object.keys(allStatus).length} providers`);
+            } else {
+                this.conversationLogger.addMessage('system', '❌ Unified status manager not available');
+            }
+            
+            // Test AI Swarm sync
+            const connectedProviders = await this.providerManager.updateAllProviderStatus();
+            this.conversationLogger.addMessage('system', `🔄 AI Swarm sync: ${connectedProviders.length} providers connected`);
+            
+            // Update UI
+            this.uiController.debouncedRenderProviders();
+            this.uiController.updateStatusSummary();
+            
+            showNotification('🧪 Backend sync test completed', 'success');
+            
+        } catch (error) {
+            console.error('❌ [TEST SYNC] Test failed:', error);
+            this.conversationLogger.addMessage('system', `❌ Sync test failed: ${error.message}`);
+            showNotification('❌ Backend sync test failed', 'error');
+        }
+    }
+
+    /**
+     * 🔧 NEW: Force unified sync
+     */
+    async forceUnifiedSync() {
+        console.log('🔄 [FORCE SYNC] Forcing unified synchronization...');
+        this.conversationLogger.addMessage('system', '🔄 Forcing unified sync...');
+        
+        try {
+            if (window.unifiedStatusManager) {
+                await window.unifiedStatusManager.updateAllProviderStatus();
+                await this.providerManager.updateAllProviderStatus();
+                this.uiController.debouncedRenderProviders();
+                this.uiController.updateStatusSummary();
+                
+                const report = this.getStatusReport();
+                this.conversationLogger.addMessage('system', `✅ Sync complete: ${report.connectedCount}/${report.totalCount} connected`);
+                showNotification('🔄 Unified sync completed', 'success');
+            } else {
+                throw new Error('Unified status manager not available');
+            }
+        } catch (error) {
+            console.error('❌ [FORCE SYNC] Failed:', error);
+            this.conversationLogger.addMessage('system', `❌ Force sync failed: ${error.message}`);
+            showNotification('❌ Force sync failed', 'error');
+        }
     }
 
     // Cleanup method for proper resource management
