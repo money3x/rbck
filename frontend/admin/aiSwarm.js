@@ -1,9 +1,22 @@
-// ===== AI SWARM COUNCIL SYSTEM - REFACTORED =====
-// Modular, secure, and performant AI collaboration system
-// Addresses: Security, Performance, Architecture, Maintainability
+// ===== AI SWARM COUNCIL SYSTEM - ENTERPRISE GRADE =====
+// Type-safe, secure, and high-performance AI collaboration system
+// Features: Advanced caching, error boundaries, performance monitoring, security
 
 import { showNotification } from './uiHelpers.js';
 import { API_BASE } from '../config.js';
+
+// @ts-check
+
+/**
+ * @typedef {'gemini'|'openai'|'claude'|'deepseek'|'chinda'} ProviderKey
+ * @typedef {Object} ProviderConfig
+ * @property {string} name
+ * @property {boolean} status
+ * @property {string} role
+ * @property {string[]} expertise
+ * @property {number} priority
+ * @property {string} icon
+ */
 
 // ===== CONSTANTS =====
 const CONSTANTS = {
@@ -13,12 +26,12 @@ const CONSTANTS = {
         WEBSOCKET_RETRY: 30000
     },
     INTERVALS: {
-        PRIMARY_MONITORING: 10000,  // Reduced from 5000ms for better performance
-        CACHE_REFRESH: 30000,       // Increased for efficiency
-        VISUAL_UPDATE: 5000         // Reduced frequency
+        PRIMARY_MONITORING: 10000,
+        CACHE_REFRESH: 30000,
+        VISUAL_UPDATE: 5000
     },
     CACHE: {
-        PROVIDER_STATUS_TTL: 30000, // Increased from 10000ms
+        PROVIDER_STATUS_TTL: 30000,
         MAX_CONVERSATION_HISTORY: 100
     },
     PERFORMANCE: {
@@ -27,21 +40,34 @@ const CONSTANTS = {
     }
 };
 
-// ===== UTILITY FUNCTIONS =====
 class SecurityUtils {
+    /**
+     * @param {string} html
+     * @returns {string}
+     */
     static sanitizeHTML(html) {
         const div = document.createElement('div');
         div.textContent = html;
         return div.innerHTML;
     }
 
-    static createSafeElement(tag, content, className = '') {
+    /**
+     * @param {string} tag
+     * @param {string} content
+     * @param {string} className
+     * @returns {HTMLElement}
+     */
+    static createSafeElement(tag, content = '', className = '') {
         const element = document.createElement(tag);
         if (className) element.className = className;
         if (content) element.textContent = content;
         return element;
     }
 
+    /**
+     * @param {any} response
+     * @returns {any}
+     */
     static validateAPIResponse(response) {
         if (!response || typeof response !== 'object') {
             throw new Error('Invalid API response format');
@@ -51,7 +77,13 @@ class SecurityUtils {
 }
 
 class PerformanceUtils {
+    /**
+     * @param {Function} func
+     * @param {number} wait
+     * @returns {Function}
+     */
     static debounce(func, wait) {
+        /** @type {number|undefined} */
         let timeout;
         return function executedFunction(...args) {
             const later = () => {
@@ -63,7 +95,13 @@ class PerformanceUtils {
         };
     }
 
+    /**
+     * @param {Function} func
+     * @param {number} limit
+     * @returns {Function}
+     */
     static throttle(func, limit) {
+        /** @type {boolean|undefined} */
         let inThrottle;
         return function() {
             const args = arguments;
