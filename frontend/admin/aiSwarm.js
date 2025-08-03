@@ -237,40 +237,51 @@ class AIProviderManager {
     }
 
     /**
-     * 🔧 NEW: Check provider status via unified metrics endpoint (same as AI Monitoring)
+     * 🔧 FIXED: Check provider status via real backend metrics (same as unified manager)
      */
     async checkProviderViaMetrics(providerKey, signal) {
         try {
-            const response = await fetch(`${API_BASE}/ai/metrics`, { 
+            // Use production URL like unified status manager
+            const apiBase = 'https://rbck.onrender.com/api';
+            const response = await fetch(`${apiBase}/ai/metrics?t=${Date.now()}`, { 
                 method: 'GET',
                 signal,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
             });
             
             if (response.ok) {
                 const data = SecurityUtils.validateAPIResponse(await response.json());
                 
+                console.log(`🔍 [REAL BACKEND] Raw response for ${providerKey}:`, data);
+                
                 if (data.success && data.metrics && data.metrics[providerKey]) {
                     const providerData = data.metrics[providerKey];
-                    // ✅ FIXED: Use same logic as unified status manager
+                    // ✅ EXACT SAME LOGIC as unified status manager
                     const isConnected = providerData.isActive && providerData.configured;
                     
-                    console.log(`📊 [METRICS API] ${providerKey}:`, {
+                    console.log(`📊 [REAL BACKEND] ${providerKey}:`, {
+                        name: providerData.name,
+                        status: providerData.status,
                         isActive: providerData.isActive,
                         configured: providerData.configured,
-                        status: providerData.status,
-                        connected: isConnected
+                        connected: isConnected,
+                        uptime: providerData.uptime,
+                        successRate: providerData.successRate
                     });
                     
                     return isConnected;
                 }
                 
-                console.warn(`⚠️ [METRICS API] No data for ${providerKey}`);
+                console.warn(`⚠️ [REAL BACKEND] No data for ${providerKey} in metrics response`);
                 return false;
             }
+            console.warn(`⚠️ [REAL BACKEND] Bad response: ${response.status}`);
             return false;
         } catch (error) {
-            console.error(`❌ [METRICS API] ${providerKey} check failed:`, error);
+            console.error(`❌ [REAL BACKEND] ${providerKey} check failed:`, error);
             return false;
         }
     }
@@ -297,52 +308,62 @@ class AIProviderManager {
     async updateAllProviderStatus() {
         console.log('🔄 [AI SWARM] Updating all provider status...');
         
-        // 🚀 PRIMARY: Try unified status manager first (same data source as AI Monitoring)
-        if (window.unifiedStatusManager) {
-            try {
-                console.log('⚡ [UNIFIED SYNC] Syncing with unified status manager...');
+        // 🚀 PRIMARY: Get real backend data directly (like unified status manager)
+        try {
+            console.log('⚡ [REAL BACKEND] Getting live AI metrics...');
+            
+            const apiBase = 'https://rbck.onrender.com/api';
+            const response = await fetch(`${apiBase}/ai/metrics?t=${Date.now()}`, { 
+                method: 'GET',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = SecurityUtils.validateAPIResponse(await response.json());
                 
-                // Force fresh update from unified manager
-                await window.unifiedStatusManager.updateAllProviderStatus();
-                const allStatus = window.unifiedStatusManager.getAllProviderStatus();
-                
-                if (allStatus && Object.keys(allStatus).length > 0) {
-                    console.log('✅ [UNIFIED SYNC] Got unified status data:', allStatus);
+                if (data.success && data.metrics) {
+                    console.log('✅ [REAL BACKEND] Got live metrics data:', data.metrics);
                     
                     const connectedProviders = [];
                     
                     Object.keys(this.providers).forEach(key => {
-                        const unifiedData = allStatus[key];
-                        if (unifiedData) {
-                            const isConnected = unifiedData.connected && unifiedData.configured && unifiedData.isActive;
+                        const backendData = data.metrics[key];
+                        if (backendData) {
+                            // Use exact same logic as unified status manager
+                            const isConnected = backendData.isActive && backendData.configured;
                             
-                            // Update provider with unified data
+                            // Update provider with real backend data
                             this.providers[key].status = isConnected;
-                            this.providers[key].connected = unifiedData.connected;
-                            this.providers[key].configured = unifiedData.configured;
-                            this.providers[key].isActive = unifiedData.isActive;
-                            this.providers[key].responseTime = unifiedData.responseTime;
-                            this.providers[key].successRate = unifiedData.successRate;
-                            this.providers[key].lastUpdate = unifiedData.lastUpdate;
+                            this.providers[key].connected = backendData.isActive;
+                            this.providers[key].configured = backendData.configured;
+                            this.providers[key].isActive = backendData.isActive;
+                            this.providers[key].responseTime = backendData.averageResponseTime;
+                            this.providers[key].successRate = backendData.successRate;
+                            this.providers[key].lastUpdate = new Date().toISOString();
+                            this.providers[key].backendStatus = backendData.status;
+                            this.providers[key].uptime = backendData.uptime;
                             
                             if (isConnected) {
                                 connectedProviders.push(key);
                             }
                             
-                            console.log(`🔄 [UNIFIED SYNC] ${key}: ${isConnected ? 'Connected' : 'Disconnected'} (unified source)`);
+                            console.log(`🔄 [REAL BACKEND] ${key}: ${isConnected ? 'Connected' : 'Disconnected'} (status: ${backendData.status}, active: ${backendData.isActive}, configured: ${backendData.configured})`);
                         } else {
                             this.providers[key].status = false;
+                            console.log(`⚠️ [REAL BACKEND] ${key}: No backend data`);
                         }
                     });
                     
-                    console.log(`✅ [UNIFIED SYNC] AI Swarm synced (${connectedProviders.length}/${Object.keys(this.providers).length} connected)`);
+                    console.log(`✅ [REAL BACKEND] AI Swarm synced with live data (${connectedProviders.length}/${Object.keys(this.providers).length} connected)`);
                     return connectedProviders;
                 }
-            } catch (error) {
-                console.error('❌ [UNIFIED SYNC] Failed:', error);
             }
-        } else {
-            console.warn('⚠️ [UNIFIED SYNC] Unified status manager not available');
+            console.warn('⚠️ [REAL BACKEND] Failed to get live metrics');
+        } catch (error) {
+            console.error('❌ [REAL BACKEND] Live sync failed:', error);
         }
         
         // 🔧 FALLBACK: Direct API check if unified manager unavailable
@@ -899,7 +920,8 @@ export class AISwarmCouncilRefactored {
         
         // 🔧 NEW: Add backend sync testing functions
         window.testAISwarmSync = () => this.testBackendSync();
-        window.forceAISwarmSync = () => this.forceUnifiedSync();
+        window.forceAISwarmSync = () => this.forceRealBackendSync();
+        window.testRealBackendData = () => this.testRealBackendData();
         
         console.log('🔗 [GLOBAL] AI Swarm functions bound with backend sync support');
     }
@@ -940,29 +962,76 @@ export class AISwarmCouncilRefactored {
     }
 
     /**
-     * 🔧 NEW: Force unified sync
+     * 🔧 NEW: Force real backend sync
      */
-    async forceUnifiedSync() {
-        console.log('🔄 [FORCE SYNC] Forcing unified synchronization...');
-        this.conversationLogger.addMessage('system', '🔄 Forcing unified sync...');
+    async forceRealBackendSync() {
+        console.log('🔄 [FORCE BACKEND SYNC] Forcing real backend synchronization...');
+        this.conversationLogger.addMessage('system', '🔄 Forcing real backend sync...');
         
         try {
-            if (window.unifiedStatusManager) {
-                await window.unifiedStatusManager.updateAllProviderStatus();
-                await this.providerManager.updateAllProviderStatus();
-                this.uiController.debouncedRenderProviders();
-                this.uiController.updateStatusSummary();
+            await this.providerManager.updateAllProviderStatus();
+            this.uiController.debouncedRenderProviders();
+            this.uiController.updateStatusSummary();
+            
+            const report = this.getStatusReport();
+            this.conversationLogger.addMessage('system', `✅ Real backend sync complete: ${report.connectedCount}/${report.totalCount} connected`);
+            this.conversationLogger.addMessage('system', `Connected: ${report.connectedProviders.map(p => p.name).join(', ')}`);
+            
+            showNotification('🔄 Real backend sync completed', 'success');
+        } catch (error) {
+            console.error('❌ [FORCE BACKEND SYNC] Failed:', error);
+            this.conversationLogger.addMessage('system', `❌ Backend sync failed: ${error.message}`);
+            showNotification('❌ Backend sync failed', 'error');
+        }
+    }
+
+    /**
+     * 🧪 NEW: Test real backend data connection
+     */
+    async testRealBackendData() {
+        console.log('🧪 [TEST BACKEND] Testing real backend data connection...');
+        this.conversationLogger.addMessage('system', '🧪 Testing real backend data...');
+        
+        try {
+            const apiBase = 'https://rbck.onrender.com/api';
+            const response = await fetch(`${apiBase}/ai/metrics?t=${Date.now()}`, { 
+                method: 'GET',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
                 
-                const report = this.getStatusReport();
-                this.conversationLogger.addMessage('system', `✅ Sync complete: ${report.connectedCount}/${report.totalCount} connected`);
-                showNotification('🔄 Unified sync completed', 'success');
+                console.log('🎯 [TEST BACKEND] Raw backend response:', data);
+                
+                if (data.success && data.metrics) {
+                    const connectedCount = Object.values(data.metrics).filter(p => p.isActive && p.configured).length;
+                    const totalCount = Object.keys(data.metrics).length;
+                    
+                    this.conversationLogger.addMessage('system', `✅ Backend connection successful`);
+                    this.conversationLogger.addMessage('system', `📊 Found ${totalCount} providers, ${connectedCount} connected`);
+                    
+                    Object.entries(data.metrics).forEach(([key, provider]) => {
+                        const status = provider.isActive && provider.configured ? '✅ Connected' : '❌ Not connected';
+                        this.conversationLogger.addMessage('system', `${key}: ${status} (${provider.status})`);
+                    });
+                    
+                    showNotification('🧪 Backend test successful', 'success');
+                    return { success: true, data, connectedCount, totalCount };
+                } else {
+                    throw new Error('Invalid response structure');
+                }
             } else {
-                throw new Error('Unified status manager not available');
+                throw new Error(`HTTP ${response.status}`);
             }
         } catch (error) {
-            console.error('❌ [FORCE SYNC] Failed:', error);
-            this.conversationLogger.addMessage('system', `❌ Force sync failed: ${error.message}`);
-            showNotification('❌ Force sync failed', 'error');
+            console.error('❌ [TEST BACKEND] Test failed:', error);
+            this.conversationLogger.addMessage('system', `❌ Backend test failed: ${error.message}`);
+            showNotification('❌ Backend test failed', 'error');
+            return { success: false, error: error.message };
         }
     }
 
