@@ -329,13 +329,15 @@ class AIProviderManager {
                     
                     const connectedProviders = [];
                     
-                    Object.keys(this.providers).forEach(key => {
+                    // ✅ FIXED: Use proper provider keys with type safety
+                    const providerKeys = ['gemini', 'openai', 'claude', 'deepseek', 'chinda'];
+                    providerKeys.forEach(key => {
                         const backendData = data.metrics[key];
-                        if (backendData) {
+                        if (backendData && this.providers[key]) {
                             // Use exact same logic as unified status manager
                             const isConnected = backendData.isActive && backendData.configured;
                             
-                            // Update provider with real backend data
+                            // Update provider with real backend data  
                             this.providers[key].status = isConnected;
                             this.providers[key].connected = backendData.isActive;
                             this.providers[key].configured = backendData.configured;
@@ -352,7 +354,9 @@ class AIProviderManager {
                             
                             console.log(`🔄 [REAL BACKEND] ${key}: ${isConnected ? 'Connected' : 'Disconnected'} (status: ${backendData.status}, active: ${backendData.isActive}, configured: ${backendData.configured})`);
                         } else {
-                            this.providers[key].status = false;
+                            if (this.providers[key]) {
+                                this.providers[key].status = false;
+                            }
                             console.log(`⚠️ [REAL BACKEND] ${key}: No backend data`);
                         }
                     });
@@ -369,7 +373,9 @@ class AIProviderManager {
         // 🔧 FALLBACK: Direct API check if unified manager unavailable
         console.log('🔄 [FALLBACK] Using direct API check...');
         
-        const checkPromises = Object.keys(this.providers).map(async (key) => {
+        // ✅ FIXED: Use proper provider keys with type safety
+        const providerKeys = ['gemini', 'openai', 'claude', 'deepseek', 'chinda'];
+        const checkPromises = providerKeys.map(async (key) => {
             try {
                 const isConnected = await this.checkProviderStatus(key);
                 return { key, connected: isConnected, success: true };
@@ -382,17 +388,17 @@ class AIProviderManager {
         const connectedProviders = [];
         
         results.forEach((result, index) => {
-            const key = Object.keys(this.providers)[index];
+            const key = providerKeys[index];
             
-            if (result.status === 'fulfilled' && result.value.connected) {
+            if (result.status === 'fulfilled' && result.value.connected && this.providers[key]) {
                 this.providers[key].status = true;
                 connectedProviders.push(key);
-            } else {
+            } else if (this.providers[key]) {
                 this.providers[key].status = false;
             }
         });
 
-        console.log(`✅ [FALLBACK] Direct check completed (${connectedProviders.length}/${Object.keys(this.providers).length} connected)`);
+        console.log(`✅ [FALLBACK] Direct check completed (${connectedProviders.length}/${providerKeys.length} connected)`);
         return connectedProviders;
     }
 
@@ -558,10 +564,8 @@ class SwarmUIController {
         this.conversationLogger = conversationLogger;
         this.cachedElements = new Map();
         
-        // Debounced update methods for performance
-        this.debouncedRenderProviders = PerformanceUtils.debounce(
-            this.renderProviders.bind(this), 100
-        );
+        // ✅ FIXED: Use immediate updates like aiMonitoring.js (no debouncing)
+        // Immediate UI updates for real-time status sync
     }
 
     getCachedElement(id) {
@@ -774,16 +778,21 @@ class MonitoringManager {
         console.log('Starting optimized monitoring system...');
         this.isMonitoring = true;
 
-        // Primary status monitoring
+        // Primary status monitoring with immediate UI updates
         this.intervals.set('primary', setInterval(async () => {
             if (!this.isMonitoring) return;
             
             try {
+                console.log('⚡ [MONITORING] Starting status update cycle...');
                 await this.providerManager.updateAllProviderStatus();
-                this.uiController.debouncedRenderProviders();
+                
+                // ✅ FIXED: Immediate UI updates like aiMonitoring.js
+                console.log('⚡ [MONITORING] Triggering immediate UI update...');
+                this.uiController.renderProviders();
                 this.uiController.updateStatusSummary();
+                console.log('✅ [MONITORING] Status update cycle completed');
             } catch (error) {
-                console.error('Primary monitoring error:', error);
+                console.error('❌ [MONITORING] Primary monitoring error:', error);
             }
         }, CONSTANTS.INTERVALS.PRIMARY_MONITORING));
 
@@ -883,8 +892,11 @@ export class AISwarmCouncilRefactored {
     async refreshProviderStatus() {
         this.conversationLogger.addMessage('system', '🔄 Refreshing AI provider status...');
         await this.providerManager.updateAllProviderStatus();
-        this.uiController.debouncedRenderProviders();
+        
+        // ✅ FIXED: Immediate UI updates
+        this.uiController.renderProviders();
         this.uiController.updateStatusSummary();
+        
         this.conversationLogger.addMessage('system', '✅ Provider status updated');
         showNotification('🔄 AI provider status refreshed', 'info');
     }
@@ -948,8 +960,8 @@ export class AISwarmCouncilRefactored {
             const connectedProviders = await this.providerManager.updateAllProviderStatus();
             this.conversationLogger.addMessage('system', `🔄 AI Swarm sync: ${connectedProviders.length} providers connected`);
             
-            // Update UI
-            this.uiController.debouncedRenderProviders();
+            // ✅ FIXED: Immediate UI updates
+            this.uiController.renderProviders();
             this.uiController.updateStatusSummary();
             
             showNotification('🧪 Backend sync test completed', 'success');
@@ -970,7 +982,8 @@ export class AISwarmCouncilRefactored {
         
         try {
             await this.providerManager.updateAllProviderStatus();
-            this.uiController.debouncedRenderProviders();
+            // ✅ FIXED: Immediate UI updates like aiMonitoring.js
+            this.uiController.renderProviders();
             this.uiController.updateStatusSummary();
             
             const report = this.getStatusReport();
