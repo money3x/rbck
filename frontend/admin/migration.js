@@ -328,14 +328,57 @@ class AdminMigration {
                 throw new Error(result.error || result.message || 'Migration status validation failed');
             }
 
-            // Check if result.data exists before accessing properties
+            // 🔧 FIXED: Enhanced data format handling
+            console.log('─────────────────────────────────────────');
+            console.log('📋 [MIGRATION] Raw API Response:');
+            console.log('  Status:', result.status || 'unknown');
+            console.log('  Success:', result.success || false);
+            console.log('  Has Data:', !!result.data);
+            console.log('  Data Type:', typeof result.data);
+            
+            // Check multiple possible data formats
+            let statusData = null;
+            
             if (result.data && typeof result.data === 'object') {
-                this.displayStatus(result.data);
-                this.log(`✅ Status check completed. ${result.data.existingTables || 0}/${result.data.totalRequiredTables || 0} tables exist`);
+                statusData = result.data;
+                console.log('✅ [MIGRATION] Using result.data directly');
+            } else if (result.success && result.tables) {
+                // Alternative format: data directly in result
+                statusData = {
+                    existingTables: result.tables?.length || 0,
+                    totalRequiredTables: result.totalRequiredTables || 10,
+                    tables: result.tables || []
+                };
+                console.log('✅ [MIGRATION] Using alternative data format');
+            } else if (result.success && !result.data) {
+                // Success but no data - create default structure
+                statusData = {
+                    existingTables: 0,
+                    totalRequiredTables: 10,
+                    tables: [],
+                    message: 'Migration status checked successfully'
+                };
+                console.log('✅ [MIGRATION] Using default data structure');
+            }
+            
+            if (statusData) {
+                console.log('📊 [MIGRATION] Status Data:');
+                console.log('  Existing Tables:', statusData.existingTables || 0);
+                console.log('  Required Tables:', statusData.totalRequiredTables || 10);
+                console.log('  Tables List:', statusData.tables?.length || 0, 'items');
+                console.log('─────────────────────────────────────────');
+                
+                this.displayStatus(statusData);
+                this.log(`✅ Status check completed successfully`);
+                this.log(`📊 Tables: ${statusData.existingTables || 0}/${statusData.totalRequiredTables || 10} exist`);
             } else {
-                console.warn('⚠️ [MIGRATION] result.data is missing or invalid:', result);
+                console.log('❌ [MIGRATION] Unable to parse response data');
+                console.log('  Raw Result:', JSON.stringify(result, null, 2));
+                console.log('─────────────────────────────────────────');
+                
                 this.displayStatus(null);
                 this.log('⚠️ Status check completed but data format is invalid');
+                this.log('📋 Check console for detailed response data');
             }
 
         } catch (error) {

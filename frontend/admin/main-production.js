@@ -756,27 +756,35 @@ window.loadAISwarmData = function() {
 };
 
 window.forceRenderAIProviders = function() {
-    console.log('🔄 [AI SWARM] Force rendering AI Providers (FIXED VERSION)...');
+    console.log('═══════════════════════════════════════');
+    console.log('🔄 [AI SWARM] Force rendering AI Providers (FIXED VERSION)');
+    console.log('═══════════════════════════════════════');
     
     const tableBody = document.getElementById('aiProvidersTableBody');
     if (!tableBody) {
-        console.error('❌ [AI SWARM] aiProvidersTableBody not found');
+        console.log('❌ [AI SWARM] ERROR: aiProvidersTableBody not found');
+        console.log('─────────────────────────────────────');
         showNotification('❌ ไม่พบตาราง AI Providers', 'error');
         return;
     }
     
+    console.log('🧹 [AI SWARM] Clearing existing table content...');
     // 🔧 FIXED: Clear existing content safely
     while (tableBody.firstChild) {
         tableBody.removeChild(tableBody.firstChild);
     }
     
+    console.log('🔍 [AI SWARM] Checking unified status manager...');
     // 🔧 FIXED: Get real-time status from unified manager
     let realTimeStatus = {};
     if (window.unifiedStatusManager && window.unifiedStatusManager.isMonitoring) {
         realTimeStatus = window.unifiedStatusManager.getAllProviderStatus();
-        console.log('📊 [AI SWARM] Got real-time status:', realTimeStatus);
+        console.log('✅ [AI SWARM] Unified status manager: AVAILABLE');
+        console.log('📊 [AI SWARM] Provider count:', Object.keys(realTimeStatus).length);
+        console.log('🔗 [AI SWARM] Connected providers:', Object.values(realTimeStatus).filter(p => p && p.connected && p.configured).length);
     } else {
-        console.warn('⚠️ [AI SWARM] Unified status manager not available');
+        console.log('⚠️ [AI SWARM] Unified status manager: NOT AVAILABLE');
+        console.log('💡 [AI SWARM] Fallback: Using disconnected status for all providers');
     }
     
     // 🔧 FIXED: Use real provider data instead of static AI_PROVIDERS
@@ -915,9 +923,15 @@ window.forceRenderAIProviders = function() {
         tableBody.appendChild(row);
     });
     
-    console.log('✅ [AI SWARM] AI Providers rendered successfully (FIXED VERSION)');
-    
     const connectedCount = Object.values(realTimeStatus).filter(p => p && p.connected && p.configured).length;
+    
+    console.log('─────────────────────────────────────');
+    console.log('✅ [AI SWARM] Rendering completed successfully');
+    console.log('📋 [AI SWARM] Total providers rendered:', providers.length);
+    console.log('🔗 [AI SWARM] Connected providers:', connectedCount);
+    console.log('💬 [AI SWARM] Showing notification to user');
+    console.log('═══════════════════════════════════════');
+    
     showNotification(`✅ แสดง AI Providers เรียบร้อย (${connectedCount} เชื่อมต่อ)`, 'success');
     
     // 🔧 FIXED: Don't need separate status check - already showing real-time data
@@ -971,24 +985,38 @@ async function checkAIProvidersStatus() {
 }
 
 window.refreshAISwarmProviders = function() {
-    console.log('🔄 [AI SWARM] Refreshing AI Swarm providers (FIXED VERSION)...');
+    console.log('═══════════════════════════════════════');
+    console.log('🔄 [AI SWARM] Manual refresh requested');
+    console.log('═══════════════════════════════════════');
+    
     showNotification('🔄 กำลังอัปเดต AI Providers...', 'info');
     
     // 🔧 FIXED: Force unified manager update first, then render
     const doRefresh = async () => {
         try {
+            console.log('🔍 [AI SWARM] Checking unified status manager availability...');
+            
             if (window.unifiedStatusManager && window.unifiedStatusManager.isMonitoring) {
-                console.log('⚡ [AI SWARM] Syncing with unified status manager...');
+                console.log('✅ [AI SWARM] Unified manager found - forcing update...');
                 await window.unifiedStatusManager.updateAllProviderStatus();
-                // Brief delay for data propagation
+                console.log('⏳ [AI SWARM] Waiting for data propagation (300ms)...');
                 await new Promise(resolve => setTimeout(resolve, 300));
+                console.log('✅ [AI SWARM] Data propagation completed');
+            } else {
+                console.log('⚠️ [AI SWARM] Unified manager not available - proceeding with fallback');
             }
             
-            // Then update display
+            console.log('🎨 [AI SWARM] Triggering UI re-render...');
             window.forceRenderAIProviders();
+            console.log('✅ [AI SWARM] Manual refresh completed successfully');
+            console.log('═══════════════════════════════════════');
             
         } catch (error) {
-            console.error('❌ [AI SWARM] Refresh failed:', error);
+            console.log('❌ [AI SWARM] ERROR during refresh:');
+            console.log('  Error Type:', error.name);
+            console.log('  Error Message:', error.message);
+            console.log('  Stack Trace:', error.stack);
+            console.log('═══════════════════════════════════════');
             showNotification('❌ การอัปเดต AI Providers ล้มเหลว', 'error');
         }
     };
@@ -997,29 +1025,52 @@ window.refreshAISwarmProviders = function() {
 };
 
 window.debugAISwarm = function() {
-    console.log('🔍 [AI SWARM] Debug Info (FIXED VERSION):');
-    console.log('- forceRenderAIProviders type:', typeof window.forceRenderAIProviders);
-    console.log('- refreshAISwarmProviders type:', typeof window.refreshAISwarmProviders);
+    console.log('═══════════════════════════════════════');
+    console.log('🐛 [AI SWARM] DEBUG INFORMATION');
+    console.log('═══════════════════════════════════════');
     
+    console.log('📋 [DEBUG] Function Availability:');
+    console.log('  forceRenderAIProviders:', typeof window.forceRenderAIProviders);
+    console.log('  refreshAISwarmProviders:', typeof window.refreshAISwarmProviders);
+    console.log('  loadAISwarmData:', typeof window.loadAISwarmData);
+    
+    console.log('─────────────────────────────────────');
+    console.log('🎯 [DEBUG] DOM Elements:');
     const tableBody = document.getElementById('aiProvidersTableBody');
-    console.log('- aiProvidersTableBody exists:', !!tableBody);
-    console.log('- current table rows:', tableBody ? tableBody.children.length : 0);
+    console.log('  aiProvidersTableBody exists:', !!tableBody);
+    console.log('  current table rows:', tableBody ? tableBody.children.length : 0);
+    console.log('  table parent visible:', tableBody ? (tableBody.offsetParent !== null) : false);
     
-    // 🔧 FIXED: Show unified manager status
+    console.log('─────────────────────────────────────');
+    console.log('🔗 [DEBUG] Unified Status Manager:');
     if (window.unifiedStatusManager) {
-        console.log('- Unified status manager available:', true);
-        console.log('- Unified status manager monitoring:', window.unifiedStatusManager.isMonitoring);
+        console.log('  Manager available: ✅ YES');
+        console.log('  Currently monitoring:', window.unifiedStatusManager.isMonitoring);
+        console.log('  Last update:', window.unifiedStatusManager.lastUpdate || 'Never');
         
         if (window.unifiedStatusManager.isMonitoring) {
             const realTimeStatus = window.unifiedStatusManager.getAllProviderStatus();
-            console.log('- Real-time status data:', realTimeStatus);
+            console.log('  Total providers tracked:', Object.keys(realTimeStatus).length);
             
             const connectedCount = Object.values(realTimeStatus).filter(p => p && p.connected && p.configured).length;
-            console.log('- Connected providers:', connectedCount);
+            console.log('  Connected providers:', connectedCount);
+            
+            console.log('  Provider details:');
+            Object.entries(realTimeStatus).forEach(([key, status]) => {
+                console.log(`    ${key}: ${status.connected && status.configured ? '✅ Connected' : '❌ Disconnected'} (${status.status})`);
+            });
         }
     } else {
-        console.log('- Unified status manager available:', false);
+        console.log('  Manager available: ❌ NO');
+        console.log('  This is the main issue - unified manager not loaded');
     }
+    
+    console.log('─────────────────────────────────────');
+    console.log('⚙️ [DEBUG] System Status:');
+    console.log('  Current URL:', window.location.href);
+    console.log('  API Base:', window.rbckConfig?.apiBase || 'Not configured');
+    console.log('  User Agent:', navigator.userAgent.substring(0, 50) + '...');
+    console.log('═══════════════════════════════════════');
     
     showNotification('🐛 Debug info ดูใน Console (F12)', 'info');
 };
@@ -3356,17 +3407,29 @@ window.clearConversationLogs = function() {
  * 🔧 FIXED: Auto-refresh AI Swarm when unified manager updates
  */
 function startAISwarmAutoSync() {
-    console.log('⚡ [AI SWARM] Starting auto-sync system...');
+    console.log('═══════════════════════════════════════');
+    console.log('⚡ [AI SWARM] Starting auto-sync system');
+    console.log('  Interval: 10 seconds');
+    console.log('  Condition: Only when AI Swarm section is visible');
+    console.log('═══════════════════════════════════════');
     
     // Start auto-refresh every 10 seconds if AI Swarm is visible
     setInterval(() => {
         const aiSwarmSection = document.getElementById('ai-swarm');
-        if (aiSwarmSection && aiSwarmSection.style.display !== 'none') {
+        const isVisible = aiSwarmSection && aiSwarmSection.style.display !== 'none';
+        
+        if (isVisible) {
+            console.log('─────────────────────────────────────');
+            console.log('⚡ [AI SWARM AUTO-SYNC] Periodic sync triggered');
+            
             // Only refresh if unified manager is available and monitoring
             if (window.unifiedStatusManager && window.unifiedStatusManager.isMonitoring) {
-                console.log('⚡ [AI SWARM] Auto-sync with unified manager...');
+                console.log('✅ [AUTO-SYNC] Unified manager available - proceeding');
                 window.forceRenderAIProviders();
+            } else {
+                console.log('⚠️ [AUTO-SYNC] Unified manager not available - skipping');
             }
+            console.log('─────────────────────────────────────');
         }
     }, 10000); // Every 10 seconds
 }
