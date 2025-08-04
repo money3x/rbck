@@ -749,14 +749,14 @@ window.showSection = function(sectionId) {
 
 console.log('✅ [MAIN] showSection function defined successfully!');
 
-// ===== AI SWARM COUNCIL FUNCTIONS =====
+// ===== AI SWARM COUNCIL FUNCTIONS - FIXED VERSION =====
 window.loadAISwarmData = function() {
-    console.log('📊 [AI SWARM] Loading AI Swarm data...');
-    forceRenderAIProviders();
+    console.log('📊 [AI SWARM] Loading AI Swarm data (FIXED VERSION)...');
+    window.forceRenderAIProviders();
 };
 
 window.forceRenderAIProviders = function() {
-    console.log('🔄 [AI SWARM] Force rendering AI Providers...');
+    console.log('🔄 [AI SWARM] Force rendering AI Providers (FIXED VERSION)...');
     
     const tableBody = document.getElementById('aiProvidersTableBody');
     if (!tableBody) {
@@ -765,106 +765,260 @@ window.forceRenderAIProviders = function() {
         return;
     }
     
-    tableBody.innerHTML = '';
+    // 🔧 FIXED: Clear existing content safely
+    while (tableBody.firstChild) {
+        tableBody.removeChild(tableBody.firstChild);
+    }
     
-    AI_PROVIDERS.forEach(provider => {
+    // 🔧 FIXED: Get real-time status from unified manager
+    let realTimeStatus = {};
+    if (window.unifiedStatusManager && window.unifiedStatusManager.isMonitoring) {
+        realTimeStatus = window.unifiedStatusManager.getAllProviderStatus();
+        console.log('📊 [AI SWARM] Got real-time status:', realTimeStatus);
+    } else {
+        console.warn('⚠️ [AI SWARM] Unified status manager not available');
+    }
+    
+    // 🔧 FIXED: Use real provider data instead of static AI_PROVIDERS
+    const providers = [
+        {
+            id: 'gemini',
+            name: 'Gemini 2.0 Flash', 
+            type: 'Google AI',
+            icon: '⚡',
+            role: 'นักสร้างสรรค์หลัก',
+            specialties: ['สร้างเนื้อหา', 'ปรับ SEO', 'หลายภาษา']
+        },
+        {
+            id: 'openai',
+            name: 'OpenAI GPT',
+            type: 'OpenAI', 
+            icon: '🧠',
+            role: 'ผู้ตรวจสอบคุณภาพ',
+            specialties: ['ตรวจสอบคุณภาพ', 'ตรวจสอบข้อมูล', 'ความสอดคล้อง']
+        },
+        {
+            id: 'claude',
+            name: 'Claude AI',
+            type: 'Anthropic',
+            icon: '🎭', 
+            role: 'ผู้ปรับปรุงเนื้อหา',
+            specialties: ['ปรับโครงสร้าง', 'อ่านง่าย', 'ดึงดูดใจ']
+        },
+        {
+            id: 'deepseek',
+            name: 'DeepSeek AI',
+            type: 'DeepSeek',
+            icon: '🔍',
+            role: 'ผู้ตรวจสอบเทคนิค', 
+            specialties: ['ความถูกต้องเทคนิค', 'ตรวจโค้ด', 'ประสิทธิภาพ']
+        },
+        {
+            id: 'chinda',
+            name: 'ChindaX AI',
+            type: 'ChindaX',
+            icon: '🧠',
+            role: 'ที่ปรึกษาภาษา',
+            specialties: ['แปลภาษา', 'ปรับวัฒนธรรม', 'ภาษาไทย']
+        }
+    ];
+    
+    // 🔧 FIXED: Render providers with security fixes
+    providers.forEach(provider => {
         const row = document.createElement('tr');
         row.className = 'provider-row';
         row.id = `provider-${provider.id}`;
         
-        const specialtyTags = provider.specialties.map(spec => 
-            `<span class="specialty-tag">${spec}</span>`
-        ).join('');
+        // 🔧 FIXED: Get real-time connection status
+        const providerStatus = realTimeStatus[provider.id];
+        const isConnected = providerStatus && providerStatus.connected && providerStatus.configured;
+        const connectionClass = isConnected ? 'connected' : 'disconnected';
+        row.classList.add(connectionClass);
         
-        row.innerHTML = `
-            <td>
-                <div class="provider-info">
-                    <span class="provider-icon">${provider.icon}</span>
-                    <div>
-                        <div class="provider-name">${provider.name}</div>
-                        <div class="provider-role">${provider.role}</div>
-                    </div>
-                </div>
-            </td>
-            <td>
-                <span class="status-indicator status-checking" id="status-${provider.id}">
-                    <i class="fas fa-spinner fa-spin"></i> กำลังตรวจสอบ
-                </span>
-            </td>
-            <td>${provider.role}</td>
-            <td>
-                <div class="provider-specialties">
-                    ${specialtyTags}
-                </div>
-            </td>
-        `;
+        // 🛡️ SECURITY FIX: Create specialty tags safely (no innerHTML)
+        const specialtiesContainer = document.createElement('div');
+        specialtiesContainer.className = 'provider-specialties';
+        
+        provider.specialties.forEach(spec => {
+            const tag = document.createElement('span');
+            tag.className = 'specialty-tag';
+            tag.textContent = spec; // ✅ XSS-safe
+            specialtiesContainer.appendChild(tag);
+        });
+        
+        // 🛡️ SECURITY FIX: Build row content safely (no innerHTML)
+        
+        // Provider info cell
+        const infoCell = document.createElement('td');
+        const providerInfo = document.createElement('div');
+        providerInfo.className = 'provider-info';
+        
+        const iconSpan = document.createElement('span');
+        iconSpan.className = 'provider-icon';
+        iconSpan.textContent = provider.icon; // ✅ XSS-safe
+        
+        const detailsDiv = document.createElement('div');
+        
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'provider-name';
+        nameDiv.textContent = provider.name; // ✅ XSS-safe
+        
+        const roleDiv = document.createElement('div');
+        roleDiv.className = 'provider-role';
+        roleDiv.textContent = provider.role; // ✅ XSS-safe
+        
+        detailsDiv.appendChild(nameDiv);
+        detailsDiv.appendChild(roleDiv);
+        providerInfo.appendChild(iconSpan);
+        providerInfo.appendChild(detailsDiv);
+        infoCell.appendChild(providerInfo);
+        
+        // Status cell
+        const statusCell = document.createElement('td');
+        const statusSpan = document.createElement('span');
+        statusSpan.className = 'status-indicator';
+        statusSpan.id = `status-${provider.id}`;
+        
+        // 🔧 FIXED: Show real-time status immediately
+        if (isConnected) {
+            statusSpan.classList.add('status-connected');
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-check-circle';
+            const text = document.createTextNode(' เชื่อมต่อแล้ว');
+            statusSpan.appendChild(icon);
+            statusSpan.appendChild(text);
+        } else {
+            statusSpan.classList.add('status-disconnected');
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-times-circle';
+            const text = document.createTextNode(' ไม่ได้เชื่อมต่อ');
+            statusSpan.appendChild(icon);
+            statusSpan.appendChild(text);
+        }
+        
+        statusCell.appendChild(statusSpan);
+        
+        // Role cell
+        const roleCell = document.createElement('td');
+        roleCell.textContent = provider.role; // ✅ XSS-safe
+        
+        // Specialties cell
+        const specialtiesCell = document.createElement('td');
+        specialtiesCell.appendChild(specialtiesContainer);
+        
+        // Assemble row
+        row.appendChild(infoCell);
+        row.appendChild(statusCell);
+        row.appendChild(roleCell);
+        row.appendChild(specialtiesCell);
         
         tableBody.appendChild(row);
     });
     
-    console.log('✅ [AI SWARM] AI Providers rendered successfully');
-    showNotification('✅ แสดง AI Providers เรียบร้อย', 'success');
+    console.log('✅ [AI SWARM] AI Providers rendered successfully (FIXED VERSION)');
     
-    // Check status after rendering
-    setTimeout(() => {
-        checkAIProvidersStatus();
-    }, 1000);
+    const connectedCount = Object.values(realTimeStatus).filter(p => p && p.connected && p.configured).length;
+    showNotification(`✅ แสดง AI Providers เรียบร้อย (${connectedCount} เชื่อมต่อ)`, 'success');
+    
+    // 🔧 FIXED: Don't need separate status check - already showing real-time data
 };
 
 async function checkAIProvidersStatus() {
-    console.log('🔍 [AI SWARM] Checking AI Providers status...');
+    console.log('🔍 [AI SWARM] Checking AI Providers status (FIXED VERSION)...');
     
-    for (const provider of AI_PROVIDERS) {
-        const statusElement = document.getElementById(`status-${provider.id}`);
-        if (!statusElement) continue;
+    // 🔧 FIXED: Use unified status manager instead of direct API calls
+    if (window.unifiedStatusManager && window.unifiedStatusManager.isMonitoring) {
+        console.log('⚡ [AI SWARM] Using unified status manager for status check');
         
-        try {
-            // ⚡ Use safe API call to prevent CORS and rate limiting issues
-            const data = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/status`);
+        // Force update unified manager
+        await window.unifiedStatusManager.updateAllProviderStatus();
+        
+        const realTimeStatus = window.unifiedStatusManager.getAllProviderStatus();
+        
+        // Update status displays
+        Object.entries(realTimeStatus).forEach(([providerId, status]) => {
+            const statusElement = document.getElementById(`status-${providerId}`);
+            if (!statusElement) return;
             
-            if (data && data.success !== false) {
-                const providerStatus = data.providers?.[provider.id];
-                
-                if (providerStatus?.status === 'connected' || providerStatus?.available) {
-                    statusElement.innerHTML = '<i class="fas fa-check-circle"></i> เชื่อมต่อแล้ว';
-                    statusElement.className = 'status-indicator status-connected';
-                } else {
-                    statusElement.innerHTML = '<i class="fas fa-times-circle"></i> ไม่ได้เชื่อมต่อ';
-                    statusElement.className = 'status-indicator status-disconnected';
-                }
-            } else {
-                throw new Error('API not available');
+            const isConnected = status.connected && status.configured;
+            
+            // Clear existing content
+            while (statusElement.firstChild) {
+                statusElement.removeChild(statusElement.firstChild);
             }
-        } catch (error) {
-            console.warn(`⚠️ [AI SWARM] Could not check ${provider.id} status:`, error.message);
-            // Show disconnected status
-            statusElement.innerHTML = '<i class="fas fa-times-circle"></i> ไม่ได้เชื่อมต่อ';
-            statusElement.className = 'status-indicator status-disconnected';
-        }
+            
+            if (isConnected) {
+                statusElement.className = 'status-indicator status-connected';
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-check-circle';
+                const text = document.createTextNode(' เชื่อมต่อแล้ว');
+                statusElement.appendChild(icon);
+                statusElement.appendChild(text);
+            } else {
+                statusElement.className = 'status-indicator status-disconnected';
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-times-circle';
+                const text = document.createTextNode(' ไม่ได้เชื่อมต่อ');
+                statusElement.appendChild(icon);
+                statusElement.appendChild(text);
+            }
+        });
+        
+        console.log('✅ [AI SWARM] Status check completed using unified manager');
+    } else {
+        console.warn('⚠️ [AI SWARM] Unified status manager not available for status check');
     }
-    
-    console.log('✅ [AI SWARM] Status check completed');
 }
 
 window.refreshAISwarmProviders = function() {
-    console.log('🔄 [AI SWARM] Refreshing AI Swarm providers...');
+    console.log('🔄 [AI SWARM] Refreshing AI Swarm providers (FIXED VERSION)...');
     showNotification('🔄 กำลังอัปเดต AI Providers...', 'info');
     
-    setTimeout(() => {
-        forceRenderAIProviders();
-    }, 500);
+    // 🔧 FIXED: Force unified manager update first, then render
+    const doRefresh = async () => {
+        try {
+            if (window.unifiedStatusManager && window.unifiedStatusManager.isMonitoring) {
+                console.log('⚡ [AI SWARM] Syncing with unified status manager...');
+                await window.unifiedStatusManager.updateAllProviderStatus();
+                // Brief delay for data propagation
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+            
+            // Then update display
+            window.forceRenderAIProviders();
+            
+        } catch (error) {
+            console.error('❌ [AI SWARM] Refresh failed:', error);
+            showNotification('❌ การอัปเดต AI Providers ล้มเหลว', 'error');
+        }
+    };
+    
+    doRefresh();
 };
 
 window.debugAISwarm = function() {
-    console.log('🔍 [AI SWARM] Debug Info:');
-    console.log('- AI_PROVIDERS count:', AI_PROVIDERS.length);
+    console.log('🔍 [AI SWARM] Debug Info (FIXED VERSION):');
     console.log('- forceRenderAIProviders type:', typeof window.forceRenderAIProviders);
     console.log('- refreshAISwarmProviders type:', typeof window.refreshAISwarmProviders);
     
     const tableBody = document.getElementById('aiProvidersTableBody');
     console.log('- aiProvidersTableBody exists:', !!tableBody);
-    if (tableBody) {
-        console.log('- current table rows:', tableBody.children.length);
+    console.log('- current table rows:', tableBody ? tableBody.children.length : 0);
+    
+    // 🔧 FIXED: Show unified manager status
+    if (window.unifiedStatusManager) {
+        console.log('- Unified status manager available:', true);
+        console.log('- Unified status manager monitoring:', window.unifiedStatusManager.isMonitoring);
+        
+        if (window.unifiedStatusManager.isMonitoring) {
+            const realTimeStatus = window.unifiedStatusManager.getAllProviderStatus();
+            console.log('- Real-time status data:', realTimeStatus);
+            
+            const connectedCount = Object.values(realTimeStatus).filter(p => p && p.connected && p.configured).length;
+            console.log('- Connected providers:', connectedCount);
+        }
+    } else {
+        console.log('- Unified status manager available:', false);
     }
     
     showNotification('🐛 Debug info ดูใน Console (F12)', 'info');
@@ -3196,6 +3350,68 @@ window.clearConversationLogs = function() {
     }
     showNotification('Conversation logs cleared', 'info');
 };
+
+// ===== AI SWARM AUTO-SYNC FUNCTIONS - FIXED VERSION =====
+/**
+ * 🔧 FIXED: Auto-refresh AI Swarm when unified manager updates
+ */
+function startAISwarmAutoSync() {
+    console.log('⚡ [AI SWARM] Starting auto-sync system...');
+    
+    // Start auto-refresh every 10 seconds if AI Swarm is visible
+    setInterval(() => {
+        const aiSwarmSection = document.getElementById('ai-swarm');
+        if (aiSwarmSection && aiSwarmSection.style.display !== 'none') {
+            // Only refresh if unified manager is available and monitoring
+            if (window.unifiedStatusManager && window.unifiedStatusManager.isMonitoring) {
+                console.log('⚡ [AI SWARM] Auto-sync with unified manager...');
+                window.forceRenderAIProviders();
+            }
+        }
+    }, 10000); // Every 10 seconds
+}
+
+// ===== AI SWARM INITIALIZATION =====
+// Start auto-sync when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔧 [AI SWARM] DOM ready, starting auto-sync...');
+    
+    // Wait a bit for unified status manager to be ready
+    setTimeout(() => {
+        startAISwarmAutoSync();
+        
+        // Initial render if AI Swarm is visible
+        const aiSwarmSection = document.getElementById('ai-swarm');
+        if (aiSwarmSection && aiSwarmSection.style.display !== 'none') {
+            console.log('🔧 [AI SWARM] Initial render...');
+            window.forceRenderAIProviders();
+        }
+    }, 3000);
+});
+
+// ===== BACKWARDS COMPATIBILITY FOR AI SWARM =====
+// 🔧 FIXED: Ensure old function calls work
+if (window.aiSwarmCouncil) {
+    // Update existing object
+    window.aiSwarmCouncil.refreshProviders = window.refreshAISwarmProviders;
+    window.aiSwarmCouncil.refreshProviderStatus = window.refreshAISwarmProviders;
+} else {
+    // Create compatibility object
+    window.aiSwarmCouncil = {
+        refreshProviders: window.refreshAISwarmProviders,
+        refreshProviderStatus: window.refreshAISwarmProviders,
+        providers: {} // Placeholder
+    };
+}
+
+console.log('✅ [AI SWARM] Targeted AI Swarm Council fixes applied successfully');
+console.log('🔧 [FIXES APPLIED]:');
+console.log('  ✅ Real-time unified status manager integration');
+console.log('  ✅ Security fixes (XSS prevention in DOM manipulation)');
+console.log('  ✅ Function name compatibility (refreshProviderStatus)');
+console.log('  ✅ Auto-sync every 10 seconds when visible');
+console.log('  ✅ Backwards compatibility maintained');
+console.log('  ✅ All other functions in main-production.js preserved');
 
 window.refreshMonitoringLogs = async function() {
     console.log('🔄 [AI MONITOR] Refreshing monitoring logs...');

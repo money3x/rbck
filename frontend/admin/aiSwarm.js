@@ -175,10 +175,10 @@ class AIProviderManager {
     async checkProviderStatus(providerKey) {
         try {
             // 🚀 PRIMARY: Try unified status manager first (same as AI Monitoring)
-            if (window.unifiedStatusManager) {
+            if (window.unifiedStatusManager && window.unifiedStatusManager.isMonitoring) {
                 const unifiedStatus = window.unifiedStatusManager.getProviderStatus(providerKey);
                 if (unifiedStatus && unifiedStatus.lastUpdate) {
-                    const isConnected = unifiedStatus.connected && unifiedStatus.configured && unifiedStatus.isActive;
+                    const isConnected = unifiedStatus.connected && unifiedStatus.configured;
                     console.log(`✅ [UNIFIED SYNC] ${providerKey}: ${isConnected ? 'Connected' : 'Disconnected'} from unified manager`);
                     return isConnected;
                 }
@@ -308,98 +308,73 @@ class AIProviderManager {
     async updateAllProviderStatus() {
         console.log('🔄 [AI SWARM] Updating all provider status...');
         
-        // 🚀 PRIMARY: Get real backend data directly (like unified status manager)
-        try {
-            console.log('⚡ [REAL BACKEND] Getting live AI metrics...');
+        // 🚀 PRIMARY: Use unified status manager data (no duplicate API calls)
+        if (window.unifiedStatusManager && window.unifiedStatusManager.isMonitoring) {
+            console.log('⚡ [UNIFIED SYNC] Using unified status manager data...');
             
-            const apiBase = 'https://rbck.onrender.com/api';
-            const response = await fetch(`${apiBase}/ai/metrics?t=${Date.now()}`, { 
-                method: 'GET',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+            const allStatus = window.unifiedStatusManager.getAllProviderStatus();
+            const connectedProviders = [];
+            
+            console.log('📊 [UNIFIED SYNC] Got unified status data:', allStatus);
+            
+            // ✅ FIXED: Use proper provider keys with type safety
+            const providerKeys = ['gemini', 'openai', 'claude', 'deepseek', 'chinda'];
+            providerKeys.forEach(key => {
+                const unifiedData = allStatus[key];
+                if (unifiedData && this.providers[key]) {
+                    // Use exact same logic as unified status manager
+                    const isConnected = unifiedData.connected && unifiedData.configured;
+                    
+                    // Update provider with unified manager data  
+                    this.providers[key].status = isConnected;
+                    this.providers[key].connected = unifiedData.connected;
+                    this.providers[key].configured = unifiedData.configured;
+                    this.providers[key].isActive = unifiedData.isActive;
+                    this.providers[key].responseTime = unifiedData.responseTime;
+                    this.providers[key].successRate = unifiedData.successRate;
+                    this.providers[key].lastUpdate = unifiedData.lastUpdate;
+                    this.providers[key].backendStatus = unifiedData.status;
+                    
+                    if (isConnected) {
+                        connectedProviders.push(key);
+                    }
+                    
+                    console.log(`🔄 [UNIFIED SYNC] ${key}: ${isConnected ? 'Connected' : 'Disconnected'} (status: ${unifiedData.status}, connected: ${unifiedData.connected}, configured: ${unifiedData.configured})`);
+                } else {
+                    if (this.providers[key]) {
+                        this.providers[key].status = false;
+                    }
+                    console.log(`⚠️ [UNIFIED SYNC] ${key}: No unified manager data`);
                 }
             });
             
-            if (response.ok) {
-                const data = SecurityUtils.validateAPIResponse(await response.json());
-                
-                if (data.success && data.metrics) {
-                    console.log('✅ [REAL BACKEND] Got live metrics data:', data.metrics);
-                    
-                    const connectedProviders = [];
-                    
-                    // ✅ FIXED: Use proper provider keys with type safety
-                    const providerKeys = ['gemini', 'openai', 'claude', 'deepseek', 'chinda'];
-                    providerKeys.forEach(key => {
-                        const backendData = data.metrics[key];
-                        if (backendData && this.providers[key]) {
-                            // Use exact same logic as unified status manager
-                            const isConnected = backendData.isActive && backendData.configured;
-                            
-                            // Update provider with real backend data  
-                            this.providers[key].status = isConnected;
-                            this.providers[key].connected = backendData.isActive;
-                            this.providers[key].configured = backendData.configured;
-                            this.providers[key].isActive = backendData.isActive;
-                            this.providers[key].responseTime = backendData.averageResponseTime;
-                            this.providers[key].successRate = backendData.successRate;
-                            this.providers[key].lastUpdate = new Date().toISOString();
-                            this.providers[key].backendStatus = backendData.status;
-                            this.providers[key].uptime = backendData.uptime;
-                            
-                            if (isConnected) {
-                                connectedProviders.push(key);
-                            }
-                            
-                            console.log(`🔄 [REAL BACKEND] ${key}: ${isConnected ? 'Connected' : 'Disconnected'} (status: ${backendData.status}, active: ${backendData.isActive}, configured: ${backendData.configured})`);
-                        } else {
-                            if (this.providers[key]) {
-                                this.providers[key].status = false;
-                            }
-                            console.log(`⚠️ [REAL BACKEND] ${key}: No backend data`);
-                        }
-                    });
-                    
-                    console.log(`✅ [REAL BACKEND] AI Swarm synced with live data (${connectedProviders.length}/${Object.keys(this.providers).length} connected)`);
-                    return connectedProviders;
-                }
-            }
-            console.warn('⚠️ [REAL BACKEND] Failed to get live metrics');
-        } catch (error) {
-            console.error('❌ [REAL BACKEND] Live sync failed:', error);
+            console.log(`✅ [UNIFIED SYNC] AI Swarm synced with unified manager (${connectedProviders.length}/${Object.keys(this.providers).length} connected)`);
+            return connectedProviders;
         }
         
-        // 🔧 FALLBACK: Direct API check if unified manager unavailable
-        console.log('🔄 [FALLBACK] Using direct API check...');
+        // 🔧 FALLBACK: Wait for unified status manager to initialize
+        console.log('⏳ [FALLBACK] Unified status manager not ready, initializing...');
         
-        // ✅ FIXED: Use proper provider keys with type safety
-        const providerKeys = ['gemini', 'openai', 'claude', 'deepseek', 'chinda'];
-        const checkPromises = providerKeys.map(async (key) => {
-            try {
-                const isConnected = await this.checkProviderStatus(key);
-                return { key, connected: isConnected, success: true };
-            } catch (error) {
-                return { key, connected: false, success: false, error };
-            }
-        });
-        
-        const results = await Promise.allSettled(checkPromises);
-        const connectedProviders = [];
-        
-        results.forEach((result, index) => {
-            const key = providerKeys[index];
+        if (window.unifiedStatusManager && !window.unifiedStatusManager.isMonitoring) {
+            console.log('🚀 [FALLBACK] Starting unified status manager...');
+            await window.unifiedStatusManager.startMonitoring();
+            // Brief delay to ensure data is populated
+            await new Promise(resolve => setTimeout(resolve, 1000));
             
-            if (result.status === 'fulfilled' && result.value.connected && this.providers[key]) {
-                this.providers[key].status = true;
-                connectedProviders.push(key);
-            } else if (this.providers[key]) {
+            // Retry with unified manager
+            return this.updateAllProviderStatus();
+        }
+        
+        // 🔧 LAST RESORT: Set all providers to disconnected if no unified manager
+        console.warn('❌ [FALLBACK] No unified status manager available');
+        const providerKeys = ['gemini', 'openai', 'claude', 'deepseek', 'chinda'];
+        providerKeys.forEach(key => {
+            if (this.providers[key]) {
                 this.providers[key].status = false;
             }
         });
-
-        console.log(`✅ [FALLBACK] Direct check completed (${connectedProviders.length}/${providerKeys.length} connected)`);
-        return connectedProviders;
+        
+        return [];
     }
 
     getConnectedProviders() {
@@ -854,11 +829,17 @@ export class AISwarmCouncilRefactored {
             console.log('🤖 [AI SWARM] Initializing AI Swarm Council with unified backend sync...');
             
             // 🔧 WAIT: Ensure unified status manager is ready first
-            if (window.unifiedStatusManager && !window.unifiedStatusManager.isMonitoring) {
-                console.log('⏳ [INIT] Starting unified status manager...');
-                await window.unifiedStatusManager.startMonitoring();
-                // Brief delay to ensure data is populated
-                await new Promise(resolve => setTimeout(resolve, 1000));
+            if (window.unifiedStatusManager) {
+                if (!window.unifiedStatusManager.isMonitoring) {
+                    console.log('⏳ [INIT] Starting unified status manager...');
+                    await window.unifiedStatusManager.startMonitoring();
+                    // Brief delay to ensure data is populated
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                } else {
+                    console.log('✅ [INIT] Unified status manager already running');
+                }
+            } else {
+                console.warn('⚠️ [INIT] Unified status manager not available');
             }
             
             // Initialize provider status
@@ -874,7 +855,7 @@ export class AISwarmCouncilRefactored {
             this.bindGlobalFunctions();
             
             console.log('✅ [AI SWARM] Council initialized with unified backend sync');
-            showNotification('🤖 AI Swarm Council (Backend Sync) activated', 'success');
+            showNotification('🤖 AI Swarm Council (Unified Sync) activated', 'success');
             
         } catch (error) {
             console.error('❌ [AI SWARM] Initialization failed:', error);
@@ -891,14 +872,23 @@ export class AISwarmCouncilRefactored {
 
     async refreshProviderStatus() {
         this.conversationLogger.addMessage('system', '🔄 Refreshing AI provider status...');
+        
+        // Force unified status manager update first
+        if (window.unifiedStatusManager && window.unifiedStatusManager.isMonitoring) {
+            console.log('🔄 [REFRESH] Forcing unified status manager update...');
+            await window.unifiedStatusManager.updateAllProviderStatus();
+            await new Promise(resolve => setTimeout(resolve, 500)); // Brief delay for data sync
+        }
+        
         await this.providerManager.updateAllProviderStatus();
         
         // ✅ FIXED: Immediate UI updates
         this.uiController.renderProviders();
         this.uiController.updateStatusSummary();
         
-        this.conversationLogger.addMessage('system', '✅ Provider status updated');
-        showNotification('🔄 AI provider status refreshed', 'info');
+        const connectedCount = this.providerManager.getConnectedProviders().length;
+        this.conversationLogger.addMessage('system', `✅ Provider status updated (${connectedCount} connected)`);
+        showNotification(`🔄 AI provider status refreshed (${connectedCount} connected)`, 'info');
     }
 
     getStatusReport() {
