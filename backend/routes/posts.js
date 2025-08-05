@@ -79,41 +79,16 @@ router.get('/', checkSupabaseConnection, async (req, res) => {
         console.log('📋 GET /api/posts called');
         
         if (!req.supabaseAvailable) {
-            console.log('📋 Using fallback posts data');
-            const fallbackPosts = [
-                {
-                    id: 1,
-                    title: "Welcome to RBCK CMS",
-                    content: "This is a sample post from fallback data. Your Supabase database is not connected yet.",
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                    published: true,
-                    author: "System"
-                },
-                {
-                    id: 2,
-                    title: "Getting Started",
-                    content: "To connect your Supabase database, make sure to set the SUPABASE_URL and SUPABASE_ANON_KEY environment variables.",
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                    published: true,
-                    author: "System"
-                }
-            ];
-            
-            return res.status(200).json({
-                success: true,
-                data: fallbackPosts,
-                source: 'fallback',
-                message: 'Using fallback data due to database connection issues'
+            return res.status(503).json({
+                success: false,
+                error: 'Database connection unavailable',
+                message: 'Supabase database connection is required for this operation',
+                source: 'error'
             });
         }
 
-        // Use Supabase query
-        const { data, error } = await supabase
-            .from('posts')
-            .select('*')
-            .order('created_at', { ascending: false });
+        // Use Supabase database helper
+        const { data, error } = await supabase.db.posts.findAll(100, 0);
 
         if (error) {
             console.error('Supabase query error:', error);
@@ -162,11 +137,7 @@ router.get('/:id', checkSupabaseConnection, async (req, res) => {
             });
         }
 
-        const { data, error } = await supabase
-            .from('posts')
-            .select('*')
-            .eq('id', parseInt(id))
-            .single();
+        const { data, error } = await supabase.db.posts.findById(parseInt(id));
 
         if (error) {
             if (error.code === 'PGRST116') {
@@ -225,19 +196,14 @@ router.post('/', authenticateAdmin, checkSupabaseConnection, async (req, res) =>
         }
 
         const newPost = {
-            title: title.trim(),
+            titleTH: title.trim(),
             content: content.trim(),
-            published: Boolean(published),
+            status: published ? 'published' : 'draft',
             author: req.user?.username || 'admin',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            excerpt: content.trim().substring(0, 200) + '...'
         };
 
-        const { data, error } = await supabase
-            .from('posts')
-            .insert([newPost])
-            .select()
-            .single();
+        const { data, error } = await supabase.db.posts.create(newPost);
 
         if (error) {
             console.error('Supabase insert error:', error);
@@ -285,20 +251,13 @@ router.put('/:id', authenticateAdmin, checkSupabaseConnection, async (req, res) 
             });
         }
 
-        const updateData = {
-            updated_at: new Date().toISOString()
-        };
+        const updateData = {};
 
-        if (title !== undefined) updateData.title = title.trim();
+        if (title !== undefined) updateData.titleTH = title.trim();
         if (content !== undefined) updateData.content = content.trim();
-        if (published !== undefined) updateData.published = Boolean(published);
+        if (published !== undefined) updateData.status = published ? 'published' : 'draft';
 
-        const { data, error } = await supabase
-            .from('posts')
-            .update(updateData)
-            .eq('id', parseInt(id))
-            .select()
-            .single();
+        const { data, error } = await supabase.db.posts.update(parseInt(id), updateData);
 
         if (error) {
             if (error.code === 'PGRST116') {
@@ -349,10 +308,7 @@ router.delete('/:id', authenticateAdmin, checkSupabaseConnection, async (req, re
             });
         }
 
-        const { error } = await supabase
-            .from('posts')
-            .delete()
-            .eq('id', parseInt(id));
+        const { error } = await supabase.db.posts.delete(parseInt(id));
 
         if (error) {
             console.error('Supabase delete error:', error);

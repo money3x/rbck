@@ -284,92 +284,40 @@ app.use((req, res, next) => {
 //app.use(express.static('frontend'));
 //app.use('/admin', express.static('admin'));
 
-// In-memory database (ใน production ใช้ database จริง)
-let posts = [];
-let nextId = 1;
+// REMOVED: In-memory database fallback system
+// All data now comes from Supabase only - no fallback in production
 
-// Load initial data
-async function loadInitialData() {
+// Initialize data connection (Supabase only)
+async function initializeDataConnection() {
     try {
-        const dataPath = path.join(__dirname, 'data.json');
-        const data = await fs.readFile(dataPath, 'utf8');
-        const parsed = JSON.parse(data);
-        posts = parsed.posts || [];
-        nextId = parsed.nextId || 1;
-        logger.info(`📊 Loaded ${posts.length} posts from data.json`);
+        logger.info('🔄 Verifying Supabase connection...');
+        
+        // Only proceed if we have a valid Supabase client
+        if (!supabase.isConnected()) {
+            throw new Error('Supabase client not connected');
+        }
+        
+        // Test connection with a simple query
+        const { error } = await supabase.supabase
+            .from('posts')
+            .select('id')
+            .limit(1);
+            
+        if (error) {
+            throw new Error(`Supabase connection test failed: ${error.message}`);
+        }
+        
+        logger.info('✅ Supabase connection verified');
+        return true;
+        
     } catch (error) {
-        logger.info('📊 No existing data file, starting fresh');
-        // เพิ่มข้อมูลตัวอย่าง
-        posts = [
-            {
-                id: 1,
-                titleTH: 'เทคนิคการดูแลรักษารถเกี่ยวข้าวเบื้องต้น',
-                titleEN: 'Basic Rice Harvester Maintenance Tips',
-                slug: 'basic-rice-harvester-maintenance-tips',
-                content: `
-                    <h3>🌾 การดูแลรักษารถเกี่ยวข้าวอย่างถูกต้อง</h3>
-                    <p>รถเกี่ยวข้าวเป็นเครื่องจักรที่สำคัญสำหรับเกษตรกร การดูแลรักษาอย่างเหมาะสมจะช่วยยืดอายุการใช้งานและรักษาประสิทธิภาพ</p>
-                    
-                    <h4>🔧 ขั้นตอนการดูแลรักษา</h4>
-                    <ol>
-                        <li><strong>ทำความสะอาดหลังใช้งาน</strong><br>
-                        เก็บเศษฟาง ธุลี และสิ่งสกปรกที่ติดเครื่อง โดยเฉพาะบริเวณใบมีดและส่วนที่สัมผัสข้าว</li>
-                        
-                        <li><strong>ตรวจสอบน้ำมันเครื่อง</strong><br>
-                        เช็คระดับน้ำมันเครื่องก่อนการใช้งานทุกครั้ง เปลี่ยนน้ำมันตามระยะที่กำหนดในคู่มือ</li>
-                        
-                        <li><strong>ดูแลใบมีด</strong><br>
-                        ตรวจสอบความคมของใบมีด ลับคมเมื่อจำเป็น และปรับตั้งให้อยู่ในตำแหน่งที่เหมาะสม</li>
-                        
-                        <li><strong>ตรวจสายพาน</strong><br>
-                        เช็คความตึงของสายพาน ดูรอยแตกหรือการสึกหรอ เปลี่ยนเมื่อพบความเสียหาย</li>
-                        
-                        <li><strong>การเก็บรักษา</strong><br>
-                        เก็บเครื่องในที่แห้ง ระบายอากาศดี หลีกเลี่ยงความชื้นที่อาจทำให้เกิดสนิม</li>
-                    </ol>
-                    
-                    <h4>⚠️ สิ่งที่ควรหลีกเลี่ยง</h4>
-                    <ul>
-                        <li>การใช้งานเครื่องในสภาพน้ำมันไม่เพียงพอ</li>
-                        <li>การบังคับใช้งานเมื่อมีสิ่งแปลกปลอมติดขัด</li>
-                        <li>การทิ้งเครื่องกลางแจ้งโดยไม่มีการป้องกัน</li>
-                    </ul>
-                    
-                    <p><strong>💡 เคล็ดลับ:</strong> การบำรุงรักษาเป็นประจำจะช่วยประหยัดค่าใช้จ่ายในการซ่อมแซมและยืดอายุการใช้งานของเครื่อง</p>
-                `,
-                excerpt: 'เรียนรู้เทคนิคการดูแลรักษารถเกี่ยวข้าวอย่างถูกต้อง ตั้งแต่การทำความสะอาด การตรวจสอบ จนถึงการเก็บรักษา เพื่อให้เครื่องใช้งานได้นานและมีประสิทธิภาพสูงสุด',
-                category: 'maintenance',
-                tags: ['รถเกี่ยวข้าว', 'การดูแลรักษา', 'เทคนิค', 'บำรุงรักษา'],
-                status: 'published',
-                author: 'ระเบียบการช่าง',
-                publishDate: new Date().toISOString().split('T')[0],
-                views: 0,
-                metaTitle: 'เทคนิคการดูแลรักษารถเกี่ยวข้าว | ระเบียบการช่าง',
-                metaDescription: 'เรียนรู้วิธีการดูแลรักษารถเกี่ยวข้าวอย่างถูกต้อง เพื่อยืดอายุการใช้งานและรักษาประสิทธิภาพ คำแนะนำจากผู้เชี่ยวชาญ',
-                focusKeyword: 'ดูแลรักษารถเกี่ยวข้าว',
-                schemaType: 'HowTo',
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            }
-        ];
-        nextId = 2;
-        await saveData();
-    }
-}
-
-// Save data to file
-async function saveData() {
-    try {
-        const dataPath = path.join(__dirname, 'data.json');
-        const data = {
-            posts: posts,
-            nextId: nextId,
-            lastUpdated: new Date().toISOString()
-        };
-        await fs.writeFile(dataPath, JSON.stringify(data, null, 2));
-        logger.debug('💾 Data saved successfully');
-    } catch (error) {
-        logger.error('❌ Error saving data:', error);
+        logger.error('❌ Data connection initialization failed:', error);
+        
+        if (process.env.NODE_ENV === 'production') {
+            throw new Error('Production requires valid Supabase connection');
+        }
+        
+        return false;
     }
 }
 
@@ -457,322 +405,8 @@ app.get('/api/analytics', cacheMiddleware(600), (req, res) => {
     }
 });
 
-/**
- * @swagger
- * /api/posts:
- *   get:
- *     summary: Get all posts
- *     tags: [Posts]
- *     parameters:
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *         description: Filter by post status
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *         description: Limit number of results
- *     responses:
- *       200:
- *         description: List of posts
- */
-app.get('/api/posts', cacheMiddleware(300), (req, res) => {
-    try {
-        let filteredPosts = [...posts];
-        
-        // Filter by status if provided
-        if (req.query.status) {
-            filteredPosts = filteredPosts.filter(post => post.status === req.query.status);
-        }
-        
-        // Sort by update date
-        filteredPosts.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-        
-        // Apply limit if provided
-        if (req.query.limit) {
-            const limit = parseInt(req.query.limit);
-            if (!isNaN(limit) && limit > 0) {
-                filteredPosts = filteredPosts.slice(0, limit);
-            }
-        }
-        
-        res.json({
-            posts: filteredPosts,
-            total: filteredPosts.length,
-            query: req.query
-        });
-    } catch (error) {
-        logger.error('Error fetching posts:', error);
-        res.status(500).json({ 
-            error: 'Failed to fetch posts',
-            message: error.message 
-        });
-    }
-});
-
-/**
- * @swagger
- * /api/posts/{id}:
- *   get:
- *     summary: Get single post by ID
- *     tags: [Posts]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Post ID
- *     responses:
- *       200:
- *         description: Post details
- *       404:
- *         description: Post not found
- */
-app.get('/api/posts/:id', cacheMiddleware(600), (req, res) => {
-    try {
-        const postId = parseInt(req.params.id);
-        
-        if (isNaN(postId)) {
-            return res.status(400).json({ 
-                error: 'Invalid post ID',
-                message: 'Post ID must be a number' 
-            });
-        }
-        
-        const post = posts.find(p => p.id === postId);
-        
-        if (!post) {
-            return res.status(404).json({ 
-                error: 'Post not found',
-                postId: postId 
-            });
-        }
-        
-        res.json(post);
-    } catch (error) {
-        logger.error('Error fetching post:', error);
-        res.status(500).json({ 
-            error: 'Failed to fetch post',
-            message: error.message 
-        });
-    }
-});
-
-/**
- * @swagger
- * /api/posts:
- *   post:
- *     summary: Create a new post
- *     tags: [Posts]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - titleTH
- *               - excerpt
- *             properties:
- *               titleTH:
- *                 type: string
- *               titleEN:
- *                 type: string
- *               content:
- *                 type: string
- *               excerpt:
- *                 type: string
- *               category:
- *                 type: string
- *               tags:
- *                 type: array
- *                 items:
- *                   type: string
- *               status:
- *                 type: string
- *                 enum: [draft, published]
- *               author:
- *                 type: string
- *     responses:
- *       201:
- *         description: Post created successfully
- *       400:
- *         description: Validation error
- */
-app.post('/api/posts', validatePost, async (req, res) => {
-    try {
-        const postData = req.body;
-        
-        // Auto-generate slug if not provided
-        if (!postData.slug && postData.titleTH) {
-            postData.slug = postData.titleTH
-                .toLowerCase()
-                .replace(/[^\w\s-]/g, '')
-                .replace(/[\s_-]+/g, '-')
-                .replace(/^-+|-+$/g, '');
-        }
-        
-        const newPost = {
-            id: nextId++,
-            ...postData,
-            views: 0,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-        
-        posts.push(newPost);
-        await saveData();
-        
-        // Clear cache for posts endpoints
-        clearCache('/api/posts');
-        clearCache('/api/analytics');
-        
-        logger.info(`📝 Created new post: ${newPost.titleTH}`, { postId: newPost.id });
-        res.status(201).json(newPost);
-    } catch (error) {
-        logger.error('Error creating post:', error);
-        res.status(500).json({ 
-            error: 'Failed to create post',
-            message: error.message 
-        });
-    }
-});
-
-/**
- * @swagger
- * /api/posts/{id}:
- *   put:
- *     summary: Update an existing post
- *     tags: [Posts]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Post ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *     responses:
- *       200:
- *         description: Post updated successfully
- *       404:
- *         description: Post not found
- */
-app.put('/api/posts/:id', validatePost, async (req, res) => {
-    try {
-        const postId = parseInt(req.params.id);
-        
-        if (isNaN(postId)) {
-            return res.status(400).json({ 
-                error: 'Invalid post ID',
-                message: 'Post ID must be a number' 
-            });
-        }
-        
-        const postIndex = posts.findIndex(p => p.id === postId);
-        
-        if (postIndex === -1) {
-            return res.status(404).json({ 
-                error: 'Post not found',
-                postId: postId 
-            });
-        }
-        
-        const updatedPost = {
-            ...posts[postIndex],
-            ...req.body,
-            id: postId, // Ensure ID doesn't change
-            updatedAt: new Date().toISOString()
-        };
-        
-        posts[postIndex] = updatedPost;
-        await saveData();
-        
-        // Clear cache for posts endpoints
-        clearCache('/api/posts');
-        clearCache('/api/analytics');
-        
-        logger.info(`📝 Updated post: ${updatedPost.titleTH}`, { postId });
-        res.json(updatedPost);
-    } catch (error) {
-        logger.error('Error updating post:', error);
-        res.status(500).json({ 
-            error: 'Failed to update post',
-            message: error.message 
-        });
-    }
-});
-
-/**
- * @swagger
- * /api/posts/{id}:
- *   delete:
- *     summary: Delete a post
- *     tags: [Posts]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Post ID
- *     responses:
- *       200:
- *         description: Post deleted successfully
- *       404:
- *         description: Post not found
- */
-app.delete('/api/posts/:id', async (req, res) => {
-    try {
-        const postId = parseInt(req.params.id);
-        
-        if (isNaN(postId)) {
-            return res.status(400).json({ 
-                error: 'Invalid post ID',
-                message: 'Post ID must be a number' 
-            });
-        }
-        
-        const postIndex = posts.findIndex(p => p.id === postId);
-        
-        if (postIndex === -1) {
-            return res.status(404).json({ 
-                error: 'Post not found',
-                postId: postId 
-            });
-        }
-        
-        const deletedPost = posts.splice(postIndex, 1)[0];
-        await saveData();
-        
-        // Clear cache for posts endpoints
-        clearCache('/api/posts');
-        clearCache('/api/analytics');
-        
-        logger.info(`🗑️ Deleted post: ${deletedPost.titleTH}`, { postId });
-        res.json({ 
-            message: 'Post deleted successfully',
-            deletedPost: {
-                id: deletedPost.id,
-                title: deletedPost.titleTH
-            }
-        });
-    } catch (error) {
-        logger.error('Error deleting post:', error);
-        res.status(500).json({ 
-            error: 'Failed to delete post',
-            message: error.message 
-        });
-    }
-});
+// REMOVED: Duplicate post endpoints - handled by routes/posts.js
+// This prevents conflicts between server.js and routes/posts.js endpoints
 
 /**
  * @swagger
@@ -786,66 +420,48 @@ app.delete('/api/posts/:id', async (req, res) => {
  */
 app.get('/api/blog-html', cacheMiddleware(300), async (req, res) => {
     try {
-        logger.debug('Starting blog-html request...');
+        logger.debug('Starting blog-html request - using Supabase only...');
         
-        // Get local published posts first (always available)
-        const localPublishedPosts = posts.filter(post => post.status === 'published');
-        logger.debug(`Local published posts found: ${localPublishedPosts.length}`);
-        
-        let finalPosts = [];
-        let source = 'local';
-        
-        try {
-            // Try to fetch from Supabase (only if properly initialized)
-            if (supabase && typeof supabase.from === 'function') {
-                const { data: supabasePosts, error } = await supabase
-                    .from('posts')
-                    .select('*')
-                    .eq('status', 'published')
-                    .order('created_at', { ascending: false });
-                
-                logger.debug('Supabase response:', {
-                    posts: supabasePosts?.length || 0,
-                    error: error?.message || 'none'
-                });
-                
-                if (!error && supabasePosts && supabasePosts.length > 0) {
-                    finalPosts = supabasePosts;
-                    source = 'supabase';
-                    logger.debug(`Using Supabase data: ${finalPosts.length} posts`);
-                } else {
-                    finalPosts = localPublishedPosts;
-                    source = 'local_fallback';
-                    logger.debug(`Using local fallback data: ${finalPosts.length} posts`);
-                }
-            } else {
-                finalPosts = localPublishedPosts;
-                source = 'local_no_supabase';
-                logger.debug(`No Supabase connection, using local data: ${finalPosts.length} posts`);
-            }
-        } catch (supabaseError) {
-            logger.error('Supabase connection error:', supabaseError);
-            finalPosts = localPublishedPosts;
-            source = 'local_error_fallback';
+        // Verify Supabase connection first
+        if (!supabase.isConnected()) {
+            throw new Error('Supabase client not connected');
         }
         
-        // Generate HTML for final posts
-        const blogHTML = finalPosts.map(post => {
-            // Handle different title field names (Supabase vs Local)
+        // Fetch from Supabase only - no fallbacks
+        const { data: supabasePosts, error } = await supabase.db.posts.findAll(100, 0);
+        
+        if (error) {
+            throw new Error(`Database query failed: ${error.message}`);
+        }
+        
+        // Filter published posts
+        const publishedPosts = (supabasePosts || []).filter(post => post.status === 'published');
+        
+        if (publishedPosts.length === 0) {
+            logger.info('No published posts found in database');
+            return res.json({
+                html: '<div class="no-posts-message">ไม่มีบทความที่เผยแพร่แล้ว</div>',
+                count: 0,
+                posts: [],
+                source: 'supabase'
+            });
+        }
+        
+        // Generate HTML for published posts
+        const blogHTML = publishedPosts.map(post => {
+            // Handle field name consistency (Supabase uses snake_case)
             const title = post.titleth || post.titleTH || post.title || 'ไม่มีหัวข้อ';
             const excerpt = post.excerpt || 'ไม่มีเนื้อหาย่อ';
             const author = post.author || 'ระเบียบการช่าง';
             const views = post.views || 0;
             const slug = post.slug || '';
             
-            // Handle date formatting
+            // Handle date formatting (Supabase uses created_at)
             let dateStr = 'ไม่ระบุ';
             if (post.created_at) {
                 dateStr = new Date(post.created_at).toLocaleDateString('th-TH');
-            } else if (post.createdAt) {
-                dateStr = new Date(post.createdAt).toLocaleDateString('th-TH');
-            } else if (post.publishDate) {
-                dateStr = new Date(post.publishDate).toLocaleDateString('th-TH');
+            } else if (post.publishedat) {
+                dateStr = new Date(post.publishedat).toLocaleDateString('th-TH');
             }
             
             return `
@@ -861,54 +477,38 @@ app.get('/api/blog-html', cacheMiddleware(300), async (req, res) => {
                         <div class="post-actions">
                             <a href="/blog/${slug}" class="read-more-btn">อ่านบทความ →</a>
                         </div>
-                        <p class="ai-generated-notice">*บทความจากระบบ CMS</p>
                     </div>
                 </article>
             `;
         }).join('');
         
-        logger.debug(`Generated HTML for ${finalPosts.length} posts from ${source}`);
+        logger.debug(`Generated HTML for ${publishedPosts.length} posts from Supabase`);
         
         res.json({
             html: blogHTML,
-            count: finalPosts.length,
-            posts: finalPosts,
-            source: source,
-            debug: {
-                localPostsCount: localPublishedPosts.length,
-                finalPostsCount: finalPosts.length,
-                source: source
-            }
+            count: publishedPosts.length,
+            posts: publishedPosts,
+            source: 'supabase'
         });
         
     } catch (err) {
         logger.error('/api/blog-html failed:', err);
         
-        // Final fallback - always use local data
-        const localPublishedPosts = posts.filter(post => post.status === 'published');
-        const fallbackHTML = localPublishedPosts.map(post => `
-            <article class="blog-post-item">
-                <div class="post-image-placeholder">ภาพประกอบบทความ: ${post.titleTH || 'ไม่มีหัวข้อ'}</div>
-                <div class="post-content">
-                    <h3><a href="/blog/${post.slug}" class="post-title-link">${post.titleTH || 'ไม่มีหัวข้อ'}</a></h3>
-                    <p class="post-meta">เผยแพร่เมื่อ: ${post.publishDate ? new Date(post.publishDate).toLocaleDateString('th-TH') : 'ไม่ระบุ'} | โดย: ${post.author || 'ระเบียบการช่าง'} | ดู: ${post.views || 0} ครั้ง</p>
-                    <p class="post-excerpt">${post.excerpt || 'ไม่มีเนื้อหาย่อ'}</p>
-                    <div class="post-tags">
-                        ${(Array.isArray(post.tags) ? post.tags.map(tag => `<span class="tag">${tag}</span>`).join('') : '')}
-                    </div>
-                    <div class="post-actions">
-                        <a href="/blog/${post.slug}" class="read-more-btn">อ่านบทความ →</a>
-                    </div>
-                    <p class="ai-generated-notice">*บทความจากระบบ CMS</p>
-                </div>
-            </article>
-        `).join('');
+        // In production, fail hard - no fallbacks
+        if (process.env.NODE_ENV === 'production') {
+            return res.status(503).json({
+                success: false,
+                error: 'Database connection required',
+                message: 'Blog content unavailable - please check database connection'
+            });
+        }
         
-        res.json({ 
-            html: fallbackHTML, 
-            count: localPublishedPosts.length, 
-            posts: localPublishedPosts,
-            source: 'error_fallback',
+        // Development fallback with clear indication
+        res.status(503).json({
+            html: '<div class="error-message">Database connection failed - please check Supabase configuration</div>',
+            count: 0,
+            posts: [],
+            source: 'error',
             error: err.message
         });
     }
@@ -1171,7 +771,7 @@ async function startServer() {
             console.warn('⚠️ AI features may be limited');
         }
         
-        await loadInitialData();
+        await initializeDataConnection();
         
         const server = app.listen(PORT, () => {
             logger.info('🚀 ================================');

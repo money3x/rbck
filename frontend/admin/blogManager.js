@@ -24,7 +24,17 @@ export async function loadBlogPosts() {
     try {
         const res = await fetch(`${API_BASE}/posts`);
         if (!res.ok) throw new Error('Failed to fetch posts');
-        posts = await res.json();
+        const response = await res.json();
+        
+        // Handle API response format: { success: true, data: [...] }
+        if (response.success && response.data) {
+            posts = response.data;
+        } else if (Array.isArray(response)) {
+            posts = response; // Fallback for direct array response
+        } else {
+            posts = [];
+        }
+        
         console.log('📋 [DEBUG] Loaded posts:', posts);
         // Debug: show structure of first post
         if (posts.length > 0) {
@@ -192,7 +202,15 @@ export async function savePost() {
             });
         }
         if (!res.ok) throw new Error('Failed to save post');
-        savedPost = await res.json();
+        const saveResponse = await res.json();
+        
+        // Handle API response format: { success: true, data: {...} }
+        if (saveResponse.success && saveResponse.data) {
+            savedPost = saveResponse.data;
+        } else {
+            savedPost = saveResponse; // Fallback for direct response
+        }
+        
         currentEditingPostId = savedPost.id;
         // Refresh posts from backend
         await loadBlogPosts();

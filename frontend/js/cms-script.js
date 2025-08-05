@@ -83,12 +83,12 @@ class CMSDashboard {
         try {
             this.showLoading();
             
-            const response = await fetch('/cms/api/posts');
+            const response = await fetch('/api/posts');
             const data = await response.json();
             
             if (data.success) {
-                this.posts = data.posts;
-                this.stats = data.stats;
+                this.posts = data.data || data.posts || []; // Handle both response formats
+                this.stats = data.stats || { total: this.posts.length };
                 this.updateDashboard();
                 this.renderPosts();
             } else {
