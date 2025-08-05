@@ -2,195 +2,184 @@
 const { createClient } = require('@supabase/supabase-js');
 const config = require('./config/config');
 
+// Logger for database operations
+const logger = {
+    info: (message, data = null) => {
+        console.log(`ℹ️ [Supabase] ${message}`, data ? `\n   Data: ${JSON.stringify(data, null, 2)}` : '');
+    },
+    warn: (message, data = null) => {
+        console.warn(`⚠️ [Supabase] ${message}`, data ? `\n   Data: ${JSON.stringify(data, null, 2)}` : '');
+    },
+    error: (message, error = null) => {
+        console.error(`❌ [Supabase] ${message}`, error ? `\n   Error: ${error.stack || error.message || error}` : '');
+    },
+    success: (message, data = null) => {
+        console.log(`✅ [Supabase] ${message}`, data ? `\n   Data: ${JSON.stringify(data, null, 2)}` : '');
+    }
+};
+
 // Use configuration from config.js
 const supabaseUrl = config.database.supabaseUrl;
 const supabaseKey = config.database.supabaseKey;
 
 let supabase;
 let isSupabaseConnected = false;
+let connectionStatus = {
+    isConnected: false,
+    lastChecked: null,
+    error: null
+};
 
-// Mock client for when Supabase is not available
-function createMockClient() {
-    console.log('� Creating mock Supabase client for testing');
+// Credential validation utility
+function validateCredentials(url, key) {
+    if (!url || !key) {
+        return { valid: false, error: 'Missing Supabase URL or API key' };
+    }
     
-    // Mock data store for testing
-    let mockPosts = [
-        {
-            id: 1,
-            title: "Welcome to RBCK CMS",
-            content: "This is a sample post from mock data.",
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            published: true,
-            author: "System"
+    if (url.includes('placeholder') || key.includes('placeholder')) {
+        return { valid: false, error: 'Placeholder credentials detected' };
+    }
+    
+    // Basic URL format validation
+    try {
+        const urlObj = new URL(url);
+        if (!urlObj.hostname.includes('supabase.co') && !urlObj.hostname.includes('supabase.net')) {
+            return { valid: false, error: 'Invalid Supabase URL format' };
         }
-    ];
-    let nextId = 2;
+    } catch (error) {
+        return { valid: false, error: `Invalid URL format: ${error.message}` };
+    }
+    
+    // Basic API key format validation (Supabase keys are typically long base64-like strings)
+    if (key.length < 50) {
+        return { valid: false, error: 'API key appears to be too short' };
+    }
+    
+    return { valid: true };
+}
 
-    return {
-        from: (table) => ({
-            select: (columns = '*') => {
-                const query = {
-                    data: table === 'posts' ? mockPosts : [],
-                    error: null,
-                    count: table === 'posts' ? mockPosts.length : 0,
-                    eq: function(column, value) { 
-                        if (table === 'posts') {
-                            const filtered = mockPosts.filter(p => p[column] === value);
-                            return { ...this, data: filtered };
-                        }
-                        return this; 
-                    },
-                    neq: function(column, value) { return this; },
-                    gt: function(column, value) { return this; },
-                    lt: function(column, value) { return this; },
-                    gte: function(column, value) { return this; },
-                    lte: function(column, value) { return this; },
-                    like: function(column, value) { return this; },
-                    ilike: function(column, value) { return this; },
-                    is: function(column, value) { return this; },
-                    in: function(column, values) { return this; },
-                    order: function(column, options) { return this; },
-                    limit: function(count) { 
-                        if (table === 'posts') {
-                            return { ...this, data: mockPosts.slice(0, count) };
-                        }
-                        return this; 
-                    },
-                    range: function(from, to) { return this; },
-                    single: function() { 
-                        if (table === 'posts' && this.data && this.data.length > 0) {
-                            return Promise.resolve({ 
-                                data: this.data[0], 
-                                error: null 
-                            });
-                        }
-                        return Promise.resolve({ 
-                            data: null, 
-                            error: { code: 'PGRST116', message: 'No rows found' } 
-                        }); 
-                    },
-                    then: function(callback) { 
-                        return Promise.resolve({ 
-                            data: this.data || [], 
-                            error: null, 
-                            count: this.count || 0 
-                        }).then(callback); 
-                    }
-                };
-                // Make it thenable for async/await
-                query.then = function(callback) { 
-                    return Promise.resolve({ 
-                        data: this.data || [], 
-                        error: null, 
-                        count: this.count || 0 
-                    }).then(callback); 
-                };
-                return query;
-            },
-            insert: (data) => ({
-                select: function() { 
-                    if (table === 'posts') {
-                        const newPost = {
-                            id: nextId++,
-                            ...data,
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        };
-                        mockPosts.push(newPost);
-                        return {
-                            single: function() {
-                                return Promise.resolve({ 
-                                    data: newPost, 
-                                    error: null 
-                                });
-                            }
-                        };
-                    }
-                    return {
-                        single: function() {
-                            return Promise.resolve({ 
-                                data: null, 
-                                error: { message: 'Mock client - table not supported' } 
-                            });
-                        }
-                    }; 
-                }
-            }),
-            update: (data) => ({
-                eq: function(column, value) {
-                    this.whereClause = { column, value };
-                    return this;
-                },
-                select: function() { 
-                    return {
-                        single: function() {
-                            if (table === 'posts' && this.whereClause) {
-                                const postIndex = mockPosts.findIndex(p => p[this.whereClause.column] === this.whereClause.value);
-                                if (postIndex >= 0) {
-                                    mockPosts[postIndex] = { 
-                                        ...mockPosts[postIndex], 
-                                        ...data, 
-                                        updated_at: new Date().toISOString() 
-                                    };
-                                    return Promise.resolve({ 
-                                        data: mockPosts[postIndex], 
-                                        error: null 
-                                    });
-                                }
-                            }
-                            return Promise.resolve({ 
-                                data: null, 
-                                error: { message: 'Post not found' } 
-                            });
-                        }
-                    };
-                }.bind(this)
-            }),
-            delete: () => ({
-                eq: function(column, value) {
-                    if (table === 'posts') {
-                        const postIndex = mockPosts.findIndex(p => p[column] === value);
-                        if (postIndex >= 0) {
-                            mockPosts.splice(postIndex, 1);
-                            return Promise.resolve({ error: null });
-                        }
-                        return Promise.resolve({ 
-                            error: { message: 'Post not found' } 
-                        });
-                    }
-                    return Promise.resolve({ 
-                        error: { message: 'Not found' } 
-                    });
-                }
-            })
-        }),
-        // Add other Supabase methods that might be used
-        auth: {
-            getUser: () => Promise.resolve({ 
-                data: { user: null }, 
-                error: { message: 'Mock client - auth not available' } 
-            }),
-            signInWithPassword: () => Promise.resolve({ 
-                data: { user: null, session: null }, 
-                error: { message: 'Mock client - auth not available' } 
-            }),
-            signOut: () => Promise.resolve({ error: null })
+// Enhanced error wrapper for database operations
+function wrapDatabaseOperation(operation, context = '') {
+    return async (...args) => {
+        const startTime = Date.now();
+        
+        try {
+            if (!isSupabaseConnected) {
+                throw new Error('Supabase client not connected');
+            }
+            
+            logger.info(`Starting operation: ${context}`, { args: args.length > 0 ? 'with arguments' : 'no arguments' });
+            const result = await operation(...args);
+            
+            const duration = Date.now() - startTime;
+            if (result.error) {
+                logger.error(`Operation failed: ${context}`, result.error);
+                return result;
+            }
+            
+            logger.success(`Operation completed: ${context}`, { 
+                duration: `${duration}ms`,
+                hasData: !!result.data
+            });
+            return result;
+            
+        } catch (error) {
+            const duration = Date.now() - startTime;
+            logger.error(`Operation threw error: ${context}`, {
+                error: error.message,
+                duration: `${duration}ms`,
+                stack: error.stack
+            });
+            return { data: null, error: { message: error.message, code: 'CLIENT_ERROR' } };
         }
     };
 }
 
-// Initialize Supabase client
-if (process.env.NODE_ENV === 'test') {
-    console.log('🧪 Test environment detected - using mock Supabase client');
-    supabase = createMockClient();
-    isSupabaseConnected = true; // Mock client is always "connected"
-} else if (supabaseUrl && supabaseKey && !supabaseUrl.includes('placeholder')) {
-    try {
-        console.log('🔄 Initializing Supabase client...');
-        console.log('📍 URL: [Configured]');
-        console.log('🔑 Supabase key configured successfully');
+// Mock client factory for test environment only
+function createTestMockClient() {
+    if (process.env.NODE_ENV !== 'test') {
+        throw new Error('Mock client can only be created in test environment');
+    }
+    
+    logger.info('Creating mock Supabase client for testing environment');
+    
+    const mockPosts = [{
+        id: 1,
+        title: "Test Post",
+        content: "Test content",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        published: true,
+        author: "Test Author"
+    }];
 
+    return {
+        from: (table) => ({
+            select: () => ({
+                eq: () => ({
+                    single: () => Promise.resolve({ data: mockPosts[0], error: null })
+                }),
+                limit: () => Promise.resolve({ data: mockPosts, error: null })
+            }),
+            insert: () => ({
+                select: () => ({
+                    single: () => Promise.resolve({ data: mockPosts[0], error: null })
+                })
+            }),
+            update: () => ({
+                eq: () => ({
+                    select: () => ({
+                        single: () => Promise.resolve({ data: mockPosts[0], error: null })
+                    })
+                })
+            }),
+            delete: () => ({
+                eq: () => Promise.resolve({ error: null })
+            })
+        }),
+        auth: {
+            getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+            signInWithPassword: () => Promise.resolve({ data: { user: null, session: null }, error: null }),
+            signOut: () => Promise.resolve({ error: null })
+        },
+        rpc: () => Promise.resolve({ data: null, error: null })
+    };
+}
+
+// Initialize Supabase client with proper environment handling
+function initializeSupabaseClient() {
+    // Test environment - use mock client
+    if (process.env.NODE_ENV === 'test') {
+        logger.info('Test environment detected - initializing mock client');
+        supabase = createTestMockClient();
+        isSupabaseConnected = true;
+        connectionStatus = { isConnected: true, lastChecked: new Date(), error: null };
+        return;
+    }
+    
+    // Production/Development environment - require real credentials
+    const validation = validateCredentials(supabaseUrl, supabaseKey);
+    
+    if (!validation.valid) {
+        const errorMessage = `Invalid credentials: ${validation.error}`;
+        logger.error(errorMessage);
+        
+        if (process.env.NODE_ENV === 'production') {
+            // In production, fail hard - no fallbacks
+            throw new Error(`[PRODUCTION] ${errorMessage}. Application cannot start without valid Supabase credentials.`);
+        } else {
+            // In development, log warning but don't crash
+            logger.warn('Development mode: Continuing without Supabase connection');
+            supabase = null;
+            isSupabaseConnected = false;
+            connectionStatus = { isConnected: false, lastChecked: new Date(), error: validation.error };
+            return;
+        }
+    }
+    
+    try {
+        logger.info('Initializing Supabase client with validated credentials');
+        
         supabase = createClient(supabaseUrl, supabaseKey, {
             auth: {
                 autoRefreshToken: false,
@@ -201,74 +190,94 @@ if (process.env.NODE_ENV === 'test') {
             },
             global: {
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'User-Agent': 'RBCK-CMS/1.0'
                 }
             }
         });
         
-        console.log('✅ Supabase client created successfully');
+        logger.success('Supabase client created successfully');
         
-        // Test the connection immediately
-        testSupabaseConnection().then(connected => {
-            isSupabaseConnected = connected;
+        // Test connection immediately in a non-blocking way
+        verifyConnection().then(connected => {
             if (connected) {
-                console.log('✅ Supabase connection verified on startup');
+                logger.success('Initial connection verification successful');
             } else {
-                console.warn('⚠️ Supabase connection failed on startup - will use fallback data');
+                logger.error('Initial connection verification failed');
+                if (process.env.NODE_ENV === 'production') {
+                    // In production, this is critical
+                    process.exit(1);
+                }
+            }
+        }).catch(error => {
+            logger.error('Connection verification threw an error', error);
+            if (process.env.NODE_ENV === 'production') {
+                process.exit(1);
             }
         });
         
     } catch (error) {
-        console.error('❌ Supabase initialization failed:', error.message);
-        supabase = createMockClient();
-        isSupabaseConnected = false;
+        logger.error('Failed to create Supabase client', error);
+        
+        if (process.env.NODE_ENV === 'production') {
+            throw new Error(`[PRODUCTION] Failed to initialize Supabase: ${error.message}`);
+        } else {
+            supabase = null;
+            isSupabaseConnected = false;
+            connectionStatus = { isConnected: false, lastChecked: new Date(), error: error.message };
+        }
     }
-} else {
-    console.warn('⚠️ Supabase credentials missing or invalid:');
-    console.warn(`   SUPABASE_URL: ${supabaseUrl ? (supabaseUrl.includes('placeholder') ? 'Placeholder' : 'Set') : 'Missing'}`);
-    console.warn(`   SUPABASE_KEY: ${supabaseKey ? 'Set' : 'Missing'}`);
-    supabase = createMockClient();
-    isSupabaseConnected = false;
 }
 
-// Test Supabase connection function
-async function testSupabaseConnection() {
-    try {
-        console.log('🔍 Testing Supabase connection...');
-        
-        // Check if supabase client exists and has the from method
-        if (!supabase || typeof supabase.from !== 'function') {
-            console.warn('⚠️ Supabase client not properly initialized');
-            return false;
-        }
+// Initialize the client
+initializeSupabaseClient();
 
-        // In test environment with mock client, always return true
+// Simplified connection verification
+async function verifyConnection() {
+    const startTime = Date.now();
+    
+    try {
+        logger.info('Verifying Supabase connection');
+        
+        if (!supabase || typeof supabase.from !== 'function') {
+            throw new Error('Supabase client not properly initialized');
+        }
+        
+        // Test environment always passes
         if (process.env.NODE_ENV === 'test') {
-            console.log('✅ Test environment - mock Supabase client is ready');
+            isSupabaseConnected = true;
+            connectionStatus = { isConnected: true, lastChecked: new Date(), error: null };
+            logger.success('Test environment connection verified');
             return true;
         }
-
-        // Simple test query - just check if we can access the posts table
-        const { data, error } = await supabase
+        
+        // Simple connectivity test
+        const { error } = await supabase
             .from('posts')
             .select('id')
             .limit(1);
             
         if (error) {
-            console.warn('⚠️ Supabase connection test failed:', error.message);
-            return false;
+            throw new Error(`Database query failed: ${error.message}`);
         }
         
-        console.log(`✅ Supabase connected successfully - Posts table accessible`);
+        const duration = Date.now() - startTime;
+        isSupabaseConnected = true;
+        connectionStatus = { isConnected: true, lastChecked: new Date(), error: null };
+        
+        logger.success(`Connection verified successfully in ${duration}ms`);
         return true;
         
     } catch (error) {
-        console.error('❌ Supabase connection test error:', error.message);
-        // In test environment, don't fail on errors
-        if (process.env.NODE_ENV === 'test') {
-            console.log('✅ Test environment - assuming connection works despite error');
-            return true;
-        }
+        const duration = Date.now() - startTime;
+        isSupabaseConnected = false;
+        connectionStatus = { 
+            isConnected: false, 
+            lastChecked: new Date(), 
+            error: error.message 
+        };
+        
+        logger.error(`Connection verification failed after ${duration}ms`, error);
         return false;
     }
 }
@@ -277,184 +286,253 @@ async function testSupabaseConnection() {
 // Import models
 const { User } = require('./models/User');
 const { Post } = require('./models/Post');
+const { AIUsage, AIConversation, AIMessage } = require('./models/database');
 
 // Database helper functions
 const db = {
     // User operations
     users: {
-        async findById(id) {
+        findById: wrapDatabaseOperation(async (id) => {
             if (!id) {
-                return { data: null, error: { message: 'User ID is required' } };
+                throw new Error('User ID is required');
             }
             
-            try {
-                const { data, error } = await supabase
-                    .from(User.tableName)
-                    .select(User.fields.join(','))
-                    .eq('id', id)
-                    .single();
-                return { data, error };
-            } catch (err) {
-                return { data: null, error: { message: err.message } };
-            }
-        },
+            return await supabase
+                .from(User.tableName)
+                .select(User.fields.join(','))
+                .eq('id', id)
+                .single();
+        }, 'users.findById'),
         
-        async findByUsername(username) {
-            const { data, error } = await supabase
+        findByUsername: wrapDatabaseOperation(async (username) => {
+            if (!username) {
+                throw new Error('Username is required');
+            }
+            
+            return await supabase
                 .from(User.tableName)
                 .select(User.fields.join(','))
                 .eq('username', username)
                 .single();
-            return { data, error };
-        },
+        }, 'users.findByUsername'),
         
-        async findByEmail(email) {
-            const { data, error } = await supabase
+        findByEmail: wrapDatabaseOperation(async (email) => {
+            if (!email) {
+                throw new Error('Email is required');
+            }
+            
+            return await supabase
                 .from(User.tableName)
                 .select(User.fields.join(','))
                 .eq('email', email)
                 .single();
-            return { data, error };
-        },
+        }, 'users.findByEmail'),
         
-        async create(userData) {
-            const { data, error } = await supabase
+        create: wrapDatabaseOperation(async (userData) => {
+            if (!userData) {
+                throw new Error('User data is required');
+            }
+            
+            return await supabase
                 .from(User.tableName)
                 .insert(userData)
                 .select()
                 .single();
-            return { data, error };
-        },
+        }, 'users.create'),
         
-        async update(id, userData) {
-            const { data, error } = await supabase
+        update: wrapDatabaseOperation(async (id, userData) => {
+            if (!id) {
+                throw new Error('User ID is required');
+            }
+            if (!userData) {
+                throw new Error('User data is required');
+            }
+            
+            return await supabase
                 .from(User.tableName)
                 .update(userData)
                 .eq('id', id)
                 .select()
                 .single();
-            return { data, error };
-        }
+        }, 'users.update')
     },
     
     // Post operations
     posts: {
-        async findAll(limit = 50, offset = 0) {
-            const { data, error } = await supabase
+        findAll: wrapDatabaseOperation(async (limit = 50, offset = 0) => {
+            if (limit < 1 || limit > 1000) {
+                throw new Error('Limit must be between 1 and 1000');
+            }
+            if (offset < 0) {
+                throw new Error('Offset must be non-negative');
+            }
+            
+            return await supabase
                 .from(Post.tableName)
                 .select(Post.fields.join(','))
                 .order('created_at', { ascending: false })
                 .range(offset, offset + limit - 1);
-            return { data, error };
-        },
+        }, 'posts.findAll'),
         
-        async findById(id) {
-            const { data, error } = await supabase
+        findById: wrapDatabaseOperation(async (id) => {
+            if (!id) {
+                throw new Error('Post ID is required');
+            }
+            
+            return await supabase
                 .from(Post.tableName)
                 .select(Post.fields.join(','))
                 .eq('id', id)
                 .single();
-            return { data, error };
-        },
+        }, 'posts.findById'),
         
-        async findBySlug(slug) {
-            const { data, error } = await supabase
+        findBySlug: wrapDatabaseOperation(async (slug) => {
+            if (!slug) {
+                throw new Error('Post slug is required');
+            }
+            
+            return await supabase
                 .from(Post.tableName)
                 .select(Post.fields.join(','))
                 .eq('slug', slug)
                 .single();
-            return { data, error };
-        },
+        }, 'posts.findBySlug'),
         
-        async create(postData) {
-            const { data, error } = await supabase
+        create: wrapDatabaseOperation(async (postData) => {
+            if (!postData) {
+                throw new Error('Post data is required');
+            }
+            
+            return await supabase
                 .from(Post.tableName)
                 .insert(postData)
                 .select()
                 .single();
-            return { data, error };
-        },
+        }, 'posts.create'),
         
-        async update(id, postData) {
-            const { data, error } = await supabase
+        update: wrapDatabaseOperation(async (id, postData) => {
+            if (!id) {
+                throw new Error('Post ID is required');
+            }
+            if (!postData) {
+                throw new Error('Post data is required');
+            }
+            
+            return await supabase
                 .from(Post.tableName)
                 .update(postData)
                 .eq('id', id)
                 .select()
                 .single();
-            return { data, error };
-        },
+        }, 'posts.update'),
         
-        async delete(id) {
-            const { data, error } = await supabase
+        delete: wrapDatabaseOperation(async (id) => {
+            if (!id) {
+                throw new Error('Post ID is required');
+            }
+            
+            return await supabase
                 .from(Post.tableName)
                 .delete()
                 .eq('id', id);
-            return { data, error };
-        },
+        }, 'posts.delete'),
         
-        async incrementViewCount(id) {
-            const { data, error } = await supabase
+        incrementViewCount: wrapDatabaseOperation(async (id) => {
+            if (!id) {
+                throw new Error('Post ID is required');
+            }
+            
+            return await supabase
                 .rpc('increment_view_count', { post_id: id });
-            return { data, error };
-        }
+        }, 'posts.incrementViewCount')
     },
     
     // AI Usage tracking
     aiUsage: {
-        async create(usageData) {
-            const { data, error } = await supabase
+        create: wrapDatabaseOperation(async (usageData) => {
+            if (!usageData) {
+                throw new Error('Usage data is required');
+            }
+            
+            return await supabase
                 .from(AIUsage.tableName)
                 .insert(usageData)
                 .select()
                 .single();
-            return { data, error };
-        },
+        }, 'aiUsage.create'),
         
-        async getByUser(userId, limit = 100) {
-            const { data, error } = await supabase
+        getByUser: wrapDatabaseOperation(async (userId, limit = 100) => {
+            if (!userId) {
+                throw new Error('User ID is required');
+            }
+            if (limit < 1 || limit > 1000) {
+                throw new Error('Limit must be between 1 and 1000');
+            }
+            
+            return await supabase
                 .from(AIUsage.tableName)
                 .select('*')
                 .eq('user_id', userId)
                 .order('created_at', { ascending: false })
                 .limit(limit);
-            return { data, error };
-        },
+        }, 'aiUsage.getByUser'),
         
-        async getStats(userId, startDate, endDate) {
-            const { data, error } = await supabase
+        getStats: wrapDatabaseOperation(async (userId, startDate, endDate) => {
+            if (!userId) {
+                throw new Error('User ID is required');
+            }
+            if (!startDate || !endDate) {
+                throw new Error('Start date and end date are required');
+            }
+            
+            return await supabase
                 .from(AIUsage.tableName)
                 .select('provider, tokens_used, cost_thb')
                 .eq('user_id', userId)
                 .gte('created_at', startDate)
                 .lte('created_at', endDate);
-            return { data, error };
-        }
+        }, 'aiUsage.getStats')
     },
     
     // AI Conversations
     conversations: {
-        async create(conversationData) {
-            const { data, error } = await supabase
+        create: wrapDatabaseOperation(async (conversationData) => {
+            if (!conversationData) {
+                throw new Error('Conversation data is required');
+            }
+            
+            return await supabase
                 .from(AIConversation.tableName)
                 .insert(conversationData)
                 .select()
                 .single();
-            return { data, error };
-        },
+        }, 'conversations.create'),
         
-        async findByUser(userId, limit = 50) {
-            const { data, error } = await supabase
+        findByUser: wrapDatabaseOperation(async (userId, limit = 50) => {
+            if (!userId) {
+                throw new Error('User ID is required');
+            }
+            if (limit < 1 || limit > 1000) {
+                throw new Error('Limit must be between 1 and 1000');
+            }
+            
+            return await supabase
                 .from(AIConversation.tableName)
                 .select('*')
                 .eq('user_id', userId)
                 .order('updated_at', { ascending: false })
                 .limit(limit);
-            return { data, error };
-        },
+        }, 'conversations.findByUser'),
         
-        async addMessage(conversationId, messageData) {
-            const { data, error } = await supabase
+        addMessage: wrapDatabaseOperation(async (conversationId, messageData) => {
+            if (!conversationId) {
+                throw new Error('Conversation ID is required');
+            }
+            if (!messageData) {
+                throw new Error('Message data is required');
+            }
+            
+            return await supabase
                 .from(AIMessage.tableName)
                 .insert({
                     conversation_id: conversationId,
@@ -462,74 +540,41 @@ const db = {
                 })
                 .select()
                 .single();
-            return { data, error };
-        },
+        }, 'conversations.addMessage'),
         
-        async getMessages(conversationId) {
-            const { data, error } = await supabase
+        getMessages: wrapDatabaseOperation(async (conversationId) => {
+            if (!conversationId) {
+                throw new Error('Conversation ID is required');
+            }
+            
+            return await supabase
                 .from(AIMessage.tableName)
                 .select('*')
                 .eq('conversation_id', conversationId)
                 .order('created_at', { ascending: true });
-            return { data, error };
-        }
+        }, 'conversations.getMessages')
     }
 };
 
-// Export health check function
+// Simplified health check function
 const checkSupabaseHealth = async () => {
     try {
-        const { data, error } = await supabase
-            .from('posts')
-            .select('id')
-            .limit(1);
-            
+        const connected = await verifyConnection();
+        
         return {
-            status: error ? 'unhealthy' : 'healthy',
-            error: error?.message || null,
-            connected: !error
+            status: connected ? 'healthy' : 'unhealthy',
+            error: connectionStatus.error,
+            connected: connectionStatus.isConnected,
+            lastChecked: connectionStatus.lastChecked
         };
     } catch (error) {
+        logger.error('Health check failed', error);
         return {
             status: 'unhealthy', 
             error: error.message,
-            connected: false
+            connected: false,
+            lastChecked: new Date()
         };
-    }
-};
-
-// Test connection function
-const testConnection = async () => {
-    try {
-        console.log('🔍 Testing Supabase connection...');
-        
-        // Check if supabase client exists and has the from method
-        if (!supabase || typeof supabase.from !== 'function') {
-            console.warn('⚠️ Supabase client not properly initialized');
-            isSupabaseConnected = false;
-            return false;
-        }
-
-        // Simple test query - just check if we can access the posts table
-        const { data, error } = await supabase
-            .from('posts')
-            .select('id')
-            .limit(1);
-            
-        if (error) {
-            console.warn('⚠️ Supabase connection test failed:', error.message);
-            isSupabaseConnected = false;
-            return false;
-        }
-        
-        console.log(`✅ Supabase connected successfully - Posts table accessible`);
-        isSupabaseConnected = true;
-        return true;
-        
-    } catch (error) {
-        console.error('❌ Supabase connection test error:', error.message);
-        isSupabaseConnected = false;
-        return false;
     }
 };
 
@@ -538,10 +583,19 @@ const isConnected = () => {
     return isSupabaseConnected;
 };
 
+// Get detailed connection status
+const getConnectionStatus = () => {
+    return {
+        ...connectionStatus,
+        isSupabaseConnected
+    };
+};
+
 module.exports = {
     supabase,
     db,
     isConnected,
-    testConnection,
-    checkSupabaseHealth
+    getConnectionStatus,
+    checkSupabaseHealth,
+    verifyConnection
 };
