@@ -239,12 +239,13 @@ class AdminMigration {
                 headers['Authorization'] = `Bearer ${authToken}`;
             }
             
-            console.log('🔍 [MIGRATION] Checking status with:', {
-                apiBase: this.apiBase,
-                endpoint: `${this.apiBase}/migration/status`,
-                hasAuthToken: !!authToken,
-                hasSafeApiCall: !!(window.safeApiCall && typeof window.safeApiCall === 'function')
-            });
+            console.log('═══════════════════════════════════════');
+            console.log('🔍 [MIGRATION] Checking status with:');
+            console.log('  API Base:', this.apiBase);
+            console.log('  Endpoint:', `${this.apiBase}/migration/status`);
+            console.log('  Has Auth Token:', !!authToken);
+            console.log('  Has safeApiCall:', !!(window.safeApiCall && typeof window.safeApiCall === 'function'));
+            console.log('═══════════════════════════════════════');
 
             if (window.safeApiCall && typeof window.safeApiCall === 'function') {
                 result = await window.safeApiCall(`${this.apiBase}/migration/status`, {
@@ -276,15 +277,16 @@ class AdminMigration {
             }
             
             // Enhanced validation with detailed debugging
-            console.log('🔍 [MIGRATION] Validating result:', {
-                hasResult: !!result,
-                resultType: typeof result,
-                successField: result?.success,
-                successType: typeof result?.success,
-                hasData: !!result?.data,
-                hasError: !!result?.error,
-                resultKeys: result ? Object.keys(result) : null
-            });
+            console.log('═══════════════════════════════════════');
+            console.log('🔍 [MIGRATION] Validating result:');
+            console.log('  Has Result:', !!result);
+            console.log('  Result Type:', typeof result);
+            console.log('  Success Field:', result?.success);
+            console.log('  Success Type:', typeof result?.success);
+            console.log('  Has Data:', !!result?.data);
+            console.log('  Has Error:', !!result?.error);
+            console.log('  Result Keys:', result ? Object.keys(result) : null);
+            console.log('═══════════════════════════════════════');
             
             if (!result) {
                 throw new Error('Empty response from migration status endpoint');
