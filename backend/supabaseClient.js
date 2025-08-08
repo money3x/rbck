@@ -24,19 +24,18 @@ const supabaseKey = config.database.supabaseKey;
 
 // PRODUCTION DEBUG: Log config status (never log actual values)
 logger.info('Supabase Configuration Status', {
-    hasUrl: !!supabaseUrl && !supabaseUrl.includes('your-project'),
-    urlPattern: supabaseUrl ? supabaseUrl.substring(0, 20) + '...' : 'MISSING',
-    hasKey: !!supabaseKey && !supabaseKey.includes('your-'),
-    keyPattern: supabaseKey ? '***' + supabaseKey.slice(-4) : 'MISSING',
+    hasUrl: !!supabaseUrl,
+    urlStartsWith: supabaseUrl ? supabaseUrl.substring(0, 8) : 'MISSING',
+    hasKey: !!supabaseKey,
+    keyLength: supabaseKey ? supabaseKey.length : 0,
     nodeEnv: process.env.NODE_ENV
 });
 
-// FAIL FAST: Reject invalid configuration immediately
-if (!supabaseUrl || supabaseUrl.includes('your-project') || !supabaseKey || supabaseKey.includes('your-')) {
-    const error = new Error('PRODUCTION ERROR: Invalid Supabase configuration detected');
-    logger.error('Supabase initialization failed - check Render environment variables', {
-        urlValid: !!supabaseUrl && !supabaseUrl.includes('your-project'),
-        keyValid: !!supabaseKey && !supabaseKey.includes('your-'),
+// FAIL FAST: Validate required environment variables
+if (!supabaseUrl || !supabaseKey) {
+    logger.error('Supabase initialization failed - missing required environment variables', {
+        urlProvided: !!supabaseUrl,
+        keyProvided: !!supabaseKey,
         required: ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY']
     });
     // Don't crash server, but mark as unavailable
@@ -56,15 +55,11 @@ function validateCredentials(url, key) {
         return { valid: false, error: 'Missing Supabase URL or API key' };
     }
     
-    if (url.includes('placeholder') || key.includes('placeholder')) {
-        return { valid: false, error: 'Placeholder credentials detected' };
-    }
-    
     // Basic URL format validation
     try {
         const urlObj = new URL(url);
-        if (!urlObj.hostname.includes('supabase.co') && !urlObj.hostname.includes('supabase.net')) {
-            return { valid: false, error: 'Invalid Supabase URL format' };
+        if (!urlObj.protocol.startsWith('http')) {
+            return { valid: false, error: 'URL must use HTTP/HTTPS protocol' };
         }
     } catch (error) {
         return { valid: false, error: `Invalid URL format: ${error.message}` };
