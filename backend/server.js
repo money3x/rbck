@@ -783,7 +783,7 @@ async function startServer() {
             logger.info(`📊 Metrics: http://localhost:${PORT}/api/metrics`);
             logger.info(`🧪 API Test: http://localhost:${PORT}/api/test`);
             logger.info('🚀 ================================');
-            logger.info(`📊 Loaded ${posts.length} posts`);
+            logger.info('📊 Posts loaded via database connection');
             logger.info(`🌍 Environment: ${config.server.env}`);
             logger.info(`🌐 Frontend URL: ${config.frontend.url}`);
             logger.info(`🤖 AI Providers: ${config.getEnabledAIProviders().map(p => p.name).join(', ') || 'None'}`);
