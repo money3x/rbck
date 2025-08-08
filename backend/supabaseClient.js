@@ -379,12 +379,16 @@ const db = {
                 return { data: null, error };
             }
             
-            // Map database fields to expected frontend format
+            // Map database fields to expected frontend format (matching actual Supabase schema)
             const mappedData = data ? data.map(post => ({
                 id: post.id,
-                titleTH: post.title_th || post.titleTH || post.title || 'ไม่มีหัวข้อ',
-                titleEN: post.title_en || post.titleEN || post.title || 'No Title',
-                title: post.title || post.title_th || post.titleTH || 'ไม่มีหัวข้อ',
+                // Real Supabase fields (lowercase)
+                titleTH: post.titleth || 'ไม่มีหัวข้อ',
+                titleEN: post.titleen || 'No Title', 
+                title: post.titleth || 'ไม่มีหัวข้อ',
+                titleth: post.titleth,
+                titleen: post.titleen,
+                
                 slug: post.slug || `post-${post.id}`,
                 content: post.content || '',
                 excerpt: post.excerpt || '',
@@ -394,12 +398,22 @@ const db = {
                 tags: Array.isArray(post.tags) ? post.tags : (post.tags ? [post.tags] : []),
                 views: post.views || 0,
                 likes: post.likes || 0,
-                metaTitle: post.meta_title || post.metaTitle || post.title,
-                metaDescription: post.meta_description || post.metaDescription || post.excerpt,
-                focusKeyword: post.focus_keyword || post.focusKeyword || '',
-                publishDate: post.published_at || post.publishDate || post.created_at,
-                createdAt: post.created_at || post.createdAt,
-                updatedAt: post.updated_at || post.updatedAt,
+                
+                // Real Supabase fields (lowercase) with backwards compatibility
+                metaTitle: post.metatitle || post.titleth,
+                metaDescription: post.metadescription || post.excerpt,
+                focusKeyword: post.focuskeyword || '',
+                schemaType: post.schematype || 'Article',
+                
+                // Legacy field names for compatibility
+                metatitle: post.metatitle,
+                metadescription: post.metadescription,
+                focuskeyword: post.focuskeyword,
+                schematype: post.schematype,
+                
+                publishDate: post.created_at,
+                createdAt: post.created_at,
+                updatedAt: post.updated_at,
                 created_at: post.created_at,
                 updated_at: post.updated_at,
                 published: post.status === 'published'
@@ -424,12 +438,16 @@ const db = {
                 return { data: null, error };
             }
             
-            // Map database fields to expected frontend format
+            // Map database fields to expected frontend format (matching actual Supabase schema)
             const mappedData = data ? {
                 id: data.id,
-                titleTH: data.title_th || data.titleTH || data.title || 'ไม่มีหัวข้อ',
-                titleEN: data.title_en || data.titleEN || data.title || 'No Title',
-                title: data.title || data.title_th || data.titleTH || 'ไม่มีหัวข้อ',
+                // Real Supabase fields (lowercase)
+                titleTH: data.titleth || 'ไม่มีหัวข้อ',
+                titleEN: data.titleen || 'No Title',
+                title: data.titleth || 'ไม่มีหัวข้อ',
+                titleth: data.titleth,
+                titleen: data.titleen,
+                
                 slug: data.slug || `post-${data.id}`,
                 content: data.content || '',
                 excerpt: data.excerpt || '',
@@ -439,12 +457,22 @@ const db = {
                 tags: Array.isArray(data.tags) ? data.tags : (data.tags ? [data.tags] : []),
                 views: data.views || 0,
                 likes: data.likes || 0,
-                metaTitle: data.meta_title || data.metaTitle || data.title,
-                metaDescription: data.meta_description || data.metaDescription || data.excerpt,
-                focusKeyword: data.focus_keyword || data.focusKeyword || '',
-                publishDate: data.published_at || data.publishDate || data.created_at,
-                createdAt: data.created_at || data.createdAt,
-                updatedAt: data.updated_at || data.updatedAt,
+                
+                // Real Supabase fields (lowercase) with backwards compatibility
+                metaTitle: data.metatitle || data.titleth,
+                metaDescription: data.metadescription || data.excerpt,
+                focusKeyword: data.focuskeyword || '',
+                schemaType: data.schematype || 'Article',
+                
+                // Legacy field names for compatibility
+                metatitle: data.metatitle,
+                metadescription: data.metadescription,
+                focuskeyword: data.focuskeyword,
+                schematype: data.schematype,
+                
+                publishDate: data.created_at,
+                createdAt: data.created_at,
+                updatedAt: data.updated_at,
                 created_at: data.created_at,
                 updated_at: data.updated_at,
                 published: data.status === 'published'
