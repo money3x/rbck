@@ -18,9 +18,29 @@ const logger = {
     }
 };
 
-// Use configuration from config.js
+// Use configuration from config.js with production debugging
 const supabaseUrl = config.database.supabaseUrl;
 const supabaseKey = config.database.supabaseKey;
+
+// PRODUCTION DEBUG: Log config status (never log actual values)
+logger.info('Supabase Configuration Status', {
+    hasUrl: !!supabaseUrl && !supabaseUrl.includes('your-project'),
+    urlPattern: supabaseUrl ? supabaseUrl.substring(0, 20) + '...' : 'MISSING',
+    hasKey: !!supabaseKey && !supabaseKey.includes('your-'),
+    keyPattern: supabaseKey ? '***' + supabaseKey.slice(-4) : 'MISSING',
+    nodeEnv: process.env.NODE_ENV
+});
+
+// FAIL FAST: Reject invalid configuration immediately
+if (!supabaseUrl || supabaseUrl.includes('your-project') || !supabaseKey || supabaseKey.includes('your-')) {
+    const error = new Error('PRODUCTION ERROR: Invalid Supabase configuration detected');
+    logger.error('Supabase initialization failed - check Render environment variables', {
+        urlValid: !!supabaseUrl && !supabaseUrl.includes('your-project'),
+        keyValid: !!supabaseKey && !supabaseKey.includes('your-'),
+        required: ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY']
+    });
+    // Don't crash server, but mark as unavailable
+}
 
 let supabase;
 let isSupabaseConnected = false;

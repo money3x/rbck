@@ -80,29 +80,14 @@ router.get('/', checkSupabaseConnection, async (req, res) => {
         console.log('🔍 Supabase connection available:', req.supabaseAvailable);
         
         if (!req.supabaseAvailable) {
-            console.warn('⚠️ Supabase unavailable, returning fallback data');
-            // Return structured fallback data instead of error
-            return res.json({
-                success: true,
-                data: [
-                    {
-                        id: 1,
-                        titleTH: "ยินดีต้อนรับสู่ระเบียบการช่าง",
-                        title: "ยินดีต้อนรับสู่ระเบียบการช่าง",
-                        content: "บทความตัวอย่างจากระบบ CMS ของระเบียบการช่าง ผู้เชี่ยวชาญด้านรถเกี่ยวข้าว",
-                        excerpt: "ระเบียบการช่าง - พันธมิตรที่เกษตรกรไว้วางใจ",
-                        author: "ระเบียบการช่าง",
-                        status: "published",
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString(),
-                        published: true,
-                        slug: "welcome-post",
-                        tags: ["รถเกี่ยวข้าว", "ระเบียบการช่าง"]
-                    }
-                ],
-                source: 'fallback',
-                count: 1,
-                message: 'Using fallback data due to database connection issues'
+            console.error('❌ PRODUCTION ERROR: Supabase connection unavailable');
+            return res.status(503).json({
+                success: false,
+                error: 'Database service unavailable',
+                message: 'Unable to fetch posts - database connection failed',
+                source: 'production_error',
+                timestamp: new Date().toISOString(),
+                retryAfter: 300 // Suggest retry after 5 minutes
             });
         }
 
