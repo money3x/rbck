@@ -156,21 +156,28 @@ class CMSDashboard {
 
         const recentPosts = this.posts.slice(0, 5);
         
-        container.innerHTML = recentPosts.map(post => `
-            <div class="recent-post-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border-bottom: 1px solid #dee2e6;">
-                <div>
-                    <h4 style="margin: 0; font-size: 0.9rem; color: var(--primary-color);">${post.titleth}</h4>
-                    <small style="color: #6c757d;">${new Date(post.updated_at).toLocaleDateString('th-TH')}</small>
+        container.innerHTML = recentPosts.map(post => {
+            // Handle different field name formats
+            const title = post.titleTH || post.titleth || post.title || 'ไม่มีหัวข้อ';
+            const updatedDate = post.updated_at || post.updatedAt || post.created_at || post.createdAt || new Date().toISOString();
+            const seoScore = post.seoScore || post.seo_score || 0;
+            
+            return `
+                <div class="recent-post-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border-bottom: 1px solid #dee2e6;">
+                    <div>
+                        <h4 style="margin: 0; font-size: 0.9rem; color: var(--primary-color);">${title}</h4>
+                        <small style="color: #6c757d;">${new Date(updatedDate).toLocaleDateString('th-TH')}</small>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span class="score-indicator score-${this.getScoreClass(seoScore)}">
+                            <span class="score-circle ${this.getScoreClass(seoScore)}">${seoScore}</span>
+                            SEO
+                        </span>
+                        <span class="status-badge status-${post.status}">${this.getStatusText(post.status)}</span>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <span class="score-indicator score-${this.getScoreClass(post.seoScore)}">
-                        <span class="score-circle ${this.getScoreClass(post.seoScore)}">${post.seoScore}</span>
-                        SEO
-                    </span>
-                    <span class="status-badge status-${post.status}">${this.getStatusText(post.status)}</span>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     renderPosts() {
@@ -179,29 +186,36 @@ class CMSDashboard {
 
         const filteredPosts = this.getFilteredPosts();
 
-        container.innerHTML = filteredPosts.map(post => `
-            <div class="post-card">
-                <div class="post-card-header">
-                    <div class="post-card-title">${post.titleth}</div>
-                    <div class="post-card-meta">
-                        <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <span class="status-badge status-${post.status}">${this.getStatusText(post.status)}</span>
-                            <span class="score-indicator score-${this.getScoreClass(post.seoScore)}">
-                                <span class="score-circle ${this.getScoreClass(post.seoScore)}">${post.seoScore}</span>
-                            </span>
+        container.innerHTML = filteredPosts.map(post => {
+            // Handle different field name formats
+            const title = post.titleTH || post.titleth || post.title || 'ไม่มีหัวข้อ';
+            const updatedDate = post.updated_at || post.updatedAt || post.created_at || post.createdAt || new Date().toISOString();
+            const seoScore = post.seoScore || post.seo_score || 0;
+            
+            return `
+                <div class="post-card">
+                    <div class="post-card-header">
+                        <div class="post-card-title">${title}</div>
+                        <div class="post-card-meta">
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <span class="status-badge status-${post.status}">${this.getStatusText(post.status)}</span>
+                                <span class="score-indicator score-${this.getScoreClass(seoScore)}">
+                                    <span class="score-circle ${this.getScoreClass(seoScore)}">${seoScore}</span>
+                                </span>
+                            </div>
+                            <span>${new Date(updatedDate).toLocaleDateString('th-TH')}</span>
                         </div>
-                        <span>${new Date(post.updated_at).toLocaleDateString('th-TH')}</span>
+                    </div>
+                    <div class="post-card-body">
+                        <div class="post-excerpt">${post.excerpt || 'ไม่มีสรุปย่อ'}</div>
+                        <div class="post-actions">
+                            <button class="edit-btn" onclick="cmsApp.editPost('${post.id}')">แก้ไข</button>
+                            <button class="delete-btn" onclick="cmsApp.deletePost('${post.id}')">ลบ</button>
+                        </div>
                     </div>
                 </div>
-                <div class="post-card-body">
-                    <div class="post-excerpt">${post.excerpt || 'ไม่มีสรุปย่อ'}</div>
-                    <div class="post-actions">
-                        <button class="edit-btn" onclick="cmsApp.editPost('${post.id}')">แก้ไข</button>
-                        <button class="delete-btn" onclick="cmsApp.deletePost('${post.id}')">ลบ</button>
-                    </div>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     getFilteredPosts() {
@@ -216,10 +230,11 @@ class CMSDashboard {
         // Filter by search
         const searchTerm = document.getElementById('searchPosts')?.value.toLowerCase();
         if (searchTerm) {
-            filtered = filtered.filter(post => 
-                post.titleth.toLowerCase().includes(searchTerm) ||
-                (post.excerpt && post.excerpt.toLowerCase().includes(searchTerm))
-            );
+            filtered = filtered.filter(post => {
+                const title = (post.titleTH || post.titleth || post.title || '').toLowerCase();
+                const excerpt = (post.excerpt || '').toLowerCase();
+                return title.includes(searchTerm) || excerpt.includes(searchTerm);
+            });
         }
 
         return filtered;
@@ -281,22 +296,35 @@ class CMSDashboard {
     }
 
     populateForm(post) {
-        document.getElementById('titleTH').value = post.titleth || '';
-        document.getElementById('titleEN').value = post.titleen || '';
+        // Handle different field name formats
+        const titleTH = post.titleTH || post.titleth || post.title || '';
+        const titleEN = post.titleEN || post.titleen || post.title_en || '';
+        const metaDescription = post.metaDescription || post.meta_description || post.excerpt || '';
+        const focusKeyword = post.focusKeyword || post.focus_keyword || '';
+        const canonicalUrl = post.canonicalUrl || post.canonical_url || '';
+        const tags = Array.isArray(post.tags) ? post.tags : (post.tags ? [post.tags] : []);
+        
+        document.getElementById('titleTH').value = titleTH;
+        document.getElementById('titleEN').value = titleEN;
         document.getElementById('excerpt').value = post.excerpt || '';
         document.getElementById('contentEditor').innerHTML = post.content || '';
-        document.getElementById('tags').value = post.tags ? post.tags.join(', ') : '';
+        document.getElementById('tags').value = tags.join(', ');
         document.getElementById('status').value = post.status || 'draft';
         
         // SEO fields
-        document.getElementById('metaDescription').value = post.meta_description || '';
-        document.getElementById('focusKeyword').value = post.focus_keyword || '';
-        document.getElementById('canonicalUrl').value = post.canonical_url || '';
+        document.getElementById('metaDescription').value = metaDescription;
+        document.getElementById('focusKeyword').value = focusKeyword;
+        document.getElementById('canonicalUrl').value = canonicalUrl;
         
         // SGE fields
-        document.getElementById('mainQuestion').value = post.main_question || '';
-        document.getElementById('quickAnswer').value = post.quick_answer || '';
-        document.getElementById('relatedEntities').value = post.related_entities ? post.related_entities.join(', ') : '';
+        const mainQuestion = post.mainQuestion || post.main_question || '';
+        const quickAnswer = post.quickAnswer || post.quick_answer || '';
+        const relatedEntities = Array.isArray(post.relatedEntities || post.related_entities) ? 
+            (post.relatedEntities || post.related_entities) : [];
+            
+        document.getElementById('mainQuestion').value = mainQuestion;
+        document.getElementById('quickAnswer').value = quickAnswer;
+        document.getElementById('relatedEntities').value = relatedEntities.join(', ');
 
         this.updateCharCount(document.getElementById('metaDescription'));
     }
@@ -333,23 +361,43 @@ class CMSDashboard {
             this.showError('เกิดข้อผิดพลาดในการบันทึกบทความ');
         }
     }    collectFormData() {
+        const tags = document.getElementById('tags')?.value.split(',').map(tag => tag.trim()).filter(tag => tag) || [];
+        const relatedEntities = document.getElementById('relatedEntities')?.value.split(',').map(entity => entity.trim()).filter(entity => entity) || [];
+        
         return {
+            // Support both field naming conventions
+            titleTH: document.getElementById('titleTH')?.value || '',
             titleth: document.getElementById('titleTH')?.value || '',
+            title: document.getElementById('titleTH')?.value || '',
+            
+            titleEN: document.getElementById('titleEN')?.value || '',
             titleen: document.getElementById('titleEN')?.value || '',
+            title_en: document.getElementById('titleEN')?.value || '',
+            
             excerpt: document.getElementById('excerpt')?.value || '',
             content: document.getElementById('contentEditor')?.innerHTML || '',
-            tags: document.getElementById('tags')?.value.split(',').map(tag => tag.trim()).filter(tag => tag) || [],
+            tags: tags,
             status: document.getElementById('status')?.value || 'draft',
             
-            // SEO fields
+            // SEO fields - support both formats
+            metaDescription: document.getElementById('metaDescription')?.value || '',
             meta_description: document.getElementById('metaDescription')?.value || '',
+            
+            focusKeyword: document.getElementById('focusKeyword')?.value || '',
             focus_keyword: document.getElementById('focusKeyword')?.value || '',
+            
+            canonicalUrl: document.getElementById('canonicalUrl')?.value || '',
             canonical_url: document.getElementById('canonicalUrl')?.value || '',
             
-            // SGE fields
+            // SGE fields - support both formats
+            mainQuestion: document.getElementById('mainQuestion')?.value || '',
             main_question: document.getElementById('mainQuestion')?.value || '',
+            
+            quickAnswer: document.getElementById('quickAnswer')?.value || '',
             quick_answer: document.getElementById('quickAnswer')?.value || '',
-            related_entities: document.getElementById('relatedEntities')?.value.split(',').map(entity => entity.trim()).filter(entity => entity) || []
+            
+            relatedEntities: relatedEntities,
+            related_entities: relatedEntities
         };
     }
 
@@ -534,10 +582,10 @@ class CMSDashboard {
                 const prompt = `
                 ในฐานะ SEO Expert โปรดวิเคราะห์บทความนี้อย่างละเอียด:
 
-                หัวข้อ: "${selectedPost.titleth || selectedPost.title}"
+                หัวข้อ: "${selectedPost.titleTH || selectedPost.titleth || selectedPost.title || 'ไม่มีหัวข้อ'}"
                 เนื้อหา: "${(selectedPost.content || '').replace(/<[^>]*>/g, ' ').substring(0, 1000)}..."
-                Meta Description: "${selectedPost.meta_description || ''}"
-                Focus Keyword: "${selectedPost.focus_keyword || ''}"
+                Meta Description: "${selectedPost.metaDescription || selectedPost.meta_description || ''}"
+                Focus Keyword: "${selectedPost.focusKeyword || selectedPost.focus_keyword || ''}"
 
                 โปรดวิเคราะห์:
                 1. คะแนน SEO โดยรวม (0-100)
@@ -598,9 +646,9 @@ class CMSDashboard {
 
     // Generate fallback SEO analysis
     generateFallbackSEOAnalysis(post) {
-        const title = post.titleth || post.title || '';
+        const title = post.titleTH || post.titleth || post.title || '';
         const content = post.content || '';
-        const metaDesc = post.meta_description || '';
+        const metaDesc = post.metaDescription || post.meta_description || '';
         
         let score = 50; // Base score
         const improvements = [];
@@ -677,7 +725,7 @@ class CMSDashboard {
         modal.innerHTML = `
             <div class="modal-content" style="max-width: 900px;">
                 <div class="modal-header">
-                    <h3><i class="fas fa-chart-line"></i> 🚀 Flash SEO Analysis: ${post.titleth || post.title}</h3>
+                    <h3><i class="fas fa-chart-line"></i> 🚀 Flash SEO Analysis: ${post.titleTH || post.titleth || post.title || 'ไม่มีหัวข้อ'}</h3>
                     <button onclick="this.closest('.modal').remove()">&times;</button>
                 </div>
                 <div class="modal-body">

@@ -367,11 +367,45 @@ const db = {
                 throw new Error('Offset must be non-negative');
             }
             
-            return await supabase
+            const { data, error } = await supabase
                 .from(Post.tableName)
-                .select(Post.fields.join(','))
+                .select('*')  // Select all fields to avoid field name issues
+                .eq('status', 'published')  // Only published posts
                 .order('created_at', { ascending: false })
                 .range(offset, offset + limit - 1);
+            
+            if (error) {
+                logger.error('Database query failed in posts.findAll', error);
+                return { data: null, error };
+            }
+            
+            // Map database fields to expected frontend format
+            const mappedData = data ? data.map(post => ({
+                id: post.id,
+                titleTH: post.title_th || post.titleTH || post.title || 'ไม่มีหัวข้อ',
+                titleEN: post.title_en || post.titleEN || post.title || 'No Title',
+                title: post.title || post.title_th || post.titleTH || 'ไม่มีหัวข้อ',
+                slug: post.slug || `post-${post.id}`,
+                content: post.content || '',
+                excerpt: post.excerpt || '',
+                author: post.author || 'ระเบียบการช่าง',
+                status: post.status || 'published',
+                category: post.category || 'general',
+                tags: Array.isArray(post.tags) ? post.tags : (post.tags ? [post.tags] : []),
+                views: post.views || 0,
+                likes: post.likes || 0,
+                metaTitle: post.meta_title || post.metaTitle || post.title,
+                metaDescription: post.meta_description || post.metaDescription || post.excerpt,
+                focusKeyword: post.focus_keyword || post.focusKeyword || '',
+                publishDate: post.published_at || post.publishDate || post.created_at,
+                createdAt: post.created_at || post.createdAt,
+                updatedAt: post.updated_at || post.updatedAt,
+                created_at: post.created_at,
+                updated_at: post.updated_at,
+                published: post.status === 'published'
+            })) : [];
+            
+            return { data: mappedData, error: null };
         }, 'posts.findAll'),
         
         findById: wrapDatabaseOperation(async (id) => {
@@ -379,11 +413,44 @@ const db = {
                 throw new Error('Post ID is required');
             }
             
-            return await supabase
+            const { data, error } = await supabase
                 .from(Post.tableName)
-                .select(Post.fields.join(','))
+                .select('*')
                 .eq('id', id)
                 .single();
+            
+            if (error) {
+                logger.error('Database query failed in posts.findById', error);
+                return { data: null, error };
+            }
+            
+            // Map database fields to expected frontend format
+            const mappedData = data ? {
+                id: data.id,
+                titleTH: data.title_th || data.titleTH || data.title || 'ไม่มีหัวข้อ',
+                titleEN: data.title_en || data.titleEN || data.title || 'No Title',
+                title: data.title || data.title_th || data.titleTH || 'ไม่มีหัวข้อ',
+                slug: data.slug || `post-${data.id}`,
+                content: data.content || '',
+                excerpt: data.excerpt || '',
+                author: data.author || 'ระเบียบการช่าง',
+                status: data.status || 'published',
+                category: data.category || 'general',
+                tags: Array.isArray(data.tags) ? data.tags : (data.tags ? [data.tags] : []),
+                views: data.views || 0,
+                likes: data.likes || 0,
+                metaTitle: data.meta_title || data.metaTitle || data.title,
+                metaDescription: data.meta_description || data.metaDescription || data.excerpt,
+                focusKeyword: data.focus_keyword || data.focusKeyword || '',
+                publishDate: data.published_at || data.publishDate || data.created_at,
+                createdAt: data.created_at || data.createdAt,
+                updatedAt: data.updated_at || data.updatedAt,
+                created_at: data.created_at,
+                updated_at: data.updated_at,
+                published: data.status === 'published'
+            } : null;
+            
+            return { data: mappedData, error: null };
         }, 'posts.findById'),
         
         findBySlug: wrapDatabaseOperation(async (slug) => {

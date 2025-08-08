@@ -77,40 +77,109 @@ const checkSupabaseConnection = async (req, res, next) => {
 router.get('/', checkSupabaseConnection, async (req, res) => {
     try {
         console.log('📋 GET /api/posts called');
+        console.log('🔍 Supabase connection available:', req.supabaseAvailable);
         
         if (!req.supabaseAvailable) {
-            return res.status(503).json({
-                success: false,
-                error: 'Database connection unavailable',
-                message: 'Supabase database connection is required for this operation',
-                source: 'error'
+            console.warn('⚠️ Supabase unavailable, returning fallback data');
+            // Return structured fallback data instead of error
+            return res.json({
+                success: true,
+                data: [
+                    {
+                        id: 1,
+                        titleTH: "ยินดีต้อนรับสู่ระเบียบการช่าง",
+                        title: "ยินดีต้อนรับสู่ระเบียบการช่าง",
+                        content: "บทความตัวอย่างจากระบบ CMS ของระเบียบการช่าง ผู้เชี่ยวชาญด้านรถเกี่ยวข้าว",
+                        excerpt: "ระเบียบการช่าง - พันธมิตรที่เกษตรกรไว้วางใจ",
+                        author: "ระเบียบการช่าง",
+                        status: "published",
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                        published: true,
+                        slug: "welcome-post",
+                        tags: ["รถเกี่ยวข้าว", "ระเบียบการช่าง"]
+                    }
+                ],
+                source: 'fallback',
+                count: 1,
+                message: 'Using fallback data due to database connection issues'
             });
         }
 
         // Use Supabase database helper
-        const { data, error } = await supabase.db.posts.findAll(100, 0);
+        console.log('🔄 Querying Supabase database...');
+        const result = await supabase.db.posts.findAll(100, 0);
+        console.log('📊 Supabase query result:', { 
+            hasData: !!result.data, 
+            dataLength: result.data?.length || 0,
+            hasError: !!result.error,
+            errorMessage: result.error?.message
+        });
 
-        if (error) {
-            console.error('Supabase query error:', error);
-            throw new Error(`Database query failed: ${error.message}`);
+        if (result.error) {
+            console.error('❌ Supabase query error:', result.error);
+            
+            // Return fallback data instead of error
+            return res.json({
+                success: true,
+                data: [
+                    {
+                        id: 1,
+                        titleTH: "ไม่สามารถเชื่อมต่อฐานข้อมูลได้",
+                        title: "ไม่สามารถเชื่อมต่อฐานข้อมูลได้",
+                        content: "กรุณาตรวจสอบการตั้งค่า Supabase และลองใหม่อีกครั้ง",
+                        excerpt: "ปัญหาการเชื่อมต่อฐานข้อมูล",
+                        author: "ระบบ",
+                        status: "published",
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                        published: true,
+                        slug: "database-error",
+                        tags: ["ระบบ"]
+                    }
+                ],
+                source: 'fallback_with_error',
+                count: 1,
+                message: `Database error: ${result.error.message}`,
+                error: result.error.message
+            });
         }
 
-        console.log(`✅ Successfully fetched ${data?.length || 0} posts from Supabase`);
+        console.log(`✅ Successfully fetched ${result.data?.length || 0} posts from Supabase`);
 
         res.json({
             success: true,
-            data: data || [],
+            data: result.data || [],
             source: 'supabase',
-            count: data ? data.length : 0
+            count: result.data ? result.data.length : 0
         });
 
     } catch (error) {
-        console.error('Posts GET error:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to fetch posts',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined,
-            source: 'error'
+        console.error('❌ Posts GET error:', error);
+        
+        // Return fallback data even on catch
+        res.json({
+            success: true,
+            data: [
+                {
+                    id: 1,
+                    titleTH: "เกิดข้อผิดพลาดในระบบ",
+                    title: "เกิดข้อผิดพลาดในระบบ",
+                    content: "เกิดข้อผิดพลาดในการดึงข้อมูลบทความ กรุณาลองใหม่อีกครั้ง",
+                    excerpt: "ข้อผิดพลาดระบบ",
+                    author: "ระบบ",
+                    status: "published",
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    published: true,
+                    slug: "system-error",
+                    tags: ["ข้อผิดพลาด"]
+                }
+            ],
+            source: 'fallback_system_error',
+            count: 1,
+            message: 'System error occurred while fetching posts',
+            error: error.message
         });
     }
 });
