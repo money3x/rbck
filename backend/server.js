@@ -1,14 +1,16 @@
 console.log('🚀 [INIT] Loading server.js...');
 
-// Global error handlers - MUST be first
+// Global error handlers - MUST be first - NEVER EXIT
 process.on('unhandledRejection', (reason, promise) => {
-    console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-    // Don't exit, just log
+    console.error('❌ UNHANDLED REJECTION:', reason);
+    console.error('❌ Promise:', promise);
+    // Log but keep server alive
 });
 
 process.on('uncaughtException', (error) => {
-    console.error('❌ Uncaught Exception:', error);
-    // Don't exit, just log
+    console.error('❌ UNCAUGHT EXCEPTION:', error);
+    console.error('❌ Stack:', error.stack);
+    // Log but keep server alive
 });
 
 require('dotenv').config(); // Load environment variables
@@ -771,8 +773,8 @@ console.log('✅ [INIT] All middleware configured');
 async function startServer() {
     console.log('🚀 [START] startServer() called');
     try {
-        // Initialize AI services in proper order
-        console.log('🤖 [START] Initializing AI Services...');
+        // Initialize AI services - NEVER exit on failure
+        console.log('🤖 BOOT: starting AI services initialization');
         
         try {
             // Initialize AI Provider Service first
@@ -780,22 +782,31 @@ async function startServer() {
             console.log('🔧 Initializing AI Provider Service...');
             await aiProviderService.initializeProviders();
             console.log('✅ AI Provider Service initialized');
-            
+        } catch (aiProviderError) {
+            console.warn('⚠️ AI Provider Service failed - continuing without it:', aiProviderError.message);
+        }
+
+        try {
             // Initialize AI Swarm Councils (singleton) 
             console.log('🔧 Initializing AI Swarm Councils...');
             const SwarmCouncilManager = require('./services/SwarmCouncilManager');
             const swarmCouncilManager = SwarmCouncilManager.getInstance();
             await swarmCouncilManager.initializeAll();
-            console.log('✅ AI Swarm Councils initialized');
-            
-        } catch (aiError) {
-            console.warn('⚠️ AI Services initialization failed but server will continue:', aiError.message);
-            console.warn('⚠️ AI features may be limited');
+            console.log('✅ BOOT: councils init done');
+        } catch (councilError) {
+            console.warn('⚠️ AI Swarm Councils failed - continuing without them:', councilError.message);
+            console.log('✅ BOOT: councils init done (with errors)');
         }
         
-        await initializeDataConnection();
+        try {
+            await initializeDataConnection();
+            console.log('✅ Data connection initialized');
+        } catch (dbError) {
+            console.warn('⚠️ Database connection failed - continuing anyway:', dbError.message);
+        }
         
-        const server = app.listen(PORT, () => {
+        console.log('🚀 BOOT: server listening on', PORT);
+        const server = app.listen(PORT, '0.0.0.0', () => {
             logger.info('🚀 ================================');
             logger.info(`🚀   ${config.api.title} v${config.api.version}`);
             logger.info('🚀 ================================');
@@ -810,6 +821,7 @@ async function startServer() {
             logger.info(`🌐 Frontend URL: ${config.frontend.url}`);
             logger.info(`🤖 AI Providers: ${config.getEnabledAIProviders().map(p => p.name).join(', ') || 'None'}`);
             logger.info('✅ API Server is ready and operational!');
+            console.log('🚀 BOOT: server listening on', PORT);
         });
 
         // 🚀 REAL-TIME WEBSOCKET: Initialize after server starts (poe.com style)
@@ -867,19 +879,26 @@ async function startServer() {
         process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
         // Handle uncaught exceptions
+        // Runtime error handlers - these replace the global ones
+        process.removeAllListeners('uncaughtException');
+        process.removeAllListeners('unhandledRejection');
+        
         process.on('uncaughtException', (error) => {
-            logger.error('❌ Uncaught Exception:', error);
-            gracefulShutdown('uncaughtException');
+            console.error('❌ Runtime Uncaught Exception:', error.message);
+            console.error('❌ Stack:', error.stack);
+            // Log but don't exit
         });
 
         process.on('unhandledRejection', (reason, promise) => {
-            logger.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-            gracefulShutdown('unhandledRejection');
+            console.error('❌ Runtime Unhandled Rejection:', reason);
+            console.error('❌ Promise:', promise);
+            // Log but don't exit
         });
         
     } catch (error) {
-        logger.error('❌ Failed to start server:', error);
-        process.exit(1);
+        console.error('❌ Server startup error (but continuing):', error.message);
+        console.error('❌ Stack:', error.stack);
+        // DO NOT EXIT - keep server alive
     }
 }
 
