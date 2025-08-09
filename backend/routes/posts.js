@@ -91,52 +91,59 @@ router.get('/', checkSupabaseConnection, async (req, res) => {
             });
         }
 
-        // Use Supabase database helper
-        console.log('🔄 Querying Supabase database...');
-        const result = await supabase.db.posts.findAll(100, 0);
+        // Direct Supabase client query
+        console.log('🔄 Querying Supabase posts table...');
+        
+        const { data, error, count } = await supabase
+            .from('posts')
+            .select('*', { count: 'exact' })
+            .eq('status', 'published')
+            .order('created_at', { ascending: false })
+            .limit(100);
+            
         console.log('📊 Supabase query result:', { 
-            hasData: !!result.data, 
-            dataLength: result.data?.length || 0,
-            hasError: !!result.error,
-            errorMessage: result.error?.message
+            totalRows: count,
+            returnedRows: data?.length || 0,
+            hasError: !!error,
+            errorDetails: error?.message || error?.details || null
         });
 
-        if (result.error) {
-            console.error('❌ Supabase query error:', result.error);
+        if (error) {
+            console.error('❌ CRITICAL: Supabase query failed:', {
+                error: error.message,
+                details: error.details,
+                hint: error.hint,
+                code: error.code
+            });
             
-            // Return fallback data instead of error
-            return res.json({
-                success: true,
-                data: [
-                    {
-                        id: 1,
-                        titleTH: "ไม่สามารถเชื่อมต่อฐานข้อมูลได้",
-                        title: "ไม่สามารถเชื่อมต่อฐานข้อมูลได้",
-                        content: "กรุณาตรวจสอบการตั้งค่า Supabase และลองใหม่อีกครั้ง",
-                        excerpt: "ปัญหาการเชื่อมต่อฐานข้อมูล",
-                        author: "ระบบ",
-                        status: "published",
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString(),
-                        published: true,
-                        slug: "database-error",
-                        tags: ["ระบบ"]
-                    }
-                ],
-                source: 'fallback_with_error',
-                count: 1,
-                message: `Database error: ${result.error.message}`,
-                error: result.error.message
+            return res.status(500).json({
+                success: false,
+                error: 'Database query failed',
+                message: error.message,
+                source: 'supabase_error',
+                timestamp: new Date().toISOString()
             });
         }
 
-        console.log(`✅ Successfully fetched ${result.data?.length || 0} posts from Supabase`);
+        if (!data || data.length === 0) {
+            console.warn('⚠️ No posts found in database');
+            return res.json({
+                success: true,
+                data: [],
+                count: 0,
+                source: 'supabase_empty',
+                message: 'No published posts found'
+            });
+        }
 
+        console.log(`✅ Successfully fetched ${data.length} posts from Supabase`);
+        
         res.json({
             success: true,
-            data: result.data || [],
+            data: data,
+            count: data.length,
             source: 'supabase',
-            count: result.data ? result.data.length : 0
+            timestamp: new Date().toISOString()
         });
 
     } catch (error) {
