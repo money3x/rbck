@@ -2,7 +2,7 @@
 // REST API for posts with comprehensive Supabase error handling
 const express = require('express');
 const router = express.Router();
-const supabase = require('../supabaseClient');
+const { supabase } = require('../supabaseClient');
 const { authenticateAdmin } = require('../middleware/auth');
 const SwarmCouncilManager = require('../services/SwarmCouncilManager');
 

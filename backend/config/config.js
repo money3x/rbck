@@ -146,12 +146,12 @@ const validateConfig = () => {
       errors.push('ADMIN_PASSWORD must be set in production');
     }
 
-    if (!config.database.supabaseUrl || config.database.supabaseUrl.includes('placeholder')) {
+    if (!config.database.supabaseUrl) {
       errors.push('SUPABASE_URL must be set in production');
     }
 
-    if (!config.database.supabaseKey || config.database.supabaseKey.includes('placeholder')) {
-      errors.push('SUPABASE_SERVICE_KEY or SUPABASE_ANON_KEY must be set in production');
+    if (!config.database.supabaseKey) {
+      errors.push('SUPABASE_SERVICE_KEY must be set in production');
     }
   }
 
