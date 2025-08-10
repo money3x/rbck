@@ -86,12 +86,25 @@ class ProviderPool {
                 
                 console.log(`✅ [ProviderPool] ${providerName} initialized successfully`);
             } else {
-                throw new Error(`Health check failed: ${healthResult.error}`);
+                // Mark as DOWN but don't throw - continue with other providers
+                this.healthChecks.set(providerName, {
+                    status: 'DOWN',
+                    provider: providerName,
+                    error: healthResult.error || 'Health check failed',
+                    lastCheck: Date.now()
+                });
+                console.error(`❌ [ProviderPool] ${providerName} marked as DOWN: ${healthResult.error}`);
             }
             
         } catch (error) {
-            console.error(`❌ [ProviderPool] Failed to initialize ${providerName}:`, error.message);
-            throw error;
+            // Mark as DOWN but don't throw - continue with other providers
+            this.healthChecks.set(providerName, {
+                status: 'DOWN',
+                provider: providerName,
+                error: error.message,
+                lastCheck: Date.now()
+            });
+            console.error(`❌ [ProviderPool] ${providerName} initialization failed (marked DOWN):`, error.message);
         }
     }
 
@@ -226,14 +239,18 @@ class ProviderPool {
 
         for (const [providerName, healthCheck] of this.healthChecks.entries()) {
             const isHealthy = healthCheck.status === 'healthy';
+            const isUp = isHealthy && this.providers.has(providerName);
+            
             status.providers[providerName] = {
-                status: healthCheck.status,
+                status: isUp ? 'UP' : 'DOWN',
+                healthStatus: healthCheck.status,
+                error: !isUp ? healthCheck.error : null,
                 lastCheck: this.lastHealthCheck.get(providerName),
                 circuitBreakerStatus: ProviderFactory.getProviderCircuitBreakerStatus(providerName),
-                provider: this.providers.get(providerName) // Add provider reference
+                hasProvider: this.providers.has(providerName)
             };
             
-            if (isHealthy) {
+            if (isUp) {
                 status.healthyProviders++;
             } else {
                 status.unhealthyProviders++;

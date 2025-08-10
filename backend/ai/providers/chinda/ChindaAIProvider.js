@@ -121,19 +121,25 @@ class ChindaAIProvider extends BaseProvider {
     
     async checkHealth() {
         try {
-            // Test with a simple request
-            const testResponse = await this.generateResponse('Hello', { maxTokens: 10 });
+            // Lightweight health check - just test the connection without full generation
+            const startTime = Date.now();
+            
+            // Simple ping with minimal tokens to avoid rate limiting
+            const testResponse = await this.generateResponse('Hi', { maxTokens: 5 });
+            const responseTime = Date.now() - startTime;
+            
             return {
                 status: 'healthy',
                 provider: 'chinda',
                 model: 'chinda-qwen3-32b',
-                responseTime: Date.now()
+                responseTime: responseTime
             };
         } catch (error) {
+            console.error('🔥 [ChindaX] Health check failed:', error.message.substring(0, 300));
             return {
                 status: 'unhealthy',
                 provider: 'chinda',
-                error: error.message
+                error: error.message.substring(0, 300) // Trim error for logging
             };
         }
     }
