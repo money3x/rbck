@@ -5,15 +5,7 @@ const { supabase, isConnected } = require('../supabaseClient');
 // GET /api/posts - Get all posts
 router.get('/', async (req, res) => {
     try {
-        console.log('📋 GET /api/posts called');
-        
-        // Log configuration status
-        console.log('🔍 Database status:', {
-            hasUrl: !!process.env.SUPABASE_URL,
-            hasAnon: !!process.env.SUPABASE_ANON_KEY,
-            clientExists: !!supabase,
-            isConnected: isConnected
-        });
+        console.log('📋 /api/posts called', { hasUrl: !!process.env.SUPABASE_URL, hasAnon: !!process.env.SUPABASE_ANON_KEY });
 
         // Check if client exists
         if (!supabase) {
@@ -28,48 +20,32 @@ router.get('/', async (req, res) => {
         }
 
         // Query database
-        console.log('🔄 Querying posts table...');
         const { data, error, count } = await supabase
             .from('posts')
-            .select('*', { count: 'exact' })
+            .select('id,title,status,published_at')
             .eq('status', 'published')
-            .order('created_at', { ascending: false })
-            .limit(100);
+            .order('published_at', { ascending: false })
+            .limit(50);
 
         // Log query result
-        console.log('📊 Query result:', {
-            totalRows: count,
-            returnedRows: data?.length || 0,
-            hasError: !!error
-        });
+        console.log('📊 Supabase query result:', { returnedRows: data?.length || 0 });
 
         // Handle database error
         if (error) {
-            console.error('❌ Database query failed:', {
-                message: error.message,
-                details: error.details,
-                code: error.code
-            });
-            
             return res.status(500).json({
-                success: false,
-                error: 'Database query failed',
+                error: 'Database error',
                 message: error.message,
-                code: error.code || 'DB_QUERY_ERROR',
-                data: []
+                code: error.code
             });
         }
 
-        // Return results (always array)
+        // Return results
         const posts = data || [];
-        console.log(`✅ Successfully returned ${posts.length} posts`);
+        if (posts.length === 0) {
+            return res.status(200).json({ items: [], message: 'No posts found' });
+        }
         
-        res.json({
-            success: true,
-            data: posts,
-            count: posts.length,
-            source: 'supabase'
-        });
+        res.json({ items: posts });
 
     } catch (error) {
         console.error('❌ Route error:', error.message);

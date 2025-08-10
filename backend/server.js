@@ -190,7 +190,7 @@ app.use(generalRateLimit);
 
 // CORS configuration for Netlify frontend - SIMPLIFIED
 app.use(cors({
-  origin: ['https://flourishing-gumdrop-dffe7a.netlify.app', 'http://localhost:3000', 'http://127.0.0.1:3000'],
+  origin: ['https://flourishing-gumdrop-dffe7a.netlify.app', 'http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:8080'],
   credentials: false,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
@@ -222,15 +222,7 @@ app.use((req, res, next) => {
 setupSwagger(app);
 
 // Health and monitoring endpoints (must be BEFORE generic routes)
-app.get('/health', (req, res) => {
-    res.json({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        database: supabase.isConnected ? 'connected' : 'disconnected',
-        environment: process.env.NODE_ENV || 'development'
-    });
-});
+app.get('/health', (_req, res) => res.status(200).json({ok:true,ts:Date.now()}));
 app.get('/api/health', healthCheck);
 app.get('/api/metrics', getMetrics);
 

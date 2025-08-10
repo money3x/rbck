@@ -83,7 +83,9 @@ class CMSDashboard {
         try {
             this.showLoading();
             
-            const response = await fetch('/api/posts');
+            const API_BASE = window.__API_BASE__ || "https://rbck.onrender.com";
+            const response = await fetch(`${API_BASE}/api/posts`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
             
             if (data.success) {

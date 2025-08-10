@@ -11,13 +11,15 @@ class MigrationServiceHTTP {
                          process.env.SUPABASE_KEY ||
                          process.env.SUPABASE_DB_PASSWORD;
     
-    if (!this.supabaseUrl || !this.serviceRoleKey) {
-      throw new Error('Missing Supabase configuration: SUPABASE_URL and service role key required');
-    }
+    // Don't throw at import time - check when needed
+    this.configured = !!(this.supabaseUrl && this.serviceRoleKey);
   }
 
   // Execute SQL via Supabase REST API
   async executeSQL(sql) {
+    if (!this.configured) {
+      throw new Error('Migration service not configured: Missing SUPABASE_URL or service role key');
+    }
     try {
       const response = await fetch(`${this.supabaseUrl}/rest/v1/rpc/exec_sql`, {
         method: 'POST',

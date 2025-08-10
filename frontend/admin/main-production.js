@@ -1112,48 +1112,33 @@ async function loadDashboard() {
 }
 
 // ===== POSTS FUNCTIONS =====
+// This function is replaced by the enhanced window.loadPosts below
+// Keeping it for legacy compatibility but redirecting to the enhanced version
 async function loadPosts() {
-    console.log('📝 [POSTS] Loading posts...');
-    
-    try {
-        const response = await apiRequest('/posts');
-        const postsContainer = document.getElementById('posts-list');
+    console.log('📝 [POSTS] Redirecting to enhanced loadPosts...');
+    if (typeof window.loadPosts === 'function') {
+        return window.loadPosts();
+    } else {
+        console.warn('⚠️ [POSTS] Enhanced loadPosts not available, falling back to basic implementation');
         
-        if (!postsContainer) {
-            console.warn('⚠️ [POSTS] posts-list container not found');
-            return;
+        // Basic fallback implementation (should not normally be reached)
+        try {
+            const response = await apiRequest('/posts');
+            const postsContainer = document.querySelector('#posts-list, [data-component="posts-list"], [data-posts-list]');
+            
+            if (!postsContainer) {
+                console.warn('⚠️ [POSTS] posts-list container not found on this page');
+                return;
+            }
+            
+            if (response.success && response.data && response.data.length > 0) {
+                postsContainer.innerHTML = '<div class="posts-loaded"><p>Posts loaded via fallback method</p></div>';
+            } else {
+                postsContainer.innerHTML = '<div class="no-data"><p>No posts yet.</p></div>';
+            }
+        } catch (error) {
+            console.error('❌ [POSTS] Fallback error:', error);
         }
-        
-        if (response.success && response.data && response.data.length > 0) {
-            postsContainer.innerHTML = response.data.map(post => `
-                <div class="post-item" data-id="${post.id}">
-                    <h3>${post.title || 'ไม่มีชื่อ'}</h3>
-                    <p>${(post.content || '').substring(0, 100)}${post.content && post.content.length > 100 ? '...' : ''}</p>
-                    <div class="post-meta">
-                        <span>โดย: ${post.author || 'ไม่ทราบ'}</span>
-                        <span>${post.created_at ? new Date(post.created_at).toLocaleDateString('th-TH') : 'ไม่ทราบวันที่'}</span>
-                        <span class="status ${post.published ? 'published' : 'draft'}">
-                            ${post.published ? 'เผยแพร่แล้ว' : 'ร่าง'}
-                        </span>
-                    </div>
-                    <div class="post-actions">
-                        <button onclick="editPost(${post.id})" class="btn-edit">แก้ไข</button>
-                        <button onclick="deletePost(${post.id})" class="btn-delete">ลบ</button>
-                    </div>
-                </div>
-            `).join('');
-        } else {
-            postsContainer.innerHTML = '<div class="no-data"><p>ไม่พบโพสต์</p></div>';
-        }
-        
-        console.log('✅ [POSTS] Posts loaded successfully');
-    } catch (error) {
-        console.error('❌ [POSTS] Error loading posts:', error);
-        const postsContainer = document.getElementById('posts-list');
-        if (postsContainer) {
-            postsContainer.innerHTML = '<div class="error"><p>ไม่สามารถโหลดโพสต์ได้</p></div>';
-        }
-        showNotification('ไม่สามารถโหลดโพสต์ได้', 'error');
     }
 }
 
@@ -1214,52 +1199,96 @@ function updateElement(id, value) {
 }
 
 // ===== BLOG MANAGEMENT FUNCTIONS =====
+// Helper function to escape HTML and prevent XSS
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Helper function to find posts container with multiple selector support
+function findPostsContainer() {
+    // Try multiple selectors in priority order
+    const selectors = ['#posts-list', '[data-component="posts-list"]', '[data-posts-list]'];
+    
+    for (const selector of selectors) {
+        const container = document.querySelector(selector);
+        if (container) {
+            console.log(`📝 [BLOG] Found posts container with selector: ${selector}`);
+            return container;
+        }
+    }
+    
+    return null;
+}
+
 // ✅ RENAMED: loadBlogPosts → loadPosts for consistency
+// ✅ ENHANCED: Page-aware, XSS-safe, multiple selectors
 window.loadPosts = async function() {
     console.log('📝 [BLOG] Loading posts...');
     
     try {
-        const response = await apiRequest('/posts');
-        const postsContainer = document.getElementById('posts-list');
+        // Page-aware container detection
+        const postsContainer = findPostsContainer();
         
         if (!postsContainer) {
-            console.warn('⚠️ [BLOG] posts-list container not found');
-            showNotification('⚠️ ไม่พบตาราง Posts', 'warning');
+            console.warn('⚠️ [BLOG] posts-list container not found on this page');
+            // Only warn, don't show notification - this is expected on non-blog pages
             return;
         }
         
+        const response = await apiRequest('/posts');
+        
         if (response.success && response.data && response.data.length > 0) {
-            postsContainer.innerHTML = response.data.map(post => `
-                <div class="post-item" data-id="${post.id}">
-                    <h3>${post.title || 'ไม่มีชื่อ'}</h3>
-                    <p>${(post.content || '').substring(0, 100)}${post.content && post.content.length > 100 ? '...' : ''}</p>
-                    <div class="post-meta">
-                        <span>โดย: ${post.author || 'ไม่ทราบ'}</span>
-                        <span>${post.created_at ? new Date(post.created_at).toLocaleDateString('th-TH') : 'ไม่ทราบวันที่'}</span>
-                        <span class="status ${post.published ? 'published' : 'draft'}">
-                            ${post.published ? 'เผยแพร่แล้ว' : 'ร่าง'}
-                        </span>
-                    </div>
-                    <div class="post-actions">
-                        <button onclick="editPost(${post.id})" class="btn-edit">แก้ไข</button>
-                        <button onclick="deletePost(${post.id})" class="btn-delete">ลบ</button>
-                    </div>
-                </div>
-            `).join('');
+            // XSS-safe rendering with escapeHtml
+            postsContainer.innerHTML = response.data.map(post => {
+                const safeTitle = escapeHtml(post.title || 'ไม่มีชื่อ');
+                const safeContent = escapeHtml((post.content || '').substring(0, 100));
+                const safeAuthor = escapeHtml(post.author || 'ไม่ทราบ');
+                const contentTruncated = post.content && post.content.length > 100 ? '...' : '';
+                const dateStr = post.created_at ? new Date(post.created_at).toLocaleDateString('th-TH') : 'ไม่ทราบวันที่';
+                
+                return `
+                    <article class="post-item" data-id="${post.id}">
+                        <h3>${safeTitle}</h3>
+                        <p>${safeContent}${contentTruncated}</p>
+                        <div class="post-meta">
+                            <span>โดย: ${safeAuthor}</span>
+                            <span>${dateStr}</span>
+                            <span class="status ${post.published ? 'published' : 'draft'}">
+                                ${post.published ? 'เผยแพร่แล้ว' : 'ร่าง'}
+                            </span>
+                        </div>
+                        <div class="post-actions">
+                            <button onclick="editPost(${post.id})" class="btn-edit">แก้ไข</button>
+                            <button onclick="deletePost(${post.id})" class="btn-delete">ลบ</button>
+                        </div>
+                    </article>
+                `;
+            }).join('');
             
             console.log(`✅ [BLOG] Loaded ${response.data.length} posts`);
             showNotification(`✅ โหลด ${response.data.length} โพสต์เรียบร้อย`, 'success');
         } else {
-            postsContainer.innerHTML = '<div class="no-data"><p>ไม่พบโพสต์</p></div>';
+            // Show "No posts yet" message
+            postsContainer.innerHTML = '<div class="no-data"><p>No posts yet.</p></div>';
             console.log('📝 [BLOG] No posts found');
             showNotification('📝 ไม่พบโพสต์', 'info');
         }
         
     } catch (error) {
         console.error('❌ [BLOG] Error loading posts:', error);
-        const postsContainer = document.getElementById('posts-list');
+        console.error('❌ [BLOG] Error details:', {
+            message: error.message,
+            stack: error.stack,
+            response: error.response
+        });
+        
+        // Try to find container again for error display
+        const postsContainer = findPostsContainer();
         if (postsContainer) {
-            postsContainer.innerHTML = '<div class="error"><p>ไม่สามารถโหลดโพสต์ได้</p></div>';
+            postsContainer.innerHTML = '<div class="error"><p>Error loading posts. Please check console for details.</p></div>';
         }
         showNotification('❌ ไม่สามารถโหลดโพสต์ได้: ' + error.message, 'error');
     }
