@@ -35,7 +35,9 @@
       "Bash(cat:*)",
       "Bash(npm start)",
       "Bash(git push:*)",
-      "Bash(npm run check-production:*)"
+      "Bash(npm run check-production:*)",
+      "Bash(npm run:*)",
+      "Bash(pkill:*)"
     ],
     "deny": []
   }

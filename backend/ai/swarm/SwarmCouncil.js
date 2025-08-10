@@ -172,7 +172,7 @@ class SwarmCouncil {
             let successfulInitializations = 0;
             for (const [providerName, providerInfo] of Object.entries(availableProviders)) {
                 try {
-                    if (providerInfo.status === 'healthy') {
+                    if (providerInfo.status === 'UP' || providerInfo.healthStatus === 'healthy') {
                         // Get provider instance from pool (sync method)
                         const provider = this.providerPool.getProvider(providerName);
                         
