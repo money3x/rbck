@@ -44,8 +44,8 @@ const getAllowedOrigins = () => {
 const config = {
   // Server Configuration
   server: {
-    port: process.env.PORT || 10000,
-    host: process.env.HOST || 'localhost',
+    port: process.env.PORT || 3001,
+    host: process.env.HOST || '0.0.0.0',
     env: process.env.NODE_ENV || 'development'
   },
 

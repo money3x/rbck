@@ -15,7 +15,7 @@ function getApiBase() {
     // Check if we're in development (localhost or local IP)
     if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('192.168.')) {
         // Development: use local backend
-        const backendPort = port === '8080' ? '10000' : '10000'; // Default backend port
+        const backendPort = port === '8080' ? '3001' : '3001'; // Default backend port
         const devUrl = `${protocol}//${hostname}:${backendPort}/api`;
         console.log('🏠 Development mode detected, using:', devUrl);
         return devUrl;
