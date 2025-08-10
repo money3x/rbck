@@ -1948,4 +1948,56 @@ router.get('/swarm/status', async (req, res) => {
     }
 });
 
+// ===== DEBUG ROUTES =====
+
+// Debug: Get all providers status
+router.get('/debug/providers', async (req, res) => {
+    try {
+        const results = await ProviderFactory.testAllProviders();
+        const providersStatus = [];
+        
+        for (const [name, result] of Object.entries(results)) {
+            providersStatus.push({
+                name,
+                status: result.status === 'healthy' ? 'UP' : 'DOWN',
+                error: result.status !== 'healthy' ? result.error : null
+            });
+        }
+        
+        res.json(providersStatus);
+    } catch (error) {
+        res.status(500).json({
+            error: 'Failed to get providers status',
+            message: error.message
+        });
+    }
+});
+
+// Debug: Test ChindaX specifically
+router.get('/debug/chinda/ping', async (req, res) => {
+    try {
+        const result = await ProviderFactory.testProvider('chinda');
+        
+        if (result.status === 'healthy') {
+            res.json({
+                ok: true,
+                status: result.status,
+                responseTime: result.responseTime
+            });
+        } else {
+            res.json({
+                ok: false,
+                status: result.status,
+                snippet: result.error ? result.error.substring(0, 300) : 'Unknown error'
+            });
+        }
+    } catch (error) {
+        res.json({
+            ok: false,
+            status: 'error',
+            snippet: error.message.substring(0, 300)
+        });
+    }
+});
+
 module.exports = router;
