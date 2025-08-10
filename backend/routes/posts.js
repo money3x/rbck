@@ -22,9 +22,9 @@ router.get('/', async (req, res) => {
         // Query database
         const { data, error, count } = await supabase
             .from('posts')
-            .select('id,title,status,published_at')
+            .select('id,titleth,titleen,content,author,category,excerpt,metadescription,created_at,updated_at,status')
             .eq('status', 'published')
-            .order('published_at', { ascending: false })
+            .order('created_at', { ascending: false })
             .limit(50);
 
         // Log query result
@@ -42,10 +42,19 @@ router.get('/', async (req, res) => {
         // Return results
         const posts = data || [];
         if (posts.length === 0) {
-            return res.status(200).json({ items: [], message: 'No posts found' });
+            return res.status(200).json({ 
+                success: true,
+                data: [],
+                message: 'No posts found',
+                count: 0
+            });
         }
         
-        res.json({ items: posts });
+        res.json({ 
+            success: true,
+            data: posts,
+            count: posts.length
+        });
 
     } catch (error) {
         console.error('❌ Route error:', error.message);
