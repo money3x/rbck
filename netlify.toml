@@ -46,16 +46,18 @@
   headers = {X-From = "Netlify"}
   # ❌ ลบ conditions ออก - ให้ backend จัดการ JWT เอง
 
-# Admin redirects
-[[redirects]]
-  from = "/admin/*"
-  to = "/admin/index.html"
-  status = 200
-
+# Admin redirects - only for routes without file extensions (no CSS/JS/etc)
 [[redirects]]
   from = "/admin"
   to = "/admin/index.html"
   status = 200
+
+[[redirects]]
+  from = "/admin/:path*"
+  to = "/admin/index.html"
+  status = 200
+  force = false
+  # This won't override existing files like CSS/JS
 
 # Blog redirects
 [[redirects]]

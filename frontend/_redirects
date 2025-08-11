@@ -4,4 +4,3 @@
 # Netlify redirect rules for SPA routing
 /blog/*  /blog/post.html  200
 /admin   /admin/index.html  200
-/admin/* /admin/index.html  200
