@@ -83,14 +83,15 @@ class CMSDashboard {
         try {
             this.showLoading();
             
-            const API_BASE = window.__API_BASE__ || "https://rbck.onrender.com";
+            const API_BASE = window.__API_BASE__ || '';
             const response = await fetch(`${API_BASE}/api/posts`);
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
+            const json = await response.json();
             
-            if (data.success) {
-                this.posts = data.data || data.posts || []; // Handle both response formats
-                this.stats = data.stats || { total: this.posts.length };
+            if (json.success) {
+                const posts = json.items || json.data || json.posts || [];
+                this.posts = posts;
+                this.stats = json.stats || { total: this.posts.length };
                 this.updateDashboard();
                 this.renderPosts();
             } else {

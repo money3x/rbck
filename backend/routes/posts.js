@@ -35,7 +35,7 @@ router.get('/', async (req, res) => {
             return res.status(500).json({
                 error: 'Database error',
                 message: error.message,
-                code: error.code
+                code: error.code || 'DB_ERROR'
             });
         }
 
@@ -44,15 +44,20 @@ router.get('/', async (req, res) => {
         if (posts.length === 0) {
             return res.status(200).json({ 
                 success: true,
+                items: [],
                 data: [],
+                posts: [],
                 message: 'No posts found',
                 count: 0
             });
         }
         
+        console.log('📊 posts result', { count: posts.length });
         res.json({ 
             success: true,
+            items: posts,
             data: posts,
+            posts: posts,
             count: posts.length
         });
 

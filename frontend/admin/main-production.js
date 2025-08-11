@@ -1097,7 +1097,7 @@ async function loadDashboard() {
         
         // Update posts count
         if (postsResponse.status === 'fulfilled' && postsResponse.value.success) {
-            const posts = postsResponse.value.data || [];
+            const posts = postsResponse.value.items || postsResponse.value.data || postsResponse.value.posts || [];
             const totalElement = document.getElementById('total-posts');
             if (totalElement) {
                 totalElement.textContent = posts.length;
@@ -1131,7 +1131,8 @@ async function loadPosts() {
                 return;
             }
             
-            if (response.success && response.data && response.data.length > 0) {
+            const posts = response.items || response.data || response.posts || [];
+            if (response.success && posts && posts.length > 0) {
                 postsContainer.innerHTML = '<div class="posts-loaded"><p>Posts loaded via fallback method</p></div>';
             } else {
                 postsContainer.innerHTML = '<div class="no-data"><p>No posts yet.</p></div>';
@@ -1240,9 +1241,10 @@ window.loadPosts = async function() {
         
         const response = await apiRequest('/posts');
         
-        if (response.success && response.data && response.data.length > 0) {
+        const posts = response.items || response.data || response.posts || [];
+        if (response.success && posts && posts.length > 0) {
             // XSS-safe rendering with escapeHtml
-            postsContainer.innerHTML = response.data.map(post => {
+            postsContainer.innerHTML = posts.map(post => {
                 const safeTitle = escapeHtml(post.title || 'ไม่มีชื่อ');
                 const safeContent = escapeHtml((post.content || '').substring(0, 100));
                 const safeAuthor = escapeHtml(post.author || 'ไม่ทราบ');

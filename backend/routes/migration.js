@@ -3,7 +3,10 @@ const router = express.Router();
 const { supabase } = require('../supabaseClient');
 const { authenticateAdmin } = require('../middleware/auth');
 const MigrationService = require('../services/MigrationService');
-const MigrationServiceHTTP = require('../services/MigrationServiceHTTP');
+// Gate MigrationServiceHTTP behind env flag for safety
+const MigrationServiceHTTP = process.env.RUN_MIGRATIONS === 'true' 
+    ? require('../services/MigrationServiceHTTP') 
+    : null;
 const path = require('path');
 const fs = require('fs');
 
@@ -154,6 +157,15 @@ router.post('/execute', async (req, res) => {
         // Use modern HTTP API migration system (bypasses network restrictions)
         console.log('🌐 Using HTTP API migration system...');
         console.log('🔌 Testing connection capabilities...');
+        
+        // Check if migrations are enabled
+        if (!MigrationServiceHTTP) {
+            return res.status(503).json({
+                success: false,
+                error: 'Database migrations are disabled. Set RUN_MIGRATIONS=true to enable.',
+                code: 'MIGRATIONS_DISABLED'
+            });
+        }
         
         // Test HTTP API connection first
         const httpConnectionTest = await MigrationServiceHTTP.testConnection();
