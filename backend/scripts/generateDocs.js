@@ -264,7 +264,7 @@ Get list of available AI providers.
     {
       "id": "chinda",
       "name": "ChindaX AI",
-      "model": "chinda-qwen3-32b",
+      "model": "chinda-qwen3-4b",
       "status": "active"
     },
     {
@@ -299,7 +299,7 @@ Generate content using AI.
   "data": {
     "content": "เนื้อหาที่ AI สร้าง...",
     "provider": "chinda",
-    "model": "chinda-qwen3-32b",
+    "model": "chinda-qwen3-4b",
     "usage": {
       "prompt_tokens": 50,
       "completion_tokens": 500,

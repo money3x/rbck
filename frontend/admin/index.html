@@ -3718,7 +3718,7 @@
                         <select id="chatModelSelect">
                             <option value="openai">OpenAI (GPT-4/3.5)</option>
                             <option value="anthropic">Anthropic (Claude)</option>
-                            <option value="chinda">ChindaX (chinda-qwen3-32b)</option>
+                            <option value="chinda">ChindaX (chinda-qwen3-4b)</option>
                             <option value="gemini">Gemini 2.0 Flash</option>
                         </select>
                     </div>
@@ -6513,7 +6513,7 @@
                 { id: 'claude', name: 'Claude', model: 'Anthropic', icon: '🧠' },
                 { id: 'gemini', name: 'Gemini', model: '2.0 Flash', icon: '✨' },
                 { id: 'deepseek', name: 'DeepSeek', model: 'V2', icon: '🔍' },
-                { id: 'chinda', name: 'ChindaX', model: 'qwen3-32b', icon: '🚀' }
+                { id: 'chinda', name: 'ChindaX', model: 'qwen3-4b', icon: '🚀' }
             ];
             
             let html = '';
@@ -6905,7 +6905,7 @@
                     {
                         id: 'chinda',
                         name: 'ChindaX',
-                        model: 'qwen3-32b',
+                        model: 'qwen3-4b',
                         icon: '🚀',
                         hasKey: providersData.chinda?.configured || false,
                         status: providersData.chinda?.status || 'not_configured'
@@ -7251,7 +7251,7 @@
                 {
                     id: 'chinda',
                     name: 'ChindaX',
-                    model: 'qwen3-32b',
+                    model: 'qwen3-4b',
                     icon: '🚀',
                     hasKey: providersData.chinda?.configured || false
                 }
@@ -7580,7 +7580,7 @@
                 'anthropic': 'claude-3-haiku-20240307',
                 'gemini': 'gemini-2.0-flash',
                 'deepseek': 'deepseek-chat',
-                'chinda': 'chinda-qwen3-32b'
+                'chinda': 'chinda-qwen3-4b'
             };
             return modelMap[provider] || 'gpt-4o-mini';
         }
@@ -7724,7 +7724,7 @@
                     { value: 'anthropic', text: 'Anthropic (Claude)', enabled: providersData.claude?.configured && providersData.claude?.status === 'ready' },
                     { value: 'gemini', text: 'Gemini 2.0 Flash', enabled: providersData.gemini?.configured && providersData.gemini?.status === 'ready' },
                     { value: 'deepseek', text: 'DeepSeek AI', enabled: providersData.deepseek?.configured && providersData.deepseek?.status === 'ready' },
-                    { value: 'chinda', text: 'ChindaX (qwen3-32b)', enabled: providersData.chinda?.configured && providersData.chinda?.status === 'ready' }
+                    { value: 'chinda', text: 'ChindaX (qwen3-4b)', enabled: providersData.chinda?.configured && providersData.chinda?.status === 'ready' }
                 ];
                 
                 modelSelect.innerHTML = '';
@@ -7751,7 +7751,7 @@
                 // Fallback: show all providers (force Gemini and ChindaX as ready)
                 const fallbackOptions = [
                     { value: 'gemini', text: 'Gemini 2.0 Flash' },
-                    { value: 'chinda', text: 'ChindaX (qwen3-32b)' },
+                    { value: 'chinda', text: 'ChindaX (qwen3-4b)' },
                     { value: 'openai', text: 'OpenAI (GPT-4/3.5) (Not Available)' },
                     { value: 'anthropic', text: 'Anthropic (Claude) (Not Available)' }
                 ];

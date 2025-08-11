@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS ai_usage (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES users(id),
     provider VARCHAR(50) NOT NULL,           -- 'openai', 'claude', 'gemini', 'deepseek', 'chinda'
-    model VARCHAR(100),                      -- 'chinda-qwen3-32b', 'gpt-4', etc.
+    model VARCHAR(100),                      -- 'chinda-qwen3-4b', 'gpt-4', etc.
     operation_type VARCHAR(50) NOT NULL,     -- 'chat', 'analyze', 'generate', etc.
     tokens_used INTEGER NOT NULL DEFAULT 0,
     cost_usd DECIMAL(10, 6) NOT NULL DEFAULT 0,
@@ -345,7 +345,7 @@ module.exports = {
             claude: ['claude-3-sonnet-20240229', 'claude-3-opus-20240229'],
             gemini: ['gemini-pro', 'gemini-2.0-flash'],
             deepseek: ['deepseek-chat', 'deepseek-coder'],
-            chinda: ['chinda-qwen3-32b']
+            chinda: ['chinda-qwen3-4b']
         };
         return models[provider] || [];
     }

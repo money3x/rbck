@@ -71,7 +71,7 @@ const AI_PROVIDERS = {
     chinda: {
         name: 'Chinda AI',
         endpoint: process.env.CHINDA_BASE_URL || 'https://chindax.iapp.co.th/api/chat/completions',
-        model: 'chinda-qwen3-32b',
+        model: 'chinda-qwen3-4b',
         enabled: !!process.env.CHINDA_API_KEY,
         costPerToken: 0.000001,
         status: 'active',

@@ -37,7 +37,7 @@ class ChindaAIProvider extends BaseProvider {
             ];
             
             const requestData = {
-                model: options.model || 'chinda-qwen3-32b',
+                model: options.model || 'chinda-qwen3-4b',
                 messages: messages,
                 max_tokens: options.maxTokens || 1000,
                 temperature: options.temperature || 0.7
@@ -69,7 +69,7 @@ class ChindaAIProvider extends BaseProvider {
             
             return {
                 content: content,
-                model: data.model || options.model || 'chinda-qwen3-32b',
+                model: data.model || options.model || 'chinda-qwen3-4b',
                 provider: 'chinda',
                 usage: data.usage || {}
             };
@@ -135,7 +135,7 @@ class ChindaAIProvider extends BaseProvider {
         return {
             content: response,
             provider: 'chinda',
-            model: 'chinda-qwen3-32b'
+            model: 'chinda-qwen3-4b'
         };
     }
     
@@ -156,7 +156,7 @@ class ChindaAIProvider extends BaseProvider {
             return {
                 status: 'healthy',
                 provider: 'chinda',
-                model: 'chinda-qwen3-32b',
+                model: 'chinda-qwen3-4b',
                 responseTime: responseTime
             };
         } catch (error) {

@@ -166,7 +166,7 @@ class AIProviderManager {
                 role: 'multilingual_advisor',
                 expertise: ['translation', 'cultural_adaptation', 'localization', 'thai_language'],
                 priority: 5,
-                model: 'chinda-qwen3-32b',
+                model: 'chinda-qwen3-4b',
                 icon: '🧠'
             }
         };

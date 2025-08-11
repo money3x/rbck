@@ -54,7 +54,7 @@ export class AISwarmCouncilUI {
                 expertise: ['translation', 'cultural_adaptation', 'localization', 'thai_language'],
                 priority: 5,
                 color: '#10b981',
-                model: 'chinda-qwen3-32b'
+                model: 'chinda-qwen3-4b'
             }
         };
         
