@@ -5,6 +5,3 @@
 /blog/*  /blog/post.html  200
 /admin   /admin/index.html  200
 /admin/* /admin/index.html  200
-
-# Fallback for any other route
-/*       /index.html   200
