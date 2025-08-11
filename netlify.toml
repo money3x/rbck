@@ -63,8 +63,3 @@
   to = "/index.html"
   status = 200
 
-# Catch-all redirect - MUST be last
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
