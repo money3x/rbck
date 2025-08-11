@@ -1211,7 +1211,13 @@ function escapeHtml(text) {
 // Helper function to find posts container with multiple selector support
 function findPostsContainer() {
     // Try multiple selectors in priority order
-    const selectors = ['#posts-list', '[data-component="posts-list"]', '[data-posts-list]'];
+    const selectors = [
+        '#posts-list', 
+        '#blogManageGrid',
+        '[data-component="posts-list"]', 
+        '[data-posts-list]',
+        '.blog-manage-grid'
+    ];
     
     for (const selector of selectors) {
         const container = document.querySelector(selector);
