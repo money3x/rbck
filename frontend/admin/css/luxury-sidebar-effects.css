@@ -1,0 +1,9 @@
+/* Luxury Sidebar Effects */
+.sidebar-effect {
+    transition: all 0.3s ease;
+}
+
+/* Placeholder for sidebar effect styles */
+.hover-effect:hover {
+    transform: translateX(5px);
+}

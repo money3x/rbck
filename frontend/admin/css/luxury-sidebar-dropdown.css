@@ -1,0 +1,10 @@
+/* Luxury Sidebar Dropdown */
+.sidebar-dropdown {
+    position: relative;
+}
+
+/* Placeholder for dropdown styles */
+.dropdown-menu {
+    display: none;
+    position: absolute;
+}

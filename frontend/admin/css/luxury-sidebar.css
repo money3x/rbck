@@ -1,0 +1,10 @@
+/* Luxury Sidebar Styles */
+.luxury-sidebar {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+}
+
+/* Placeholder for luxury sidebar styles */
+.sidebar-nav {
+    list-style: none;
+    padding: 0;
+}

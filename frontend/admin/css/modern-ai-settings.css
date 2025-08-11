@@ -1,0 +1,11 @@
+/* Modern AI Settings Styles */
+.ai-settings {
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+/* Placeholder for AI settings specific styles */
+.ai-provider-card {
+    border: 1px solid #dee2e6;
+    margin-bottom: 15px;
+}

@@ -1,0 +1,10 @@
+/* Luxury Sidebar Force Styles */
+.sidebar-force {
+    position: fixed;
+    z-index: 1000;
+}
+
+/* Placeholder for force sidebar styles */
+.force-show {
+    display: block !important;
+}

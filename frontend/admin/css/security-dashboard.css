@@ -1,0 +1,10 @@
+/* Security Dashboard Styles */
+.security-dashboard {
+    padding: 20px;
+}
+
+/* Placeholder for security dashboard specific styles */
+.security-metrics {
+    display: grid;
+    gap: 20px;
+}

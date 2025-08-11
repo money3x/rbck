@@ -1,0 +1,10 @@
+/* Luxury Sidebar Performance */
+.sidebar-performance {
+    will-change: transform;
+    contain: layout style paint;
+}
+
+/* Placeholder for performance optimization styles */
+.gpu-accelerated {
+    transform: translateZ(0);
+}
