@@ -7074,24 +7074,30 @@
                         // Fetch real performance data from backend
                         let metricsData = null;
                         
-                        try {
-                            const metricsResponse = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/metrics`, {
-                                method: 'GET',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': (await getAuthToken()) ? `Bearer ${await getAuthToken()}` : ''
+                        if (window.__ADMIN_ENABLE_AI_MONITORING__ === true &&
+                            window.aiSwarmCouncil &&
+                            typeof window.aiSwarmCouncil.refreshProviderStatus === 'function') {
+                            try {
+                                const metricsResponse = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/metrics`, {
+                                    method: 'GET',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': (await getAuthToken()) ? `Bearer ${await getAuthToken()}` : ''
+                                    }
+                                });
+                                
+                                if (metricsResponse.ok) {
+                                    const data = await metricsResponse.json();
+                                    metricsData = data.metrics;
+                                    console.log('✅ [MONITORING] Real metrics loaded from backend');
+                                } else {
+                                    console.warn('⚠️ [MONITORING] Backend metrics not available, using fallback');
                                 }
-                            });
-                            
-                            if (metricsResponse.ok) {
-                                const data = await metricsResponse.json();
-                                metricsData = data.metrics;
-                                console.log('✅ [MONITORING] Real metrics loaded from backend');
-                            } else {
-                                console.warn('⚠️ [MONITORING] Backend metrics not available, using fallback');
+                            } catch (error) {
+                                console.error('❌ [MONITORING] Error fetching backend metrics:', error);
                             }
-                        } catch (error) {
-                            console.error('❌ [MONITORING] Error fetching backend metrics:', error);
+                        } else {
+                            console.warn('ℹ️ [ADMIN] AI monitoring disabled; skipping intervals');
                         }
                         
                         // Generate performance data for configured providers
@@ -7416,21 +7422,27 @@
                     
                     // Fetch metrics data first
                     let metricsData = null;
-                    try {
-                        const metricsResponse = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/metrics`, {
-                            method: 'GET',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': (await getAuthToken()) ? `Bearer ${await getAuthToken()}` : ''
+                    if (window.__ADMIN_ENABLE_AI_MONITORING__ === true &&
+                        window.aiSwarmCouncil &&
+                        typeof window.aiSwarmCouncil.refreshProviderStatus === 'function') {
+                        try {
+                            const metricsResponse = await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/metrics`, {
+                                method: 'GET',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': (await getAuthToken()) ? `Bearer ${await getAuthToken()}` : ''
+                                }
+                            });
+                            
+                            if (metricsResponse.ok) {
+                                const data = await metricsResponse.json();
+                                metricsData = data.metrics;
                             }
-                        });
-                        
-                        if (metricsResponse.ok) {
-                            const data = await metricsResponse.json();
-                            metricsData = data.metrics;
+                        } catch (error) {
+                            console.error('❌ [OVERVIEW] Error fetching metrics:', error);
                         }
-                    } catch (error) {
-                        console.error('❌ [OVERVIEW] Error fetching metrics:', error);
+                    } else {
+                        console.warn('ℹ️ [ADMIN] AI monitoring disabled; skipping intervals');
                     }
                     
                     for (const provider of providers) {
@@ -8717,11 +8729,17 @@
         window.aiMonitoringSystem.init();
         
         // Auto-refresh every 30 seconds for AI Swarm Council
-        setInterval(() => {
-            if (document.getElementById('ai-swarm').style.display !== 'none' && window.aiSwarmCouncil) {
-                window.aiSwarmCouncil.refreshProviderStatus();
-            }
-        }, 30000);
+        if (window.__ADMIN_ENABLE_AI_MONITORING__ === true &&
+            window.aiSwarmCouncil &&
+            typeof window.aiSwarmCouncil.refreshProviderStatus === 'function') {
+            setInterval(() => {
+                if (document.getElementById('ai-swarm').style.display !== 'none' && window.aiSwarmCouncil) {
+                    window.aiSwarmCouncil.refreshProviderStatus();
+                }
+            }, 30000);
+        } else {
+            console.warn('ℹ️ [ADMIN] AI monitoring disabled; skipping intervals');
+        }
         
         // Auto-refresh every 60 seconds for AI Monitoring  
         setInterval(() => {

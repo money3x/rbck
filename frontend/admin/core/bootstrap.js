@@ -121,10 +121,10 @@ class PerformanceBootstrap {
      * ⚡ OPTIMIZED: Interaction-based loading
      */
     addInteractionListeners() {
-        // ⚡ Load AI modal when AI button clicked
+        // ⚡ Load AI modal when AI button clicked (lazy with error handling)
         document.addEventListener('click', (e) => {
             if (e.target.closest('[data-module="ai-modal"]')) {
-                this.loadModule('ai-modal', '../modals.js');
+                this.loadModuleWithFallback('ai-modal', '../modals.js');
             }
         });
 
@@ -263,6 +263,26 @@ class PerformanceBootstrap {
             
             document.head.appendChild(script);
         });
+    }
+
+    /**
+     * ⚡ SAFE: Load module with error handling and file existence check
+     */
+    async loadModuleWithFallback(name, path) {
+        try {
+            // Check if file exists first by making a HEAD request
+            const response = await fetch(path, { method: 'HEAD' });
+            if (!response.ok) {
+                console.warn(`⚠️ [BOOTSTRAP] Module file not found: ${path}`);
+                return null;
+            }
+            
+            // File exists, proceed with normal loading
+            return await this.loadModule(name, path);
+        } catch (error) {
+            console.warn(`⚠️ [BOOTSTRAP] Failed to load module ${name}:`, error);
+            return null;
+        }
     }
 
     /**

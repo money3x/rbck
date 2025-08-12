@@ -167,6 +167,12 @@ export class RealTimeConversationLogs {
      * Start real-time monitoring
      */
     async startMonitoring() {
+        if (!(window.__ADMIN_ENABLE_AI_MONITORING__ === true)) {
+            console.warn('ℹ️ [CONVERSATION LOGS] Monitoring disabled by flag');
+            // Do not poll /ai/conversations
+            return;
+        }
+        
         if (this.isMonitoring) {
             console.log('🔄 [CONVERSATION LOGS] Already monitoring');
             return;

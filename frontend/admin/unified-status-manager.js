@@ -70,6 +70,12 @@ export class UnifiedAIStatusManager {
      * Start professional monitoring with intelligent intervals
      */
     async startMonitoring(updateIntervalMs = 5000) { // 5 seconds default - real-time performance like poe.com
+        if (!(window.__ADMIN_ENABLE_AI_MONITORING__ === true)) {
+            console.warn('ℹ️ [UNIFIED STATUS] Monitoring disabled by flag');
+            // Do not start intervals or fetch /ai/metrics
+            return;
+        }
+        
         if (this.isMonitoring) {
             console.log('🔄 [UNIFIED STATUS] Already monitoring');
             return;
@@ -116,6 +122,12 @@ export class UnifiedAIStatusManager {
      * Update all provider status with debouncing and instant feedback
      */
     async updateAllProviderStatus() {
+        if (!(window.__ADMIN_ENABLE_AI_MONITORING__ === true)) {
+            console.warn('ℹ️ [UNIFIED STATUS] Monitoring disabled by flag');
+            // Do not start intervals or fetch /ai/metrics
+            return;
+        }
+        
         if (this.statusLock) {
             console.log('🔒 [UNIFIED STATUS] Update locked, skipping');
             return;

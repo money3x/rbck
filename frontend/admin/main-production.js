@@ -1,3 +1,17 @@
+;(function(){
+  if (typeof window.__ADMIN_ENABLE_AI_MONITORING__ === 'undefined') {
+    window.__ADMIN_ENABLE_AI_MONITORING__ = false;
+  }
+  // define early to avoid TDZ
+  window.__AI_MON__ = !!window.__ADMIN_ENABLE_AI_MONITORING__;
+  // safe stubs so calls won't crash when monitoring disabled
+  window.aiSwarmCouncil = window.aiSwarmCouncil || {};
+  ['refreshProviderStatus','warmup','start','stop'].forEach(fn=>{
+    if (typeof window.aiSwarmCouncil[fn] !== 'function') {
+      window.aiSwarmCouncil[fn] = function() {};
+    }
+  });
+})();
 // ===== PRODUCTION-READY RBCK CMS ADMIN PANEL =====
 // All-in-one JavaScript file for production deployment
 // No ES6 modules, all functions available in global scope
@@ -303,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ⚡ PERFORMANCE: Keep Render backend warm (prevent cold starts) - guarded
-if (AI_MON && window.aiSwarmCouncil && typeof window.aiSwarmCouncil.refreshProviderStatus === 'function') {
+if (window.__AI_MON__ && window.aiSwarmCouncil && typeof window.aiSwarmCouncil.refreshProviderStatus === 'function') {
   setInterval(async () => {
     try {
         if (window.safeApiCall && typeof window.safeApiCall === 'function') {
@@ -1292,8 +1306,7 @@ if (typeof window.loadAdminPosts === 'function') {
 }
 
 // D) Guard AI monitoring calls (default OFF unless explicitly enabled)
-const AI_MON = (window.__ADMIN_ENABLE_AI_MONITORING__ === true);
-if (!AI_MON) {
+if (!window.__AI_MON__) {
   console.warn('ℹ️ [ADMIN] AI monitoring disabled or not available; skipping intervals');
 }
 
@@ -3446,7 +3459,7 @@ function startAISwarmAutoSync() {
     console.log('═══════════════════════════════════════');
     
     // Start auto-refresh every 10 seconds if AI Swarm is visible (guarded)
-    if (AI_MON && window.aiSwarmCouncil && typeof window.aiSwarmCouncil.refreshProviderStatus === 'function') {
+    if (window.__AI_MON__ && window.aiSwarmCouncil && typeof window.aiSwarmCouncil.refreshProviderStatus === 'function') {
       setInterval(() => {
         const aiSwarmSection = document.getElementById('ai-swarm');
         const isVisible = aiSwarmSection && aiSwarmSection.style.display !== 'none';
