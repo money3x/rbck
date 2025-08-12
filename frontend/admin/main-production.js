@@ -31,16 +31,23 @@ console.log('🚀 [MAIN] Loading RBCK CMS Admin Panel v2025-07-04-v3-secure...')
 
 // ===== HELPER FUNCTIONS =====
 const API_BASE = window.__API_BASE__ || '';
-const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
-const pick = (o,...ks)=> ks.reduce((v,k)=> v ?? o?.[k], undefined);
-function normalizePost(p){
+window.RBCK = window.RBCK || {};
+RBCK.util = RBCK.util || {};
+RBCK.util.escapeHtml = RBCK.util.escapeHtml || function (s) {
+  return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+};
+RBCK.util.pick = RBCK.util.pick || function (o, ...ks) {
+  return ks.reduce((v,k)=> v ?? o?.[k], undefined);
+};
+RBCK.util.normalizePost = RBCK.util.normalizePost || function(p){
+  const pick = RBCK.util.pick;
   const title = pick(p,'titleth','titleTH','title') ?? 'Untitled';
   const excerpt = pick(p,'excerpt','metadescription') ?? '';
   const body = pick(p,'content','body','bodyTH','body_th') ?? '';
   const publishedAt = pick(p,'published_at','created_at','updated_at');
   const idOrSlug = pick(p,'slug','slugTH','slug_th','id');
   return { title, excerpt, body, publishedAt, id:idOrSlug, raw:p };
-}
+};
 
 // ✅ Add global error handler to catch any errors that prevent showSection from loading
 window.addEventListener('error', function(event) {
@@ -1213,14 +1220,6 @@ function updateElement(id, value) {
 }
 
 // ===== BLOG MANAGEMENT FUNCTIONS =====
-// Helper function to escape HTML and prevent XSS
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 // Helper function to find posts container with multiple selector support
 function findPostsContainer() {
     // Try multiple selectors in priority order
@@ -1261,15 +1260,15 @@ window.loadPosts = async function loadAdminPosts(){
   const rawPosts = json.items || json.data || json.posts || [];
   console.log('🧩 [ADMIN] posts payload', { count: rawPosts.length });
 
-  const posts = rawPosts.map(normalizePost);
+  const posts = rawPosts.map(RBCK.util.normalizePost);
   // keep existing admin rendering style; just swap in normalized fields
   container.innerHTML = posts.length ? posts.map(p => `
     <div class="blog-card">
       <div class="blog-card__header">
-        <h3 class="blog-card__title">${escapeHtml(p.title)}</h3>
+        <h3 class="blog-card__title">${RBCK.util.escapeHtml(p.title)}</h3>
         <time class="blog-card__date">${p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : ''}</time>
       </div>
-      <p class="blog-card__excerpt">${escapeHtml((p.excerpt || p.body).slice(0,160))}</p>
+      <p class="blog-card__excerpt">${RBCK.util.escapeHtml((p.excerpt || p.body).slice(0,160))}</p>
     </div>
   `).join('') : '<p class="muted">No posts yet.</p>';
 
