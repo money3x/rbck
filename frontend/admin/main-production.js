@@ -48,6 +48,7 @@ RBCK.util.normalizePost = RBCK.util.normalizePost || function(p){
   const idOrSlug = pick(p,'slug','slugTH','slug_th','id');
   return { title, excerpt, body, publishedAt, id:idOrSlug, raw:p };
 };
+RBCK.admin = RBCK.admin || {};
 
 // ✅ Add global error handler to catch any errors that prevent showSection from loading
 window.addEventListener('error', function(event) {
@@ -301,8 +302,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 500);
 });
 
-// ⚡ PERFORMANCE: Keep Render backend warm (prevent cold starts)
-setInterval(async () => {
+// ⚡ PERFORMANCE: Keep Render backend warm (prevent cold starts) - guarded
+if (AI_MON && window.aiSwarmCouncil && typeof window.aiSwarmCouncil.refreshProviderStatus === 'function') {
+  setInterval(async () => {
     try {
         if (window.safeApiCall && typeof window.safeApiCall === 'function') {
             await window.safeApiCall(`${window.rbckConfig.apiBase}/ai/status`, { 
@@ -318,7 +320,10 @@ setInterval(async () => {
     } catch (e) {
         // Silent fail - just warming
     }
-}, 25 * 60 * 1000); // Every 25 minutes (reduced frequency to avoid 429 errors)
+  }, 25 * 60 * 1000); // Every 25 minutes (reduced frequency to avoid 429 errors)
+} else {
+  console.warn('ℹ️ [WARMING] Backend warming disabled - AI monitoring not enabled');
+}
 
 // ===== AI PROVIDERS DATA =====
 const AI_PROVIDERS = [
@@ -1244,39 +1249,53 @@ function findPostsContainer() {
 
 // ✅ RENAMED: loadBlogPosts → loadPosts for consistency
 // ✅ ENHANCED: Page-aware, XSS-safe, multiple selectors
-window.loadPosts = async function loadAdminPosts(){
-  const container =
-    document.querySelector('#blogManageGrid') ||
-    document.querySelector('.blog-manage-grid') ||
-    document.querySelector('#posts-list') ||
-    document.querySelector('[data-component="posts-list"]') ||
-    document.querySelector('[data-posts-list]');
+if (typeof RBCK.admin.loadAdminPosts !== 'function') {
+  RBCK.admin.loadAdminPosts = async function(){
+    const U = RBCK.util;
+    const API_BASE = window.__API_BASE__ || '';
+    const grid = document.querySelector('#blogManageGrid') || document.querySelector('.blog-manage-grid');
+    if (!grid) { console.warn('⚠️ [ADMIN] blogManageGrid not found'); return; }
+    const r = await fetch(`${API_BASE}/api/posts`, { headers:{'Accept':'application/json'} });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const j = await r.json();
+    const raw = j.items || j.data || j.posts || [];
+    const pick = U.pick || ((o,...ks)=>ks.reduce((v,k)=>v??o?.[k],undefined));
+    const esc  = U.escapeHtml || (s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])));
+    const norm = U.normalizePost || (p=>({
+      title: pick(p,'titleth','titleTH','title') ?? 'Untitled',
+      excerpt: pick(p,'excerpt','metadescription') ?? '',
+      body: pick(p,'content','body','bodyTH','body_th') ?? '',
+      publishedAt: pick(p,'published_at','created_at','updated_at'),
+      id: pick(p,'slug','slugTH','slug_th','id'),
+      raw:p
+    }));
+    const posts = raw.map(norm);
+    grid.innerHTML = posts.length ? posts.map(p=>`
+      <div class="blog-card">
+        <div class="blog-card__header">
+          <h3 class="blog-card__title">${esc(p.title)}</h3>
+          <time class="blog-card__date">${p.publishedAt?new Date(p.publishedAt).toLocaleDateString():''}</time>
+        </div>
+        <p class="blog-card__excerpt">${esc((p.excerpt||p.body).slice(0,160))}</p>
+      </div>`).join('') : '<p class="muted">No posts yet.</p>';
+  };
+}
+window.loadAdminPosts = RBCK.admin.loadAdminPosts;
+window.loadPosts = RBCK.admin.loadAdminPosts; // legacy compatibility
 
-  if (!container) { console.warn('⚠️ [ADMIN] blogManageGrid not found — skipping'); return; }
+// C) Harden boot: only call loadAdminPosts after definition
+if (typeof window.loadAdminPosts === 'function') {
+  try { window.loadAdminPosts(); } catch(e){ console.error('❌ loadAdminPosts failed', e); }
+} else {
+  console.warn('⚠️ loadAdminPosts missing at boot, scheduling retry');
+  setTimeout(()=>{ if (typeof window.loadAdminPosts === 'function') window.loadAdminPosts(); }, 300);
+}
 
-  const r = await fetch(`${API_BASE}/api/posts`, { headers:{ 'Accept':'application/json' }});
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  const json = await r.json();
-  const rawPosts = json.items || json.data || json.posts || [];
-  console.log('🧩 [ADMIN] posts payload', { count: rawPosts.length });
-
-  const posts = rawPosts.map(RBCK.util.normalizePost);
-  // keep existing admin rendering style; just swap in normalized fields
-  container.innerHTML = posts.length ? posts.map(p => `
-    <div class="blog-card">
-      <div class="blog-card__header">
-        <h3 class="blog-card__title">${RBCK.util.escapeHtml(p.title)}</h3>
-        <time class="blog-card__date">${p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : ''}</time>
-      </div>
-      <p class="blog-card__excerpt">${RBCK.util.escapeHtml((p.excerpt || p.body).slice(0,160))}</p>
-    </div>
-  `).join('') : '<p class="muted">No posts yet.</p>';
-
-  // if this file uses stats elsewhere, keep it:
-  const stats = json.stats || { total: rawPosts.length };
-  // (do not change other admin logic)
-};
-loadAdminPosts().catch(e=>console.error('❌ loadAdminPosts', e));
+// D) Guard AI monitoring calls (default OFF unless explicitly enabled)
+const AI_MON = (window.__ADMIN_ENABLE_AI_MONITORING__ === true);
+if (!AI_MON) {
+  console.warn('ℹ️ [ADMIN] AI monitoring disabled or not available; skipping intervals');
+}
 
 window.savePost = async function() {
     console.log('💾 [BLOG] Saving post...');
@@ -3426,8 +3445,9 @@ function startAISwarmAutoSync() {
     console.log('  Condition: Only when AI Swarm section is visible');
     console.log('═══════════════════════════════════════');
     
-    // Start auto-refresh every 10 seconds if AI Swarm is visible
-    setInterval(() => {
+    // Start auto-refresh every 10 seconds if AI Swarm is visible (guarded)
+    if (AI_MON && window.aiSwarmCouncil && typeof window.aiSwarmCouncil.refreshProviderStatus === 'function') {
+      setInterval(() => {
         const aiSwarmSection = document.getElementById('ai-swarm');
         const isVisible = aiSwarmSection && aiSwarmSection.style.display !== 'none';
         
@@ -3444,7 +3464,10 @@ function startAISwarmAutoSync() {
             }
             console.log('─────────────────────────────────────');
         }
-    }, 10000); // Every 10 seconds
+      }, 10000); // Every 10 seconds
+    } else {
+      console.warn('ℹ️ [AI SWARM] Auto-refresh disabled - AI monitoring not enabled');
+    }
 }
 
 // ===== AI SWARM INITIALIZATION =====
@@ -3773,3 +3796,7 @@ window.debugBackendConfig = async function() {
     console.log('   - SUPABASE_URL');
     console.log('   - SUPABASE_SERVICE_KEY');
 };
+
+// E) Mark ready to avoid HTML fallbacks screaming
+window.RBCK.ready = true;
+console.log('🚀 [ADMIN] RBCK admin system fully loaded and ready');

@@ -164,7 +164,7 @@ class PerformanceBootstrap {
         // ⚡ Preload likely modules after critical path
         setTimeout(() => {
             this.preloadModules([
-                '../modals.js'
+                // '../modals.js' // Removed preload of modals.js (404)
             ]);
         }, 1000);
 
