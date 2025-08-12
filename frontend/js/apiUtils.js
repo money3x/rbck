@@ -3,11 +3,17 @@
  * Handles API calls with proper error handling and retry logic
  */
 
+const __BASE = (typeof window !== 'undefined' && window.__API_BASE__) ||
+               (typeof window !== 'undefined' && window.CONFIG && (window.CONFIG.API_BASE_URL || window.CONFIG.API_BASE)) || '';
+const __TIMEOUT = (typeof window !== 'undefined' && window.CONFIG && Number(window.CONFIG.apiTimeout)) || 15000;
+const __RETRY = (typeof window !== 'undefined' && window.CONFIG && Number(window.CONFIG.retryAttempts)) || 2;
+
 import { API_BASE, CONFIG } from '../config.js';
 
 // API call wrapper with error handling and retry logic
 export async function apiCall(endpoint, options = {}) {
-    const url = `${API_BASE}${endpoint}`;
+    const base = (CONFIG?.API_BASE_URL || CONFIG?.API_BASE || __BASE);
+    const url = `${base}${endpoint}`;
     const defaultOptions = {
         method: 'GET',
         mode: 'cors',
@@ -16,7 +22,7 @@ export async function apiCall(endpoint, options = {}) {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         },
-        timeout: CONFIG.apiTimeout || 30000
+        timeout: CONFIG.apiTimeout || __TIMEOUT
     };
 
     const finalOptions = { ...defaultOptions, ...options };
@@ -30,7 +36,7 @@ export async function apiCall(endpoint, options = {}) {
     let lastError = null;
     
     // Retry logic
-    for (let attempt = 1; attempt <= (CONFIG.retryAttempts || 3); attempt++) {
+    for (let attempt = 1; attempt <= (CONFIG.retryAttempts || __RETRY); attempt++) {
         try {
             console.log(`🔄 API Call (Attempt ${attempt}): ${finalOptions.method} ${url}`);
             
@@ -97,7 +103,7 @@ export async function apiCall(endpoint, options = {}) {
             }
             
             // Wait before retry (exponential backoff)
-            if (attempt < (CONFIG.retryAttempts || 3)) {
+            if (attempt < (CONFIG.retryAttempts || __RETRY)) {
                 const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
                 console.log(`⏳ Retrying in ${delay/1000}s...`);
                 await new Promise(resolve => setTimeout(resolve, delay));
