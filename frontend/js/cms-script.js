@@ -1,6 +1,18 @@
 // Advanced CMS Dashboard JavaScript
 // Supporting SEO and SGE optimization
 
+const API_BASE = window.__API_BASE__ || '';
+const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+const pick = (o,...ks)=> ks.reduce((v,k)=> v ?? o?.[k], undefined);
+function normalizePost(p){
+  const title = pick(p,'titleth','titleTH','title') ?? 'Untitled';
+  const excerpt = pick(p,'excerpt','metadescription') ?? '';
+  const body = pick(p,'content','body','bodyTH','body_th') ?? '';
+  const publishedAt = pick(p,'published_at','created_at','updated_at');
+  const idOrSlug = pick(p,'slug','slugTH','slug_th','id');
+  return { title, excerpt, body, publishedAt, id:idOrSlug, raw:p };
+}
+
 class CMSDashboard {
     constructor() {
         this.currentSection = 'dashboard';
@@ -83,20 +95,36 @@ class CMSDashboard {
         try {
             this.showLoading();
             
-            const API_BASE = window.__API_BASE__ || '';
-            const response = await fetch(`${API_BASE}/api/posts`);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const json = await response.json();
+            (async function loadPublicPosts(){
+              const container =
+                document.querySelector('#posts-list') ||
+                document.querySelector('[data-component="posts-list"]') ||
+                document.querySelector('[data-posts-list]') ||
+                document.querySelector('#blogManageGrid') ||
+                document.querySelector('.blog-manage-grid');
+
+              if (!container) { console.warn('⚠️ [PUBLIC] posts-list container not found — skipping'); return; }
+
+              const resp = await fetch(`${API_BASE}/api/posts`, { headers:{ 'Accept':'application/json' }});
+              if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+              const json = await resp.json();
+              const rawPosts = json.items || json.data || json.posts || [];
+              console.log('🧩 [PUBLIC] posts payload', { count: rawPosts.length });
+
+              const posts = rawPosts.map(normalizePost);
+              if (!posts.length) {
+                container.innerHTML = '<p class="muted">No posts yet.</p>';
+              } else {
+                container.innerHTML = posts.map(p => `
+                  <article class="post">
+                    <h3>${escapeHtml(p.title)}</h3>
+                    <time>${p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : ''}</time>
+                    <p>${escapeHtml((p.excerpt || p.body).slice(0,160))}</p>
+                  </article>
+                `).join('');
+              }
+            })().catch(e=>console.error('❌ loadPublicPosts', e));
             
-            if (json.success) {
-                const posts = json.items || json.data || json.posts || [];
-                this.posts = posts;
-                this.stats = json.stats || { total: this.posts.length };
-                this.updateDashboard();
-                this.renderPosts();
-            } else {
-                this.showError('ไม่สามารถโหลดข้อมูลได้');
-            }
         } catch (error) {
             console.error('Error loading dashboard data:', error);
             this.showError('เกิดข้อผิดพลาดในการโหลดข้อมูล');

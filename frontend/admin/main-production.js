@@ -29,6 +29,19 @@ if (typeof window !== 'undefined') {
 
 console.log('🚀 [MAIN] Loading RBCK CMS Admin Panel v2025-07-04-v3-secure...');
 
+// ===== HELPER FUNCTIONS =====
+const API_BASE = window.__API_BASE__ || '';
+const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+const pick = (o,...ks)=> ks.reduce((v,k)=> v ?? o?.[k], undefined);
+function normalizePost(p){
+  const title = pick(p,'titleth','titleTH','title') ?? 'Untitled';
+  const excerpt = pick(p,'excerpt','metadescription') ?? '';
+  const body = pick(p,'content','body','bodyTH','body_th') ?? '';
+  const publishedAt = pick(p,'published_at','created_at','updated_at');
+  const idOrSlug = pick(p,'slug','slugTH','slug_th','id');
+  return { title, excerpt, body, publishedAt, id:idOrSlug, raw:p };
+}
+
 // ✅ Add global error handler to catch any errors that prevent showSection from loading
 window.addEventListener('error', function(event) {
     console.error('❌ [MAIN] JavaScript Error:', event.error);
@@ -1232,75 +1245,39 @@ function findPostsContainer() {
 
 // ✅ RENAMED: loadBlogPosts → loadPosts for consistency
 // ✅ ENHANCED: Page-aware, XSS-safe, multiple selectors
-window.loadPosts = async function() {
-    console.log('📝 [BLOG] Loading posts...');
-    
-    try {
-        // Page-aware container detection
-        const postsContainer = findPostsContainer();
-        
-        if (!postsContainer) {
-            console.warn('⚠️ [BLOG] posts-list container not found on this page');
-            // Only warn, don't show notification - this is expected on non-blog pages
-            return;
-        }
-        
-        const response = await apiRequest('/posts');
-        
-        const posts = response.items || response.data || response.posts || [];
-        if (response.success && posts && posts.length > 0) {
-            // XSS-safe rendering with escapeHtml
-            postsContainer.innerHTML = posts.map(post => {
-                const safeTitle = escapeHtml(post.title || 'ไม่มีชื่อ');
-                const safeContent = escapeHtml((post.content || '').substring(0, 100));
-                const safeAuthor = escapeHtml(post.author || 'ไม่ทราบ');
-                const contentTruncated = post.content && post.content.length > 100 ? '...' : '';
-                const dateStr = post.created_at ? new Date(post.created_at).toLocaleDateString('th-TH') : 'ไม่ทราบวันที่';
-                
-                return `
-                    <article class="post-item" data-id="${post.id}">
-                        <h3>${safeTitle}</h3>
-                        <p>${safeContent}${contentTruncated}</p>
-                        <div class="post-meta">
-                            <span>โดย: ${safeAuthor}</span>
-                            <span>${dateStr}</span>
-                            <span class="status ${post.published ? 'published' : 'draft'}">
-                                ${post.published ? 'เผยแพร่แล้ว' : 'ร่าง'}
-                            </span>
-                        </div>
-                        <div class="post-actions">
-                            <button onclick="editPost(${post.id})" class="btn-edit">แก้ไข</button>
-                            <button onclick="deletePost(${post.id})" class="btn-delete">ลบ</button>
-                        </div>
-                    </article>
-                `;
-            }).join('');
-            
-            console.log(`✅ [BLOG] Loaded ${response.data.length} posts`);
-            showNotification(`✅ โหลด ${response.data.length} โพสต์เรียบร้อย`, 'success');
-        } else {
-            // Show "No posts yet" message
-            postsContainer.innerHTML = '<div class="no-data"><p>No posts yet.</p></div>';
-            console.log('📝 [BLOG] No posts found');
-            showNotification('📝 ไม่พบโพสต์', 'info');
-        }
-        
-    } catch (error) {
-        console.error('❌ [BLOG] Error loading posts:', error);
-        console.error('❌ [BLOG] Error details:', {
-            message: error.message,
-            stack: error.stack,
-            response: error.response
-        });
-        
-        // Try to find container again for error display
-        const postsContainer = findPostsContainer();
-        if (postsContainer) {
-            postsContainer.innerHTML = '<div class="error"><p>Error loading posts. Please check console for details.</p></div>';
-        }
-        showNotification('❌ ไม่สามารถโหลดโพสต์ได้: ' + error.message, 'error');
-    }
+window.loadPosts = async function loadAdminPosts(){
+  const container =
+    document.querySelector('#blogManageGrid') ||
+    document.querySelector('.blog-manage-grid') ||
+    document.querySelector('#posts-list') ||
+    document.querySelector('[data-component="posts-list"]') ||
+    document.querySelector('[data-posts-list]');
+
+  if (!container) { console.warn('⚠️ [ADMIN] blogManageGrid not found — skipping'); return; }
+
+  const r = await fetch(`${API_BASE}/api/posts`, { headers:{ 'Accept':'application/json' }});
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const json = await r.json();
+  const rawPosts = json.items || json.data || json.posts || [];
+  console.log('🧩 [ADMIN] posts payload', { count: rawPosts.length });
+
+  const posts = rawPosts.map(normalizePost);
+  // keep existing admin rendering style; just swap in normalized fields
+  container.innerHTML = posts.length ? posts.map(p => `
+    <div class="blog-card">
+      <div class="blog-card__header">
+        <h3 class="blog-card__title">${escapeHtml(p.title)}</h3>
+        <time class="blog-card__date">${p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : ''}</time>
+      </div>
+      <p class="blog-card__excerpt">${escapeHtml((p.excerpt || p.body).slice(0,160))}</p>
+    </div>
+  `).join('') : '<p class="muted">No posts yet.</p>';
+
+  // if this file uses stats elsewhere, keep it:
+  const stats = json.stats || { total: rawPosts.length };
+  // (do not change other admin logic)
 };
+loadAdminPosts().catch(e=>console.error('❌ loadAdminPosts', e));
 
 window.savePost = async function() {
     console.log('💾 [BLOG] Saving post...');

@@ -41,6 +41,10 @@ router.get('/', async (req, res) => {
 
         // Return results
         const posts = data || [];
+        console.log('📊 /api/posts result', {
+          returned: posts.length,
+          sampleKeys: posts[0] ? Object.keys(posts[0]) : []
+        });
         if (posts.length === 0) {
             return res.status(200).json({ 
                 success: true,
