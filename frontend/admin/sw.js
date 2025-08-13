@@ -1,301 +1,414 @@
-// Service Worker for RBCK CMS - Performance Optimization
-// Implements aggressive caching strategy for maximum performance
+/**
+ * 🚀 SERVICE WORKER - RBCK CMS Performance Optimization
+ * Implements caching, offline support, and performance improvements
+ */
 
 const CACHE_NAME = 'rbck-cms-v1.0.0';
 const STATIC_CACHE = 'rbck-static-v1.0.0';
-const DYNAMIC_CACHE = 'rbck-dynamic-v1.0.0';
 const API_CACHE = 'rbck-api-v1.0.0';
 
-// Resources to cache immediately (critical path)
-const CRITICAL_ASSETS = [
-  '/frontend/admin/dist/js/runtime.8591e8daa7636ae8e378.js',
-  '/frontend/admin/dist/js/main.47234b74d8640c5c6aed.js',
-  '/frontend/admin/dist/js/performance-optimizer.d39e23e134c6eb96e8fc.js',
-  '/frontend/admin/css/critical.css',
-  '/frontend/admin/dist/index.html'
-];
-
-// Static assets for background caching
-const STATIC_ASSETS = [
-  '/frontend/admin/dist/js/component-loader.f9bf3d66edc7cd6e65b0.js',
-  '/frontend/admin/dist/js/api-utils.cf0943b0b19dca0381d8.js',
-  '/frontend/admin/css/ai-modal.css',
-  '/frontend/admin/components/ai-modal/modal-header.html'
+// Assets to cache immediately
+const PRECACHE_ASSETS = [
+    '/',
+    '/admin/index.html',
+    '/admin/core/bootstrap.js',
+    '/admin/core/auth.js',
+    '/admin/core/module-loader.js',
+    '/admin/core/performance-optimizer.js',
+    '/admin/core/production-optimizer.js',
+    '/admin/core/unified-monitoring-service.js',
+    '/admin/css/luxury-sidebar.css',
+    '/admin/uiHelpers.js'
 ];
 
 // API endpoints to cache
-const API_ROUTES = [
-  '/api/ai/providers/status',
-  '/api/performance/dashboard',
-  '/api/health'
+const API_CACHE_PATTERNS = [
+    /\/api\/ai\/status/,
+    /\/api\/ai\/metrics/,
+    /\/api\/ai\/providers/
 ];
 
-// Install event - cache critical resources
+// Cache strategies
+const CACHE_STRATEGIES = {
+    CACHE_FIRST: 'cache-first',
+    NETWORK_FIRST: 'network-first',
+    STALE_WHILE_REVALIDATE: 'stale-while-revalidate',
+    NETWORK_ONLY: 'network-only',
+    CACHE_ONLY: 'cache-only'
+};
+
+/**
+ * Service Worker Installation
+ */
 self.addEventListener('install', (event) => {
-  console.log('🔧 [SW] Installing service worker...');
-  
-  event.waitUntil(
-    (async () => {
-      try {
-        // Cache critical assets first
-        const criticalCache = await caches.open(CACHE_NAME);
-        await criticalCache.addAll(CRITICAL_ASSETS);
-        
-        // Cache static assets in background
-        const staticCache = await caches.open(STATIC_CACHE);
-        await staticCache.addAll(STATIC_ASSETS);
-        
-        console.log('✅ [SW] Critical and static assets cached');
-        
-        // Skip waiting to activate immediately
-        self.skipWaiting();
-      } catch (error) {
-        console.error('❌ [SW] Cache installation failed:', error);
-      }
-    })()
-  );
+    console.log('🚀 [SERVICE WORKER] Installing...');
+    
+    event.waitUntil(
+        Promise.all([
+            // Cache static assets
+            caches.open(STATIC_CACHE).then((cache) => {
+                console.log('📦 [SERVICE WORKER] Caching static assets');
+                return cache.addAll(PRECACHE_ASSETS);
+            }),
+            
+            // Skip waiting to activate immediately
+            self.skipWaiting()
+        ])
+    );
 });
 
-// Activate event - clean up old caches
+/**
+ * Service Worker Activation
+ */
 self.addEventListener('activate', (event) => {
-  console.log('🚀 [SW] Activating service worker...');
-  
-  event.waitUntil(
-    (async () => {
-      // Clean up old caches
-      const cacheNames = await caches.keys();
-      const oldCaches = cacheNames.filter(name => 
-        name.startsWith('rbck-') && 
-        !name.includes('v1.0.0')
-      );
-      
-      await Promise.all(
-        oldCaches.map(name => caches.delete(name))
-      );
-      
-      console.log('🧹 [SW] Old caches cleaned up');
-      
-      // Take control of all pages
-      self.clients.claim();
-    })()
-  );
+    console.log('✅ [SERVICE WORKER] Activating...');
+    
+    event.waitUntil(
+        Promise.all([
+            // Clean up old caches
+            cleanupOldCaches(),
+            
+            // Take control of all pages
+            self.clients.claim()
+        ])
+    );
 });
 
-// Fetch event - intelligent caching strategy
+/**
+ * Fetch Event Handler - Main caching logic
+ */
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
-  
-  // Skip non-GET requests
-  if (request.method !== 'GET') return;
-  
-  // Skip cross-origin requests (except for known APIs)
-  if (url.origin !== self.location.origin && !isAllowedOrigin(url.origin)) {
-    return;
-  }
-  
-  event.respondWith(handleRequest(request));
+    const request = event.request;
+    const url = new URL(request.url);
+    
+    // Skip non-GET requests
+    if (request.method !== 'GET') {
+        return;
+    }
+    
+    // Skip chrome-extension and other non-HTTP requests
+    if (!url.protocol.startsWith('http')) {
+        return;
+    }
+    
+    event.respondWith(handleFetch(request, url));
 });
 
-async function handleRequest(request) {
-  const url = new URL(request.url);
-  
-  try {
-    // Strategy 1: Critical assets - Cache First
-    if (isCriticalAsset(url.pathname)) {
-      return await cacheFirst(request, CACHE_NAME);
+/**
+ * Handle fetch requests with appropriate caching strategy
+ */
+async function handleFetch(request, url) {
+    // Determine caching strategy based on request
+    if (isStaticAsset(url)) {
+        return handleStaticAsset(request);
+    } else if (isAPIRequest(url)) {
+        return handleAPIRequest(request);
+    } else if (isHTMLRequest(request)) {
+        return handleHTMLRequest(request);
+    } else {
+        return handleDefaultRequest(request);
     }
-    
-    // Strategy 2: Static assets - Cache First with background update
-    if (isStaticAsset(url.pathname)) {
-      return await cacheFirstWithUpdate(request, STATIC_CACHE);
+}
+
+/**
+ * Check if request is for static assets
+ */
+function isStaticAsset(url) {
+    return /\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/i.test(url.pathname);
+}
+
+/**
+ * Check if request is for API
+ */
+function isAPIRequest(url) {
+    return url.pathname.startsWith('/api/') || API_CACHE_PATTERNS.some(pattern => pattern.test(url.pathname));
+}
+
+/**
+ * Check if request is for HTML
+ */
+function isHTMLRequest(request) {
+    return request.headers.get('Accept')?.includes('text/html');
+}
+
+/**
+ * Handle static assets - Cache First strategy
+ */
+async function handleStaticAsset(request) {
+    try {
+        // Try cache first
+        const cachedResponse = await caches.match(request);
+        if (cachedResponse) {
+            return cachedResponse;
+        }
+        
+        // Fetch from network and cache
+        const networkResponse = await fetch(request);
+        if (networkResponse.ok) {
+            const cache = await caches.open(STATIC_CACHE);
+            cache.put(request, networkResponse.clone());
+        }
+        
+        return networkResponse;
+    } catch (error) {
+        console.error('❌ [SERVICE WORKER] Static asset error:', error);
+        
+        // Return cached version if available
+        const cachedResponse = await caches.match(request);
+        if (cachedResponse) {
+            return cachedResponse;
+        }
+        
+        throw error;
     }
+}
+
+/**
+ * Handle API requests - Network First with cache fallback
+ */
+async function handleAPIRequest(request) {
+    const cache = await caches.open(API_CACHE);
     
-    // Strategy 3: API routes - Network First with cache fallback
-    if (isApiRoute(url.pathname)) {
-      return await networkFirstWithCache(request, API_CACHE);
+    try {
+        // Try network first for fresh data
+        const networkResponse = await fetch(request.clone());
+        
+        if (networkResponse.ok) {
+            // Cache successful responses
+            cache.put(request, networkResponse.clone());
+            return networkResponse;
+        }
+        
+        throw new Error(`Network response not ok: ${networkResponse.status}`);
+    } catch (error) {
+        console.warn('⚠️ [SERVICE WORKER] Network failed, trying cache:', error);
+        
+        // Fallback to cache
+        const cachedResponse = await cache.match(request);
+        if (cachedResponse) {
+            // Add header to indicate cached response
+            const response = cachedResponse.clone();
+            response.headers.set('X-Served-By', 'ServiceWorker-Cache');
+            return response;
+        }
+        
+        // Return offline response for API requests
+        return new Response(JSON.stringify({
+            success: false,
+            error: 'Offline - data not available',
+            cached: false
+        }), {
+            status: 503,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Served-By': 'ServiceWorker-Offline'
+            }
+        });
     }
-    
-    // Strategy 4: HTML pages - Network First with cache fallback
-    if (isHtmlRequest(request)) {
-      return await networkFirstWithCache(request, DYNAMIC_CACHE);
+}
+
+/**
+ * Handle HTML requests - Network First with fallback
+ */
+async function handleHTMLRequest(request) {
+    try {
+        // Try network first
+        const networkResponse = await fetch(request);
+        
+        if (networkResponse.ok) {
+            // Cache HTML pages
+            const cache = await caches.open(CACHE_NAME);
+            cache.put(request, networkResponse.clone());
+            return networkResponse;
+        }
+        
+        throw new Error(`Network response not ok: ${networkResponse.status}`);
+    } catch (error) {
+        console.warn('⚠️ [SERVICE WORKER] HTML network failed, trying cache');
+        
+        // Try cache
+        const cachedResponse = await caches.match(request);
+        if (cachedResponse) {
+            return cachedResponse;
+        }
+        
+        // Return offline page
+        return new Response(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>RBCK CMS - Offline</title>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+                    .offline { color: #666; }
+                    .retry { margin-top: 20px; }
+                    .retry button { padding: 10px 20px; font-size: 16px; }
+                </style>
+            </head>
+            <body>
+                <h1>🌐 RBCK CMS</h1>
+                <div class="offline">
+                    <h2>You're offline</h2>
+                    <p>Check your internet connection and try again.</p>
+                </div>
+                <div class="retry">
+                    <button onclick="window.location.reload()">Retry</button>
+                </div>
+            </body>
+            </html>
+        `, {
+            headers: {
+                'Content-Type': 'text/html',
+                'X-Served-By': 'ServiceWorker-Offline'
+            }
+        });
     }
+}
+
+/**
+ * Handle other requests - Network only
+ */
+async function handleDefaultRequest(request) {
+    return fetch(request);
+}
+
+/**
+ * Clean up old caches
+ */
+async function cleanupOldCaches() {
+    const cacheNames = await caches.keys();
+    const validCaches = [CACHE_NAME, STATIC_CACHE, API_CACHE];
     
-    // Strategy 5: Other resources - Cache with background refresh
-    return await cacheWithRefresh(request, DYNAMIC_CACHE);
+    const deletionPromises = cacheNames
+        .filter(cacheName => !validCaches.includes(cacheName))
+        .map(cacheName => {
+            console.log('🗑️ [SERVICE WORKER] Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
+        });
     
-  } catch (error) {
-    console.error('❌ [SW] Request handling failed:', error);
-    return await handleOffline(request);
-  }
+    return Promise.all(deletionPromises);
 }
 
-// Cache First strategy - for critical assets
-async function cacheFirst(request, cacheName) {
-  const cache = await caches.open(cacheName);
-  const cached = await cache.match(request);
-  
-  if (cached) {
-    console.log('📦 [SW] Serving from cache:', request.url);
-    return cached;
-  }
-  
-  const response = await fetch(request);
-  if (response.ok) {
-    cache.put(request, response.clone());
-  }
-  
-  return response;
-}
-
-// Cache First with background update
-async function cacheFirstWithUpdate(request, cacheName) {
-  const cache = await caches.open(cacheName);
-  const cached = await cache.match(request);
-  
-  // Background update
-  const fetchPromise = fetch(request).then(response => {
-    if (response.ok) {
-      cache.put(request, response.clone());
-    }
-    return response;
-  }).catch(() => {});
-  
-  if (cached) {
-    fetchPromise; // Don't await, let it run in background
-    return cached;
-  }
-  
-  return await fetchPromise;
-}
-
-// Network First with cache fallback
-async function networkFirstWithCache(request, cacheName) {
-  const cache = await caches.open(cacheName);
-  
-  try {
-    const response = await fetch(request);
-    
-    if (response.ok) {
-      // Cache successful responses
-      cache.put(request, response.clone());
-      console.log('🌐 [SW] Network response cached:', request.url);
-    }
-    
-    return response;
-  } catch (error) {
-    // Network failed, try cache
-    const cached = await cache.match(request);
-    
-    if (cached) {
-      console.log('📦 [SW] Network failed, serving from cache:', request.url);
-      return cached;
-    }
-    
-    throw error;
-  }
-}
-
-// Cache with background refresh
-async function cacheWithRefresh(request, cacheName) {
-  const cache = await caches.open(cacheName);
-  const cached = await cache.match(request);
-  
-  // Always try to fetch fresh version
-  const fetchPromise = fetch(request).then(response => {
-    if (response.ok) {
-      cache.put(request, response.clone());
-    }
-    return response;
-  });
-  
-  // Return cached version immediately if available
-  if (cached) {
-    fetchPromise.catch(() => {}); // Don't let fetch errors break the promise chain
-    return cached;
-  }
-  
-  // If no cache, wait for network
-  return await fetchPromise;
-}
-
-// Offline fallback
-async function handleOffline(request) {
-  if (isHtmlRequest(request)) {
-    // Return cached main page for HTML requests
-    const cache = await caches.open(CACHE_NAME);
-    return await cache.match('/frontend/admin/dist/index.html');
-  }
-  
-  // Return basic offline response
-  return new Response('Offline', { 
-    status: 503,
-    statusText: 'Service Unavailable',
-    headers: { 'Content-Type': 'text/plain' }
-  });
-}
-
-// Helper functions
-function isCriticalAsset(pathname) {
-  return CRITICAL_ASSETS.some(asset => pathname.includes(asset.split('/').pop()));
-}
-
-function isStaticAsset(pathname) {
-  return pathname.includes('/dist/') || 
-         pathname.includes('/css/') || 
-         pathname.includes('/components/') ||
-         pathname.match(/\.(js|css|html|png|jpg|jpeg|gif|svg|woff|woff2)$/);
-}
-
-function isApiRoute(pathname) {
-  return pathname.startsWith('/api/') || 
-         API_ROUTES.some(route => pathname.startsWith(route));
-}
-
-function isHtmlRequest(request) {
-  return request.headers.get('accept')?.includes('text/html');
-}
-
-function isAllowedOrigin(origin) {
-  const allowedOrigins = [
-    'https://fonts.googleapis.com',
-    'https://fonts.gstatic.com',
-    'https://api.openai.com',
-    'https://api.anthropic.com'
-  ];
-  
-  return allowedOrigins.some(allowed => origin.startsWith(allowed));
-}
-
-// Performance monitoring
-self.addEventListener('message', (event) => {
-  if (event.data?.type === 'PERFORMANCE_REPORT') {
-    console.log('📊 [SW] Performance metrics received:', event.data.metrics);
-    
-    // Could send to analytics here
-    // analytics.track('performance', event.data.metrics);
-  }
-});
-
-// Background sync for performance data
+/**
+ * Background sync for offline actions
+ */
 self.addEventListener('sync', (event) => {
-  if (event.tag === 'performance-sync') {
-    event.waitUntil(syncPerformanceData());
-  }
+    if (event.tag === 'background-sync') {
+        console.log('🔄 [SERVICE WORKER] Background sync triggered');
+        event.waitUntil(handleBackgroundSync());
+    }
 });
 
-async function syncPerformanceData() {
-  try {
-    // Sync performance data when connection is restored
-    console.log('🔄 [SW] Syncing performance data...');
-    
-    // Implementation would depend on your analytics setup
-    // const data = await getStoredPerformanceData();
-    // await sendToAnalytics(data);
-    
-  } catch (error) {
-    console.error('❌ [SW] Performance sync failed:', error);
-  }
+/**
+ * Handle background sync
+ */
+async function handleBackgroundSync() {
+    // Implement offline action queue processing
+    console.log('🔄 [SERVICE WORKER] Processing background sync');
 }
 
-console.log('✅ [SW] Service Worker script loaded - RBCK CMS Performance Optimization Active');
+/**
+ * Push notifications (future feature)
+ */
+self.addEventListener('push', (event) => {
+    if (event.data) {
+        const data = event.data.json();
+        
+        event.waitUntil(
+            self.registration.showNotification(data.title, {
+                body: data.body,
+                icon: '/admin/icon-192.png',
+                badge: '/admin/badge-72.png',
+                actions: data.actions || []
+            })
+        );
+    }
+});
+
+/**
+ * Notification click handler
+ */
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    
+    event.waitUntil(
+        clients.openWindow('/admin/')
+    );
+});
+
+/**
+ * Message handler for communication with main thread
+ */
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type) {
+        switch (event.data.type) {
+            case 'CACHE_STATUS':
+                handleCacheStatusRequest(event);
+                break;
+            case 'CLEAR_CACHE':
+                handleClearCacheRequest(event);
+                break;
+            case 'UPDATE_CHECK':
+                handleUpdateCheckRequest(event);
+                break;
+        }
+    }
+});
+
+/**
+ * Handle cache status request
+ */
+async function handleCacheStatusRequest(event) {
+    const cacheNames = await caches.keys();
+    const status = {
+        caches: cacheNames.length,
+        size: await getCacheSize(),
+        version: CACHE_NAME
+    };
+    
+    event.ports[0].postMessage(status);
+}
+
+/**
+ * Handle clear cache request
+ */
+async function handleClearCacheRequest(event) {
+    await cleanupOldCaches();
+    event.ports[0].postMessage({ success: true });
+}
+
+/**
+ * Handle update check request
+ */
+async function handleUpdateCheckRequest(event) {
+    // Force update check
+    await self.registration.update();
+    event.ports[0].postMessage({ updateChecked: true });
+}
+
+/**
+ * Get total cache size
+ */
+async function getCacheSize() {
+    const cacheNames = await caches.keys();
+    let totalSize = 0;
+    
+    for (const cacheName of cacheNames) {
+        const cache = await caches.open(cacheName);
+        const keys = await cache.keys();
+        
+        for (const request of keys) {
+            const response = await cache.match(request);
+            if (response) {
+                const blob = await response.blob();
+                totalSize += blob.size;
+            }
+        }
+    }
+    
+    return totalSize;
+}
+
+console.log('✅ [SERVICE WORKER] RBCK CMS Service Worker loaded');

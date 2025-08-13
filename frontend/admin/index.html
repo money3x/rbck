@@ -5,15 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🚀 Gemini 2.0 Flash CMS - ระเบียบการช่าง AI-Powered Content Management</title>
     
-    <!-- ⚡ PERFORMANCE: Critical resource preloading -->
+    <!-- 🚀 CRITICAL PERFORMANCE OPTIMIZATIONS -->
+    <!-- Load performance optimizer and module loader first -->
+    <link rel="modulepreload" href="core/module-loader.js">
+    <link rel="modulepreload" href="core/performance-optimizer.js">
+    
+    <!-- Critical resources for initial render -->
     <link rel="modulepreload" href="core/bootstrap.js">
     <link rel="modulepreload" href="core/auth.js">
-    <link rel="modulepreload" href="core/api-client.js">
-    <link rel="modulepreload" href="unified-status-manager.js">
-    <link rel="modulepreload" href="real-time-conversation-logs.js">
     <link rel="preload" href="css/luxury-sidebar.css" as="style">
+    
+    <!-- DNS optimization -->
     <link rel="dns-prefetch" href="https://rbck.onrender.com">
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
     <link rel="preconnect" href="https://rbck.onrender.com" crossorigin>
+    
+    <!-- Service Worker registration -->
+    <link rel="manifest" href="manifest.json">
     
     <!-- ⚡ PERFORMANCE: Critical CSS inlined for faster rendering -->
     <style>
@@ -5523,12 +5532,66 @@
     </div>
     
     <!-- Original AI Settings Modal (Keep for compatibility) -->
-    <!-- Emergency debug fix for showSection ReferenceError -->
-    <!-- Production-ready JavaScript -->
-    <script>window.__API_BASE__="https://rbck.onrender.com";</script>
-    <script>window.__ADMIN_ENABLE_AI_MONITORING__ = false;</script>
-    <script src="api-helper.js?v=2&t=1752240000" onload="console.log('✅ api-helper.js v2 loaded')" onerror="console.error('❌ Failed to load api-helper.js')"></script>
-    <script src="main-production.js?v=2&t=1752240000" onload="console.log('✅ main-production.js v2 loaded'); console.log('showSection type:', typeof window.showSection);" onerror="console.error('❌ Failed to load main-production.js')"></script>
+    <!-- 🚀 PERFORMANCE OPTIMIZED SCRIPT LOADING -->
+    <script>
+        // Critical configuration
+        window.__API_BASE__="https://rbck.onrender.com";
+        window.__ADMIN_ENABLE_AI_MONITORING__ = false;
+        window.__PERF_OPTIMIZED__ = true;
+    </script>
+    
+    <!-- Load performance system first -->
+    <script src="core/module-loader.js" async></script>
+    <script src="core/performance-optimizer.js" async></script>
+    <script src="core/production-optimizer.js" async></script>
+    <script src="core/unified-monitoring-service.js" async></script>
+    <script src="core/ai-provider-optimizer.js" async></script>
+    <script src="core/css-optimizer.js" async></script>
+    
+    <!-- Load critical modules -->
+    <script>
+        // Performance-optimized loading
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 [PERF LOAD] Starting optimized loading sequence...');
+            
+            // Wait for module loader to be ready
+            while (!window.moduleLoader) {
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+            
+            // Load critical modules in priority order
+            const criticalModules = [
+                { path: 'api-helper.js?v=3&t=' + Date.now(), name: 'api-helper', required: true },
+                { path: 'core/auth.js', name: 'auth', required: true }
+            ];
+            
+            await window.moduleLoader.loadModules(criticalModules);
+            
+            // Load main functionality in chunks
+            const mainModules = [
+                { path: 'uiHelpers.js', name: 'ui-helpers', required: true },
+                { path: 'unified-status-manager.js', name: 'status-manager', required: false }
+            ];
+            
+            await window.moduleLoader.loadModules(mainModules);
+            
+            // Replace the monolithic main-production.js with modular loading
+            console.log('✅ [PERF LOAD] Critical modules loaded, initializing app...');
+            
+            // Initialize core functionality
+            if (window.initializeApp) {
+                window.initializeApp();
+            }
+            
+            // Preload non-critical modules
+            window.moduleLoader.preloadModules([
+                'aiMonitoring.js',
+                'seoTools.js',
+                'blogManager.js',
+                'migration.js'
+            ]);
+        });
+    </script>
     
     <!-- Complete Modal Conflict Fix -->
     <script>

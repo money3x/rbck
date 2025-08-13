@@ -1,0 +1,129 @@
+{
+  "name": "RBCK CMS - AI-Powered Content Management",
+  "short_name": "RBCK CMS",
+  "description": "Advanced CMS powered by Google Gemini 2.0 Flash AI for intelligent content creation and SEO optimization",
+  "start_url": "/admin/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#007cba",
+  "orientation": "portrait-primary",
+  "scope": "/admin/",
+  "lang": "th-TH",
+  "dir": "ltr",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-96.png", 
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-128.png",
+      "sizes": "128x128", 
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png", 
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-384.png", 
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-mobile.png",
+      "sizes": "375x667",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Mobile view of RBCK CMS"
+    },
+    {
+      "src": "screenshot-desktop.png", 
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Desktop view of RBCK CMS"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Create New Post",
+      "short_name": "New Post",
+      "description": "Create a new blog post with AI assistance",
+      "url": "/admin/#new-post",
+      "icons": [
+        {
+          "src": "shortcut-new-post.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "AI Monitoring",
+      "short_name": "AI Status", 
+      "description": "View AI provider status and monitoring",
+      "url": "/admin/#ai-monitoring",
+      "icons": [
+        {
+          "src": "shortcut-ai-monitoring.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "SEO Tools",
+      "short_name": "SEO",
+      "description": "Access SEO optimization tools", 
+      "url": "/admin/#seo-tools",
+      "icons": [
+        {
+          "src": "shortcut-seo.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "protocol_handlers": [
+    {
+      "protocol": "web+rbckcms",
+      "url": "/admin/handler?protocol=%s"
+    }
+  ]
+}

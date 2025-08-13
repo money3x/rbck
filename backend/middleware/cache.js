@@ -1,18 +1,60 @@
 const NodeCache = require('node-cache');
 
-// Create cache instances for different types of data
+// 🚀 PERFORMANCE: Enhanced cache instances with optimized configurations
 const caches = {
-  // Short-term cache for API responses (5 minutes)
-  api: new NodeCache({ stdTTL: 300, checkperiod: 60 }),
+  // Critical API responses cache (2 minutes for high-frequency calls)
+  api: new NodeCache({ 
+    stdTTL: 120, 
+    checkperiod: 30,
+    useClones: false, // Performance optimization - avoid cloning
+    maxKeys: 1000,    // Memory management
+    deleteOnExpire: true
+  }),
   
-  // Medium-term cache for posts (15 minutes)
-  posts: new NodeCache({ stdTTL: 900, checkperiod: 180 }),
+  // Posts cache (10 minutes - longer for content)
+  posts: new NodeCache({ 
+    stdTTL: 600, 
+    checkperiod: 120,
+    useClones: false,
+    maxKeys: 500,
+    deleteOnExpire: true
+  }),
   
-  // Long-term cache for static content (1 hour)
-  static: new NodeCache({ stdTTL: 3600, checkperiod: 600 }),
+  // Static content cache (2 hours - much longer for static assets)
+  static: new NodeCache({ 
+    stdTTL: 7200, 
+    checkperiod: 1800,
+    useClones: false,
+    maxKeys: 200,
+    deleteOnExpire: true
+  }),
   
-  // AI provider responses cache (30 minutes)
-  ai: new NodeCache({ stdTTL: 1800, checkperiod: 300 })
+  // AI provider responses cache (5 minutes - balanced for freshness vs performance)
+  ai: new NodeCache({ 
+    stdTTL: 300, 
+    checkperiod: 60,
+    useClones: false,
+    maxKeys: 100,
+    deleteOnExpire: true
+  }),
+  
+  // 🚀 NEW: Database query results cache (30 seconds for high-performance)
+  database: new NodeCache({
+    stdTTL: 30,
+    checkperiod: 10,
+    useClones: false,
+    maxKeys: 2000,
+    deleteOnExpire: true
+  }),
+  
+  // 🚀 NEW: User session cache (15 minutes)
+  sessions: new NodeCache({
+    stdTTL: 900,
+    checkperiod: 180,
+    useClones: false,
+    maxKeys: 1000,
+    deleteOnExpire: true
+  })
 };
 
 // Cache middleware factory
@@ -111,11 +153,13 @@ const createCacheMiddleware = (ttlOrType = 'api', keyGenerator = null) => {
   };
 };
 
-// Specific cache middleware for different routes
+// 🚀 PERFORMANCE: Enhanced cache middleware for different routes
 const apiCache = createCacheMiddleware('api');
 const postsCache = createCacheMiddleware('posts', (req) => `posts:${req.originalUrl}`);
 const staticCache = createCacheMiddleware('static');
 const aiCache = createCacheMiddleware('ai', (req) => `ai:${req.body ? JSON.stringify(req.body) : req.originalUrl}`);
+const databaseCache = createCacheMiddleware('database', (req) => `db:${req.originalUrl}:${JSON.stringify(req.query || {})}`);
+const sessionCache = createCacheMiddleware('sessions');
 
 // Cache invalidation helpers
 const invalidateCache = {
