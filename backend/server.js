@@ -188,12 +188,22 @@ app.use(requestMonitoring());
 app.use(blockSuspiciousIPs);
 app.use(generalRateLimit);
 
-// CORS configuration for Netlify frontend - SIMPLIFIED
+// CORS configuration for Netlify frontend - FIXED FOR CACHE HEADERS
 app.use(cors({
   origin: ['https://flourishing-gumdrop-dffe7a.netlify.app', 'http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:8080'],
   credentials: false,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With', 
+    'Accept',
+    'Cache-Control',
+    'Pragma',
+    'Expires',
+    'Accept-Encoding',
+    'Save-Data'
+  ],
   optionsSuccessStatus: 200
 }));
 

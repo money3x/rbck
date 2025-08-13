@@ -157,19 +157,37 @@ class APIHelper {
      * ⚡ Enhanced request with retry logic - prioritize real backend
      */
     async makeRequest(url, options, retryCount = 0) {
-        // 🚀 Try full production URL first for AI endpoints
+        // 🚀 Try full production URL first for AI endpoints - FIXED URL CONSTRUCTION
         if (url.includes('/api/ai/')) {
-            const productionUrl = url.startsWith('http') ? url : `https://rbck.onrender.com${url}`;
+            let productionUrl;
+            if (url.startsWith('http')) {
+                productionUrl = url;
+            } else {
+                // Ensure clean URL construction
+                const cleanUrl = url.startsWith('/') ? url : '/' + url;
+                productionUrl = `https://rbck.onrender.com${cleanUrl}`;
+            }
             console.log(`🌐 [API HELPER] Trying production endpoint: ${productionUrl}`);
             
             try {
+                // Create clean headers to avoid CORS issues
+                const cleanHeaders = {
+                    'Accept': 'application/json',
+                    ...(options.method !== 'GET' && { 'Content-Type': 'application/json' }),
+                    ...options.headers
+                };
+                
+                // Remove problematic headers that cause CORS issues
+                delete cleanHeaders['cache-control'];
+                delete cleanHeaders['Cache-Control'];
+                delete cleanHeaders['pragma'];
+                delete cleanHeaders['Pragma'];
+                delete cleanHeaders['expires'];
+                delete cleanHeaders['Expires'];
+                
                 const prodResponse = await fetch(productionUrl, {
                     method: options.method || 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        ...options.headers
-                    },
+                    headers: cleanHeaders,
                     mode: 'cors',
                     credentials: 'omit',
                     ...options
@@ -179,9 +197,33 @@ class APIHelper {
                     console.log('✅ [API HELPER] Production endpoint successful');
                     return await prodResponse.json();
                 }
-                console.log(`⚠️ [API HELPER] Production returned ${prodResponse.status}`);
+                console.log(`⚠️ [API HELPER] Production returned ${prodResponse.status}: ${prodResponse.statusText}`);
+                
+                // If it's a CORS error, try with even cleaner headers
+                if (prodError.name === 'TypeError' && prodError.message.includes('Failed to fetch')) {
+                    console.log('🔄 [API HELPER] Retrying with minimal headers...');
+                    const minimalResponse = await fetch(productionUrl, {
+                        method: 'GET',
+                        mode: 'cors',
+                        credentials: 'omit'
+                    });
+                    
+                    if (minimalResponse.ok) {
+                        return await minimalResponse.json();
+                    }
+                }
+                
             } catch (prodError) {
                 console.log('⚠️ [API HELPER] Production endpoint failed:', prodError.message);
+                
+                // Enhanced error analysis
+                if (prodError.message.includes('CORS')) {
+                    console.error('🚫 [API HELPER] CORS error detected - backend CORS configuration needed');
+                } else if (prodError.message.includes('Failed to fetch')) {
+                    console.error('🌐 [API HELPER] Network error - possibly offline or server down');
+                } else {
+                    console.error('❌ [API HELPER] Unexpected error:', prodError);
+                }
             }
         }
 

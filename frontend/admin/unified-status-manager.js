@@ -2,15 +2,23 @@
 // Centralized status management to prevent flickering and conflicts
 // Replaces multiple competing status monitoring systems
 
-import { showNotification } from './uiHelpers.js';
-import { API_BASE } from '../config.js';
-import cacheManager from './cache-manager.js';
+// Use global variables instead of ES6 imports
+const API_BASE = window.__API_BASE__ || window.API_BASE || 'https://rbck.onrender.com';
+
+// Ensure required functions are available
+function ensureGlobals() {
+    if (typeof window.showNotification !== 'function') {
+        window.showNotification = function(message, type = 'info') {
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        };
+    }
+}
 
 /**
- * Unified AI Status Manager - Single source of truth for all provider statuses
+ * Unified AI Status Manager - Single source of truth for all provider statuses  
  * Prevents status flickering by coordinating all updates through one system
  */
-export class UnifiedAIStatusManager {
+class UnifiedAIStatusManager {
     constructor() {
         this.providers = ['gemini', 'openai', 'claude', 'deepseek', 'chinda'];
         this.providerStatus = {};
@@ -701,6 +709,9 @@ export class UnifiedAIStatusManager {
     }
 }
 
+// Ensure critical functions are available before creating instance
+ensureGlobals();
+
 // Create singleton instance
 const unifiedStatusManager = new UnifiedAIStatusManager();
 
@@ -708,6 +719,10 @@ const unifiedStatusManager = new UnifiedAIStatusManager();
 window.unifiedStatusManager = unifiedStatusManager;
 
 // Export for module use
-export default unifiedStatusManager;
+// Make globally available (replacing ES6 export)
+window.UnifiedAIStatusManager = UnifiedAIStatusManager;
+window.unifiedStatusManager = unifiedStatusManager;
+
+console.log('✅ [UNIFIED STATUS] Unified AI Status Manager loaded and available globally');
 
 console.log('✅ [UNIFIED STATUS] Unified AI Status Manager loaded');

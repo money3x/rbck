@@ -5536,11 +5536,15 @@
     <script>
         // Critical configuration
         window.__API_BASE__="https://rbck.onrender.com";
-        window.__ADMIN_ENABLE_AI_MONITORING__ = false;
+        window.__ADMIN_ENABLE_AI_MONITORING__ = true;
         window.__PERF_OPTIMIZED__ = true;
     </script>
     
-    <!-- Load performance system first -->
+    <!-- Load critical systems first -->
+    <script src="api-helper.js" defer></script>
+    <script src="main-production.js" defer></script>
+    
+    <!-- Load performance system -->
     <script src="core/module-loader.js" async></script>
     <script src="core/performance-optimizer.js" async></script>
     <script src="core/production-optimizer.js" async></script>
@@ -9297,7 +9301,43 @@
             // ✅ Also check switchAITab
             if (typeof window.switchAITab === 'undefined') {
                 console.error('❌ [FALLBACK] switchAITab NOT AVAILABLE - CREATING FALLBACK!');
-                // switchAITab ถูกโหลดจาก main-production.js แล้ว
+                window.switchAITab = function(tabName) {
+                    console.log('🔄 [FALLBACK] Using fallback switchAITab for:', tabName);
+                    
+                    try {
+                        // Hide all AI tabs
+                        document.querySelectorAll('.ai-tab-content, [id*="ai-tab"]').forEach(tab => {
+                            tab.style.display = 'none';
+                            tab.classList.remove('active');
+                        });
+                        
+                        // Show target tab
+                        const targetTab = document.getElementById(tabName) || 
+                                         document.querySelector(`[data-tab="${tabName}"]`) ||
+                                         document.querySelector(`.ai-tab-content[data-tab="${tabName}"]`);
+                        
+                        if (targetTab) {
+                            targetTab.style.display = 'block';
+                            targetTab.classList.add('active');
+                            console.log('✅ [FALLBACK] AI tab switched to:', tabName);
+                        } else {
+                            console.error('❌ [FALLBACK] AI tab not found:', tabName);
+                        }
+                        
+                        // Update tab navigation buttons
+                        document.querySelectorAll('.ai-tab-btn, [onclick*="switchAITab"]').forEach(btn => {
+                            btn.classList.remove('active');
+                        });
+                        
+                        const activeBtn = document.querySelector(`[onclick*="${tabName}"]`);
+                        if (activeBtn) {
+                            activeBtn.classList.add('active');
+                        }
+                        
+                    } catch (error) {
+                        console.error('❌ [FALLBACK] Error in switchAITab fallback:', error);
+                    }
+                };
             } else {
                 console.log('✅ [FALLBACK] switchAITab already available from main-production.js');
             }
@@ -9518,12 +9558,40 @@
         }, 500);
     </script>
     
-    <!-- ⚡ PERFORMANCE: Fallback for non-module browsers -->
+    <!-- ⚡ PERFORMANCE: Fallback already loaded above -->
     <script nomodule>
-        console.warn('⚠️ [COMPATIBILITY] Browser does not support ES modules, loading fallback...');
-        const script = document.createElement('script');
-        script.src = 'main-production.js';
-        document.head.appendChild(script);
+        console.log('✅ [COMPATIBILITY] main-production.js already loaded for modern browsers');
+    </script>
+    
+    <!-- Initialize after everything loads -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 [INIT] DOM loaded, checking for missing functions...');
+            
+            // Verify all critical functions are available
+            const requiredFunctions = [
+                'showSection', 'showNotification', 'switchAITab', 
+                'loadBlogPosts', 'savePost', 'editPost', 'deletePost', 'clearForm',
+                'safeApiCall'
+            ];
+            
+            let missingFunctions = [];
+            requiredFunctions.forEach(funcName => {
+                if (typeof window[funcName] !== 'function') {
+                    missingFunctions.push(funcName);
+                }
+            });
+            
+            if (missingFunctions.length > 0) {
+                console.warn('⚠️ [INIT] Missing functions:', missingFunctions);
+            } else {
+                console.log('✅ [INIT] All critical functions available');
+            }
+            
+            // Mark system as ready
+            window.RBCK_SYSTEM_READY = true;
+            console.log('🎯 [INIT] RBCK CMS system initialization complete');
+        });
     </script>
 </body>
 </html>

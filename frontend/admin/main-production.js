@@ -3810,6 +3810,289 @@ window.debugBackendConfig = async function() {
     console.log('   - SUPABASE_SERVICE_KEY');
 };
 
+// ===== MISSING CORE FUNCTIONS =====
+// Adding the functions that were causing fallback errors
+
+// UI Helper Functions
+window.showNotification = function(message, type = 'info') {
+    console.log(`📢 [NOTIFICATION] ${type.toUpperCase()}: ${message}`);
+    
+    const notification = document.getElementById('notification');
+    const notificationText = document.getElementById('notificationText');
+    
+    if (notification && notificationText) {
+        notification.className = 'notification';
+        notification.classList.add(type);
+        notificationText.textContent = message;
+        notification.style.display = 'block';
+        
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 3000);
+    } else {
+        // Fallback to browser alert
+        alert(`[${type.toUpperCase()}] ${message}`);
+    }
+};
+
+window.showSection = function(sectionId) {
+    console.log('🔄 [SECTION] Showing section:', sectionId);
+    
+    try {
+        // Hide all sections
+        document.querySelectorAll('.content-section').forEach(section => {
+            section.classList.remove('active');
+            section.style.display = 'none';
+        });
+        
+        // Remove active class from all nav links
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.remove('active');
+        });
+        
+        // Show target section
+        const targetSection = document.getElementById(sectionId);
+        if (targetSection) {
+            targetSection.classList.add('active');
+            targetSection.style.display = 'block';
+            
+            // Update page title if section has data-title
+            const title = targetSection.dataset.title;
+            if (title) {
+                document.title = `RBCK CMS - ${title}`;
+                const pageTitle = document.querySelector('.page-title');
+                if (pageTitle) {
+                    pageTitle.textContent = title;
+                }
+            }
+            
+            // Add active class to corresponding nav link
+            const navLink = document.querySelector(`[onclick*="${sectionId}"], [data-section="${sectionId}"]`);
+            if (navLink) {
+                navLink.classList.add('active');
+            }
+            
+            console.log('✅ [SECTION] Section shown successfully:', sectionId);
+        } else {
+            console.error('❌ [SECTION] Section not found:', sectionId);
+            window.showNotification(`Section ${sectionId} not found`, 'error');
+        }
+    } catch (error) {
+        console.error('❌ [SECTION] Error in showSection:', error);
+        window.showNotification('Navigation error occurred', 'error');
+    }
+};
+
+window.switchAITab = function(tabName) {
+    console.log('🔄 [AI TAB] Switching to tab:', tabName);
+    
+    try {
+        // Hide all AI tabs
+        document.querySelectorAll('.ai-tab-content, [id*="ai-tab"]').forEach(tab => {
+            tab.style.display = 'none';
+            tab.classList.remove('active');
+        });
+        
+        // Show target tab
+        const targetTab = document.getElementById(tabName) || 
+                         document.querySelector(`[data-tab="${tabName}"]`) ||
+                         document.querySelector(`.ai-tab-content[data-tab="${tabName}"]`);
+        
+        if (targetTab) {
+            targetTab.style.display = 'block';
+            targetTab.classList.add('active');
+            console.log('✅ [AI TAB] Tab switched successfully:', tabName);
+        } else {
+            console.error('❌ [AI TAB] Tab not found:', tabName);
+        }
+        
+        // Update tab buttons
+        document.querySelectorAll('.ai-tab-btn, [onclick*="switchAITab"]').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        const activeBtn = document.querySelector(`[onclick*="${tabName}"]`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+        }
+        
+    } catch (error) {
+        console.error('❌ [AI TAB] Error in switchAITab:', error);
+    }
+};
+
+// Blog Management Functions
+window.loadBlogPosts = async function() {
+    console.log('📝 [BLOG] Loading blog posts...');
+    
+    try {
+        const apiBase = window.rbckConfig?.apiBase || 'https://rbck.onrender.com/api';
+        const response = await fetch(`${apiBase}/posts`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            mode: 'cors',
+            credentials: 'omit'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('✅ [BLOG] Posts loaded:', data);
+        
+        // Handle response format
+        const posts = data.success ? data.data : data;
+        
+        // Update UI with posts
+        const postsContainer = document.getElementById('postsContainer');
+        if (postsContainer && Array.isArray(posts)) {
+            postsContainer.innerHTML = posts.map(post => `
+                <div class="post-item">
+                    <h3>${post.title || 'Untitled'}</h3>
+                    <p>${(post.content || '').substring(0, 100)}...</p>
+                    <div class="post-actions">
+                        <button onclick="editPost('${post.id || post._id}')" class="btn btn-primary">Edit</button>
+                        <button onclick="deletePost('${post.id || post._id}')" class="btn btn-danger">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        window.showNotification('Blog posts loaded successfully', 'success');
+        return posts;
+        
+    } catch (error) {
+        console.error('❌ [BLOG] Failed to load posts:', error);
+        window.showNotification('Failed to load blog posts: ' + error.message, 'error');
+        return [];
+    }
+};
+
+window.savePost = async function() {
+    console.log('💾 [BLOG] Saving post...');
+    
+    try {
+        const title = document.getElementById('postTitle')?.value || '';
+        const content = document.getElementById('postContent')?.value || '';
+        const slug = document.getElementById('postSlug')?.value || '';
+        
+        if (!title.trim()) {
+            window.showNotification('Post title is required', 'error');
+            return false;
+        }
+        
+        const postData = {
+            title: title.trim(),
+            content: content.trim(),
+            slug: slug.trim() || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+            status: 'draft'
+        };
+        
+        const apiBase = window.rbckConfig?.apiBase || 'https://rbck.onrender.com/api';
+        const response = await fetch(`${apiBase}/posts`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            mode: 'cors',
+            credentials: 'omit',
+            body: JSON.stringify(postData)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        console.log('✅ [BLOG] Post saved:', result);
+        
+        window.showNotification('Post saved successfully', 'success');
+        
+        // Reload posts list
+        if (typeof window.loadBlogPosts === 'function') {
+            window.loadBlogPosts();
+        }
+        
+        return true;
+        
+    } catch (error) {
+        console.error('❌ [BLOG] Failed to save post:', error);
+        window.showNotification('Failed to save post: ' + error.message, 'error');
+        return false;
+    }
+};
+
+window.editPost = function(id) {
+    console.log('✏️ [BLOG] Editing post:', id);
+    window.showNotification('Edit post functionality - implement as needed', 'info');
+};
+
+window.deletePost = async function(id) {
+    console.log('🗑️ [BLOG] Deleting post:', id);
+    
+    if (!confirm('Are you sure you want to delete this post?')) {
+        return false;
+    }
+    
+    try {
+        const apiBase = window.rbckConfig?.apiBase || 'https://rbck.onrender.com/api';
+        const response = await fetch(`${apiBase}/posts/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json'
+            },
+            mode: 'cors',
+            credentials: 'omit'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        console.log('✅ [BLOG] Post deleted');
+        window.showNotification('Post deleted successfully', 'success');
+        
+        // Reload posts list
+        if (typeof window.loadBlogPosts === 'function') {
+            window.loadBlogPosts();
+        }
+        
+        return true;
+        
+    } catch (error) {
+        console.error('❌ [BLOG] Failed to delete post:', error);
+        window.showNotification('Failed to delete post: ' + error.message, 'error');
+        return false;
+    }
+};
+
+window.clearForm = function() {
+    console.log('🧹 [BLOG] Clearing form...');
+    
+    const formElements = document.querySelectorAll('#postTitle, #postContent, #postSlug, #metaTitle, #metaDescription');
+    formElements.forEach(element => {
+        if (element) {
+            element.value = '';
+        }
+    });
+    
+    // Clear any rich text editors if present
+    const editor = document.querySelector('.editor');
+    if (editor) {
+        editor.innerHTML = '';
+    }
+    
+    window.showNotification('Form cleared', 'info');
+};
+
+// Initialize missing functions
+console.log('✅ [FUNCTIONS] All missing core functions added to main-production.js');
+
 // E) Mark ready to avoid HTML fallbacks screaming
 window.RBCK.ready = true;
 console.log('🚀 [ADMIN] RBCK admin system fully loaded and ready');

@@ -1,4 +1,4 @@
-export function createOrGetGeminiModal() {
+function createOrGetGeminiModal() {
     let modal = document.getElementById('geminiAiModal');
     if (!modal) {
         modal = document.createElement('div');
@@ -29,19 +29,27 @@ export function createOrGetGeminiModal() {
     return modal;
 }
 
-export function closeGeminiModal() {
+function closeGeminiModal() {
     const modal = document.getElementById('geminiAiModal');
     if (modal) modal.style.display = 'none';
 }
 
 // showModal: show modal by id
-export function showModal(id) {
+function showModal(id) {
     const modal = document.getElementById(id);
     if (modal) modal.style.display = 'flex';
 }
 
 // closeModal: close modal by id
-export function closeModal(id) {
+function closeModal(id) {
     const modal = document.getElementById(id);
     if (modal) modal.style.display = 'none';
 }
+
+// Make functions globally available
+window.createOrGetGeminiModal = createOrGetGeminiModal;
+window.closeGeminiModal = closeGeminiModal;
+window.showModal = showModal;
+window.closeModal = closeModal;
+
+console.log('✅ [MODALS] Modal functions loaded');

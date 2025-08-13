@@ -1,6 +1,6 @@
 // uiHelpers.js
 
-export function showNotification(message, type = 'info') {
+function showNotification(message, type = 'info') {
     const notification = document.getElementById('notification');
     const notificationText = document.getElementById('notificationText');
     
@@ -16,7 +16,7 @@ export function showNotification(message, type = 'info') {
     }, 3000);
 }
 
-export function showSection(sectionId) {
+function showSection(sectionId) {
     console.log('🔄 [DEBUG] Showing section:', sectionId);
     
     // Hide all sections
@@ -83,7 +83,7 @@ export function showSection(sectionId) {
     }
 }
 
-export function updateCharacterCounters() {
+function updateCharacterCounters() {
     const metaTitle = document.getElementById('metaTitle');
     const metaDesc = document.getElementById('metaDescription');
     const titleCount = document.getElementById('metaTitleCount');
@@ -102,16 +102,16 @@ export function updateCharacterCounters() {
     }
 }
 
-export function toggleSidebar() {
+function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     if (sidebar) {
         sidebar.classList.toggle('mobile-open');
     }
 }
 
-import { API_BASE } from '../config.js';
+// Removed ES6 import - using global API_BASE instead
 
-export function logout() {
+function logout() {
     if (confirm('คุณต้องการออกจากระบบใช่หรือไม่?')) {
         // Call backend logout endpoint
         const token = localStorage.getItem('jwtToken');
@@ -136,3 +136,12 @@ export function logout() {
         window.location.href = 'login.html';
     }
 }
+
+// Make functions globally available (replacing ES6 exports)
+window.showNotification = showNotification;
+window.showSection = showSection;
+window.updateCharacterCounters = updateCharacterCounters;
+window.toggleSidebar = toggleSidebar;
+window.logout = logout;
+
+console.log('✅ [UI HELPERS] UI helper functions loaded and available globally');

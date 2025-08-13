@@ -1,14 +1,23 @@
-import { RealisticSeoAnalyzer } from './seoAnalyzer.js';
-// Add this import if you want to use Gemini modal or AI logic
-import { runGeminiSeoCheck } from './seoTools.js';
-import { showNotification, showSection } from './uiHelpers.js'; // Add showSection for navigation
-import { API_BASE } from '../config.js';
+// Use global variables instead of ES6 imports
+// Ensure API_BASE is available
+const API_BASE = window.__API_BASE__ || window.API_BASE || 'https://rbck.onrender.com';
 
-// Remove localStorage loading, fetch from backend API instead
-export let posts = [];
-export let currentEditingPostId = null;
+// Remove localStorage loading, fetch from backend API instead  
+let posts = [];
+let currentEditingPostId = null;
 
-const seoAnalyzer = new RealisticSeoAnalyzer();
+// SEO Analyzer will be initialized when RealisticSeoAnalyzer is available
+let seoAnalyzer = null;
+
+// Ensure showNotification is available
+function ensureShowNotification() {
+    if (typeof window.showNotification !== 'function') {
+        window.showNotification = function(message, type = 'info') {
+            console.log(`[${type.toUpperCase()}] ${message}`);
+            alert(message);
+        };
+    }
+}
 
 // Helper: generate slug from title
 function generateSlug(title) {
@@ -20,7 +29,7 @@ function generateSlug(title) {
         .replace(/^-|-$/g, '');
 }
 
-export async function loadBlogPosts() {
+async function loadBlogPosts() {
     try {
         const res = await fetch(`${API_BASE}/posts`);
         if (!res.ok) throw new Error('Failed to fetch posts');
@@ -156,7 +165,7 @@ function getContentValue(id) {
     return el.innerHTML;
 }
 
-export async function savePost() {
+async function savePost() {
     console.log('💾 [DEBUG] Saving post...');
     try {
         let slug = getInputValue('postSlug').trim();
@@ -226,7 +235,7 @@ export async function savePost() {
     }
 }
 
-export async function editPost(id) {
+async function editPost(id) {
     console.log('✏️ [DEBUG] Editing post with ID:', id);
     try {
         const res = await fetch(`${API_BASE}/posts/${id}`);
@@ -253,7 +262,7 @@ export async function editPost(id) {
     }
 }
 
-export function previewPost(id) {
+function previewPost(id) {
     console.log('👁️ [DEBUG] Previewing post with ID:', id);
     const post = posts.find(p => (p.id || p._id || p.postId || p.slug) === id);
     if (!post) {
@@ -264,7 +273,7 @@ export function previewPost(id) {
     window.open(`/blog/${encodeURIComponent(post.slug)}`, '_blank');
 }
 
-export async function deletePost(id) {
+async function deletePost(id) {
     if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบบทความนี้?')) return;
     try {
         const res = await fetch(`${API_BASE}/posts/${id}`, { method: 'DELETE' });
@@ -277,7 +286,7 @@ export async function deletePost(id) {
 }
 
 // ฟังก์ชันสำหรับ publish post
-export async function publishPost(id) {
+async function publishPost(id) {
     console.log('🚀 [DEBUG] Publishing post with ID:', id);
     if (!id || id === 'undefined') {
         showNotification('ไม่พบ ID ของบทความ', 'error');
@@ -308,7 +317,7 @@ export async function publishPost(id) {
 /**
  * Save post with E-A-T optimization
  */
-export async function savePostWithEATOptimization() {
+async function savePostWithEATOptimization() {
     console.log('🎯 [E-A-T] Saving post with E-A-T optimization...');
     try {
         // Get post data
@@ -389,7 +398,7 @@ export async function savePostWithEATOptimization() {
 /**
  * Optimize existing post with E-A-T
  */
-export async function optimizePostWithEAT(postId) {
+async function optimizePostWithEAT(postId) {
     console.log(`🎯 [E-A-T] Optimizing post ${postId} with E-A-T...`);
     try {
         if (!postId) {
@@ -448,7 +457,7 @@ export async function optimizePostWithEAT(postId) {
 window.savePostWithEATOptimization = savePostWithEATOptimization;
 window.optimizePostWithEAT = optimizePostWithEAT;
 
-export async function processAISuggestions(post) {
+async function processAISuggestions(postId) {
     console.log('🤖 [DEBUG] Processing AI suggestions for post ID:', postId);
     const select = document.getElementById('postSelectForSeo');
     if (select) {
@@ -484,3 +493,42 @@ export async function processAISuggestions(post) {
         }
     }
 }
+
+// Make all functions globally available (replacing ES6 exports)
+window.posts = posts;
+window.currentEditingPostId = currentEditingPostId;
+window.loadBlogPosts = loadBlogPosts;
+window.savePost = savePost;
+window.editPost = editPost;
+window.previewPost = previewPost;
+window.deletePost = deletePost;
+window.publishPost = publishPost;
+window.savePostWithEATOptimization = savePostWithEATOptimization;
+window.optimizePostWithEAT = optimizePostWithEAT;
+window.processAISuggestions = processAISuggestions;
+
+// Initialize SEO analyzer when available
+function initializeSeoAnalyzer() {
+    if (window.RealisticSeoAnalyzer && !seoAnalyzer) {
+        seoAnalyzer = new window.RealisticSeoAnalyzer();
+        console.log('✅ [BLOG MANAGER] SEO Analyzer initialized');
+    }
+}
+
+// Try to initialize immediately or wait for it to be available
+if (window.RealisticSeoAnalyzer) {
+    initializeSeoAnalyzer();
+} else {
+    // Check periodically for RealisticSeoAnalyzer
+    const checkInterval = setInterval(() => {
+        if (window.RealisticSeoAnalyzer) {
+            initializeSeoAnalyzer();
+            clearInterval(checkInterval);
+        }
+    }, 100);
+    
+    // Clear interval after 10 seconds to avoid infinite checking
+    setTimeout(() => clearInterval(checkInterval), 10000);
+}
+
+console.log('✅ [BLOG MANAGER] Blog management functions loaded and available globally');
