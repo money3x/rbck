@@ -1,6 +1,12 @@
 // Use global variables instead of ES6 imports
-// Ensure API_BASE is available
-const API_BASE = window.__API_BASE__ || window.API_BASE || 'https://rbck.onrender.com';
+// Ensure API_BASE is available - use existing if already declared
+let API_BASE;
+if (typeof window.API_BASE !== 'undefined') {
+    API_BASE = window.API_BASE;
+} else {
+    API_BASE = window.__API_BASE__ || 'https://rbck.onrender.com';
+    window.API_BASE = API_BASE;
+}
 
 // Remove localStorage loading, fetch from backend API instead  
 let posts = [];

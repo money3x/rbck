@@ -3,7 +3,13 @@
 // Replaces multiple competing status monitoring systems
 
 // Use global variables instead of ES6 imports
-const API_BASE = window.__API_BASE__ || window.API_BASE || 'https://rbck.onrender.com';
+let API_BASE;
+if (typeof window.API_BASE !== 'undefined') {
+    API_BASE = window.API_BASE;
+} else {
+    API_BASE = window.__API_BASE__ || 'https://rbck.onrender.com';
+    window.API_BASE = API_BASE;
+}
 
 // Ensure required functions are available
 function ensureGlobals() {

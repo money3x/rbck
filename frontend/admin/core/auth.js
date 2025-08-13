@@ -234,8 +234,8 @@ class AuthenticationManager {
 // ⚡ Performance: Singleton pattern for efficiency
 const authManager = new AuthenticationManager();
 
-// ⚡ Export for module system
-export default authManager;
+// ⚡ Export for module system (commented out to avoid ES6 module errors)
+// export default authManager;
 
 // ⚡ Backward compatibility for global access
 if (typeof window !== 'undefined') {

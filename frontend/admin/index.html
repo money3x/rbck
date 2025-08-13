@@ -5565,8 +5565,8 @@
             
             // Load critical modules in priority order
             const criticalModules = [
-                { path: 'api-helper.js?v=3&t=' + Date.now(), name: 'api-helper', required: true },
-                { path: 'core/auth.js', name: 'auth', required: true }
+                // api-helper.js already loaded with defer attribute above
+                // { path: 'core/auth.js', name: 'auth', required: true } // Temporarily disabled - ES6 export issues
             ];
             
             await window.moduleLoader.loadModules(criticalModules);
@@ -5587,10 +5587,10 @@
                 window.initializeApp();
             }
             
-            // Preload non-critical modules
+            // Preload non-critical modules (removed problematic ES6 modules temporarily)
             window.moduleLoader.preloadModules([
                 'aiMonitoring.js',
-                'seoTools.js',
+                // 'seoTools.js', // Temporarily disabled - ES6 module syntax errors
                 'blogManager.js',
                 'migration.js'
             ]);
@@ -9253,8 +9253,11 @@
         });
         
         // ✅ Wait for main-production.js to load, then check for showSection
+        let fallbacksCreated = false;
         function checkAndCreateFallback() {
-            if (typeof window.showSection === 'undefined') {
+            // Only create fallback if function doesn't exist AND we haven't already created a fallback
+            if (typeof window.showSection === 'undefined' && !fallbacksCreated) {
+                fallbacksCreated = true;
                 console.error('❌ [FALLBACK] showSection NOT AVAILABLE - CREATING FALLBACK!');
                 console.error('❌ [FALLBACK] This means main-production.js failed to load or has errors!');
                 window.showSection = function(sectionId) {
@@ -9365,17 +9368,21 @@
         console.log('🔍 [DEBUG] Checking showSection availability...');
         console.log('🔍 [DEBUG] window.showSection type:', typeof window.showSection);
         
-        checkAndCreateFallback();
-        
-        setTimeout(() => {
-            console.log('🔍 [DEBUG] After 1s - window.showSection type:', typeof window.showSection);
-            checkAndCreateFallback();
-        }, 1000);
-        
-        setTimeout(() => {
-            console.log('🔍 [DEBUG] After 3s - window.showSection type:', typeof window.showSection);
-            checkAndCreateFallback();
-        }, 3000);
+        // Wait for defer scripts to load before checking for fallbacks
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🔍 [DEBUG] DOM loaded - checking for functions...');
+            
+            // Wait a bit more for defer scripts
+            setTimeout(() => {
+                console.log('🔍 [DEBUG] After DOMContentLoaded + 500ms - window.showSection type:', typeof window.showSection);
+                checkAndCreateFallback();
+            }, 500);
+            
+            setTimeout(() => {
+                console.log('🔍 [DEBUG] After DOMContentLoaded + 2s - window.showSection type:', typeof window.showSection);
+                checkAndCreateFallback();
+            }, 2000);
+        });
     </script>
     <!-- ⚡ PERFORMANCE: High-performance module system -->
     <script type="module">
