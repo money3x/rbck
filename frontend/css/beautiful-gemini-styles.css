@@ -91,6 +91,8 @@ body {
   z-index: 1000;
   overflow-y: auto;
   transition: transform var(--transition-smooth);
+  display: block;
+  transform: translateX(0);
 }
 
 .sidebar-header {
@@ -256,6 +258,8 @@ body {
   min-height: 100vh;
   background: var(--bg-primary);
   transition: margin-left var(--transition-smooth);
+  display: flex;
+  flex-direction: column;
 }
 
 .header {
@@ -307,6 +311,7 @@ body {
   display: none;
   padding: var(--space-xl);
   min-height: calc(100vh - 80px);
+  overflow-y: auto;
 }
 
 .content-section.active {
@@ -381,6 +386,8 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 24px;
   padding: 20px 0;
+  margin: 0;
+  height: auto;
 }
 
 /* Modern Card Design */
@@ -1214,10 +1221,19 @@ body {
    IMPROVED SPACING SYSTEM
    ===================================================== */
 
-/* Section spacing */
+/* Section spacing - Fix for blank space issues */
 .content-section {
-  margin-bottom: var(--space-xxl);
-  padding-bottom: var(--space-xl);
+  margin-bottom: 0;
+  padding-bottom: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.content-section.active {
+  display: flex;
+  flex-direction: column;
+  animation: fadeInUp 0.4s ease-out;
 }
 
 .section-header {
@@ -1753,10 +1769,13 @@ body {
 @media (max-width: 1024px) {
   .sidebar {
     transform: translateX(-100%);
+    display: block;
   }
   
   .sidebar.mobile-open {
     transform: translateX(0);
+    display: block;
+    z-index: 1001;
   }
   
   .main-content {
