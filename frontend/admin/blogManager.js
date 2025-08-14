@@ -1,11 +1,6 @@
-// Use global variables instead of ES6 imports
-// Ensure API_BASE is available - use existing if already declared
-let API_BASE;
-if (typeof window.API_BASE !== 'undefined') {
-    API_BASE = window.API_BASE;
-} else {
-    API_BASE = window.__API_BASE__ || 'https://rbck.onrender.com';
-    window.API_BASE = API_BASE;
+// Use centralized configuration to prevent duplicate declarations
+function getApiBase() {
+    return window.rbckConfig?.apiBase || window.__API_BASE__ || 'https://rbck.onrender.com/api';
 }
 
 // Remove localStorage loading, fetch from backend API instead  
@@ -37,7 +32,7 @@ function generateSlug(title) {
 
 async function loadBlogPosts() {
     try {
-        const res = await fetch(`${API_BASE}/posts`);
+        const res = await fetch(`${getApiBase()}/posts`);
         if (!res.ok) throw new Error('Failed to fetch posts');
         const response = await res.json();
         
@@ -204,13 +199,13 @@ async function savePost() {
         let res, savedPost;
         if (currentEditingPostId) {
             postData.id = currentEditingPostId;
-            res = await fetch(`${API_BASE}/posts/${currentEditingPostId}`, {
+            res = await fetch(`${getApiBase()}/posts/${currentEditingPostId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(postData)
             });
         } else {
-            res = await fetch(`${API_BASE}/posts`, {
+            res = await fetch(`${getApiBase()}/posts`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(postData)
@@ -244,7 +239,7 @@ async function savePost() {
 async function editPost(id) {
     console.log('✏️ [DEBUG] Editing post with ID:', id);
     try {
-        const res = await fetch(`${API_BASE}/posts/${id}`);
+        const res = await fetch(`${getApiBase()}/posts/${id}`);
         if (!res.ok) throw new Error('ไม่พบบทความ');
         const post = await res.json();
         
@@ -282,7 +277,7 @@ function previewPost(id) {
 async function deletePost(id) {
     if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบบทความนี้?')) return;
     try {
-        const res = await fetch(`${API_BASE}/posts/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${getApiBase()}/posts/${id}`, { method: 'DELETE' });
         if (!res.ok) throw new Error('Failed to delete');
         showNotification('🗑️ ลบบทความเรียบร้อย', 'success');
         await loadBlogPosts();
@@ -301,12 +296,12 @@ async function publishPost(id) {
     if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการเผยแพร่บทความนี้?')) return;
     try {
         // ดึงโพสต์เดิมมาก่อน
-        const resGet = await fetch(`${API_BASE}/posts/${id}`);
+        const resGet = await fetch(`${getApiBase()}/posts/${id}`);
         if (!resGet.ok) throw new Error('ไม่พบบทความ');
         const post = await resGet.json();
         // อัปเดต status เป็น published
         const updated = { ...post, status: 'published' };
-        const res = await fetch(`${API_BASE}/posts/${id}`, {
+        const res = await fetch(`${getApiBase()}/posts/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updated)
@@ -352,7 +347,7 @@ async function savePostWithEATOptimization() {
         showNotification('🎯 กำลังปรับปรุงเนื้อหาด้วย E-A-T...', 'info');
 
         // Use the new E-A-T optimized endpoint
-        const response = await fetch(`${API_BASE}/api/posts/ai-create`, {
+        const response = await fetch(`${getApiBase()}/api/posts/ai-create`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -414,7 +409,7 @@ async function optimizePostWithEAT(postId) {
 
         showNotification('🎯 กำลังปรับปรุงเนื้อหาด้วย E-A-T...', 'info');
 
-        const response = await fetch(`${API_BASE}/api/posts/${postId}/optimize`, {
+        const response = await fetch(`${getApiBase()}/api/posts/${postId}/optimize`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

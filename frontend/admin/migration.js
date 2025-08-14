@@ -252,6 +252,14 @@ class AdminMigration {
                     method: 'GET',
                     headers: headers
                 });
+                
+                // Handle 404 for safeApiCall path
+                if (!result.ok && result.status === 404) {
+                    console.warn('⚠️ [MIGRATION] Migration endpoint not found via safeApiCall - skipping status check');
+                    this.log('⚠️ Migration endpoint not available');
+                    return;
+                }
+                
                 console.log('✅ [MIGRATION] safeApiCall result:', result);
             } else {
                 console.log('⚠️ [MIGRATION] Using fallback fetch method');

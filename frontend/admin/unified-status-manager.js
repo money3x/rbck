@@ -2,13 +2,9 @@
 // Centralized status management to prevent flickering and conflicts
 // Replaces multiple competing status monitoring systems
 
-// Use global variables instead of ES6 imports
-let API_BASE;
-if (typeof window.API_BASE !== 'undefined') {
-    API_BASE = window.API_BASE;
-} else {
-    API_BASE = window.__API_BASE__ || 'https://rbck.onrender.com';
-    window.API_BASE = API_BASE;
+// Use centralized configuration to prevent duplicate declarations
+function getApiBase() {
+    return window.rbckConfig?.apiBase || window.__API_BASE__ || 'https://rbck.onrender.com/api';
 }
 
 // Ensure required functions are available
@@ -166,7 +162,7 @@ class UnifiedAIStatusManager {
             }
             
             // Cache miss - fetch from API
-            const response = await fetch(`${API_BASE}/ai/metrics?t=${Date.now()}`);
+            const response = await fetch(`${getApiBase()}/ai/metrics?t=${Date.now()}`);
             
             if (response.ok) {
                 data = await response.json();
@@ -319,7 +315,7 @@ class UnifiedAIStatusManager {
             const { authenticatedFetch } = await import('./auth.js');
             
             // Use authenticated fetch for testing
-            const response = await authenticatedFetch(`${API_BASE}/ai/test/${provider}`, {
+            const response = await authenticatedFetch(`${getApiBase()}/ai/test/${provider}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: 'Status test from unified manager' })
@@ -440,7 +436,7 @@ class UnifiedAIStatusManager {
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
         
         try {
-            const response = await authenticatedFetch(`${API_BASE}/ai/test/${provider}`, {
+            const response = await authenticatedFetch(`${getApiBase()}/ai/test/${provider}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: 'Parallel test' }),

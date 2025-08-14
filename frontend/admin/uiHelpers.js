@@ -137,7 +137,10 @@ function logout() {
     }
 }
 
-// Make functions globally available (replacing ES6 exports)
+// Export for ES6 modules
+export { showNotification, showSection, updateCharacterCounters };
+
+// Make functions globally available (backward compatibility)
 window.showNotification = showNotification;
 window.showSection = showSection;
 window.updateCharacterCounters = updateCharacterCounters;
