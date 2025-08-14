@@ -587,6 +587,7 @@ const NavigationCache = {
         this.sections.forEach(section => {
             section.classList.remove('active');
             section.style.display = 'none';
+            section.style.opacity = '0';
         });
     },
     
@@ -624,7 +625,8 @@ window.showSection = function(sectionId) {
         const selectedSection = document.getElementById(sectionId);
         if (selectedSection) {
             selectedSection.classList.add('active');
-            selectedSection.style.display = 'block';
+            selectedSection.style.display = 'flex';
+            selectedSection.style.opacity = '1';
             console.log('✅ [NAV] Section shown:', sectionId);
         } else {
             console.error('❌ [NAV] Section not found:', sectionId);
@@ -806,9 +808,34 @@ window.testNavigation = function() {
     try {
         window.showSection('dashboard');
         console.log('✅ [DEBUG] Dashboard navigation test passed');
+        
+        // Check if the section is actually visible
+        const dashboardSection = document.getElementById('dashboard');
+        console.log('🧪 [DEBUG] Dashboard section display:', dashboardSection?.style.display);
+        console.log('🧪 [DEBUG] Dashboard section opacity:', dashboardSection?.style.opacity);
+        console.log('🧪 [DEBUG] Dashboard section classes:', dashboardSection?.className);
+        console.log('🧪 [DEBUG] Dashboard section visible:', dashboardSection?.offsetWidth > 0 && dashboardSection?.offsetHeight > 0);
     } catch (error) {
         console.error('❌ [DEBUG] Dashboard navigation test failed:', error);
     }
+};
+
+// ✅ DEBUG: Add section visibility checker
+window.checkSectionVisibility = function(sectionId) {
+    const section = document.getElementById(sectionId);
+    if (!section) {
+        console.log('❌ [DEBUG] Section not found:', sectionId);
+        return;
+    }
+    
+    console.log(`🧪 [DEBUG] Section ${sectionId} visibility check:`);
+    console.log('  - Display:', section.style.display);
+    console.log('  - Opacity:', section.style.opacity);
+    console.log('  - Classes:', section.className);
+    console.log('  - Computed display:', getComputedStyle(section).display);
+    console.log('  - Computed opacity:', getComputedStyle(section).opacity);
+    console.log('  - Offset dimensions:', {width: section.offsetWidth, height: section.offsetHeight});
+    console.log('  - Parent container:', section.parentElement?.className);
 };
 
 // ===== AI SWARM COUNCIL FUNCTIONS - FIXED VERSION =====
