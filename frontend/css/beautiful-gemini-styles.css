@@ -135,6 +135,12 @@ body {
   transition: all var(--transition-fast);
   position: relative;
   overflow: hidden;
+  cursor: pointer;
+  pointer-events: auto;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
 }
 
 .nav-link:before {

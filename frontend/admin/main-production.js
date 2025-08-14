@@ -613,6 +613,9 @@ window.showSection = function(sectionId) {
     console.log('🔄 [NAV] Showing section:', sectionId);
     
     try {
+        // ✅ Ensure NavigationCache is initialized
+        NavigationCache.init();
+        
         // ✅ PERFORMANCE: Use cached navigation methods
         NavigationCache.hideAllSections();
         NavigationCache.clearActiveNavLinks();
@@ -629,10 +632,14 @@ window.showSection = function(sectionId) {
             return;
         }
         
-        // Update active nav link
-        const navLink = document.querySelector(`.nav-link[onclick*="${sectionId}"]`);
+        // Update active nav link - improved selector
+        const navLink = document.querySelector(`.nav-link[onclick*="${sectionId}"]`) || 
+                       document.querySelector(`[onclick*="showSection('${sectionId}')"]`);
         if (navLink) {
             navLink.classList.add('active');
+            console.log('✅ [NAV] Active nav link updated:', navLink);
+        } else {
+            console.warn('⚠️ [NAV] Nav link not found for:', sectionId);
         }
         
         // ✅ PERFORMANCE: Use cached page title update with error handling
@@ -787,6 +794,22 @@ window.showSection = function(sectionId) {
 };
 
 console.log('✅ [MAIN] showSection function defined successfully!');
+
+// ✅ DEBUG: Add test function
+window.testNavigation = function() {
+    console.log('🧪 [DEBUG] Testing navigation...');
+    console.log('🧪 [DEBUG] Available sections:', Array.from(document.querySelectorAll('.content-section')).map(s => s.id));
+    console.log('🧪 [DEBUG] Available nav links:', Array.from(document.querySelectorAll('.nav-link[onclick]')).map(l => l.getAttribute('onclick')));
+    console.log('🧪 [DEBUG] showSection function:', typeof window.showSection);
+    
+    // Test showing dashboard
+    try {
+        window.showSection('dashboard');
+        console.log('✅ [DEBUG] Dashboard navigation test passed');
+    } catch (error) {
+        console.error('❌ [DEBUG] Dashboard navigation test failed:', error);
+    }
+};
 
 // ===== AI SWARM COUNCIL FUNCTIONS - FIXED VERSION =====
 window.loadAISwarmData = function() {
@@ -1594,6 +1617,9 @@ window.debugFunctions = function() {
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 [INIT] DOM loaded, initializing admin panel...');
+    
+    // ✅ Initialize NavigationCache
+    NavigationCache.init();
     
     // Check if all required elements exist
     const requiredElements = ['dashboard'];
@@ -3835,53 +3861,7 @@ window.showNotification = function(message, type = 'info') {
     }
 };
 
-window.showSection = function(sectionId) {
-    console.log('🔄 [SECTION] Showing section:', sectionId);
-    
-    try {
-        // Hide all sections
-        document.querySelectorAll('.content-section').forEach(section => {
-            section.classList.remove('active');
-            section.style.display = 'none';
-        });
-        
-        // Remove active class from all nav links
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.classList.remove('active');
-        });
-        
-        // Show target section
-        const targetSection = document.getElementById(sectionId);
-        if (targetSection) {
-            targetSection.classList.add('active');
-            targetSection.style.display = 'block';
-            
-            // Update page title if section has data-title
-            const title = targetSection.dataset.title;
-            if (title) {
-                document.title = `RBCK CMS - ${title}`;
-                const pageTitle = document.querySelector('.page-title');
-                if (pageTitle) {
-                    pageTitle.textContent = title;
-                }
-            }
-            
-            // Add active class to corresponding nav link
-            const navLink = document.querySelector(`[onclick*="${sectionId}"], [data-section="${sectionId}"]`);
-            if (navLink) {
-                navLink.classList.add('active');
-            }
-            
-            console.log('✅ [SECTION] Section shown successfully:', sectionId);
-        } else {
-            console.error('❌ [SECTION] Section not found:', sectionId);
-            window.showNotification(`Section ${sectionId} not found`, 'error');
-        }
-    } catch (error) {
-        console.error('❌ [SECTION] Error in showSection:', error);
-        window.showNotification('Navigation error occurred', 'error');
-    }
-};
+// ✅ REMOVED DUPLICATE showSection FUNCTION - Using the main one defined earlier at line 612
 
 window.switchAITab = function(tabName) {
     console.log('🔄 [AI TAB] Switching to tab:', tabName);
