@@ -9,11 +9,7 @@ function getApiBase() {
 
 // Ensure required functions are available
 function ensureGlobals() {
-    if (typeof window.showNotification !== 'function') {
-        window.showNotification = function(message, type = 'info') {
-            console.log(`[${type.toUpperCase()}] ${message}`);
-        };
-    }
+    // ✅ REMOVED: showNotification fallback - using uiHelpers.js implementation
 }
 
 /**

@@ -1,5 +1,5 @@
 <!-- General Tab Component -->
-<div id="general-tab" class="tab-content active">
+<div id="general-tab-content" class="tab-content active">
   <div class="section-header">
     <h3>General Settings</h3>
     <p>Basic AI provider configuration and connectivity</p>
@@ -18,7 +18,7 @@
       <div class="card-content">
         <div class="metric-row">
           <span>Active Providers</span>
-          <span class="metric-value" id="activeProvidersCount">-</span>
+          <span class="metric-value" id="activeProvidersCountModal">-</span>
         </div>
         <div class="metric-row">
           <span>Total Requests Today</span>
@@ -59,7 +59,7 @@
           <label class="setting-label">
             <span>Request Timeout (seconds)</span>
             <div class="slider-container">
-              <input type="range" id="requestTimeout" min="5" max="60" value="30" class="slider">
+              <input type="range" id="requestTimeoutModal" min="5" max="60" value="30" class="slider">
               <span class="slider-value">30s</span>
             </div>
           </label>

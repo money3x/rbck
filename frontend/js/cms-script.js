@@ -296,7 +296,7 @@ class CMSDashboard {
         if (!confirm('คุณแน่ใจหรือไม่ที่จะลบบทความนี้?')) return;
 
         try {
-            const response = await fetch(`/cms/api/posts/${postId}`, {
+            const response = await fetch(`/api/posts/${postId}`, {
                 method: 'DELETE'
             });
 
@@ -365,8 +365,8 @@ class CMSDashboard {
             const formData = this.collectFormData();
             
             const url = this.editingPostId 
-                ? `/cms/api/posts/${this.editingPostId}`
-                : '/cms/api/posts';
+                ? `/api/posts/${this.editingPostId}`
+                : '/api/posts';
             
             const method = this.editingPostId ? 'PUT' : 'POST';
 
@@ -448,7 +448,7 @@ class CMSDashboard {
             
             const content = this.collectFormData();
             
-            const response = await fetch('/cms/api/ai-enhance', {
+            const response = await fetch('/api/posts/ai-enhance', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -519,7 +519,7 @@ class CMSDashboard {
             const content = this.collectFormData();
             
             try {
-                const response = await fetch('/cms/api/seo-analyze', {
+                const response = await fetch('/api/posts/seo-analyze', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

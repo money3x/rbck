@@ -77,6 +77,64 @@ router.get('/', async (req, res) => {
     }
 });
 
+// AI Enhancement endpoint
+router.post('/ai-enhance', async (req, res) => {
+    try {
+        console.log('🤖 [AI-ENHANCE] Request received');
+        
+        // For now, return a placeholder response
+        // TODO: Implement actual AI enhancement functionality
+        res.json({
+            success: true,
+            message: 'AI enhancement functionality will be implemented soon',
+            enhanced: {
+                title: req.body.title || 'Enhanced Title',
+                content: req.body.content || 'Enhanced Content',
+                suggestions: ['Improve readability', 'Add more keywords', 'Optimize structure']
+            }
+        });
+    } catch (error) {
+        console.error('❌ [AI-ENHANCE] Error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'AI enhancement failed',
+            message: error.message
+        });
+    }
+});
+
+// SEO Analysis endpoint
+router.post('/seo-analyze', async (req, res) => {
+    try {
+        console.log('🔍 [SEO-ANALYZE] Request received');
+        
+        // For now, return a placeholder response
+        // TODO: Implement actual SEO analysis functionality
+        res.json({
+            success: true,
+            message: 'SEO analysis functionality will be implemented soon',
+            analysis: {
+                score: 75,
+                suggestions: [
+                    'Add meta description',
+                    'Optimize title length',
+                    'Include more keywords',
+                    'Improve content structure'
+                ],
+                keywords: ['content', 'SEO', 'optimization'],
+                readability: 'Good'
+            }
+        });
+    } catch (error) {
+        console.error('❌ [SEO-ANALYZE] Error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'SEO analysis failed',
+            message: error.message
+        });
+    }
+});
+
 // Health check endpoint
 router.get('/health', async (req, res) => {
     const { checkHealth } = require('../supabaseClient');

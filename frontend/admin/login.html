@@ -3,6 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" 
+          content="default-src 'self'; 
+                   script-src 'self' 'unsafe-inline'; 
+                   style-src 'self' 'unsafe-inline'; 
+                   img-src 'self' data:; 
+                   connect-src 'self' https://rbck.onrender.com http://localhost:10000; 
+                   frame-ancestors 'none'; 
+                   base-uri 'self';">
     <title>เข้าสู่ระบบ - ระเบียบการช่าง CMS</title>
     <style>
         * {
@@ -169,6 +177,8 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/form-validation.css">
 </head>
 <body>
     <div class="login-container">
@@ -185,26 +195,35 @@
 
             <div class="alert alert-success" id="alertSuccess">
                 ✅ <span id="successMessage">เข้าสู่ระบบสำเร็จ</span>
-            </div>            <div class="form-group">
-                <label for="username">ชื่อผู้ใช้</label>
+            </div>            <div class="form-field">
+                <label for="username" class="form-label required">Username</label>
                 <input 
-                    type="text" 
+                    type="email" 
                     id="username" 
                     class="form-control" 
-                    placeholder="ใส่ชื่อผู้ใช้"
+                    placeholder="Enter your email address"
                     required
+                    data-validate="email"
+                    data-field-name="Username"
+                    aria-describedby="username-error"
                 >
+                <div id="username-error" class="error-message" role="alert"></div>
             </div>
 
-            <div class="form-group">
-                <label for="password">รหัสผ่าน</label>
+            <div class="form-field">
+                <label for="password" class="form-label required">Password</label>
                 <input 
                     type="password" 
                     id="password" 
                     class="form-control" 
-                    placeholder="ใส่รหัสผ่าน"
+                    placeholder="Enter your password"
                     required
+                    data-validate="password"
+                    data-field-name="Password"
+                    minlength="8"
+                    aria-describedby="password-error"
                 >
+                <div id="password-error" class="error-message" role="alert"></div>
             </div>
 
             <button type="submit" class="btn-login" id="loginButton">
@@ -217,7 +236,10 @@
                 🔧
             </p>
         </div>
-    </div>    <script>
+    </div>
+    
+    <script src="form-validation.js"></script>
+    <script>
         console.log('🔐 Login page loaded - JWT Authentication System');
 
         // API Configuration
@@ -396,6 +418,9 @@
                 loginForm.dispatchEvent(new Event('submit'));
             }
         });
+
+        // Initialize form validation
+        FormValidator.initializeForm('loginForm');
     </script>
 </body>
 </html>

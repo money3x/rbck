@@ -17,7 +17,7 @@ img { max-width: 100%; height: auto; display: block; border-radius: 5px; }
 position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
 background: linear-gradient(135deg, #27533b 0%, #4a7d5a 100%);
 color: #fff; display: flex; flex-direction: column; justify-content: center;
-align-items: center; text-align: center; z-index: 2000; padding: 20px;
+align-items: center; text-align: center; z-index: var(--z-overlay); padding: 20px;
 }
 #welcomeScreen h1 { font-size: 2.2em; margin-bottom: 20px; color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); line-height: 1.2; }
 #welcomeScreen p { font-size: 1.1em; margin-bottom: 30px; color: #e0e0e0; max-width: 600px; line-height: 1.5; }
@@ -31,7 +31,7 @@ box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 
 header#mainHeader { /* Added ID for JS targeting */
 background-color: #ffffff; padding: 12px 0; border-bottom: 4px solid #e0a800;
-position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+position: sticky; top: 0; z-index: var(--z-modal); box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 display: none; /* Initially hidden, shown by JS */
 }
 /* header.visible { display: block; } /* This class is not used if JS sets display directly */
@@ -66,7 +66,7 @@ header .language-selector.open .language-selector-toggle .arrow-down { transform
 header .language-options {
 display: none; position: absolute; top: 100%; right: 0;
 background-color: #fff; border: 1px solid #ddd; border-radius: 4px;
-box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 1001;
+box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: var(--z-tooltip);
 padding: 5px; margin-top: 5px; min-width: 120px;
 }
 header .language-selector.open .language-options { display: flex; justify-content: center; align-items: center; }
@@ -81,9 +81,9 @@ header .language-options .lang-separator { color: #ccc; margin: 0 5px; }
 
 .menu-toggle { display: none; font-size: 1.8em; background: none; border: none; color: #27533b; cursor: pointer; padding: 5px; }
 
-.mobile-nav-panel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1900; opacity: 0; transition: opacity 0.3s ease-in-out; }
+.mobile-nav-panel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: var(--z-overlay); opacity: 0; transition: opacity 0.3s ease-in-out; }
 .mobile-nav-panel.active { display: block; opacity: 1; }
-.mobile-nav-panel-content { position: fixed; top: 0; right: -300px; width: 280px; max-width: 80%; height: 100%; background-color: #ffffff; box-shadow: -2px 0 10px rgba(0,0,0,0.1); padding: 0; z-index: 1901; transition: right 0.3s ease-in-out; display: flex; flex-direction: column; }
+.mobile-nav-panel-content { position: fixed; top: 0; right: -300px; width: 280px; max-width: 80%; height: 100%; background-color: #ffffff; box-shadow: -2px 0 10px rgba(0,0,0,0.1); padding: 0; z-index: var(--z-notification); transition: right 0.3s ease-in-out; display: flex; flex-direction: column; }
 .mobile-nav-panel.active .mobile-nav-panel-content { right: 0; }
 .mobile-menu-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #e0e0e0; background-color: #f8f9fa; }
 .mobile-menu-header .logo-mobile-menu { font-size: 1.1em; font-weight: bold; color: #27533b; }

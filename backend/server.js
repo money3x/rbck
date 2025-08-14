@@ -284,10 +284,8 @@ app.use('/api/auth', authRoutes); // Authentication routes (validation handled p
 app.use('/api/config', configRoutes);            // ✅ Configuration routes (public for frontend)
 app.use('/api/security', authenticateAdmin, securityRoutes);       // ✅ Security Dashboard routes (admin only)
 app.use('/api/ai', aiRoutes);                   // ✅ PHASE 3: AI provider routes (rate limiting temporarily disabled for debugging)
-// Mount migration routes only when RUN_MIGRATIONS==='true'
-if (process.env.RUN_MIGRATIONS === 'true') {
-    app.use('/api/migration', migrationRoutes);
-}
+// Mount migration routes (with conditional functionality based on RUN_MIGRATIONS)
+app.use('/api/migration', migrationRoutes);
 app.use('/api/performance', performanceRoutes); // Performance monitoring routes
 app.use('/api', apiKeyRoutes);                  // Protected API key routes
 app.use('/api/posts', postRoutes);              // Post management routes (mount on /api/posts to avoid conflicts)

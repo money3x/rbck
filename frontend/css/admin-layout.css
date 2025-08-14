@@ -84,7 +84,7 @@ body {
     position: fixed;
     top: 20px;
     left: 20px;
-    z-index: 10002;
+    z-index: var(--z-notification);
     background: rgba(212, 175, 55, 0.9);
     color: #fff;
     border: none;
@@ -132,7 +132,7 @@ body {
         width: 280px !important;
         min-width: 280px !important;
         height: 100vh !important;
-        z-index: 10001 !important;
+        z-index: var(--z-overlay);
         transition: left 0.3s ease !important;
         box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3) !important;
     }
@@ -156,7 +156,7 @@ body {
         width: 100vw;
         height: 100vh;
         background: rgba(0, 0, 0, 0.5);
-        z-index: 10000;
+        z-index: var(--z-modal);
         opacity: 0;
         transition: opacity 0.3s ease;
     }
@@ -293,7 +293,7 @@ body {
     color: white;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 10000;
+    z-index: var(--z-modal);
     opacity: 0;
     transform: translateZ(0);
     transition: opacity 0.3s ease;
@@ -308,7 +308,7 @@ body {
 .modal {
     display: none;
     position: fixed;
-    z-index: 10001;
+    z-index: var(--z-overlay);
     left: 0;
     top: 0;
     width: 100%;

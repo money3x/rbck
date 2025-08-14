@@ -3,6 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" 
+          content="default-src 'self'; 
+                   script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; 
+                   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; 
+                   font-src 'self' https://fonts.gstatic.com; 
+                   img-src 'self' data: https:; 
+                   connect-src 'self' https://rbck.onrender.com https://api.openai.com https://generativelanguage.googleapis.com; 
+                   frame-ancestors 'none'; 
+                   base-uri 'self';">
     <title>🚀 Gemini 2.0 Flash CMS - ระเบียบการช่าง AI-Powered Content Management</title>
     
     <!-- 🚀 CRITICAL PERFORMANCE OPTIMIZATIONS -->
@@ -38,7 +47,8 @@
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/beautiful-gemini-styles.css">
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="beautiful-gemini-styles.css">
     <link rel="stylesheet" href="../css/cms-styles.css">
     <link rel="stylesheet" href="css/modern-ai-settings.css">
     <link rel="stylesheet" href="css/luxury-sidebar-performance.css">
@@ -4899,7 +4909,7 @@
             </div>
             
             <div class="security-alerts-container">
-                <div id="security-alerts-list">
+                <div id="security-alerts-detailed">
                     <p class="no-alerts">Loading security alerts...</p>
                 </div>
             </div>
@@ -5130,8 +5140,8 @@
                   <div class="ai-form-group">
                     <label class="ai-form-label">Temperature</label>
                     <div class="ai-slider-container">
-                      <input type="range" class="ai-slider" min="0" max="2" step="0.1" value="0.7" id="temperature">
-                      <span id="temperatureValue">0.7</span>
+                      <input type="range" class="ai-slider" min="0" max="2" step="0.1" value="0.7" id="temperature-main">
+                      <span id="temperatureValue-main">0.7</span>
                     </div>
                   </div>
                   <div class="ai-form-group">
@@ -5403,14 +5413,14 @@
                   <div class="ai-form-group">
                     <label class="ai-form-label">Temperature (Creativity)</label>
                     <div class="ai-slider-container">
-                      <input type="range" class="ai-slider" min="0" max="2" step="0.1" value="0.7" id="temperature">
-                      <span id="temperatureValue">0.7</span>
+                      <input type="range" class="ai-slider" min="0" max="2" step="0.1" value="0.7" id="temperatureFineTune">
+                      <span id="temperatureValueFineTune">0.7</span>
                     </div>
                   </div>
                   <div class="ai-form-group">
                     <label class="ai-form-label">Max Tokens</label>
                     <div class="ai-slider-container">
-                      <input type="range" class="ai-slider" min="100" max="4000" value="1000" id="maxTokens">
+                      <input type="range" class="ai-slider" min="100" max="4000" value="1000" id="maxTokensFineTune">
                       <span id="maxTokensValue">1000</span>
                     </div>
                   </div>
@@ -6153,7 +6163,7 @@
             console.log('🔧 [AI Settings] Creating fallback modal...');
             
             const modalHTML = `
-                <div id="aiSettingsModal" class="ai-settings-modal" style="display: none;">
+                <div id="aiSettingsModalFallback" class="ai-settings-modal" style="display: none;">
                     <div class="ai-modal">
                         <div class="modal-header">
                             <h3>🤖 AI Provider Settings</h3>
@@ -8257,7 +8267,7 @@
                 maxRequests: document.getElementById('maxRequests')?.value || 5,
                 rateLimit: document.getElementById('rateLimit')?.value || 100,
                 loggingLevel: document.getElementById('loggingLevel')?.value || 'info',
-                temperature: document.getElementById('temperature')?.value || 0.7
+                temperature: document.getElementById('temperature-main')?.value || 0.7
             };
             
             // Save to localStorage
@@ -8353,7 +8363,7 @@
                 { id: 'cacheDuration', valueId: 'cacheValue', suffix: ' min' },
                 { id: 'maxRequests', valueId: 'requestsValue', suffix: '' },
                 { id: 'rateLimit', valueId: 'rateLimitValue', suffix: '' },
-                { id: 'temperature', valueId: 'temperatureValue', suffix: '' }
+                { id: 'temperature-main', valueId: 'temperatureValue-main', suffix: '' }
             ];
             
             sliders.forEach(slider => {

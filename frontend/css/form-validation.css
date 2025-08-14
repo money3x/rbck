@@ -1,0 +1,193 @@
+/* RBCK CMS - Form Validation Styles */
+
+/* Field validation states */
+.form-field {
+  position: relative;
+  margin-bottom: var(--space-md);
+}
+
+.form-field input,
+.form-field textarea,
+.form-field select {
+  border: var(--border-width) solid #d1d5db;
+  border-radius: var(--border-radius-md);
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-md);
+  transition: var(--transition-fast);
+  width: 100%;
+}
+
+.form-field input:focus,
+.form-field textarea:focus,
+.form-field select:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+}
+
+/* Valid state */
+.form-field input.is-valid,
+.form-field textarea.is-valid,
+.form-field select.is-valid {
+  border-color: var(--success);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='m2.3 6.73.94-.94 2.94 2.94L9.14 5.8l.94.94L6.2 10.6z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right var(--space-sm) center;
+  background-size: 16px 16px;
+  padding-right: 40px;
+}
+
+/* Invalid state */
+.form-field input.is-invalid,
+.form-field textarea.is-invalid,
+.form-field select.is-invalid {
+  border-color: var(--error);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.25 5.25 2.5 2.5m0-2.5-2.5 2.5'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right var(--space-sm) center;
+  background-size: 16px 16px;
+  padding-right: 40px;
+}
+
+/* Error messages */
+.error-message {
+  color: var(--error);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-xs);
+  display: none;
+  line-height: 1.4;
+}
+
+.error-message:before {
+  content: "⚠ ";
+  font-weight: bold;
+}
+
+/* Success messages */
+.success-message {
+  color: var(--success);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-xs);
+  display: none;
+  line-height: 1.4;
+}
+
+.success-message:before {
+  content: "✓ ";
+  font-weight: bold;
+}
+
+/* Form labels */
+.form-label {
+  display: block;
+  margin-bottom: var(--space-xs);
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.form-label.required:after {
+  content: " *";
+  color: var(--error);
+}
+
+/* Password strength indicator */
+.password-strength {
+  margin-top: var(--space-xs);
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.password-strength .strength-bar {
+  height: 100%;
+  transition: var(--transition-normal);
+  border-radius: 2px;
+}
+
+.password-strength .strength-weak {
+  width: 33%;
+  background: var(--error);
+}
+
+.password-strength .strength-medium {
+  width: 66%;
+  background: var(--warning);
+}
+
+.password-strength .strength-strong {
+  width: 100%;
+  background: var(--success);
+}
+
+/* Form submission states */
+.form-submitting {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.form-submitting button {
+  cursor: not-allowed;
+}
+
+/* Accessibility improvements */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* Focus indicators for better accessibility */
+.form-field input:focus-visible,
+.form-field textarea:focus-visible,
+.form-field select:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .form-field input.is-invalid,
+  .form-field textarea.is-invalid,
+  .form-field select.is-invalid {
+    border-width: 2px;
+  }
+  
+  .form-field input.is-valid,
+  .form-field textarea.is-valid,
+  .form-field select.is-valid {
+    border-width: 2px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .form-field input,
+  .form-field textarea,
+  .form-field select,
+  .password-strength .strength-bar {
+    transition: none;
+  }
+}
+
+/* Dark theme adjustments */
+@media (prefers-color-scheme: dark) {
+  .form-field input,
+  .form-field textarea,
+  .form-field select {
+    background: var(--bg-secondary);
+    border-color: #4b5563;
+    color: var(--text-primary);
+  }
+  
+  .form-field input::placeholder,
+  .form-field textarea::placeholder {
+    color: var(--text-muted);
+  }
+}

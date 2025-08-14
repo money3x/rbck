@@ -3,6 +3,27 @@ function getApiBase() {
     return window.rbckConfig?.apiBase || window.__API_BASE__ || 'https://rbck.onrender.com/api';
 }
 
+// Helper function to get authentication headers
+async function getAuthHeaders() {
+    const headers = { 'Content-Type': 'application/json' };
+    
+    // Try to get token from multiple sources
+    let token = localStorage.getItem('jwtToken') || 
+                localStorage.getItem('token') ||
+                sessionStorage.getItem('authToken');
+    
+    // If no token in storage, try the global getAuthToken function
+    if (!token && typeof window.getAuthToken === 'function') {
+        token = await window.getAuthToken();
+    }
+    
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    return headers;
+}
+
 // Remove localStorage loading, fetch from backend API instead  
 let posts = [];
 let currentEditingPostId = null;
@@ -12,12 +33,7 @@ let seoAnalyzer = null;
 
 // Ensure showNotification is available
 function ensureShowNotification() {
-    if (typeof window.showNotification !== 'function') {
-        window.showNotification = function(message, type = 'info') {
-            console.log(`[${type.toUpperCase()}] ${message}`);
-            alert(message);
-        };
-    }
+    // ✅ REMOVED: showNotification fallback - using uiHelpers.js implementation
 }
 
 // Helper: generate slug from title
@@ -32,7 +48,11 @@ function generateSlug(title) {
 
 async function loadBlogPosts() {
     try {
-        const res = await fetch(`${getApiBase()}/posts`);
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${getApiBase()}/posts`, {
+            method: 'GET',
+            headers: headers
+        });
         if (!res.ok) throw new Error('Failed to fetch posts');
         const response = await res.json();
         
@@ -197,17 +217,19 @@ async function savePost() {
             return;
         }
         let res, savedPost;
+        const authHeaders = await getAuthHeaders();
+        
         if (currentEditingPostId) {
             postData.id = currentEditingPostId;
             res = await fetch(`${getApiBase()}/posts/${currentEditingPostId}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: authHeaders,
                 body: JSON.stringify(postData)
             });
         } else {
             res = await fetch(`${getApiBase()}/posts`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: authHeaders,
                 body: JSON.stringify(postData)
             });
         }
@@ -277,7 +299,11 @@ function previewPost(id) {
 async function deletePost(id) {
     if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบบทความนี้?')) return;
     try {
-        const res = await fetch(`${getApiBase()}/posts/${id}`, { method: 'DELETE' });
+        const authHeaders = await getAuthHeaders();
+        const res = await fetch(`${getApiBase()}/posts/${id}`, { 
+            method: 'DELETE',
+            headers: authHeaders
+        });
         if (!res.ok) throw new Error('Failed to delete');
         showNotification('🗑️ ลบบทความเรียบร้อย', 'success');
         await loadBlogPosts();
@@ -301,9 +327,10 @@ async function publishPost(id) {
         const post = await resGet.json();
         // อัปเดต status เป็น published
         const updated = { ...post, status: 'published' };
+        const authHeaders = await getAuthHeaders();
         const res = await fetch(`${getApiBase()}/posts/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders,
             body: JSON.stringify(updated)
         });
         if (!res.ok) throw new Error('Failed to publish');
@@ -347,12 +374,10 @@ async function savePostWithEATOptimization() {
         showNotification('🎯 กำลังปรับปรุงเนื้อหาด้วย E-A-T...', 'info');
 
         // Use the new E-A-T optimized endpoint
+        const authHeaders = await getAuthHeaders();
         const response = await fetch(`${getApiBase()}/api/posts/ai-create`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
+            headers: authHeaders,
             body: JSON.stringify(postData)
         });
 
@@ -409,12 +434,10 @@ async function optimizePostWithEAT(postId) {
 
         showNotification('🎯 กำลังปรับปรุงเนื้อหาด้วย E-A-T...', 'info');
 
+        const authHeaders = await getAuthHeaders();
         const response = await fetch(`${getApiBase()}/api/posts/${postId}/optimize`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
+            headers: authHeaders,
             body: JSON.stringify({
                 contentType: 'article',
                 workflow: 'full'

@@ -115,7 +115,7 @@ describe('AI Integration Tests', () => {
         const chindaProvider = response.body.providers.find(p => p.id === 'chinda');
         expect(chindaProvider).toBeDefined();
         expect(chindaProvider).toHaveProperty('name', 'ChindaX AI');
-        expect(chindaProvider).toHaveProperty('model', 'chinda-qwen3-32b');
+        expect(chindaProvider).toHaveProperty('model', 'chinda-qwen3-4b');
       });
     });
 

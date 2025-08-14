@@ -1445,12 +1445,7 @@ function copyToClipboard(text) {
 /**
  * Close modal by ID
  */
-window.closeModal = function(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'none';
-    }
-};
+// ✅ REMOVED: Duplicate closeModal function - using modals.js implementation
 
 // Make functions available globally for HTML onclick handlers
 window.autoGenerateSEO = autoGenerateSEO;

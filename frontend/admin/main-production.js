@@ -43,15 +43,225 @@ if (typeof window !== 'undefined') {
 
 console.log('🚀 [MAIN] Loading RBCK CMS Admin Panel v2025-07-04-v3-secure...');
 
-// ===== HELPER FUNCTIONS =====
+// ===== RBCK NAMESPACE SYSTEM =====
 const API_BASE = window.__API_BASE__ || '';
-window.RBCK = window.RBCK || {};
-RBCK.util = RBCK.util || {};
-RBCK.util.escapeHtml = RBCK.util.escapeHtml || function (s) {
+
+// Initialize RBCK namespace with organized structure
+window.RBCK = window.RBCK || {
+    // Authentication & User Management
+    auth: {},
+    
+    // UI Operations & Section Management  
+    ui: {},
+    
+    // API Client & Data Operations
+    api: {},
+    
+    // AI & Swarm Operations
+    ai: {},
+    
+    // Utilities & Helpers
+    utils: {},
+    
+    // Event Management
+    events: {
+        handlers: new Map(),
+        delegated: false
+    },
+    
+    // Performance & Memory Management
+    perf: {
+        loadedModules: new Set(),
+        loadingPromises: new Map(),
+        metrics: {
+            pageLoadStart: performance.now(),
+            totalRequests: 0,
+            cacheHits: 0
+        }
+    },
+    
+    // Configuration & Settings
+    config: {
+        API_BASE: API_BASE
+    }
+};
+
+// Preserve existing utilities
+RBCK.utils.escapeHtml = RBCK.utils.escapeHtml || function (s) {
   return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 };
-RBCK.util.pick = RBCK.util.pick || function (o, ...ks) {
+
+RBCK.utils.pick = RBCK.utils.pick || function (o, ...ks) {
   return ks.reduce((v,k)=> v ?? o?.[k], undefined);
+};
+
+// ===== EVENT DELEGATION SYSTEM =====
+RBCK.events.initDelegation = function() {
+    if (RBCK.events.delegated) return;
+    
+    console.log('🎯 [EVENTS] Initializing event delegation system...');
+    
+    // Global click handler with event delegation
+    document.addEventListener('click', function(e) {
+        const target = e.target;
+        const action = target.dataset.action || target.getAttribute('data-action');
+        
+        if (!action) return;
+        
+        // Prevent default for navigation actions
+        if (action.includes('show-section') || action.includes('navigation')) {
+            e.preventDefault();
+        }
+        
+        // Route actions to appropriate handlers
+        switch (action) {
+            case 'show-section':
+                const sectionId = target.dataset.section || target.getAttribute('data-section');
+                if (sectionId) {
+                    RBCK.ui.showSection(sectionId);
+                }
+                break;
+                
+            case 'logout':
+                RBCK.auth.logout();
+                break;
+                
+            case 'open-ai-settings':
+                if (typeof window.openAISettingsModal === 'function') {
+                    window.openAISettingsModal();
+                }
+                break;
+                
+            case 'close-modal':
+                const modalId = target.dataset.modal || target.closest('.modal')?.id;
+                if (modalId) {
+                    RBCK.ui.closeModal(modalId);
+                }
+                break;
+                
+            case 'refresh-data':
+                const dataType = target.dataset.dataType;
+                if (dataType && typeof RBCK.api[`refresh${dataType}`] === 'function') {
+                    RBCK.api[`refresh${dataType}`]();
+                }
+                break;
+                
+            default:
+                // Check for custom registered handlers
+                const handler = RBCK.events.handlers.get(action);
+                if (handler && typeof handler === 'function') {
+                    handler.call(target, e);
+                } else {
+                    console.warn('⚠️ [EVENTS] No handler found for action:', action);
+                }
+        }
+    });
+    
+    RBCK.events.delegated = true;
+    console.log('✅ [EVENTS] Event delegation system initialized');
+};
+
+// Register custom event handler
+RBCK.events.register = function(action, handler) {
+    if (typeof handler !== 'function') {
+        console.error('❌ [EVENTS] Handler must be a function');
+        return;
+    }
+    
+    RBCK.events.handlers.set(action, handler);
+    console.log('✅ [EVENTS] Registered handler for action:', action);
+};
+
+// Add modal management to UI namespace
+RBCK.ui.closeModal = function(modalId) {
+    console.log('🔄 [UI] Closing modal:', modalId);
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.add('ai-modal-hidden');
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+};
+
+// ===== LAZY LOADING SYSTEM =====
+RBCK.perf.lazyLoad = async function(moduleName, moduleUrl) {
+    // Check if module is already loaded
+    if (RBCK.perf.loadedModules.has(moduleName)) {
+        console.log('✅ [PERF] Module already loaded:', moduleName);
+        return Promise.resolve();
+    }
+    
+    // Check if module is currently loading
+    if (RBCK.perf.loadingPromises.has(moduleName)) {
+        console.log('🔄 [PERF] Module is loading, waiting:', moduleName);
+        return RBCK.perf.loadingPromises.get(moduleName);
+    }
+    
+    console.log('⚡ [PERF] Lazy loading module:', moduleName);
+    RBCK.perf.metrics.totalRequests++;
+    
+    const loadPromise = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = moduleUrl;
+        script.async = true;
+        
+        script.onload = () => {
+            RBCK.perf.loadedModules.add(moduleName);
+            RBCK.perf.loadingPromises.delete(moduleName);
+            console.log('✅ [PERF] Module loaded successfully:', moduleName);
+            resolve();
+        };
+        
+        script.onerror = (error) => {
+            RBCK.perf.loadingPromises.delete(moduleName);
+            console.error('❌ [PERF] Failed to load module:', moduleName, error);
+            reject(new Error(`Failed to load module: ${moduleName}`));
+        };
+        
+        document.head.appendChild(script);
+    });
+    
+    RBCK.perf.loadingPromises.set(moduleName, loadPromise);
+    return loadPromise;
+};
+
+// Lazy load AI modules only when needed
+RBCK.ai.loadSwarmModule = async function() {
+    try {
+        await RBCK.perf.lazyLoad('aiSwarm', 'aiSwarm.js');
+        await RBCK.perf.lazyLoad('aiMonitoring', 'aiMonitoring.js');
+        console.log('✅ [AI] AI modules loaded successfully');
+        return true;
+    } catch (error) {
+        console.error('❌ [AI] Failed to load AI modules:', error);
+        return false;
+    }
+};
+
+// Lazy load SEO tools when needed
+RBCK.perf.loadSEOModule = async function() {
+    try {
+        await RBCK.perf.lazyLoad('seoTools', 'seoTools.js');
+        console.log('✅ [PERF] SEO tools loaded successfully');
+        return true;
+    } catch (error) {
+        console.error('❌ [PERF] Failed to load SEO tools:', error);
+        return false;
+    }
+};
+
+// Performance monitoring
+RBCK.perf.getMetrics = function() {
+    const now = performance.now();
+    return {
+        ...RBCK.perf.metrics,
+        pageLoadTime: now - RBCK.perf.metrics.pageLoadStart,
+        loadedModules: Array.from(RBCK.perf.loadedModules),
+        cacheHitRate: RBCK.perf.metrics.totalRequests > 0 
+            ? (RBCK.perf.metrics.cacheHits / RBCK.perf.metrics.totalRequests * 100).toFixed(1) + '%'
+            : '0%'
+    };
 };
 RBCK.util.normalizePost = RBCK.util.normalizePost || function(p){
   const pick = RBCK.util.pick;
@@ -127,13 +337,13 @@ console.log('🔧 [CONFIG] API Base:', window.window.rbckConfig.apiBase);
 
 // ===== GLOBAL VARIABLES =====
 window.currentUser = window.currentUser || null;
-let authToken = null; // ✅ No localStorage - server manages sessions
-window.authToken = authToken; // Make globally accessible
+// ✅ REMOVED: Duplicate authToken declaration - using core/auth.js instead
 let aiSwarmCouncil = null;
 let isAppInitialized = false;
 
 // ✅ ENHANCED: JWT + ENCRYPTION_KEY Authentication with ConfigManager Support
-window.checkAuthentication = async function() {
+// Move authentication functions to RBCK.auth namespace
+RBCK.auth.checkAuthentication = async function() {
     console.log('🔒 [AUTH] Enhanced authentication check...');
     
     const authOverlay = document.getElementById('authCheckOverlay');
@@ -271,13 +481,13 @@ window.checkAuthentication = async function() {
 };
 
 // ✅ Redirect to login page
-window.redirectToLogin = function() {
+RBCK.auth.redirectToLogin = function() {
     console.log('🔑 [AUTH] Redirecting to login...');
     window.location.href = '/admin/login.html';
 };
 
 // ✅ PRODUCTION: JWT Logout (clear sessionStorage)
-window.logout = function() {
+RBCK.auth.logout = function() {
     console.log('🚪 [AUTH] Logging out...');
     
     // ✅ Clear both localStorage and sessionStorage (matching login.html)
@@ -301,9 +511,18 @@ window.logout = function() {
     }, 1000);
 };
 
+// Backward compatibility aliases for authentication functions
+window.checkAuthentication = RBCK.auth.checkAuthentication;
+window.redirectToLogin = RBCK.auth.redirectToLogin;
+window.logout = RBCK.auth.logout;
+
 // ✅ Check authentication after page is fully loaded (prevent race condition)
 window.addEventListener('load', function() {
     console.log('🔒 [AUTH] Page fully loaded, starting authentication check...');
+    
+    // Initialize event delegation system
+    RBCK.events.initDelegation();
+    
     checkAuthentication();
 });
 
@@ -503,55 +722,7 @@ async function apiRequest(endpoint, options = {}) {
 }
 
 // ===== NOTIFICATION SYSTEM =====
-window.showNotification = function(message, type = 'info') {
-    console.log(`📢 [NOTIFICATION] [${type}]:`, message);
-    
-    // Remove existing notifications
-    document.querySelectorAll('.notification').forEach(n => n.remove());
-    
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'error' ? '#f44336' : type === 'success' ? '#4caf50' : type === 'warning' ? '#ff9800' : '#2196f3'};
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 10000;
-        font-family: 'Sarabun', sans-serif;
-        font-size: 14px;
-        max-width: 350px;
-        opacity: 0;
-        transform: translateX(100%);
-        transition: all 0.3s ease;
-    `;
-    
-    const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
-    notification.innerHTML = `${icon} ${message}`;
-    
-    document.body.appendChild(notification);
-    
-    // Animate in
-    setTimeout(() => {
-        notification.style.opacity = '1';
-        notification.style.transform = 'translateX(0)';
-    }, 100);
-    
-    // Auto remove
-    setTimeout(() => {
-        notification.style.opacity = '0';
-        notification.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 300);
-    }, 4000);
-};
+// ✅ REMOVED: Duplicate showNotification function - using uiHelpers.js instead
 
 // ===== PERFORMANCE: DOM CACHING SYSTEM =====
 const NavigationCache = {
@@ -610,7 +781,9 @@ const NavigationCache = {
 
 // ===== ENHANCED NAVIGATION SYSTEM =====
 console.log('🔧 [MAIN] Defining showSection function...');
-window.showSection = function(sectionId) {
+
+// Move to RBCK.ui namespace
+RBCK.ui.showSection = function(sectionId) {
     console.log('🔄 [NAV] Showing section:', sectionId);
     
     try {
@@ -794,6 +967,9 @@ window.showSection = function(sectionId) {
         showNotification('เกิดข้อผิดพลาดในการเปลี่ยนหน้า: ' + error.message, 'error');
     }
 };
+
+// Backward compatibility alias
+window.showSection = RBCK.ui.showSection;
 
 console.log('✅ [MAIN] showSection function defined successfully!');
 
@@ -1779,109 +1955,7 @@ const AIModalCache = {
 };
 
 // ===== AI SETTINGS FUNCTIONS =====
-window.openAISettingsModal = function() {
-    console.log('🔧 [AI Settings] Opening enterprise configuration modal...');
-    
-    // Start performance monitoring (only if PerformanceMonitor exists)
-    const performanceTimer = typeof PerformanceMonitor !== 'undefined' ? 
-        PerformanceMonitor.startTimer('modalOpen') : null;
-    
-    // Initialize cache if needed (with fallback)
-    if (typeof AIModalCache !== 'undefined') {
-        AIModalCache.init();
-    }
-    
-    // Use cached modal element with fallback
-    const modal = (typeof AIModalCache !== 'undefined') ? 
-        AIModalCache.getModal() : document.getElementById('aiSettingsModal');
-    if (modal) {
-        console.log('🔧 [AI Settings] Configuration modal found, opening...');
-        
-        // Remove hidden class and force display
-        modal.classList.remove('ai-modal-hidden');
-        modal.style.setProperty('display', 'flex', 'important');
-        modal.style.setProperty('opacity', '1', 'important');
-        modal.style.setProperty('visibility', 'visible', 'important');
-        modal.style.setProperty('z-index', '10001', 'important');
-        
-        document.body.style.overflow = 'hidden';
-        
-        // Initialize tabs and load data with verification
-        setTimeout(() => {
-            console.log('🔧 [AI SETTINGS] Checking function availability...');
-            console.log('🔧 [DEBUG] switchAITab available:', typeof window.switchAITab === 'function');
-            console.log('🔧 [DEBUG] initializeAISettingsTabs available:', typeof window.initializeAISettingsTabs === 'function');
-            
-            // Call the proper initialization function
-            if (typeof window.initializeAISettingsTabs === 'function') {
-                window.initializeAISettingsTabs();
-            } else {
-                console.log('🔧 [AI SETTINGS] Using fallback initialization...');
-                // Fallback: Set up tab click listeners manually
-                document.querySelectorAll('.tab-button').forEach(button => {
-                    button.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        const tabName = this.getAttribute('data-tab');
-                        if (typeof window.switchAITab === 'function') {
-                            window.switchAITab(tabName);
-                        } else {
-                            console.error('❌ [AI SETTINGS] switchAITab function not available');
-                        }
-                    });
-                });
-                
-                // Activate general tab by default in fallback mode
-                if (typeof window.switchAITab === 'function') {
-                    window.switchAITab('general');
-                }
-            }
-            
-            // Ensure tab click handlers are working
-            document.querySelectorAll('.ai-settings-tab').forEach(tab => {
-                const tabName = tab.getAttribute('data-tab');
-                if (tabName && !tab.onclick) {
-                    console.log('🔧 [FIX] Adding missing click handler to:', tabName);
-                    tab.onclick = function(e) {
-                        e.preventDefault();
-                        console.log('🖱️ [CLICK] Tab clicked:', tabName);
-                        window.switchAITab(tabName);
-                        return false;
-                    };
-                    tab.style.pointerEvents = 'auto';
-                    tab.style.cursor = 'pointer';
-                }
-            });
-            
-            if (typeof window.loadCurrentProviderStatus === 'function') {
-                window.loadCurrentProviderStatus();
-            }
-        }, 200); // Increased from 100ms to 200ms for better reliability
-        
-        console.log('✅ [AI Settings] Enterprise configuration modal opened successfully');
-        
-        // Debug: Log modal state
-        console.log('🔍 [DEBUG] Modal state after opening:');
-        console.log('- Display:', window.getComputedStyle(modal).display);
-        console.log('- Visibility:', window.getComputedStyle(modal).visibility);
-        console.log('- Opacity:', window.getComputedStyle(modal).opacity);
-        console.log('- Z-index:', window.getComputedStyle(modal).zIndex);
-        console.log('- Position:', window.getComputedStyle(modal).position);
-        console.log('- Classes:', modal.className);
-        
-        // End performance monitoring (with safety check)
-        if (performanceTimer && typeof PerformanceMonitor !== 'undefined') {
-            PerformanceMonitor.endTimer(performanceTimer);
-        }
-        
-    } else {
-        console.error('❌ [AI Settings] Configuration modal element not found');
-        if (performanceTimer && typeof PerformanceMonitor !== 'undefined') {
-            PerformanceMonitor.endTimer(performanceTimer);
-        }
-    }
-    
-    return false;
-};
+// Note: openAISettingsModal implementation consolidated - see line 3545
 
 window.closeAIConfigModal = function() {
     console.log('🔧 [AI Settings] Closing configuration modal...');
@@ -3591,15 +3665,7 @@ window.refreshMonitoringLogs = async function() {
 };
 
 // ✅ AI SETTINGS MODAL FUNCTIONS
-window.openAISettingsModal = function() {
-    console.log('🔧 [AI SETTINGS] Opening AI settings modal...');
-    
-    const modal = document.querySelector('.enterprise-modal-overlay');
-    if (modal) {
-        modal.style.display = 'flex';
-        modal.style.opacity = '1';
-    }
-};
+// Note: openAISettingsModal function implementation is in index.html to avoid conflicts
 
 window.closeAISettingsModal = function() {
     console.log('🔧 [AI SETTINGS] Closing AI settings modal...');
@@ -3867,26 +3933,7 @@ window.debugBackendConfig = async function() {
 // Adding the functions that were causing fallback errors
 
 // UI Helper Functions
-window.showNotification = function(message, type = 'info') {
-    console.log(`📢 [NOTIFICATION] ${type.toUpperCase()}: ${message}`);
-    
-    const notification = document.getElementById('notification');
-    const notificationText = document.getElementById('notificationText');
-    
-    if (notification && notificationText) {
-        notification.className = 'notification';
-        notification.classList.add(type);
-        notificationText.textContent = message;
-        notification.style.display = 'block';
-        
-        setTimeout(() => {
-            notification.style.display = 'none';
-        }, 3000);
-    } else {
-        // Fallback to browser alert
-        alert(`[${type.toUpperCase()}] ${message}`);
-    }
-};
+// ✅ REMOVED: Second duplicate showNotification function - using uiHelpers.js instead
 
 // ✅ REMOVED DUPLICATE showSection FUNCTION - Using the main one defined earlier at line 612
 

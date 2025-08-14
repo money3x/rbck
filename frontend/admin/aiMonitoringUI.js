@@ -33,6 +33,29 @@ export class AIMonitoringUI {
     }
 
     /**
+     * Helper function to get authentication headers
+     */
+    async getAuthHeaders() {
+        const headers = { 'Content-Type': 'application/json' };
+        
+        // Try to get token from multiple sources
+        let token = localStorage.getItem('jwtToken') || 
+                    localStorage.getItem('token') ||
+                    sessionStorage.getItem('authToken');
+        
+        // If no token in storage, try the global getAuthToken function
+        if (!token && typeof window.getAuthToken === 'function') {
+            token = await window.getAuthToken();
+        }
+        
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        return headers;
+    }
+
+    /**
      * Initialize metrics tracking for all providers
      */
     initializeMetrics() {
@@ -162,8 +185,13 @@ export class AIMonitoringUI {
         console.log('[AI MONITOR UI] Collecting status-only metrics (no testing)...');
         
         try {
+            // Get authentication headers
+            const headers = await this.getAuthHeaders();
+            
             // Get metrics from backend without triggering tests
-            const response = await fetch(`${API_BASE}/ai/metrics`);
+            const response = await fetch(`${API_BASE}/ai/metrics`, {
+                headers: headers
+            });
             
             if (response.ok) {
                 const data = await response.json();
@@ -261,8 +289,13 @@ export class AIMonitoringUI {
      */
     async getProviderStatus(provider) {
         try {
+            // Get authentication headers
+            const headers = await this.getAuthHeaders();
+            
             // Use public metrics endpoint instead of individual status
-            const response = await fetch(`${API_BASE}/ai/metrics`);
+            const response = await fetch(`${API_BASE}/ai/metrics`, {
+                headers: headers
+            });
             
             if (response.ok) {
                 const data = await response.json();
@@ -292,13 +325,13 @@ export class AIMonitoringUI {
      */
     async testProviderAPI(provider) {
         try {
-            // Import auth functions
-            const { authenticatedFetch } = await import('./auth.js');
+            // Get authentication headers
+            const headers = await this.getAuthHeaders();
             
             // Use authenticated fetch to call backend API
-            const response = await authenticatedFetch(`${API_BASE}/ai/test/${provider}`, {
+            const response = await fetch(`${API_BASE}/ai/test/${provider}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: headers,
                 body: JSON.stringify({ prompt: 'Performance monitoring test' })
             });
             
