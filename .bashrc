@@ -1,1 +1,1 @@
-export ANTHROPIC_API_KEY="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"
+export ANTHROPIC_API_KEY=""
