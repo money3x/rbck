@@ -58,7 +58,7 @@ class ChindaAIProvider extends BaseProvider {
             
             // Parse OpenAI-compatible response format
             const data = response.data;
-            if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+            if (!data.choices?.[0]?.message) {
                 throw new Error('Invalid response format from ChindaX API');
             }
             
@@ -81,7 +81,7 @@ class ChindaAIProvider extends BaseProvider {
                 // HTTP error from ChindaX API
                 const status = error.response.status;
                 const errorData = error.response.data;
-                let message = 'Unknown API error';
+                //let message = 'Unknown API error';
                 
                 // Enhanced error debugging
                 console.error('🔍 [ChindaX] Error response details:', {

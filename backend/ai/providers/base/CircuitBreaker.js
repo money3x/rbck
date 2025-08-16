@@ -6,7 +6,7 @@
 class CircuitBreaker {
     constructor(provider, options = {}) {
         this.provider = provider;
-        this.providerId = `${provider}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`; // Unique ID
+        this.providerId = `${provider}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`; // Unique ID
         this.options = {
             threshold: options.threshold || 5, // Number of failures before opening circuit
             timeout: options.timeout || 60000, // Time to wait before trying again (1 minute)

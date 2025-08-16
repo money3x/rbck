@@ -142,7 +142,7 @@ class ProviderFactory {
      * Start monitoring for all circuit breakers
      */
     static startCircuitBreakerMonitoring() {
-        for (const [providerName, circuitBreaker] of this.circuitBreakers.entries()) {
+        for (const [, circuitBreaker] of this.circuitBreakers.entries()) {
             circuitBreaker.startMonitoring();
         }
         console.log('📊 [ProviderFactory] Circuit breaker monitoring started for all providers');
@@ -152,7 +152,7 @@ class ProviderFactory {
      * Stop monitoring for all circuit breakers
      */
     static stopCircuitBreakerMonitoring() {
-        for (const [providerName, circuitBreaker] of this.circuitBreakers.entries()) {
+        for (const [, circuitBreaker] of this.circuitBreakers.entries()) {
             circuitBreaker.stopMonitoring();
         }
         console.log('🛑 [ProviderFactory] Circuit breaker monitoring stopped for all providers');
