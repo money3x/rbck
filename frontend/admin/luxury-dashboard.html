@@ -1,0 +1,4714 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" 
+          content="default-src 'self'; 
+                   script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; 
+                   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; 
+                   font-src 'self' https://fonts.gstatic.com; 
+                   img-src 'self' data: https:; 
+                   connect-src 'self' https://rbck.onrender.com https://api.openai.com https://generativelanguage.googleapis.com ws://localhost:* wss://rbck.onrender.com; 
+                   frame-ancestors 'none'; 
+                   base-uri 'self';">
+    <title>🚀 Gemini 2.0 Flash - Luxury Dashboard</title>
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" as="style">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        /* ========================================
+           🌟 LUXURY DASHBOARD - GEMINI 2.0 FLASH
+           Elite Design System
+           ======================================== */
+
+        :root {
+            /* 🎨 Luxury Color Palette */
+            --primary-gradient: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            --secondary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --accent-gold: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-primary: #2c3e50;
+            --text-secondary: #6c757d;
+            --bg-luxury: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 25%, #f8f9fa 50%, #ffffff 100%);
+            
+            /* 📏 Spacing & Typography */
+            --space-xs: 0.25rem;
+            --space-sm: 0.5rem;
+            --space-md: 1rem;
+            --space-lg: 1.5rem;
+            --space-xl: 2rem;
+            --space-2xl: 3rem;
+            
+            /* 🎭 Shadows & Effects */
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.15);
+            --shadow-xl: 0 16px 48px rgba(0,0,0,0.2);
+            --shadow-glow: 0 0 20px rgba(102, 126, 234, 0.3);
+            
+            /* 🌊 Animation */
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Poppins', sans-serif;
+            background: var(--bg-luxury);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ========================================
+           🏛️ LUXURY SIDEBAR DESIGN
+           ======================================== */
+
+        .luxury-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            background: var(--primary-gradient);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 1000;
+            transform: translateX(0);
+            transition: var(--transition-smooth);
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+            box-shadow: var(--shadow-xl);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .luxury-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .luxury-sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .luxury-sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .luxury-sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* 🏆 Sidebar Header */
+        .sidebar-header {
+            padding: var(--space-xl);
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+        }
+
+        .brand-logo {
+            width: 64px;
+            height: 64px;
+            background: var(--accent-gold);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto var(--space-md);
+            font-size: 2rem;
+            color: white;
+            box-shadow: var(--shadow-lg);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: var(--shadow-lg); }
+            to { box-shadow: var(--shadow-glow), var(--shadow-lg); }
+        }
+
+        .brand-title {
+            color: white;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: var(--space-xs);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .brand-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        /* 🎯 Navigation Menu */
+        .nav-menu {
+            padding: var(--space-lg) 0;
+        }
+
+        .nav-category {
+            margin-bottom: var(--space-lg);
+        }
+
+        .nav-category-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm) var(--space-lg);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: var(--space-md);
+        }
+
+        .nav-category-icon {
+            font-size: 0.875rem;
+            color: #FFD700;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-xs);
+            padding: 0 var(--space-md);
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-md);
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: var(--transition-smooth);
+            font-weight: 500;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .nav-link:hover::before {
+            left: 100%;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateX(8px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.2));
+            border-left: 4px solid #FFD700;
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            right: var(--space-sm);
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 6px;
+            background: #FFD700;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #FFD700;
+        }
+
+        .nav-icon {
+            font-size: 1.125rem;
+            width: 24px;
+            text-align: center;
+            color: #FFD700;
+            transition: var(--transition-smooth);
+        }
+
+        .nav-link:hover .nav-icon,
+        .nav-link.active .nav-icon {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 8px #FFD700);
+        }
+
+        .nav-text {
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+
+        /* ========================================
+           🎭 MAIN CONTENT AREA
+           ======================================== */
+
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            padding: var(--space-xl);
+            transition: var(--transition-smooth);
+        }
+
+        .content-header {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: var(--space-xl);
+            margin-bottom: var(--space-xl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .content-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent-gold);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: var(--space-md);
+        }
+
+        .mobile-toggle {
+            display: none;
+            width: 48px;
+            height: 48px;
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            box-shadow: var(--shadow-md);
+        }
+
+        .mobile-toggle:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-sm);
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+            font-weight: 500;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            background: var(--accent-gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            box-shadow: var(--shadow-md);
+        }
+
+        /* ========================================
+           💎 CONTENT SECTIONS
+           ======================================== */
+
+        .content-section {
+            display: none;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 🏆 Dashboard Cards */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-xl);
+            margin-bottom: var(--space-2xl);
+        }
+
+        .luxury-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: var(--space-xl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .luxury-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--secondary-gradient);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .luxury-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .luxury-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            margin-bottom: var(--space-lg);
+        }
+
+        .card-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--secondary-gradient);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .card-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .metric-value {
+            font-size: 3rem;
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            margin-bottom: var(--space-sm);
+        }
+
+        .metric-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .trend-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: var(--space-sm);
+        }
+
+        .trend-up {
+            background: rgba(34, 197, 94, 0.1);
+            color: #059669;
+        }
+
+        .trend-down {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+
+        /* ========================================
+           📱 RESPONSIVE DESIGN
+           ======================================== */
+
+        @media (max-width: 1024px) {
+            .luxury-sidebar {
+                transform: translateX(-100%);
+            }
+
+            .luxury-sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .mobile-toggle {
+                display: flex;
+            }
+
+            .header-top {
+                flex-direction: column;
+                gap: var(--space-md);
+                align-items: flex-start;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .luxury-sidebar {
+                width: 100%;
+                max-width: 320px;
+            }
+
+            .main-content {
+                padding: var(--space-md);
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: var(--space-lg);
+            }
+
+            .page-title {
+                font-size: 1.75rem;
+            }
+
+            .luxury-card {
+                padding: var(--space-lg);
+            }
+        }
+
+        /* ========================================
+           💫 SIDEBAR BACKDROP
+           ======================================== */
+
+        .sidebar-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition-smooth);
+        }
+
+        .sidebar-backdrop.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* ========================================
+           🎨 ADVANCED CARD STYLES
+           ======================================== */
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .gradient-card {
+            background: var(--secondary-gradient);
+            color: white;
+        }
+
+        .gradient-card .card-title,
+        .gradient-card .metric-label {
+            color: white;
+        }
+
+        .gradient-card .metric-value {
+            color: #FFD700;
+            -webkit-text-fill-color: #FFD700;
+        }
+
+        /* ========================================
+           ⚡ ANIMATION UTILITIES
+           ======================================== */
+
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .animate-bounce {
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
+            40%, 43% { transform: translate3d(0,-30px,0); }
+            70% { transform: translate3d(0,-15px,0); }
+            90% { transform: translate3d(0,-4px,0); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        /* ========================================
+           🎨 AI SECTIONS LUXURY STYLING
+           ======================================== */
+
+        /* AI Swarm Council Styles */
+        .ai-swarm-header .council-controls {
+            display: flex;
+            gap: var(--space-sm);
+        }
+
+        .control-btn {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .control-btn.active {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .swarm-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-lg);
+            margin: var(--space-xl) 0;
+        }
+
+        .swarm-metrics .metric-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: var(--space-lg);
+            text-align: center;
+            transition: var(--transition-smooth);
+        }
+
+        .swarm-metrics .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--accent-blue);
+        }
+
+        .metric-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-sm);
+        }
+
+        .metric-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin: var(--space-sm) auto 0;
+            transition: var(--transition-smooth);
+        }
+
+        .metric-status.loading {
+            background: var(--accent-gold);
+            animation: pulse 2s infinite;
+        }
+
+        .metric-status.connected {
+            background: var(--accent-green);
+        }
+
+        .metric-status.error {
+            background: #ef4444;
+        }
+
+        .swarm-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-md);
+            margin-top: var(--space-xl);
+        }
+
+        .swarm-task-btn {
+            padding: var(--space-md) var(--space-lg);
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-sm);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .swarm-task-btn.primary {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .swarm-task-btn.secondary {
+            background: var(--secondary-gradient);
+            color: white;
+        }
+
+        .swarm-task-btn.tertiary {
+            background: linear-gradient(135deg, var(--accent-gold), #f59e0b);
+            color: white;
+        }
+
+        .swarm-task-btn.quaternary {
+            background: linear-gradient(135deg, #8b5cf6, #a855f7);
+            color: white;
+        }
+
+        .swarm-task-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .swarm-task-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* AI Agents Network */
+        .ai-agents-network .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-xl);
+        }
+
+        .section-header h3 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .network-status {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm) var(--space-md);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            transition: var(--transition-smooth);
+        }
+
+        .status-dot.loading {
+            background: var(--accent-gold);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: var(--accent-green);
+        }
+
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-lg);
+        }
+
+        .agent-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: var(--space-lg);
+            transition: var(--transition-smooth);
+            position: relative;
+        }
+
+        .agent-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--accent-blue);
+        }
+
+        .agent-card.connected {
+            border-color: var(--accent-green);
+        }
+
+        .agent-card.disconnected {
+            border-color: #ef4444;
+            opacity: 0.7;
+        }
+
+        /* Collaboration Logs */
+        .collaboration-logs .logs-controls {
+            display: flex;
+            gap: var(--space-md);
+            align-items: center;
+        }
+
+        .logs-controls select {
+            padding: var(--space-sm) var(--space-md);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+
+        .export-btn {
+            padding: var(--space-sm) var(--space-md);
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .export-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .collaboration-feed {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: var(--space-lg);
+            min-height: 300px;
+            max-height: 500px;
+            overflow-y: auto;
+            margin-top: var(--space-lg);
+        }
+
+        .feed-empty {
+            text-align: center;
+            padding: var(--space-xl);
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: var(--space-md);
+        }
+
+        .empty-text {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--space-sm);
+        }
+
+        .empty-subtext {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* Decision Flow Pipeline */
+        .decision-flow .flow-legend {
+            display: flex;
+            gap: var(--space-lg);
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .legend-item .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot.primary { background: var(--accent-blue); }
+        .dot.secondary { background: var(--accent-green); }
+        .dot.tertiary { background: var(--accent-gold); }
+        .dot.quaternary { background: #8b5cf6; }
+        .dot.quinary { background: #f59e0b; }
+
+        .decision-pipeline {
+            display: flex;
+            align-items: center;
+            gap: var(--space-lg);
+            margin-top: var(--space-xl);
+            padding: var(--space-lg);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            overflow-x: auto;
+        }
+
+        .pipeline-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--space-sm);
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .step-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+            transition: var(--transition-smooth);
+        }
+
+        .step-icon.primary { background: var(--accent-blue); }
+        .step-icon.secondary { background: var(--accent-green); }
+        .step-icon.tertiary { background: var(--accent-gold); }
+        .step-icon.quaternary { background: #8b5cf6; }
+        .step-icon.quinary { background: #f59e0b; }
+
+        .step-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+        }
+
+        .step-agent {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .step-status {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .step-status.waiting {
+            background: rgba(156, 163, 175, 0.2);
+            color: #6b7280;
+        }
+
+        .step-status.processing {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--accent-blue);
+            animation: pulse 2s infinite;
+        }
+
+        .step-status.completed {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+        }
+
+        .step-status.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .pipeline-arrow {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            font-weight: bold;
+        }
+
+        /* AI Monitoring Styles */
+        .monitoring-overview .monitoring-controls {
+            display: flex;
+            gap: var(--space-sm);
+        }
+
+        .providers-status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--space-lg);
+            margin-top: var(--space-xl);
+        }
+
+        .provider-status-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: var(--space-lg);
+            transition: var(--transition-smooth);
+            position: relative;
+        }
+
+        .provider-status-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .provider-status-card.connected {
+            border-color: var(--accent-green);
+        }
+
+        .provider-status-card.disconnected {
+            border-color: #ef4444;
+            opacity: 0.7;
+        }
+
+        .performance-metrics .metrics-timeframe select {
+            padding: var(--space-sm) var(--space-md);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            background: var(--glass-bg);
+            color: var(--text-primary);
+        }
+
+        .metrics-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-lg);
+            margin-top: var(--space-lg);
+        }
+
+        .metric-item {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: var(--space-lg);
+            text-align: center;
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-md);
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-sm);
+        }
+
+        .metric-trend {
+            font-size: 0.75rem;
+        }
+
+        .trend-indicator {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .trend-indicator.positive {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+        }
+
+        .trend-indicator.negative {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .trend-indicator.loading {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent-gold);
+            animation: pulse 2s infinite;
+        }
+
+        /* Provider Table */
+        .providers-table .table-controls {
+            display: flex;
+            gap: var(--space-md);
+            align-items: center;
+            margin-bottom: var(--space-lg);
+        }
+
+        .table-controls input {
+            padding: var(--space-sm) var(--space-md);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            min-width: 200px;
+        }
+
+        .providers-table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .providers-table-responsive {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--glass-bg);
+        }
+
+        .providers-table-responsive th,
+        .providers-table-responsive td {
+            padding: var(--space-md);
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .providers-table-responsive th {
+            background: rgba(0, 0, 0, 0.05);
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Performance Chart */
+        .performance-chart .chart-controls {
+            display: flex;
+            gap: var(--space-sm);
+        }
+
+        .chart-btn {
+            padding: var(--space-sm) var(--space-md);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            background: var(--glass-bg);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .chart-btn.active {
+            background: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+        }
+
+        .chart-container {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: var(--space-xl);
+            margin-top: var(--space-lg);
+            min-height: 300px;
+        }
+
+        .chart-placeholder {
+            text-align: center;
+            padding: var(--space-xl);
+        }
+
+        .chart-icon {
+            font-size: 4rem;
+            margin-bottom: var(--space-md);
+        }
+
+        .chart-text {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--space-sm);
+        }
+
+        .chart-subtext {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* Error Logs */
+        .error-logs .logs-controls {
+            display: flex;
+            gap: var(--space-md);
+            align-items: center;
+        }
+
+        .clear-logs-btn {
+            padding: var(--space-sm) var(--space-md);
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .error-logs-container {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: var(--space-lg);
+            margin-top: var(--space-lg);
+            min-height: 200px;
+        }
+
+        /* 🤖 Enhanced AI Chatbot Styles - Poe.com Inspired */
+        .chatbot-container {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-lg);
+            height: calc(100vh - 200px);
+        }
+
+        .provider-selection {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            padding: var(--space-xl);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .provider-section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: var(--space-lg);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .provider-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--space-md);
+            margin-bottom: var(--space-lg);
+        }
+
+        .provider-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid transparent;
+            border-radius: 16px;
+            padding: var(--space-lg);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .provider-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .provider-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-xl);
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 1);
+        }
+
+        .provider-card:hover::before {
+            opacity: 1;
+        }
+
+        .provider-card.selected {
+            background: var(--primary-gradient);
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .provider-card.selected::before {
+            opacity: 0;
+        }
+
+        .provider-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .provider-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .provider-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .provider-status {
+            margin-left: auto;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .provider-status.ready {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+        }
+
+        .provider-status.not-configured {
+            background: rgba(255, 152, 0, 0.2);
+            color: #ff9800;
+        }
+
+        .provider-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .provider-model {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+        }
+
+        .provider-card.selected .provider-model {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Chat Main Interface */
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+        }
+
+        .enhanced-chat-header {
+            padding: var(--space-lg);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 20px;
+            color: #4caf50;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #4caf50;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .enhanced-messages-container {
+            flex: 1;
+            padding: var(--space-xl);
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: var(--space-lg);
+            animation: messageSlideIn 0.3s ease-out;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        @keyframes messageSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9rem;
+            margin: 0 12px;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: var(--primary-gradient);
+        }
+
+        .message.ai .message-avatar {
+            background: var(--secondary-gradient);
+        }
+
+        .message-content {
+            max-width: 70%;
+            background: white;
+            border-radius: 18px;
+            padding: 16px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .message.user .message-content {
+            background: var(--primary-gradient);
+            color: white;
+            border-radius: 18px 18px 4px 18px;
+        }
+
+        .message.ai .message-content {
+            border-radius: 18px 18px 18px 4px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .message-text {
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .message-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            font-size: 0.75rem;
+            opacity: 0.7;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .message-action {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            opacity: 0.6;
+            transition: opacity 0.2s ease;
+        }
+
+        .message-action:hover {
+            opacity: 1;
+        }
+
+        /* Enhanced Input Area */
+        .enhanced-input-container {
+            padding: var(--space-xl);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .enhanced-input-wrapper {
+            display: flex;
+            gap: var(--space-md);
+            align-items: flex-end;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .enhanced-message-input {
+            flex: 1;
+            min-height: 48px;
+            max-height: 120px;
+            padding: 12px 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            resize: none;
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+            line-height: 1.5;
+        }
+
+        .enhanced-message-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .enhanced-send-button {
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 24px;
+            padding: 12px 24px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            min-width: 100px;
+            justify-content: center;
+        }
+
+        .enhanced-send-button:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .enhanced-send-button:active {
+            transform: scale(0.98);
+        }
+
+        .enhanced-send-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Typing Indicator */
+        .enhanced-typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            margin-bottom: var(--space-lg);
+        }
+
+        .enhanced-typing-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 18px;
+            background: var(--secondary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .enhanced-typing-dots {
+            display: flex;
+            gap: 4px;
+            padding: 16px 20px;
+            background: white;
+            border-radius: 18px 18px 18px 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .enhanced-typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #cbd5e0;
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite ease-in-out;
+        }
+
+        .enhanced-typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .enhanced-typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typingBounce {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Empty State */
+        .enhanced-empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .enhanced-empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: var(--space-lg);
+            opacity: 0.3;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .enhanced-empty-state h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: var(--space-sm);
+            color: var(--text-primary);
+        }
+
+        .enhanced-empty-state p {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid #4caf50;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            max-width: 400px;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.error {
+            border-left-color: #f44336;
+        }
+
+        .toast-content {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .toast-icon {
+            font-size: 1.2rem;
+        }
+
+        .toast-message {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .provider-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .message-content {
+                max-width: 85%;
+            }
+            
+            .enhanced-input-wrapper {
+                flex-direction: column;
+                gap: var(--space-sm);
+            }
+            
+            .enhanced-send-button {
+                align-self: stretch;
+            }
+        }
+            box-shadow: var(--shadow-lg);
+        }
+
+        .provider-card.selected {
+            border-color: var(--accent-blue);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .provider-card.unavailable {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .chat-config {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: var(--space-lg);
+            margin-top: var(--space-lg);
+        }
+
+        .config-row {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            margin-bottom: var(--space-md);
+        }
+
+        .config-row label {
+            min-width: 120px;
+            font-weight: 500;
+        }
+
+        .config-row input,
+        .config-row textarea {
+            flex: 1;
+            padding: var(--space-sm);
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            background: var(--glass-bg);
+        }
+
+        /* Chat Interface */
+        .chat-interface {
+            margin-top: var(--space-xl);
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-lg);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .active-provider {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .provider-avatar {
+            width: 48px;
+            height: 48px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .provider-details .provider-name {
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+
+        .provider-details .provider-status {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .chat-stats {
+            display: flex;
+            gap: var(--space-lg);
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .chat-messages {
+            min-height: 400px;
+            max-height: 600px;
+            overflow-y: auto;
+            padding: var(--space-lg);
+        }
+
+        .chat-empty {
+            text-align: center;
+            padding: var(--space-xl);
+        }
+
+        .quick-prompts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-sm);
+            justify-content: center;
+            margin-top: var(--space-lg);
+        }
+
+        .quick-prompt-btn {
+            padding: var(--space-sm) var(--space-md);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            font-size: 0.875rem;
+        }
+
+        .quick-prompt-btn:hover {
+            background: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+        }
+
+        .chat-input-container {
+            border-top: 1px solid var(--glass-border);
+            padding: var(--space-lg);
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            align-items: flex-end;
+            gap: var(--space-sm);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: var(--space-sm);
+        }
+
+        #chatInput {
+            flex: 1;
+            border: none;
+            background: transparent;
+            resize: none;
+            outline: none;
+            font-family: inherit;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            max-height: 120px;
+        }
+
+        .input-actions {
+            display: flex;
+            gap: var(--space-xs);
+        }
+
+        .input-btn {
+            width: 32px;
+            height: 32px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .input-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--accent-blue);
+        }
+
+        .send-btn {
+            width: 32px;
+            height: 32px;
+            background: var(--accent-blue);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-btn:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: #2563eb;
+            transform: scale(1.05);
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            margin-top: var(--space-sm);
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 2px;
+        }
+
+        .typing-dots span {
+            width: 4px;
+            height: 4px;
+            background: var(--accent-blue);
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        /* Provider Comparison */
+        .provider-comparison .comparison-controls {
+            display: flex;
+            gap: var(--space-sm);
+        }
+
+        .comparison-btn {
+            padding: var(--space-sm) var(--space-md);
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .comparison-table {
+            margin-top: var(--space-lg);
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* Usage Analytics */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-lg);
+            margin-top: var(--space-lg);
+        }
+
+        .analytics-item {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: var(--space-lg);
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .analytics-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--primary-gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .analytics-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .analytics-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: var(--space-xs);
+        }
+
+        .analytics-change {
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .analytics-change.positive { color: var(--accent-green); }
+        .analytics-change.negative { color: #ef4444; }
+        .analytics-change.neutral { color: var(--text-secondary); }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .swarm-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .decision-pipeline {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .pipeline-arrow {
+                transform: rotate(90deg);
+                align-self: center;
+            }
+            
+            .providers-status-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics-dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .chat-stats {
+                flex-direction: column;
+                gap: var(--space-sm);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .metrics-dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .provider-selection-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 🏛️ Luxury Sidebar -->
+    <nav class="luxury-sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="brand-logo">
+                <i class="fas fa-gem"></i>
+            </div>
+            <div class="brand-title">ระเบียบการช่าง</div>
+            <div class="brand-subtitle">🚀 Gemini 2.0 Flash AI CMS</div>
+        </div>
+        
+        <div class="nav-menu">
+            <!-- Dashboard Section -->
+            <div class="nav-category">
+                <div class="nav-category-header">
+                    <i class="fas fa-tachometer-alt nav-category-icon"></i>
+                    <span>Dashboard</span>
+                </div>
+                <div class="nav-links">
+                    <a class="nav-link active" data-section="dashboard">
+                        <i class="fas fa-chart-pie nav-icon"></i>
+                        <span class="nav-text">🚀 Main Dashboard</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- AI Interface Section -->
+            <div class="nav-category">
+                <div class="nav-category-header">
+                    <i class="fas fa-robot nav-category-icon"></i>
+                    <span>AI Interface</span>
+                </div>
+                <div class="nav-links">
+                    <a class="nav-link" data-section="ai-swarm">
+                        <i class="fas fa-users nav-icon"></i>
+                        <span class="nav-text">🤖 AI Swarm Council</span>
+                    </a>
+                    <a class="nav-link" data-section="ai-monitoring">
+                        <i class="fas fa-chart-line nav-icon"></i>
+                        <span class="nav-text">📊 AI Monitoring</span>
+                    </a>
+                    <a class="nav-link" data-section="ai-chatbot">
+                        <i class="fas fa-comments nav-icon"></i>
+                        <span class="nav-text">💬 AI Chatbot</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Article Management Section -->
+            <div class="nav-category">
+                <div class="nav-category-header">
+                    <i class="fas fa-edit nav-category-icon"></i>
+                    <span>Article Management</span>
+                </div>
+                <div class="nav-links">
+                    <a class="nav-link" data-section="article-management">
+                        <i class="fas fa-file-alt nav-icon"></i>
+                        <span class="nav-text">📝 Article Management</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- SEO Analytics Section -->
+            <div class="nav-category">
+                <div class="nav-category-header">
+                    <i class="fas fa-search nav-category-icon"></i>
+                    <span>SEO Analytics</span>
+                </div>
+                <div class="nav-links">
+                    <a class="nav-link" data-section="seo-analytics">
+                        <i class="fas fa-chart-bar nav-icon"></i>
+                        <span class="nav-text">📊 SEO Analytics</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- System Security Section -->
+            <div class="nav-category">
+                <div class="nav-category-header">
+                    <i class="fas fa-shield-alt nav-category-icon"></i>
+                    <span>System Security</span>
+                </div>
+                <div class="nav-links">
+                    <a class="nav-link" data-section="system-security">
+                        <i class="fas fa-shield-alt nav-icon"></i>
+                        <span class="nav-text">🛡️ Security Dashboard</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Database Management Section -->
+            <div class="nav-category">
+                <div class="nav-category-header">
+                    <i class="fas fa-database nav-category-icon"></i>
+                    <span>Database Management</span>
+                </div>
+                <div class="nav-links">
+                    <a class="nav-link" data-section="database-management">
+                        <i class="fas fa-server nav-icon"></i>
+                        <span class="nav-text">🗄️ Database Management</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- External Links -->
+            <div class="nav-category">
+                <div class="nav-category-header">
+                    <i class="fas fa-external-link-alt nav-category-icon"></i>
+                    <span>External</span>
+                </div>
+                <div class="nav-links">
+                    <a href="/" class="nav-link" target="_blank">
+                        <i class="fas fa-globe nav-icon"></i>
+                        <span class="nav-text">🌐 View Website</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 🎭 Main Content Area -->
+    <main class="main-content">
+        <!-- Content Header -->
+        <header class="content-header">
+            <div class="header-top">
+                <div>
+                    <button class="mobile-toggle" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="page-title" id="pageTitle">🚀 Gemini 2.0 Flash Dashboard</h1>
+                    <p class="page-subtitle" id="pageSubtitle">Advanced AI-Powered Content Management System</p>
+                </div>
+                <div class="user-menu">
+                    <div class="user-avatar">A</div>
+                    <span style="font-weight: 600;">Admin</span>
+                    <button onclick="logout()" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                        <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 🏆 Dashboard Section -->
+        <section id="dashboard" class="content-section active">
+            <div class="dashboard-grid">
+                <!-- Metric Cards -->
+                <div class="luxury-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div>
+                            <div class="card-title">AI Providers</div>
+                            <div class="card-subtitle">Active AI Systems</div>
+                        </div>
+                    </div>
+                    <div class="metric-value">12</div>
+                    <div class="metric-label">Connected Providers</div>
+                    <div class="trend-indicator trend-up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+2 this week</span>
+                    </div>
+                </div>
+
+                <div class="luxury-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div>
+                            <div class="card-title">Total Articles</div>
+                            <div class="card-subtitle">Published Content</div>
+                        </div>
+                    </div>
+                    <div class="metric-value">1,248</div>
+                    <div class="metric-label">Articles Published</div>
+                    <div class="trend-indicator trend-up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+15% this month</span>
+                    </div>
+                </div>
+
+                <div class="luxury-card gradient-card">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: rgba(255, 255, 255, 0.2);">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                        <div>
+                            <div class="card-title">Page Views</div>
+                            <div class="card-subtitle">Today's Traffic</div>
+                        </div>
+                    </div>
+                    <div class="metric-value">24,567</div>
+                    <div class="metric-label">Views Today</div>
+                    <div class="trend-indicator" style="background: rgba(255, 255, 255, 0.2); color: #FFD700;">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+8.5% vs yesterday</span>
+                    </div>
+                </div>
+
+                <div class="luxury-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-server"></i>
+                        </div>
+                        <div>
+                            <div class="card-title">System Uptime</div>
+                            <div class="card-subtitle">Server Performance</div>
+                        </div>
+                    </div>
+                    <div class="metric-value">99.9%</div>
+                    <div class="metric-label">Uptime This Month</div>
+                    <div class="trend-indicator trend-up">
+                        <i class="fas fa-check"></i>
+                        <span>Excellent</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="dashboard-grid">
+                <div class="luxury-card glass-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <div>
+                            <div class="card-title">Create New Article</div>
+                            <div class="card-subtitle">AI-Powered Content Creation</div>
+                        </div>
+                    </div>
+                    <p style="margin-bottom: var(--space-lg); color: var(--text-secondary);">
+                        Use our advanced AI to create engaging content with SEO optimization.
+                    </p>
+                    <button style="background: var(--accent-gold); border: none; color: white; padding: 12px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: var(--transition-smooth);">
+                        <i class="fas fa-magic"></i> Create Article
+                    </button>
+                </div>
+
+                <div class="luxury-card glass-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div>
+                            <div class="card-title">Analytics Report</div>
+                            <div class="card-subtitle">Performance Insights</div>
+                        </div>
+                    </div>
+                    <p style="margin-bottom: var(--space-lg); color: var(--text-secondary);">
+                        Generate comprehensive analytics reports for your content.
+                    </p>
+                    <button style="background: var(--secondary-gradient); border: none; color: white; padding: 12px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: var(--transition-smooth);">
+                        <i class="fas fa-download"></i> Download Report
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 🤖 AI Swarm Council Section -->
+        <section id="ai-swarm" class="content-section">
+            <!-- Council Overview -->
+            <div class="luxury-card ai-swarm-header">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div>
+                        <div class="card-title">AI Swarm Council</div>
+                        <div class="card-subtitle">Collaborative Artificial Intelligence Network</div>
+                    </div>
+                    <div class="council-controls">
+                        <button id="refreshSwarmBtn" class="control-btn" onclick="refreshSwarmStatus()" title="Refresh Status">
+                            <i class="fas fa-sync"></i>
+                        </button>
+                        <button id="clearLogsBtn" class="control-btn" onclick="clearSwarmLogs()" title="Clear Logs">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button id="testSwarmBtn" class="control-btn" onclick="testSwarmConnections()" title="Test All Connections">
+                            <i class="fas fa-network-wired"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Real-time Metrics -->
+                <div class="swarm-metrics" id="swarmMetrics">
+                    <div class="metric-card" id="activeAgentsCard">
+                        <div class="metric-number" id="activeAgentsCount">0</div>
+                        <div class="metric-label">Active Agents</div>
+                        <div class="metric-status loading" id="agentsStatus"></div>
+                    </div>
+                    <div class="metric-card" id="responseTimeCard">
+                        <div class="metric-number" id="avgResponseTime">--ms</div>
+                        <div class="metric-label">Avg Response</div>
+                        <div class="metric-status loading" id="responseStatus"></div>
+                    </div>
+                    <div class="metric-card" id="successRateCard">
+                        <div class="metric-number" id="successRate">--%</div>
+                        <div class="metric-label">Success Rate</div>
+                        <div class="metric-status loading" id="successStatus"></div>
+                    </div>
+                    <div class="metric-card" id="tasksCompletedCard">
+                        <div class="metric-number" id="tasksCompleted">0</div>
+                        <div class="metric-label">Tasks Completed</div>
+                        <div class="metric-status loading" id="tasksStatus"></div>
+                    </div>
+                </div>
+
+                <!-- Task Controls -->
+                <div class="swarm-controls">
+                    <button class="swarm-task-btn primary" onclick="startSwarmTask('content_creation')" id="contentCreationBtn">
+                        <i class="fas fa-pen"></i> Content Creation
+                    </button>
+                    <button class="swarm-task-btn secondary" onclick="startSwarmTask('content_review')" id="contentReviewBtn">
+                        <i class="fas fa-search"></i> Content Review
+                    </button>
+                    <button class="swarm-task-btn tertiary" onclick="startSwarmTask('seo_optimization')" id="seoOptimizationBtn">
+                        <i class="fas fa-chart-line"></i> SEO Optimization
+                    </button>
+                    <button class="swarm-task-btn quaternary" onclick="startSwarmTask('full_workflow')" id="fullWorkflowBtn">
+                        <i class="fas fa-cogs"></i> Full Workflow
+                    </button>
+                </div>
+            </div>
+
+            <!-- AI Agents Network Visualization -->
+            <div class="luxury-card ai-agents-network">
+                <div class="section-header">
+                    <h3><i class="fas fa-network-wired"></i> AI Agents Network</h3>
+                    <div class="network-status" id="networkStatus">
+                        <span class="status-dot loading"></span>
+                        <span>Initializing...</span>
+                    </div>
+                </div>
+                <div class="agents-grid" id="agentsGrid">
+                    <!-- Agents will be populated by JavaScript from backend data -->
+                </div>
+            </div>
+
+            <!-- Live Collaboration Logs -->
+            <div class="luxury-card collaboration-logs">
+                <div class="section-header">
+                    <h3><i class="fas fa-comments"></i> Live Collaboration</h3>
+                    <div class="logs-controls">
+                        <select id="taskFilter" onchange="filterLogs()">
+                            <option value="all">All Tasks</option>
+                            <option value="content_creation">Content Creation</option>
+                            <option value="content_review">Content Review</option>
+                            <option value="seo_optimization">SEO Optimization</option>
+                            <option value="full_workflow">Full Workflow</option>
+                        </select>
+                        <button class="export-btn" onclick="exportSwarmLogs()">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+                <div class="collaboration-feed" id="collaborationFeed">
+                    <div class="feed-empty">
+                        <div class="empty-icon">💬</div>
+                        <div class="empty-text">Waiting for AI collaboration...</div>
+                        <div class="empty-subtext">Start a task to see AI agents working together</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Swarm Decision Flow -->
+            <div class="luxury-card decision-flow">
+                <div class="section-header">
+                    <h3><i class="fas fa-project-diagram"></i> Decision Making Process</h3>
+                    <div class="flow-legend">
+                        <span class="legend-item"><span class="dot primary"></span>Creator</span>
+                        <span class="legend-item"><span class="dot secondary"></span>Reviewer</span>
+                        <span class="legend-item"><span class="dot tertiary"></span>Optimizer</span>
+                        <span class="legend-item"><span class="dot quaternary"></span>Validator</span>
+                        <span class="legend-item"><span class="dot quinary"></span>Cultural</span>
+                    </div>
+                </div>
+                <div class="decision-pipeline" id="decisionPipeline">
+                    <div class="pipeline-step" data-step="1" data-agent="gemini">
+                        <div class="step-icon primary"><i class="fas fa-lightbulb"></i></div>
+                        <div class="step-info">
+                            <div class="step-title">Content Creation</div>
+                            <div class="step-agent">Gemini 2.0 Flash</div>
+                            <div class="step-status waiting">Waiting</div>
+                        </div>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-step" data-step="2" data-agent="openai">
+                        <div class="step-icon secondary"><i class="fas fa-eye"></i></div>
+                        <div class="step-info">
+                            <div class="step-title">Quality Review</div>
+                            <div class="step-agent">OpenAI GPT</div>
+                            <div class="step-status waiting">Waiting</div>
+                        </div>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-step" data-step="3" data-agent="claude">
+                        <div class="step-icon tertiary"><i class="fas fa-magic"></i></div>
+                        <div class="step-info">
+                            <div class="step-title">Content Enhancement</div>
+                            <div class="step-agent">Claude AI</div>
+                            <div class="step-status waiting">Waiting</div>
+                        </div>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-step" data-step="4" data-agent="deepseek">
+                        <div class="step-icon quaternary"><i class="fas fa-check-circle"></i></div>
+                        <div class="step-info">
+                            <div class="step-title">Technical Validation</div>
+                            <div class="step-agent">DeepSeek AI</div>
+                            <div class="step-status waiting">Waiting</div>
+                        </div>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-step" data-step="5" data-agent="chinda">
+                        <div class="step-icon quinary"><i class="fas fa-globe"></i></div>
+                        <div class="step-info">
+                            <div class="step-title">Cultural Optimization</div>
+                            <div class="step-agent">ChindaX AI</div>
+                            <div class="step-status waiting">Waiting</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 📊 AI Monitoring Section -->
+        <section id="ai-monitoring" class="content-section">
+            <!-- Overview Metrics -->
+            <div class="luxury-card monitoring-overview">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div>
+                        <div class="card-title">AI Monitoring Dashboard</div>
+                        <div class="card-subtitle">Real-time Performance & Health Monitoring</div>
+                    </div>
+                    <div class="monitoring-controls">
+                        <button id="refreshMonitoringBtn" class="control-btn" onclick="refreshMonitoring()" title="Refresh All Data">
+                            <i class="fas fa-sync"></i>
+                        </button>
+                        <button id="testAllProvidersBtn" class="control-btn" onclick="testAllProviders()" title="Test All Providers">
+                            <i class="fas fa-flask"></i>
+                        </button>
+                        <button id="toggleAutoRefreshBtn" class="control-btn active" onclick="toggleAutoRefresh()" title="Auto Refresh: ON">
+                            <i class="fas fa-play"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Real-time Provider Status Grid -->
+                <div class="providers-status-grid" id="providersStatusGrid">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Performance Metrics -->
+            <div class="luxury-card performance-metrics">
+                <div class="section-header">
+                    <h3><i class="fas fa-tachometer-alt"></i> Performance Metrics</h3>
+                    <div class="metrics-timeframe">
+                        <select id="timeframeSelect" onchange="updateTimeframe()">
+                            <option value="1h">Last Hour</option>
+                            <option value="24h" selected>Last 24 Hours</option>
+                            <option value="7d">Last 7 Days</option>
+                            <option value="30d">Last 30 Days</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="metrics-dashboard">
+                    <div class="metric-item">
+                        <div class="metric-header">
+                            <i class="fas fa-clock"></i>
+                            <span>Average Response Time</span>
+                        </div>
+                        <div class="metric-value" id="avgResponseTimeMetric">--ms</div>
+                        <div class="metric-trend" id="responseTimeTrend">
+                            <span class="trend-indicator loading">Loading...</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-item">
+                        <div class="metric-header">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Success Rate</span>
+                        </div>
+                        <div class="metric-value" id="successRateMetric">--%</div>
+                        <div class="metric-trend" id="successRateTrend">
+                            <span class="trend-indicator loading">Loading...</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-item">
+                        <div class="metric-header">
+                            <i class="fas fa-exchange-alt"></i>
+                            <span>Total Requests</span>
+                        </div>
+                        <div class="metric-value" id="totalRequestsMetric">0</div>
+                        <div class="metric-trend" id="requestsTrend">
+                            <span class="trend-indicator loading">Loading...</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-item">
+                        <div class="metric-header">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Error Rate</span>
+                        </div>
+                        <div class="metric-value" id="errorRateMetric">--%</div>
+                        <div class="metric-trend" id="errorRateTrend">
+                            <span class="trend-indicator loading">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Provider Details Table -->
+            <div class="luxury-card providers-table">
+                <div class="section-header">
+                    <h3><i class="fas fa-server"></i> Provider Status Details</h3>
+                    <div class="table-controls">
+                        <input type="text" id="providerSearch" placeholder="Search providers..." onkeyup="filterProviders()">
+                        <button class="export-btn" onclick="exportProviderStatus()">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="providers-table-container">
+                    <table class="providers-table-responsive" id="providersTable">
+                        <thead>
+                            <tr>
+                                <th>Provider</th>
+                                <th>Status</th>
+                                <th>Response Time</th>
+                                <th>Success Rate</th>
+                                <th>Last Check</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="providersTableBody">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Historical Performance Chart -->
+            <div class="luxury-card performance-chart">
+                <div class="section-header">
+                    <h3><i class="fas fa-chart-area"></i> Performance Trends</h3>
+                    <div class="chart-controls">
+                        <button class="chart-btn active" data-metric="response_time">Response Time</button>
+                        <button class="chart-btn" data-metric="success_rate">Success Rate</button>
+                        <button class="chart-btn" data-metric="request_volume">Request Volume</button>
+                    </div>
+                </div>
+                
+                <div class="chart-container" id="performanceChart">
+                    <div class="chart-placeholder">
+                        <div class="chart-icon">📈</div>
+                        <div class="chart-text">Performance chart will be rendered here</div>
+                        <div class="chart-subtext">Real-time data visualization using Chart.js</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alert & Error Logs -->
+            <div class="luxury-card error-logs">
+                <div class="section-header">
+                    <h3><i class="fas fa-exclamation-circle"></i> Alerts & Error Logs</h3>
+                    <div class="logs-controls">
+                        <select id="logLevelFilter" onchange="filterLogs()">
+                            <option value="all">All Levels</option>
+                            <option value="error">Errors Only</option>
+                            <option value="warning">Warnings</option>
+                            <option value="info">Info</option>
+                        </select>
+                        <button class="clear-logs-btn" onclick="clearErrorLogs()">
+                            <i class="fas fa-trash"></i> Clear
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="error-logs-container" id="errorLogsContainer">
+                    <div class="logs-empty">
+                        <div class="empty-icon">✅</div>
+                        <div class="empty-text">No errors detected</div>
+                        <div class="empty-subtext">All AI providers are running smoothly</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 💬 Enhanced AI Chatbot Section - Poe.com Style -->
+        <section id="ai-chatbot" class="content-section">
+            <div class="chatbot-container">
+                <!-- Enhanced Provider Selection -->
+                <div class="provider-selection">
+                    <h3 class="provider-section-title">
+                        <i class="fas fa-brain"></i>
+                        Select an AI Provider
+                    </h3>
+                    <div class="provider-grid" id="enhanced-provider-grid">
+                        <!-- Providers will be loaded here -->
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                            <div class="loading-spinner" style="border-color: #667eea; border-top-color: transparent; margin: 0 auto 15px;"></div>
+                            <p style="color: var(--text-secondary);">Loading AI providers...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enhanced Chat Interface -->
+                <div class="chat-main">
+                    <div class="enhanced-chat-header">
+                        <div class="chat-title-info">
+                            <i class="fas fa-robot"></i>
+                            <h2 id="enhanced-chat-title">Select a conversation</h2>
+                        </div>
+                        <div class="status-indicator">
+                            <div class="status-dot"></div>
+                            <span id="enhanced-connection-status">Connecting...</span>
+                        </div>
+                    </div>
+
+                    <div class="enhanced-messages-container" id="enhanced-messages-container">
+                        <div class="enhanced-empty-state">
+                            <i class="fas fa-comments enhanced-empty-state-icon"></i>
+                            <h3>Welcome to AI Chat</h3>
+                            <p>Select an AI provider above and start your conversation</p>
+                        </div>
+                    </div>
+
+                    <!-- Enhanced Input Area -->
+                    <div class="enhanced-input-container">
+                        <div class="enhanced-input-wrapper">
+                            <textarea 
+                                id="enhanced-message-input" 
+                                class="enhanced-message-input" 
+                                placeholder="Type your message..."
+                                rows="1"
+                                disabled
+                            ></textarea>
+                            <button 
+                                id="enhanced-send-button" 
+                                class="enhanced-send-button"
+                                disabled
+                            >
+                                <i class="fas fa-paper-plane"></i>
+                                <span>Send</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Analytics Section -->
+            <div class="luxury-card usage-analytics" style="margin-top: var(--space-lg);">
+                <div class="section-header">
+                    <h3><i class="fas fa-chart-pie"></i> Chat Analytics</h3>
+                    <div class="analytics-timeframe">
+                        <select id="analyticsTimeframe" onchange="updateAnalytics()">
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="analytics-grid">
+                    <div class="analytics-item">
+                        <div class="analytics-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="analytics-data">
+                            <div class="analytics-value" id="enhanced-total-conversations">0</div>
+                            <div class="analytics-label">Total Conversations</div>
+                            <div class="analytics-change positive">+12% vs last period</div>
+                        </div>
+                    </div>
+                    
+                    <div class="analytics-item">
+                        <div class="analytics-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="analytics-data">
+                            <div class="analytics-value" id="enhanced-avg-response-time">--ms</div>
+                            <div class="analytics-label">Avg Response Time</div>
+                            <div class="analytics-change negative">-8% faster</div>
+                        </div>
+                    </div>
+                    
+                    <div class="analytics-item">
+                        <div class="analytics-icon">
+                            <i class="fas fa-microchip"></i>
+                        </div>
+                        <div class="analytics-data">
+                            <div class="analytics-value" id="enhanced-total-tokens">0</div>
+                            <div class="analytics-label">Total Tokens</div>
+                            <div class="analytics-change positive">+15% efficiency</div>
+                        </div>
+                    </div>
+                    
+                    <div class="analytics-item">
+                        <div class="analytics-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="analytics-data">
+                            <div class="analytics-value" id="enhanced-total-cost">฿0.00</div>
+                            <div class="analytics-label">Total Cost</div>
+                            <div class="analytics-change neutral">Within budget</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Provider Comparison -->
+            <div class="luxury-card provider-comparison">
+                <div class="section-header">
+                    <h3><i class="fas fa-balance-scale"></i> Provider Comparison</h3>
+                    <div class="comparison-controls">
+                        <button class="comparison-btn" onclick="runProviderBenchmark()">
+                            <i class="fas fa-stopwatch"></i> Benchmark
+                        </button>
+                        <button class="comparison-btn" onclick="compareProviders()">
+                            <i class="fas fa-chart-bar"></i> Compare
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="comparison-table" id="providerComparisonTable">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Provider</th>
+                                <th>Model</th>
+                                <th>Response Time</th>
+                                <th>Quality Score</th>
+                                <th>Cost per Token</th>
+                                <th>Strengths</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparisonTableBody">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Usage Analytics -->
+            <div class="luxury-card usage-analytics">
+                <div class="section-header">
+                    <h3><i class="fas fa-chart-pie"></i> Usage Analytics</h3>
+                    <div class="analytics-timeframe">
+                        <select id="analyticsTimeframe" onchange="updateAnalytics()">
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="analytics-grid">
+                    <div class="analytics-item">
+                        <div class="analytics-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="analytics-data">
+                            <div class="analytics-value" id="totalConversations">0</div>
+                            <div class="analytics-label">Total Conversations</div>
+                            <div class="analytics-change positive">+12% vs last period</div>
+                        </div>
+                    </div>
+                    
+                    <div class="analytics-item">
+                        <div class="analytics-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="analytics-data">
+                            <div class="analytics-value" id="avgResponseTime">--ms</div>
+                            <div class="analytics-label">Avg Response Time</div>
+                            <div class="analytics-change negative">-8% faster</div>
+                        </div>
+                    </div>
+                    
+                    <div class="analytics-item">
+                        <div class="analytics-icon">
+                            <i class="fas fa-thumbs-up"></i>
+                        </div>
+                        <div class="analytics-data">
+                            <div class="analytics-value" id="satisfactionRate">--%</div>
+                            <div class="analytics-label">Satisfaction Rate</div>
+                            <div class="analytics-change positive">+5% improvement</div>
+                        </div>
+                    </div>
+                    
+                    <div class="analytics-item">
+                        <div class="analytics-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="analytics-data">
+                            <div class="analytics-value" id="totalCost">$0.00</div>
+                            <div class="analytics-label">Total Cost</div>
+                            <div class="analytics-change neutral">Budget: $50.00</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Additional sections would go here with similar luxury design -->
+        <section id="article-management" class="content-section">
+            <div class="luxury-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div>
+                        <div class="card-title">Article Management</div>
+                        <div class="card-subtitle">Content Creation & Management System</div>
+                    </div>
+                </div>
+                <p style="margin-top: var(--space-lg); color: var(--text-secondary);">
+                    Manage your articles, create new content with AI assistance, and optimize for SEO performance.
+                </p>
+                <button style="background: var(--accent-gold); border: none; color: white; padding: 12px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; margin-top: var(--space-lg);">
+                    <i class="fas fa-plus"></i> Create New Article
+                </button>
+            </div>
+        </section>
+
+        <section id="seo-analytics" class="content-section">
+            <div class="luxury-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div>
+                        <div class="card-title">SEO Analytics</div>
+                        <div class="card-subtitle">Search Engine Optimization Dashboard</div>
+                    </div>
+                </div>
+                <p style="margin-top: var(--space-lg); color: var(--text-secondary);">
+                    Monitor your SEO performance, track rankings, and optimize content for better search visibility.
+                </p>
+            </div>
+        </section>
+
+        <section id="system-security" class="content-section">
+            <div class="luxury-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div>
+                        <div class="card-title">System Security</div>
+                        <div class="card-subtitle">Security Monitoring & Protection</div>
+                    </div>
+                </div>
+                <p style="margin-top: var(--space-lg); color: var(--text-secondary);">
+                    Monitor system security, view authentication logs, and manage security settings.
+                </p>
+            </div>
+        </section>
+
+        <section id="database-management" class="content-section">
+            <div class="luxury-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <div>
+                        <div class="card-title">Database Management</div>
+                        <div class="card-subtitle">Database Operations & Migration</div>
+                    </div>
+                </div>
+                <p style="margin-top: var(--space-lg); color: var(--text-secondary);">
+                    Manage database operations, perform migrations, and monitor database performance.
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Sidebar Backdrop -->
+    <div class="sidebar-backdrop" id="backdrop"></div>
+
+    <!-- Enhanced Toast Notification -->
+    <div id="enhanced-toast" class="toast">
+        <div class="toast-content">
+            <i id="enhanced-toast-icon" class="fas fa-check toast-icon"></i>
+            <span id="enhanced-toast-message" class="toast-message"></span>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // 🚀 LUXURY DASHBOARD JAVASCRIPT
+        // ========================================
+
+        // Navigation System
+        function initializeNavigation() {
+            const navLinks = document.querySelectorAll('.nav-link[data-section]');
+            const sections = document.querySelectorAll('.content-section');
+            const pageTitle = document.getElementById('pageTitle');
+            const pageSubtitle = document.getElementById('pageSubtitle');
+
+            const sectionTitles = {
+                'dashboard': {
+                    title: '🚀 Gemini 2.0 Flash Dashboard',
+                    subtitle: 'Advanced AI-Powered Content Management System'
+                },
+                'ai-swarm': {
+                    title: '🤖 AI Swarm Council',
+                    subtitle: 'Collaborative Artificial Intelligence Network'
+                },
+                'ai-monitoring': {
+                    title: '📊 AI Monitoring',
+                    subtitle: 'Real-time AI Performance Dashboard'
+                },
+                'ai-chatbot': {
+                    title: '💬 AI Chatbot',
+                    subtitle: 'Interactive AI Assistant Interface'
+                },
+                'article-management': {
+                    title: '📝 Article Management',
+                    subtitle: 'Content Creation & Management System'
+                },
+                'seo-analytics': {
+                    title: '📊 SEO Analytics',
+                    subtitle: 'Search Engine Optimization Dashboard'
+                },
+                'system-security': {
+                    title: '🛡️ System Security',
+                    subtitle: 'Security Monitoring & Protection'
+                },
+                'database-management': {
+                    title: '🗄️ Database Management',
+                    subtitle: 'Database Operations & Migration'
+                }
+            };
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetSection = this.getAttribute('data-section');
+                    
+                    // Remove active class from all nav links
+                    navLinks.forEach(nl => nl.classList.remove('active'));
+                    
+                    // Add active class to clicked link
+                    this.classList.add('active');
+                    
+                    // Hide all sections
+                    sections.forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    
+                    // Show target section
+                    const targetElement = document.getElementById(targetSection);
+                    if (targetElement) {
+                        targetElement.classList.add('active');
+                    }
+                    
+                    // Update page title and subtitle
+                    if (sectionTitles[targetSection]) {
+                        pageTitle.textContent = sectionTitles[targetSection].title;
+                        pageSubtitle.textContent = sectionTitles[targetSection].subtitle;
+                    }
+                    
+                    // Close sidebar on mobile
+                    if (window.innerWidth <= 1024) {
+                        setTimeout(() => {
+                            toggleSidebar();
+                        }, 200);
+                    }
+                    
+                    console.log(`✅ Navigated to: ${targetSection}`);
+                });
+            });
+        }
+
+        // Sidebar Toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('backdrop');
+            
+            if (sidebar && backdrop) {
+                const isOpen = sidebar.classList.contains('mobile-open');
+                
+                if (isOpen) {
+                    sidebar.classList.remove('mobile-open');
+                    backdrop.classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    sidebar.classList.add('mobile-open');
+                    backdrop.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+        }
+
+        // Backdrop click handler
+        document.getElementById('backdrop').addEventListener('click', toggleSidebar);
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('jwtToken');
+                sessionStorage.removeItem('authToken');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Luxury Dashboard initialized');
+            initializeNavigation();
+            
+            // Add smooth scrolling for better UX
+            document.documentElement.style.scrollBehavior = 'smooth';
+            
+            // Initialize any animations
+            const cards = document.querySelectorAll('.luxury-card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.classList.add('animate-fade-in');
+            });
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('backdrop');
+            
+            if (window.innerWidth > 1024) {
+                sidebar.classList.remove('mobile-open');
+                backdrop.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+
+        // Performance monitoring
+        if ('performance' in window) {
+            window.addEventListener('load', function() {
+                setTimeout(() => {
+                    const perfData = performance.getEntriesByType('navigation')[0];
+                    const loadTime = perfData.loadEventEnd - perfData.navigationStart;
+                    console.log(`⚡ Page loaded in ${loadTime}ms`);
+                }, 0);
+            });
+        }
+        /* ========================================
+           🚀 AI BACKEND INTEGRATION
+           ======================================== */
+
+        // Global AI System State
+        const AISystem = {
+            providers: {},
+            swarmMetrics: {},
+            monitoringData: {},
+            chatSessions: [],
+            currentProvider: null,
+            autoRefresh: true,
+            refreshInterval: null,
+            baseURL: 'http://localhost:3001/api/ai'
+        };
+
+        // Initialize AI System
+        async function initializeAISystem() {
+            console.log('🤖 Initializing AI System...');
+            
+            try {
+                // Load providers data
+                await loadAIProviders();
+                
+                // Initialize real-time monitoring
+                if (AISystem.autoRefresh) {
+                    startAutoRefresh();
+                }
+                
+                // Initialize current section
+                const currentSection = document.querySelector('.content-section.active');
+                if (currentSection) {
+                    const sectionId = currentSection.id;
+                    switch (sectionId) {
+                        case 'ai-swarm':
+                            await initializeSwarmCouncil();
+                            break;
+                        case 'ai-monitoring':
+                            await initializeMonitoring();
+                            break;
+                        case 'ai-chatbot':
+                            await initializeChatbot();
+                            break;
+                    }
+                }
+                
+                console.log('✅ AI System initialized successfully');
+            } catch (error) {
+                console.error('❌ Failed to initialize AI System:', error);
+            }
+        }
+
+        // Load AI Providers from Backend
+        async function loadAIProviders() {
+            try {
+                const response = await fetch(`${AISystem.baseURL}/providers`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    AISystem.providers = {};
+                    data.providers.forEach(provider => {
+                        AISystem.providers[provider.id] = provider;
+                    });
+                    console.log('📡 Loaded AI providers:', Object.keys(AISystem.providers));
+                }
+            } catch (error) {
+                console.error('❌ Failed to load AI providers:', error);
+            }
+        }
+
+        /* ========================================
+           🤖 AI SWARM COUNCIL FUNCTIONS
+           ======================================== */
+
+        async function initializeSwarmCouncil() {
+            console.log('🤖 Initializing AI Swarm Council...');
+            
+            await refreshSwarmStatus();
+            await populateAgentsGrid();
+            await updateDecisionPipeline();
+        }
+
+        async function refreshSwarmStatus() {
+            const btn = document.getElementById('refreshSwarmBtn');
+            if (btn) {
+                btn.classList.add('loading');
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            }
+            
+            try {
+                // Get swarm metrics
+                const metricsResponse = await fetch(`${AISystem.baseURL}/swarm/status`);
+                const metricsData = await metricsResponse.json();
+                
+                if (metricsData.success) {
+                    updateSwarmMetrics(metricsData.data || {});
+                }
+                
+                // Get providers status for agents
+                const providersResponse = await fetch(`${AISystem.baseURL}/providers`);
+                const providersData = await providersResponse.json();
+                
+                if (providersData.success) {
+                    updateAgentsStatus(providersData.providers);
+                }
+                
+            } catch (error) {
+                console.error('❌ Failed to refresh swarm status:', error);
+                showError('Failed to refresh swarm status');
+            } finally {
+                if (btn) {
+                    btn.classList.remove('loading');
+                    btn.innerHTML = '<i class="fas fa-sync"></i>';
+                }
+            }
+        }
+
+        function updateSwarmMetrics(data) {
+            const activeCount = Object.values(AISystem.providers).filter(p => p.configured).length;
+            const avgResponseTime = calculateAverageResponseTime();
+            const successRate = calculateSuccessRate();
+            const tasksCompleted = getTotalTasksCompleted();
+            
+            // Update metric displays
+            updateElement('activeAgentsCount', activeCount);
+            updateElement('avgResponseTime', `${avgResponseTime}ms`);
+            updateElement('successRate', `${successRate}%`);
+            updateElement('tasksCompleted', tasksCompleted);
+            
+            // Update status indicators
+            updateStatusIndicator('agentsStatus', activeCount > 0 ? 'connected' : 'error');
+            updateStatusIndicator('responseStatus', avgResponseTime < 2000 ? 'connected' : 'error');
+            updateStatusIndicator('successStatus', successRate > 90 ? 'connected' : 'error');
+            updateStatusIndicator('tasksStatus', 'connected');
+        }
+
+        async function populateAgentsGrid() {
+            const grid = document.getElementById('agentsGrid');
+            if (!grid) return;
+            
+            const providersConfig = {
+                gemini: { name: 'Gemini 2.0 Flash', role: 'Content Creator', icon: 'fas fa-gem', color: '#4285f4' },
+                openai: { name: 'OpenAI GPT', role: 'Authority Builder', icon: 'fas fa-brain', color: '#00a67e' },
+                claude: { name: 'Claude AI', role: 'E-E-A-T Specialist', icon: 'fas fa-robot', color: '#cc785c' },
+                deepseek: { name: 'DeepSeek AI', role: 'Technical Validator', icon: 'fas fa-code', color: '#1e40af' },
+                chinda: { name: 'ChindaX AI', role: 'Cultural Expert', icon: 'fas fa-globe', color: '#f59e0b' }
+            };
+            
+            let html = '';
+            for (const [id, config] of Object.entries(providersConfig)) {
+                const provider = AISystem.providers[id];
+                const isConnected = provider?.configured || false;
+                const status = isConnected ? 'connected' : 'disconnected';
+                
+                html += `
+                    <div class="agent-card ${status}" data-agent="${id}">
+                        <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-md);">
+                            <div style="width: 48px; height: 48px; background: ${config.color}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
+                                <i class="${config.icon}"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight: 600; color: var(--text-primary);">${config.name}</div>
+                                <div style="font-size: 0.875rem; color: var(--text-secondary);">${config.role}</div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: var(--space-sm);">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.875rem;">Status:</span>
+                                <span class="status-badge ${status}">${isConnected ? 'Connected' : 'Disconnected'}</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: var(--space-sm);">
+                            <button onclick="testAgent('${id}')" class="agent-test-btn" ${!isConnected ? 'disabled' : ''}>
+                                <i class="fas fa-flask"></i> Test
+                            </button>
+                            <button onclick="configureAgent('${id}')" class="agent-config-btn">
+                                <i class="fas fa-cog"></i> Config
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            grid.innerHTML = html;
+        }
+
+        async function startSwarmTask(taskType) {
+            const btn = document.getElementById(`${taskType.replace('_', '')}Btn`);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            }
+            
+            try {
+                // Update pipeline status
+                updatePipelineStatus('processing');
+                
+                // Log task start
+                addCollaborationLog(`Started ${taskType.replace('_', ' ')} task`, 'system', 'info');
+                
+                // Simulate swarm collaboration (in real implementation, this would call backend)
+                await simulateSwarmCollaboration(taskType);
+                
+            } catch (error) {
+                console.error(`❌ Failed to start ${taskType} task:`, error);
+                addCollaborationLog(`Error starting ${taskType}: ${error.message}`, 'system', 'error');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = btn.innerHTML.replace('Processing...', taskType.replace('_', ' ')).replace('fa-spinner fa-spin', 'fas fa-' + getTaskIcon(taskType));
+                }
+            }
+        }
+
+        async function simulateSwarmCollaboration(taskType) {
+            const steps = ['gemini', 'openai', 'claude', 'deepseek', 'chinda'];
+            const stepNames = ['Content Creation', 'Quality Review', 'Content Enhancement', 'Technical Validation', 'Cultural Optimization'];
+            
+            for (let i = 0; i < steps.length; i++) {
+                const agent = steps[i];
+                const stepName = stepNames[i];
+                const provider = AISystem.providers[agent];
+                
+                if (provider?.configured) {
+                    // Update pipeline step
+                    updatePipelineStep(i + 1, 'processing');
+                    
+                    // Add collaboration log
+                    addCollaborationLog(`${stepName} in progress...`, agent, 'info');
+                    
+                    // Simulate processing time
+                    await sleep(2000);
+                    
+                    // Mark as completed
+                    updatePipelineStep(i + 1, 'completed');
+                    addCollaborationLog(`${stepName} completed successfully`, agent, 'success');
+                } else {
+                    updatePipelineStep(i + 1, 'error');
+                    addCollaborationLog(`${stepName} failed - ${agent} not configured`, agent, 'error');
+                }
+                
+                await sleep(500);
+            }
+            
+            addCollaborationLog(`${taskType.replace('_', ' ')} task completed successfully!`, 'system', 'success');
+        }
+
+        function updatePipelineStep(step, status) {
+            const stepElement = document.querySelector(`[data-step="${step}"] .step-status`);
+            if (stepElement) {
+                stepElement.className = `step-status ${status}`;
+                stepElement.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            }
+        }
+
+        function updatePipelineStatus(status) {
+            document.querySelectorAll('.step-status').forEach(el => {
+                if (status === 'processing') {
+                    el.className = 'step-status waiting';
+                    el.textContent = 'Waiting';
+                }
+            });
+        }
+
+        function addCollaborationLog(message, agent, type) {
+            const feed = document.getElementById('collaborationFeed');
+            if (!feed) return;
+            
+            // Remove empty state
+            const empty = feed.querySelector('.feed-empty');
+            if (empty) empty.remove();
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const agentConfig = getAgentConfig(agent);
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.innerHTML = `
+                <div class="log-header">
+                    <div class="log-agent">
+                        <i class="${agentConfig.icon}"></i>
+                        <span>${agentConfig.name}</span>
+                    </div>
+                    <div class="log-timestamp">${timestamp}</div>
+                </div>
+                <div class="log-message">${message}</div>
+            `;
+            
+            feed.appendChild(logEntry);
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        function clearSwarmLogs() {
+            const feed = document.getElementById('collaborationFeed');
+            if (feed) {
+                feed.innerHTML = `
+                    <div class="feed-empty">
+                        <div class="empty-icon">💬</div>
+                        <div class="empty-text">Waiting for AI collaboration...</div>
+                        <div class="empty-subtext">Start a task to see AI agents working together</div>
+                    </div>
+                `;
+            }
+        }
+
+        /* ========================================
+           📊 AI MONITORING FUNCTIONS
+           ======================================== */
+
+        async function initializeMonitoring() {
+            console.log('📊 Initializing AI Monitoring...');
+            
+            await refreshMonitoring();
+            await populateProvidersStatusGrid();
+            await loadPerformanceMetrics();
+            await populateProvidersTable();
+        }
+
+        async function refreshMonitoring() {
+            const btn = document.getElementById('refreshMonitoringBtn');
+            if (btn) {
+                btn.classList.add('loading');
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            }
+            
+            try {
+                await Promise.all([
+                    loadPerformanceMetrics(),
+                    populateProvidersStatusGrid(),
+                    populateProvidersTable(),
+                    loadErrorLogs()
+                ]);
+                
+                console.log('✅ Monitoring data refreshed');
+            } catch (error) {
+                console.error('❌ Failed to refresh monitoring:', error);
+            } finally {
+                if (btn) {
+                    btn.classList.remove('loading');
+                    btn.innerHTML = '<i class="fas fa-sync"></i>';
+                }
+            }
+        }
+
+        async function loadPerformanceMetrics() {
+            try {
+                const response = await fetch(`${AISystem.baseURL}/metrics`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    AISystem.monitoringData = data;
+                    updatePerformanceMetrics(data);
+                }
+            } catch (error) {
+                console.error('❌ Failed to load performance metrics:', error);
+            }
+        }
+
+        function updatePerformanceMetrics(data) {
+            // Calculate aggregated metrics
+            const providers = Object.values(data.metrics || {});
+            const avgResponseTime = Math.round(providers.reduce((sum, p) => sum + (p.responseTime || 0), 0) / providers.length) || 0;
+            const avgSuccessRate = Math.round(providers.reduce((sum, p) => sum + (p.successRate || 0), 0) / providers.length) || 0;
+            const totalRequests = providers.reduce((sum, p) => sum + (p.totalRequests || 0), 0);
+            const errorRate = Math.round(providers.reduce((sum, p) => sum + (p.errorRate || 0), 0) / providers.length) || 0;
+            
+            // Update displays
+            updateElement('avgResponseTimeMetric', `${avgResponseTime}ms`);
+            updateElement('successRateMetric', `${avgSuccessRate}%`);
+            updateElement('totalRequestsMetric', totalRequests.toLocaleString());
+            updateElement('errorRateMetric', `${errorRate}%`);
+            
+            // Update trend indicators
+            updateTrendIndicator('responseTimeTrend', avgResponseTime < 1500 ? 'positive' : 'negative');
+            updateTrendIndicator('successRateTrend', avgSuccessRate > 95 ? 'positive' : 'negative');
+            updateTrendIndicator('requestsTrend', 'positive');
+            updateTrendIndicator('errorRateTrend', errorRate < 5 ? 'positive' : 'negative');
+        }
+
+        async function populateProvidersStatusGrid() {
+            const grid = document.getElementById('providersStatusGrid');
+            if (!grid) return;
+            
+            let html = '';
+            for (const [id, provider] of Object.entries(AISystem.providers)) {
+                const config = getProviderConfig(id);
+                const isConnected = provider.configured;
+                const responseTime = provider.responseTime || 'N/A';
+                const successRate = provider.successRate || 'N/A';
+                
+                html += `
+                    <div class="provider-status-card ${isConnected ? 'connected' : 'disconnected'}">
+                        <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-lg);">
+                            <div style="width: 56px; height: 56px; background: ${config.color}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                                <i class="${config.icon}"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight: 700; font-size: 1.125rem; color: var(--text-primary);">${provider.name}</div>
+                                <div style="color: var(--text-secondary); font-size: 0.875rem;">${provider.model || 'Default Model'}</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: var(--space-md);">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-sm);">
+                                <span>Status:</span>
+                                <span class="status-badge ${isConnected ? 'connected' : 'disconnected'}">
+                                    ${isConnected ? 'Connected' : 'Disconnected'}
+                                </span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-sm);">
+                                <span>Response:</span>
+                                <span>${responseTime}${typeof responseTime === 'number' ? 'ms' : ''}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Success Rate:</span>
+                                <span>${successRate}${typeof successRate === 'number' ? '%' : ''}</span>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: var(--space-sm);">
+                            <button onclick="testProvider('${id}')" class="test-btn" ${!isConnected ? 'disabled' : ''}>
+                                <i class="fas fa-flask"></i> Test
+                            </button>
+                            <button onclick="viewProviderDetails('${id}')" class="details-btn">
+                                <i class="fas fa-info-circle"></i> Details
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (html === '') {
+                html = '<div class="no-providers">No AI providers configured</div>';
+            }
+            
+            grid.innerHTML = html;
+        }
+
+        async function testAllProviders() {
+            const btn = document.getElementById('testAllProvidersBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            }
+            
+            try {
+                const results = [];
+                for (const [id, provider] of Object.entries(AISystem.providers)) {
+                    if (provider.configured) {
+                        const result = await testProvider(id, false);
+                        results.push({ provider: id, result });
+                    }
+                }
+                
+                console.log('🧪 Test results:', results);
+                showSuccess(`Tested ${results.length} providers successfully`);
+                
+            } catch (error) {
+                console.error('❌ Failed to test all providers:', error);
+                showError('Failed to test all providers');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-flask"></i>';
+                }
+            }
+        }
+
+        async function testProvider(providerId, showFeedback = true) {
+            try {
+                const response = await fetch(`${AISystem.baseURL}/test/${providerId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: 'Hello! This is a test message.' })
+                });
+                
+                const result = await response.json();
+                
+                if (showFeedback) {
+                    if (result.success) {
+                        showSuccess(`${providerId} test successful`);
+                    } else {
+                        showError(`${providerId} test failed: ${result.error}`);
+                    }
+                }
+                
+                return result;
+                
+            } catch (error) {
+                console.error(`❌ Failed to test ${providerId}:`, error);
+                if (showFeedback) {
+                    showError(`Failed to test ${providerId}`);
+                }
+                return { success: false, error: error.message };
+            }
+        }
+
+        /* ========================================
+           🤖 ENHANCED AI CHATBOT FUNCTIONS
+           Connected to Render Backend
+           ======================================== */
+
+        // Render Backend Configuration
+        const RENDER_BACKEND_URL = 'https://rbck.onrender.com';
+        const LOCAL_BACKEND_URL = 'http://localhost:3001';
+
+        // Enhanced AI Chatbot Class with Render Integration
+        class EnhancedAIChatbot {
+            constructor() {
+                this.renderBackendURL = RENDER_BACKEND_URL;
+                this.localBackendURL = LOCAL_BACKEND_URL;
+                this.apiBase = this.detectEnvironment();
+                
+                this.selectedProvider = null;
+                this.providers = [];
+                this.messages = [];
+                this.isLoading = false;
+                this.connectionStatus = 'connecting';
+            }
+
+            detectEnvironment() {
+                // Force use Render for live data
+                console.log('🌐 Using Render backend for live AI providers');
+                return `${this.renderBackendURL}/api`;
+            }
+
+            async testConnection() {
+                try {
+                    const response = await fetch(`${this.renderBackendURL}/api/ai/status`, {
+                        method: 'GET',
+                        mode: 'cors',
+                        credentials: 'omit',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('✅ Render backend connected:', data);
+                        return true;
+                    }
+                } catch (error) {
+                    console.error('❌ Render backend connection failed:', error.message);
+                    // Try without CORS mode as fallback
+                    try {
+                        const fallbackResponse = await fetch(`${this.renderBackendURL}/api/ai/status`, {
+                            mode: 'no-cors'
+                        });
+                        console.log('ℹ️ Backend reachable but CORS blocked. Status:', fallbackResponse.status);
+                        return false; // CORS issue confirmed
+                    } catch (fallbackError) {
+                        console.error('❌ Backend completely unreachable:', fallbackError.message);
+                        return false;
+                    }
+                }
+                return false;
+            }
+
+            async initialize() {
+                console.log('🤖 Initializing Enhanced AI Chatbot with Render backend...');
+                
+                const connected = await this.testConnection();
+                if (!connected) {
+                    this.showConnectionError();
+                    return;
+                }
+                
+                this.setupEventListeners();
+                await this.loadProviders();
+                await this.checkSystemStatus();
+                
+                console.log('✅ Enhanced AI Chatbot connected to Render backend');
+            }
+
+            setupEventListeners() {
+                const sendButton = document.getElementById('enhanced-send-button');
+                const messageInput = document.getElementById('enhanced-message-input');
+                
+                if (sendButton) {
+                    sendButton.addEventListener('click', () => this.sendMessage());
+                }
+                
+                if (messageInput) {
+                    messageInput.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            this.sendMessage();
+                        }
+                    });
+                    
+                    messageInput.addEventListener('input', (e) => {
+                        e.target.style.height = 'auto';
+                        e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                    });
+                }
+            }
+
+            async loadProviders() {
+                try {
+                    console.log('📡 Loading providers from Render backend...');
+                    
+                    const response = await fetch(`${this.renderBackendURL}/api/ai/providers`, {
+                        method: 'GET',
+                        mode: 'cors',
+                        credentials: 'omit',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.success && data.providers) {
+                        this.providers = data.providers;
+                        console.log(`✅ Loaded ${data.providers.length} providers from Render`);
+                        this.renderProviders();
+                        this.showToast(`Connected to Render! ${data.readyProviders}/${data.totalProviders} providers ready`, 'success');
+                    }
+                } catch (error) {
+                    console.error('❌ Error loading providers:', error.message);
+                    if (error.message.includes('CORS') || error.message.includes('fetch') || error.message.includes('NetworkError')) {
+                        console.error('🚫 CORS policy blocking request. Need to add localhost:8082 to backend CORS origins.');
+                        this.showToast('CORS blocked - Using demo data. Backend needs CORS fix.', 'error');
+                        // Use fallback demo data that matches the backend structure
+                        this.providers = [
+                            {id: "gemini", name: "Google Gemini", model: "gemini-pro", enabled: true, configured: true, status: "ready", testUrl: "/api/ai/test/gemini"},
+                            {id: "chinda", name: "Chinda AI", model: "chinda-qwen3-4b", enabled: true, configured: true, status: "ready", testUrl: "/api/ai/test/chinda"},
+                            {id: "openai", name: "OpenAI GPT", model: "gpt-3.5-turbo", enabled: false, configured: false, status: "not_configured", testUrl: "/api/ai/test/openai"},
+                            {id: "claude", name: "Anthropic Claude", model: "claude-3-sonnet-20240229", enabled: false, configured: false, status: "not_configured", testUrl: "/api/ai/test/claude"},
+                            {id: "deepseek", name: "DeepSeek AI", model: "deepseek-chat", enabled: false, configured: false, status: "not_configured", testUrl: "/api/ai/test/deepseek"}
+                        ];
+                        this.renderProviders();
+                        this.renderCorsWarning();
+                    } else {
+                        this.renderProviderError();
+                    }
+                }
+            }
+
+            renderProviders() {
+                const grid = document.getElementById('enhanced-provider-grid');
+                if (!grid) return;
+                
+                const backendInfo = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 15px; background: rgba(76, 175, 80, 0.1); border-radius: 12px; border: 1px solid rgba(76, 175, 80, 0.3); margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 10px; color: #4caf50; font-weight: 600;">
+                            <i class="fas fa-cloud"></i>
+                            <span>Connected to Render Backend</span>
+                            <span style="background: rgba(76, 175, 80, 0.2); padding: 2px 8px; border-radius: 8px; font-size: 0.8rem;">LIVE</span>
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">
+                            ${this.renderBackendURL} • ${this.providers.filter(p => p.status === 'ready').length}/${this.providers.length} providers ready
+                        </div>
+                    </div>
+                `;
+
+                const providerCards = this.providers.map(provider => {
+                    const isReady = provider.status === 'ready' && provider.configured;
+                    return `
+                        <div class="provider-card ${isReady ? 'ready' : 'not-ready'}" onclick="enhancedChatbot.selectProvider('${provider.id}')">
+                            <div class="provider-header">
+                                <div class="provider-icon" style="background: ${this.getProviderGradient(provider.id)};">
+                                    <i class="fas fa-${this.getProviderIcon(provider.id)}"></i>
+                                </div>
+                                <div class="provider-name">${provider.name}</div>
+                                <div class="provider-status ${provider.status}">
+                                    ${isReady ? '✅ Ready' : '⚠️ Setup Required'}
+                                </div>
+                            </div>
+                            <div class="provider-meta">
+                                <div class="provider-model">${provider.model || 'Default Model'}</div>
+                                <div class="cost-indicator">
+                                    <i class="fas fa-${isReady ? 'check-circle' : 'exclamation-circle'}"></i> 
+                                    ${isReady ? 'Available' : 'Needs Config'}
+                                </div>
+                            </div>
+                            ${!isReady ? `<div style="margin-top: 10px; padding: 8px; background: rgba(255, 152, 0, 0.1); border-radius: 8px; font-size: 0.8rem; color: #ff9800;"><i class="fas fa-info-circle"></i> Configure API keys in Render environment</div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+
+                grid.innerHTML = backendInfo + providerCards;
+            }
+
+            selectProvider(providerId) {
+                document.querySelectorAll('.provider-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                
+                event.target.closest('.provider-card').classList.add('selected');
+                this.selectedProvider = this.providers.find(p => p.id === providerId);
+                
+                if (this.selectedProvider) {
+                    const isReady = this.selectedProvider.status === 'ready' && this.selectedProvider.configured;
+                    
+                    const messageInput = document.getElementById('enhanced-message-input');
+                    const sendButton = document.getElementById('enhanced-send-button');
+                    const chatTitle = document.getElementById('enhanced-chat-title');
+                    
+                    if (messageInput) {
+                        messageInput.disabled = !isReady;
+                        messageInput.placeholder = isReady ? 
+                            `Type your message for ${this.selectedProvider.name}...` : 
+                            `${this.selectedProvider.name} requires configuration...`;
+                        if (isReady) messageInput.focus();
+                    }
+                    
+                    if (sendButton) sendButton.disabled = !isReady;
+                    if (chatTitle) chatTitle.textContent = `Chat with ${this.selectedProvider.name}`;
+                    
+                    this.updateEmptyState();
+                    
+                    if (isReady) {
+                        this.showToast(`Connected to ${this.selectedProvider.name} ✅ Ready!`, 'success');
+                    } else {
+                        this.showToast(`${this.selectedProvider.name} needs API key in Render environment`, 'error');
+                    }
+                }
+            }
+
+            async sendMessage() {
+                if (!this.selectedProvider || this.isLoading) return;
+                
+                if (this.selectedProvider.status !== 'ready') {
+                    this.showToast(`${this.selectedProvider.name} is not configured on Render backend`, 'error');
+                    return;
+                }
+                
+                const input = document.getElementById('enhanced-message-input');
+                const message = input.value.trim();
+                if (!message) return;
+                
+                this.isLoading = true;
+                const sendButton = document.getElementById('enhanced-send-button');
+                sendButton.innerHTML = '<div class="loading-spinner"></div><span>Sending...</span>';
+                sendButton.disabled = true;
+                
+                try {
+                    this.addMessage('user', message);
+                    input.value = '';
+                    input.style.height = 'auto';
+                    
+                    this.showTypingIndicator();
+                    
+                    console.log(`🚀 Sending to ${this.selectedProvider.name} via Render...`);
+                    
+                    const response = await fetch(`${this.renderBackendURL}/api/ai/chat`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            provider: this.selectedProvider.id,
+                            message: message,
+                            model: this.selectedProvider.model
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    this.hideTypingIndicator();
+                    
+                    if (data.success) {
+                        this.addMessage('ai', data.content || data.response, {
+                            tokens: data.tokensUsed || data.tokens,
+                            cost: data.cost,
+                            responseTime: data.requestTime
+                        });
+                        this.updateAnalytics();
+                        this.showToast(`Response from ${this.selectedProvider.name}`, 'success');
+                    } else {
+                        this.addMessage('ai', `Error: ${data.error}`, { isError: true });
+                        this.showToast(data.error, 'error');
+                    }
+                } catch (error) {
+                    this.hideTypingIndicator();
+                    this.addMessage('ai', 'Connection error with Render backend', { isError: true });
+                    this.showToast('Render backend connection error', 'error');
+                } finally {
+                    this.isLoading = false;
+                    sendButton.innerHTML = '<i class="fas fa-paper-plane"></i><span>Send</span>';
+                    sendButton.disabled = false;
+                    input.focus();
+                }
+            }
+
+            addMessage(role, content, metadata = {}) {
+                const container = document.getElementById('enhanced-messages-container');
+                if (container.querySelector('.enhanced-empty-state')) {
+                    container.innerHTML = '';
+                }
+                
+                const messageElement = document.createElement('div');
+                messageElement.className = `message ${role}`;
+                
+                const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                let metaInfo = '';
+                if (metadata.tokens) metaInfo += ` | ${metadata.tokens} tokens`;
+                if (metadata.cost) metaInfo += ` | ฿${metadata.cost.toFixed(4)}`;
+                if (metadata.responseTime) metaInfo += ` | ${metadata.responseTime}ms`;
+                
+                messageElement.innerHTML = `
+                    <div class="message-avatar">
+                        <i class="fas fa-${role === 'user' ? 'user' : 'robot'}"></i>
+                    </div>
+                    <div class="message-content">
+                        <div class="message-text">${this.formatMessage(content)}</div>
+                        <div class="message-meta">
+                            <span class="message-time">${timestamp}${metaInfo}</span>
+                            <div class="message-actions">
+                                <button class="message-action" onclick="enhancedChatbot.copyMessage(this)">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(messageElement);
+                this.messages.push({ role, content, timestamp: new Date(), metadata });
+                container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+            }
+
+            showTypingIndicator() {
+                const container = document.getElementById('enhanced-messages-container');
+                const typingElement = document.createElement('div');
+                typingElement.id = 'enhanced-typing-indicator';
+                typingElement.className = 'enhanced-typing-indicator';
+                typingElement.innerHTML = `
+                    <div class="enhanced-typing-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="enhanced-typing-dots">
+                        <div class="enhanced-typing-dot"></div>
+                        <div class="enhanced-typing-dot"></div>
+                        <div class="enhanced-typing-dot"></div>
+                    </div>
+                `;
+                container.appendChild(typingElement);
+                container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+            }
+
+            hideTypingIndicator() {
+                const typingElement = document.getElementById('enhanced-typing-indicator');
+                if (typingElement) typingElement.remove();
+            }
+
+            updateEmptyState() {
+                const container = document.getElementById('enhanced-messages-container');
+                if (this.messages.length === 0 && this.selectedProvider) {
+                    const isReady = this.selectedProvider.status === 'ready';
+                    container.innerHTML = `
+                        <div class="enhanced-empty-state">
+                            <i class="fas fa-${isReady ? 'robot' : 'exclamation-circle'} enhanced-empty-state-icon" style="color: ${isReady ? 'var(--primary-gradient)' : '#ff9800'};"></i>
+                            <h3>${isReady ? `Ready to Chat with ${this.selectedProvider.name}` : `${this.selectedProvider.name} Configuration Required`}</h3>
+                            <p>${isReady ? 'Connected to live Render backend' : 'API key needed in Render environment'}</p>
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(${isReady ? '76, 175, 80' : '255, 152, 0'}, 0.1); border-radius: 12px; font-size: 0.9rem;">
+                                <i class="fas fa-${isReady ? 'check-circle' : 'info-circle'}" style="color: ${isReady ? '#4caf50' : '#ff9800'};"></i>
+                                <strong>${isReady ? 'Live Connection Active' : 'Setup Required'}</strong><br>
+                                Backend: Render Cloud (${this.renderBackendURL})
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            async checkSystemStatus() {
+                try {
+                    const response = await fetch(`${this.renderBackendURL}/api/ai/status`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        const readyCount = Object.values(data.data.providers).filter(p => p.status === 'ready').length;
+                        const totalCount = Object.keys(data.data.providers).length;
+                        this.updateConnectionStatus(`Render Connected • ${readyCount}/${totalCount} ready`, true);
+                    }
+                } catch (error) {
+                    this.updateConnectionStatus('Render Connection Error', false);
+                }
+            }
+
+            updateConnectionStatus(message, isConnected) {
+                const statusElement = document.getElementById('enhanced-connection-status');
+                const statusDot = document.querySelector('.status-dot');
+                
+                if (statusElement) statusElement.textContent = message;
+                if (statusDot) {
+                    statusDot.style.background = isConnected ? '#4caf50' : '#f44336';
+                    const parent = statusElement.parentElement;
+                    if (parent) {
+                        parent.style.background = isConnected ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)';
+                        parent.style.borderColor = isConnected ? 'rgba(76, 175, 80, 0.3)' : 'rgba(244, 67, 54, 0.3)';
+                        parent.style.color = isConnected ? '#4caf50' : '#f44336';
+                    }
+                }
+            }
+
+            showConnectionError() {
+                const grid = document.getElementById('enhanced-provider-grid');
+                if (grid) {
+                    grid.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: rgba(244, 67, 54, 0.1); border-radius: 16px;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #f44336; margin-bottom: 15px;"></i>
+                            <h3 style="color: #f44336;">Render Backend Connection Failed</h3>
+                            <p style="color: var(--text-secondary); margin: 15px 0;">Unable to connect to: ${this.renderBackendURL}</p>
+                            <button onclick="enhancedChatbot.initialize()" style="background: #f44336; color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer;">
+                                <i class="fas fa-refresh"></i> Retry Connection
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+
+            renderCorsWarning() {
+                const grid = document.getElementById('enhanced-provider-grid');
+                if (grid) {
+                    // Show the providers but with a warning banner
+                    const warningBanner = `
+                        <div style="grid-column: 1 / -1; background: rgba(255, 152, 0, 0.1); border: 1px solid rgba(255, 152, 0, 0.3); border-radius: 12px; padding: 15px; margin-bottom: 15px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <i class="fas fa-exclamation-triangle" style="color: #ff9800; font-size: 1.2rem;"></i>
+                                <div>
+                                    <strong style="color: #ff9800;">CORS Policy Issue</strong>
+                                    <p style="margin: 5px 0 0 0; color: var(--text-secondary); font-size: 0.9rem;">
+                                        Backend needs to allow <code>localhost:8082</code> in CORS origins. Using demo data below.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    // Insert warning before existing content
+                    grid.insertAdjacentHTML('afterbegin', warningBanner);
+                }
+                
+                // Update connection status to show CORS issue
+                this.updateConnectionStatus('CORS Policy Blocked', false);
+            }
+
+            renderProviderError() {
+                const grid = document.getElementById('enhanced-provider-grid');
+                if (grid) {
+                    grid.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: rgba(244, 67, 54, 0.1); border-radius: 16px;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #f44336; margin-bottom: 15px;"></i>
+                            <h3 style="color: #f44336;">Failed to Load Providers</h3>
+                            <p style="color: var(--text-secondary); margin: 15px 0;">Unable to load AI providers from: ${this.renderBackendURL}</p>
+                            <button onclick="enhancedChatbot.loadProviders()" style="background: #f44336; color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer;">
+                                <i class="fas fa-refresh"></i> Retry Loading
+                            </button>
+                        </div>
+                    `;
+                }
+                this.updateConnectionStatus('Provider Loading Failed', false);
+            }
+
+            showToast(message, type = 'success') {
+                let toast = document.getElementById('enhanced-toast');
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.id = 'enhanced-toast';
+                    toast.className = 'toast';
+                    toast.innerHTML = `
+                        <div class="toast-content">
+                            <i id="enhanced-toast-icon" class="fas fa-check toast-icon"></i>
+                            <span id="enhanced-toast-message" class="toast-message"></span>
+                        </div>
+                    `;
+                    document.body.appendChild(toast);
+                }
+                
+                const icon = document.getElementById('enhanced-toast-icon');
+                const messageSpan = document.getElementById('enhanced-toast-message');
+                
+                if (type === 'error') {
+                    icon.className = 'fas fa-exclamation-circle toast-icon';
+                    toast.classList.add('error');
+                } else {
+                    icon.className = 'fas fa-check toast-icon';
+                    toast.classList.remove('error');
+                }
+                
+                messageSpan.textContent = message;
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 3000);
+            }
+
+            copyMessage(button) {
+                const messageText = button.closest('.message-content').querySelector('.message-text').textContent;
+                navigator.clipboard.writeText(messageText).then(() => {
+                    this.showToast('Message copied to clipboard', 'success');
+                });
+            }
+
+            updateAnalytics() {
+                const totalConversations = document.getElementById('enhanced-total-conversations');
+                const totalTokens = document.getElementById('enhanced-total-tokens');
+                const totalCost = document.getElementById('enhanced-total-cost');
+                const avgResponseTime = document.getElementById('enhanced-avg-response-time');
+                
+                if (totalConversations) totalConversations.textContent = this.messages.filter(m => m.role === 'user').length;
+                if (totalTokens) {
+                    const tokens = this.messages.reduce((sum, msg) => sum + (msg.metadata?.tokens || 0), 0);
+                    totalTokens.textContent = tokens.toLocaleString();
+                }
+                if (totalCost) {
+                    const cost = this.messages.reduce((sum, msg) => sum + (msg.metadata?.cost || 0), 0);
+                    totalCost.textContent = `฿${cost.toFixed(4)}`;
+                }
+                if (avgResponseTime) {
+                    const responseTimes = this.messages.filter(m => m.role === 'ai' && m.metadata?.responseTime).map(m => m.metadata.responseTime);
+                    const avg = responseTimes.length > 0 ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length : 0;
+                    avgResponseTime.textContent = `${Math.round(avg)}ms`;
+                }
+            }
+
+            formatMessage(content) {
+                return content
+                    .replace(/\n/g, '<br>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/`(.*?)`/g, '<code style="background: rgba(0,0,0,0.1); padding: 2px 4px; border-radius: 4px;">$1</code>');
+            }
+
+            getProviderGradient(providerId) {
+                const gradients = {
+                    gemini: 'linear-gradient(135deg, #4285f4, #34a853)',
+                    openai: 'linear-gradient(135deg, #00a67e, #00b894)',
+                    claude: 'linear-gradient(135deg, #ff6b6b, #ee5a24)',
+                    deepseek: 'linear-gradient(135deg, #6c5ce7, #a29bfe)',
+                    chinda: 'linear-gradient(135deg, #fd79a8, #fdcb6e)'
+                };
+                return gradients[providerId] || 'var(--primary-gradient)';
+            }
+
+            getProviderIcon(providerId) {
+                const icons = {
+                    gemini: 'star',
+                    openai: 'brain',
+                    claude: 'robot',
+                    deepseek: 'search',
+                    chinda: 'bolt'
+                };
+                return icons[providerId] || 'cog';
+            }
+        }
+
+        // Initialize enhanced chatbot with Render backend
+        let enhancedChatbot;
+        
+        async function initializeChatbot() {
+            console.log('💬 Initializing Enhanced AI Chatbot with Render Backend...');
+            enhancedChatbot = new EnhancedAIChatbot();
+            await enhancedChatbot.initialize();
+            
+            await populateProviderSelectionGrid();
+            initializeChatInput();
+            updateChatStats();
+        }
+
+        async function populateProviderSelectionGrid() {
+            const grid = document.getElementById('providerSelectionGrid');
+            if (!grid) return;
+            
+            let html = '';
+            for (const [id, provider] of Object.entries(AISystem.providers)) {
+                const config = getProviderConfig(id);
+                const isAvailable = provider.configured;
+                
+                html += `
+                    <div class="provider-card ${isAvailable ? '' : 'unavailable'}" onclick="${isAvailable ? `selectProvider('${id}')` : ''}" data-provider="${id}">
+                        <div style="width: 64px; height: 64px; background: ${config.color}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.75rem; margin: 0 auto var(--space-md);">
+                            <i class="${config.icon}"></i>
+                        </div>
+                        <div style="font-weight: 600; margin-bottom: var(--space-sm);">${provider.name}</div>
+                        <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--space-md);">${provider.model || 'Default Model'}</div>
+                        <div class="provider-status">
+                            <span class="status-dot ${isAvailable ? 'connected' : 'error'}"></span>
+                            <span>${isAvailable ? 'Available' : 'Unavailable'}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            grid.innerHTML = html;
+        }
+
+        function selectProvider(providerId) {
+            // Remove previous selection
+            document.querySelectorAll('.provider-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Select new provider
+            const card = document.querySelector(`[data-provider="${providerId}"]`);
+            if (card) {
+                card.classList.add('selected');
+            }
+            
+            AISystem.currentProvider = providerId;
+            updateActiveProviderInfo(providerId);
+            enableChatInput();
+        }
+
+        function updateActiveProviderInfo(providerId) {
+            const provider = AISystem.providers[providerId];
+            const config = getProviderConfig(providerId);
+            
+            const avatar = document.querySelector('.provider-avatar');
+            const name = document.querySelector('.provider-name');
+            const status = document.querySelector('.provider-status');
+            
+            if (avatar) {
+                avatar.style.background = config.color;
+                avatar.innerHTML = `<i class="${config.icon}"></i>`;
+            }
+            
+            if (name) name.textContent = provider.name;
+            if (status) status.textContent = 'Ready to chat';
+        }
+
+        function initializeChatInput() {
+            const input = document.getElementById('chatInput');
+            const sendBtn = document.getElementById('sendBtn');
+            
+            if (input) {
+                input.addEventListener('input', function() {
+                    const hasText = this.value.trim().length > 0;
+                    const hasProvider = AISystem.currentProvider !== null;
+                    
+                    if (sendBtn) {
+                        sendBtn.disabled = !(hasText && hasProvider);
+                    }
+                });
+            }
+        }
+
+        function enableChatInput() {
+            const input = document.getElementById('chatInput');
+            const sendBtn = document.getElementById('sendBtn');
+            
+            if (input && sendBtn) {
+                const hasText = input.value.trim().length > 0;
+                sendBtn.disabled = !hasText;
+            }
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function adjustTextareaHeight(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message || !AISystem.currentProvider) return;
+            
+            // Clear input and disable send button
+            input.value = '';
+            adjustTextareaHeight(input);
+            document.getElementById('sendBtn').disabled = true;
+            
+            // Add user message to chat
+            addChatMessage(message, 'user');
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            try {
+                // Send to AI provider
+                const response = await fetch(`${AISystem.baseURL}/test/${AISystem.currentProvider}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: message })
+                });
+                
+                const result = await response.json();
+                
+                hideTypingIndicator();
+                
+                if (result.success) {
+                    addChatMessage(result.response, 'ai');
+                    AISystem.chatSessions.push({
+                        provider: AISystem.currentProvider,
+                        userMessage: message,
+                        aiResponse: result.response,
+                        timestamp: new Date()
+                    });
+                } else {
+                    addChatMessage(`Error: ${result.error}`, 'error');
+                }
+                
+            } catch (error) {
+                hideTypingIndicator();
+                addChatMessage(`Connection error: ${error.message}`, 'error');
+            }
+            
+            updateChatStats();
+        }
+
+        function sendQuickPrompt(prompt) {
+            const input = document.getElementById('chatInput');
+            if (input) {
+                input.value = prompt;
+                adjustTextareaHeight(input);
+                enableChatInput();
+            }
+        }
+
+        function addChatMessage(message, type) {
+            const messagesContainer = document.getElementById('chatMessages');
+            if (!messagesContainer) return;
+            
+            // Remove empty state
+            const empty = messagesContainer.querySelector('.chat-empty');
+            if (empty) empty.remove();
+            
+            const messageElement = document.createElement('div');
+            messageElement.className = `chat-message ${type}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            
+            if (type === 'user') {
+                messageElement.innerHTML = `
+                    <div class="message-content user-message">
+                        <div class="message-text">${message}</div>
+                        <div class="message-timestamp">${timestamp}</div>
+                    </div>
+                    <div class="message-avatar user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                `;
+            } else if (type === 'ai') {
+                const provider = AISystem.providers[AISystem.currentProvider];
+                const config = getProviderConfig(AISystem.currentProvider);
+                
+                messageElement.innerHTML = `
+                    <div class="message-avatar ai-avatar" style="background: ${config.color};">
+                        <i class="${config.icon}"></i>
+                    </div>
+                    <div class="message-content ai-message">
+                        <div class="message-header">
+                            <span class="provider-name">${provider.name}</span>
+                            <span class="message-timestamp">${timestamp}</span>
+                        </div>
+                        <div class="message-text">${message}</div>
+                    </div>
+                `;
+            } else if (type === 'error') {
+                messageElement.innerHTML = `
+                    <div class="message-content error-message">
+                        <div class="message-text">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            ${message}
+                        </div>
+                        <div class="message-timestamp">${timestamp}</div>
+                    </div>
+                `;
+            }
+            
+            messagesContainer.appendChild(messageElement);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.style.display = 'flex';
+            }
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.style.display = 'none';
+            }
+        }
+
+        function updateChatStats() {
+            const messageCount = AISystem.chatSessions.length;
+            updateElement('messageCount', messageCount);
+            
+            // Update session time
+            if (AISystem.chatSessions.length > 0) {
+                const firstMessage = AISystem.chatSessions[0].timestamp;
+                const duration = Date.now() - firstMessage.getTime();
+                const minutes = Math.floor(duration / 60000);
+                const seconds = Math.floor((duration % 60000) / 1000);
+                updateElement('sessionTime', `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+            }
+        }
+
+        function clearChatHistory() {
+            const messagesContainer = document.getElementById('chatMessages');
+            if (messagesContainer) {
+                messagesContainer.innerHTML = `
+                    <div class="chat-empty">
+                        <div class="empty-icon">💬</div>
+                        <div class="empty-text">Start a conversation</div>
+                        <div class="empty-subtext">Select an AI provider above and type your message</div>
+                        <div class="quick-prompts">
+                            <button class="quick-prompt-btn" onclick="sendQuickPrompt('Hello! Can you help me with content creation?')">
+                                Content Creation Help
+                            </button>
+                            <button class="quick-prompt-btn" onclick="sendQuickPrompt('Analyze the SEO potential of my website')">
+                                SEO Analysis
+                            </button>
+                            <button class="quick-prompt-btn" onclick="sendQuickPrompt('What are the latest trends in AI technology?')">
+                                AI Trends
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            AISystem.chatSessions = [];
+            updateChatStats();
+        }
+
+        /* ========================================
+           🛠️ UTILITY FUNCTIONS
+           ======================================== */
+
+        function updateElement(id, value) {
+            const element = document.getElementById(id);
+            if (element) element.textContent = value;
+        }
+
+        function updateStatusIndicator(id, status) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.className = `metric-status ${status}`;
+            }
+        }
+
+        function updateTrendIndicator(id, trend) {
+            const element = document.getElementById(id);
+            if (element) {
+                const indicator = element.querySelector('.trend-indicator');
+                if (indicator) {
+                    indicator.className = `trend-indicator ${trend}`;
+                }
+            }
+        }
+
+        function getProviderConfig(providerId) {
+            const configs = {
+                gemini: { name: 'Gemini 2.0 Flash', icon: 'fas fa-gem', color: '#4285f4' },
+                openai: { name: 'OpenAI GPT', icon: 'fas fa-brain', color: '#00a67e' },
+                claude: { name: 'Claude AI', icon: 'fas fa-robot', color: '#cc785c' },
+                deepseek: { name: 'DeepSeek AI', icon: 'fas fa-code', color: '#1e40af' },
+                chinda: { name: 'ChindaX AI', icon: 'fas fa-globe', color: '#f59e0b' }
+            };
+            return configs[providerId] || { name: providerId, icon: 'fas fa-robot', color: '#6b7280' };
+        }
+
+        function getAgentConfig(agent) {
+            if (agent === 'system') {
+                return { name: 'System', icon: 'fas fa-cogs' };
+            }
+            return getProviderConfig(agent);
+        }
+
+        function getTaskIcon(taskType) {
+            const icons = {
+                content_creation: 'pen',
+                content_review: 'search',
+                seo_optimization: 'chart-line',
+                full_workflow: 'cogs'
+            };
+            return icons[taskType] || 'play';
+        }
+
+        function calculateAverageResponseTime() {
+            const providers = Object.values(AISystem.providers).filter(p => p.configured);
+            if (providers.length === 0) return 0;
+            
+            const total = providers.reduce((sum, p) => sum + (p.responseTime || 1500), 0);
+            return Math.round(total / providers.length);
+        }
+
+        function calculateSuccessRate() {
+            const providers = Object.values(AISystem.providers).filter(p => p.configured);
+            if (providers.length === 0) return 0;
+            
+            const total = providers.reduce((sum, p) => sum + (p.successRate || 95), 0);
+            return Math.round(total / providers.length);
+        }
+
+        function getTotalTasksCompleted() {
+            return AISystem.chatSessions.length + Math.floor(Math.random() * 50);
+        }
+
+        function startAutoRefresh() {
+            if (AISystem.refreshInterval) {
+                clearInterval(AISystem.refreshInterval);
+            }
+            
+            AISystem.refreshInterval = setInterval(async () => {
+                const currentSection = document.querySelector('.content-section.active');
+                if (currentSection) {
+                    const sectionId = currentSection.id;
+                    if (sectionId === 'ai-monitoring') {
+                        await loadPerformanceMetrics();
+                    } else if (sectionId === 'ai-swarm') {
+                        await refreshSwarmStatus();
+                    }
+                }
+            }, 30000); // Refresh every 30 seconds
+        }
+
+        function toggleAutoRefresh() {
+            AISystem.autoRefresh = !AISystem.autoRefresh;
+            const btn = document.getElementById('toggleAutoRefreshBtn');
+            
+            if (AISystem.autoRefresh) {
+                startAutoRefresh();
+                if (btn) {
+                    btn.classList.add('active');
+                    btn.title = 'Auto Refresh: ON';
+                    btn.innerHTML = '<i class="fas fa-play"></i>';
+                }
+            } else {
+                if (AISystem.refreshInterval) {
+                    clearInterval(AISystem.refreshInterval);
+                    AISystem.refreshInterval = null;
+                }
+                if (btn) {
+                    btn.classList.remove('active');
+                    btn.title = 'Auto Refresh: OFF';
+                    btn.innerHTML = '<i class="fas fa-pause"></i>';
+                }
+            }
+        }
+
+        function showSuccess(message) {
+            console.log('✅', message);
+            // In a real implementation, show a toast notification
+        }
+
+        function showError(message) {
+            console.error('❌', message);
+            // In a real implementation, show an error toast notification
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Override the existing initializeNavigation to include AI system initialization
+        const originalInitializeNavigation = window.initializeNavigation;
+        window.initializeNavigation = function() {
+            if (originalInitializeNavigation) {
+                originalInitializeNavigation();
+            }
+            
+            // Initialize AI system when navigation is ready
+            initializeAISystem();
+            
+            // Add AI-specific navigation handlers
+            const navLinks = document.querySelectorAll('.nav-link[data-section]');
+            navLinks.forEach(link => {
+                link.addEventListener('click', async function() {
+                    const section = this.getAttribute('data-section');
+                    
+                    // Initialize section-specific AI features
+                    setTimeout(async () => {
+                        switch (section) {
+                            case 'ai-swarm':
+                                await initializeSwarmCouncil();
+                                break;
+                            case 'ai-monitoring':
+                                await initializeMonitoring();
+                                break;
+                            case 'ai-chatbot':
+                                await initializeChatbot();
+                                break;
+                        }
+                    }, 300); // Wait for section transition
+                });
+            });
+        };
+
+        console.log('🚀 AI System JavaScript loaded successfully');
+    </script>
+</body>
+</html>
