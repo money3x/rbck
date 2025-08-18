@@ -34,8 +34,8 @@ const getInitializedCouncils = () => {
 const AI_PROVIDERS = {
     gemini: {
         name: 'Google Gemini',
-        endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
-        model: 'gemini-pro',
+        endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+        model: 'gemini-2.0-flash',
         enabled: !!process.env.GEMINI_API_KEY,
         costPerToken: 0.000002,
         status: 'active',
@@ -1888,6 +1888,13 @@ router.get('/swarm/status', async (req, res) => {
         
         // Get swarm council from singleton manager
         const manager = SwarmCouncilManager.getInstance();
+        
+        // Initialize if not already initialized
+        if (!manager.isInitialized) {
+            console.log('🚀 [AI SWARM] Initializing swarm councils...');
+            await manager.initializeCouncils();
+        }
+        
         const swarmCouncil = manager.getSwarmCouncil();
         const eatSwarmCouncil = manager.getEATSwarmCouncil();
         
@@ -1898,12 +1905,12 @@ router.get('/swarm/status', async (req, res) => {
                     swarmCouncil: {
                         available: false,
                         initialized: false,
-                        error: 'Swarm Council not created'
+                        error: 'Swarm Council failed to initialize'
                     },
                     eatSwarmCouncil: {
                         available: false,
                         initialized: false,
-                        error: 'EAT Swarm Council not created'
+                        error: 'EAT Swarm Council failed to initialize'
                     },
                     manager: manager.getStatus()
                 }
