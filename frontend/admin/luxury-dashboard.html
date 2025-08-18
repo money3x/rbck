@@ -323,8 +323,7 @@
 
         .mobile-toggle:hover {
             transform: scale(1.05);
-            box-shadow: var(--shadow-lg);
-        }
+        box-shadow: var(--shadow-lg);
 
         .page-title {
             font-size: 2.5rem;
@@ -1347,6 +1346,32 @@
             transform: translateY(-3px);
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
         }
+        
+        .provider-card.not-ready {
+            opacity: 0.6;
+            cursor: not-allowed !important;
+        }
+        
+        .provider-card.ready {
+            cursor: pointer;
+        }
+        
+        .provider-card.ready:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .provider-emoji {
+            font-size: 1.5rem;
+            line-height: 1;
+            text-align: center;
+            display: block;
+        }
+        
+        .status-indicator {
+            font-size: 0.8rem;
+            margin-right: 4px;
+        }
 
         .provider-card.selected::before {
             opacity: 0;
@@ -1528,6 +1553,70 @@
         .message.ai .message-content {
             border-radius: 18px 18px 18px 4px;
             border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+        
+        .message-sender {
+            font-weight: 600;
+            color: inherit;
+        }
+        
+        .message.user .message-sender {
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .message.ai .message-sender {
+            color: var(--text-primary);
+        }
+        
+        .message-emoji {
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .error-message {
+            color: #d32f2f !important;
+            font-style: italic;
+        }
+        
+        .message-meta-info {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+        
+        .message-actions {
+            margin-top: 8px;
+            display: flex;
+            gap: 4px;
+        }
+        
+        .message-action {
+            background: none;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            opacity: 0.6;
+            transition: all 0.2s ease;
+        }
+        
+        .message-action:hover {
+            opacity: 1;
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        .message.user .message-action:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .message-text {
@@ -3846,7 +3935,7 @@
                         this.showToast('CORS blocked - Using demo data. Backend needs CORS fix.', 'error');
                         // Use fallback demo data that matches the backend structure
                         this.providers = [
-                            {id: "gemini", name: "Google Gemini", model: "gemini-pro", enabled: true, configured: true, status: "ready", testUrl: "/api/ai/test/gemini"},
+                            {id: "gemini", name: "Google Gemini", model: "gemini-2.0-flash", enabled: true, configured: true, status: "ready", testUrl: "/api/ai/test/gemini"},
                             {id: "chinda", name: "Chinda AI", model: "chinda-qwen3-4b", enabled: true, configured: true, status: "ready", testUrl: "/api/ai/test/chinda"},
                             {id: "openai", name: "OpenAI GPT", model: "gpt-3.5-turbo", enabled: false, configured: false, status: "not_configured", testUrl: "/api/ai/test/openai"},
                             {id: "claude", name: "Anthropic Claude", model: "claude-3-sonnet-20240229", enabled: false, configured: false, status: "not_configured", testUrl: "/api/ai/test/claude"},
@@ -3879,15 +3968,25 @@
 
                 const providerCards = this.providers.map(provider => {
                     const isReady = provider.status === 'ready' && provider.configured;
+                    const providerIcon = this.getProviderIcon(provider.id);
+                    const providerEmoji = this.getProviderEmoji(provider.id);
+                    const isSelected = this.selectedProvider?.id === provider.id;
+                    
                     return `
-                        <div class="provider-card ${isReady ? 'ready' : 'not-ready'}" onclick="enhancedChatbot.selectProvider('${provider.id}')">
+                        <div class="provider-card ${isReady ? 'ready' : 'not-ready'} ${isSelected ? 'selected' : ''}" 
+                             onclick="${isReady ? `enhancedChatbot.selectProvider('${provider.id}')` : ''}"
+                             data-provider="${provider.id}"
+                             style="cursor: ${isReady ? 'pointer' : 'not-allowed'}; opacity: ${isReady ? '1' : '0.6'};">
                             <div class="provider-header">
                                 <div class="provider-icon" style="background: ${this.getProviderGradient(provider.id)};">
-                                    <i class="fas fa-${this.getProviderIcon(provider.id)}"></i>
+                                    <span class="provider-emoji" style="font-size: 1.5rem;">${providerEmoji}</span>
                                 </div>
                                 <div class="provider-name">${provider.name}</div>
                                 <div class="provider-status ${provider.status}">
-                                    ${isReady ? '✅ Ready' : '⚠️ Setup Required'}
+                                    <span class="status-indicator" style="color: ${isReady ? '#4caf50' : '#ff9800'};">
+                                        ${isReady ? '●' : '●'}
+                                    </span>
+                                    <span class="status-text">${isReady ? 'Ready' : 'Setup Required'}</span>
                                 </div>
                             </div>
                             <div class="provider-meta">
@@ -3906,37 +4005,63 @@
             }
 
             selectProvider(providerId) {
+                // Remove previous selection
                 document.querySelectorAll('.provider-card').forEach(card => {
                     card.classList.remove('selected');
                 });
                 
-                event.target.closest('.provider-card').classList.add('selected');
+                // Add selection to clicked card
+                const clickedCard = document.querySelector(`[data-provider="${providerId}"]`);
+                if (clickedCard) clickedCard.classList.add('selected');
+                
+                // Set selected provider
                 this.selectedProvider = this.providers.find(p => p.id === providerId);
                 
                 if (this.selectedProvider) {
                     const isReady = this.selectedProvider.status === 'ready' && this.selectedProvider.configured;
                     
+                    // Get UI elements
                     const messageInput = document.getElementById('enhanced-message-input');
                     const sendButton = document.getElementById('enhanced-send-button');
                     const chatTitle = document.getElementById('enhanced-chat-title');
                     
+                    // Update input state
                     if (messageInput) {
-                        messageInput.disabled = !isReady;
+                        messageInput.disabled = false; // Always enable input for ready providers
+                        messageInput.removeAttribute('readonly');
                         messageInput.placeholder = isReady ? 
-                            `Type your message for ${this.selectedProvider.name}...` : 
+                            `Chat with ${this.selectedProvider.name}...` : 
                             `${this.selectedProvider.name} requires configuration...`;
-                        if (isReady) messageInput.focus();
+                        if (isReady) {
+                            messageInput.focus();
+                            messageInput.style.cursor = 'text';
+                            messageInput.style.backgroundColor = '#ffffff';
+                        }
                     }
                     
-                    if (sendButton) sendButton.disabled = !isReady;
-                    if (chatTitle) chatTitle.textContent = `Chat with ${this.selectedProvider.name}`;
+                    // Update send button
+                    if (sendButton) {
+                        sendButton.disabled = !isReady;
+                        sendButton.style.cursor = isReady ? 'pointer' : 'not-allowed';
+                        sendButton.innerHTML = isReady ? 
+                            '<i class="fas fa-paper-plane"></i><span>Send</span>' : 
+                            '<i class="fas fa-lock"></i><span>Locked</span>';
+                    }
                     
+                    // Update chat title
+                    if (chatTitle) {
+                        const emoji = this.getProviderEmoji(this.selectedProvider.id);
+                        chatTitle.innerHTML = `${emoji} Chat with ${this.selectedProvider.name}`;
+                    }
+                    
+                    // Update empty state
                     this.updateEmptyState();
                     
+                    // Show notification
                     if (isReady) {
-                        this.showToast(`Connected to ${this.selectedProvider.name} ✅ Ready!`, 'success');
+                        this.showToast(`✅ Connected to ${this.selectedProvider.name} - Ready to chat!`, 'success');
                     } else {
-                        this.showToast(`${this.selectedProvider.name} needs API key in Render environment`, 'error');
+                        this.showToast(`⚠️ ${this.selectedProvider.name} needs API key configuration`, 'error');
                     }
                 }
             }
@@ -3959,7 +4084,10 @@
                 sendButton.disabled = true;
                 
                 try {
-                    this.addMessage('user', message);
+                    this.addMessage('user', message, {
+                        provider: 'You',
+                        providerEmoji: '👤'
+                    });
                     input.value = '';
                     input.style.height = 'auto';
                     
@@ -3967,30 +4095,44 @@
                     
                     console.log(`🚀 Sending to ${this.selectedProvider.name} via Render...`);
                     
+                    // Fix model name for Gemini to match backend
+                    const correctModel = this.getCorrectModelName(this.selectedProvider.id, this.selectedProvider.model);
+                    console.log(`🔧 Model mapping: ${this.selectedProvider.model} → ${correctModel}`);
+                    
+                    const requestPayload = {
+                        provider: this.selectedProvider.id,
+                        message: message,
+                        model: correctModel
+                    };
+                    console.log('📤 Sending request:', requestPayload);
+                    
                     const response = await fetch(`${this.renderBackendURL}/api/ai/chat`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            provider: this.selectedProvider.id,
-                            message: message,
-                            model: this.selectedProvider.model
-                        })
+                        body: JSON.stringify(requestPayload)
                     });
                     
                     const data = await response.json();
                     this.hideTypingIndicator();
                     
                     if (data.success) {
-                        this.addMessage('ai', data.content || data.response, {
+                        const aiResponse = data.content || data.response || data.result || 'Response received';
+                        this.addMessage('ai', aiResponse, {
                             tokens: data.tokensUsed || data.tokens,
                             cost: data.cost,
-                            responseTime: data.requestTime
+                            responseTime: data.requestTime || data.responseTime,
+                            provider: this.selectedProvider.name,
+                            providerEmoji: this.getProviderEmoji(this.selectedProvider.id)
                         });
                         this.updateAnalytics();
-                        this.showToast(`Response from ${this.selectedProvider.name}`, 'success');
+                        this.showToast(`✅ Response from ${this.selectedProvider.name}`, 'success');
                     } else {
-                        this.addMessage('ai', `Error: ${data.error}`, { isError: true });
-                        this.showToast(data.error, 'error');
+                        this.addMessage('ai', `❌ Error: ${data.error || 'Unknown error occurred'}`, { 
+                            isError: true,
+                            provider: this.selectedProvider.name,
+                            providerEmoji: this.getProviderEmoji(this.selectedProvider.id)
+                        });
+                        this.showToast(`❌ ${data.error || 'Request failed'}`, 'error');
                     }
                 } catch (error) {
                     this.hideTypingIndicator();
@@ -4019,19 +4161,29 @@
                 if (metadata.cost) metaInfo += ` | ฿${metadata.cost.toFixed(4)}`;
                 if (metadata.responseTime) metaInfo += ` | ${metadata.responseTime}ms`;
                 
+                const senderName = role === 'user' ? 'You' : (metadata.provider || this.selectedProvider?.name || 'AI');
+                const senderEmoji = role === 'user' ? '👤' : (metadata.providerEmoji || this.getProviderEmoji(this.selectedProvider?.id) || '🤖');
+                
                 messageElement.innerHTML = `
-                    <div class="message-avatar">
-                        <i class="fas fa-${role === 'user' ? 'user' : 'robot'}"></i>
+                    <div class="message-avatar" style="background: ${role === 'user' ? 'var(--primary-gradient)' : (metadata.isError ? '#f44336' : '#4caf50')};">
+                        <span class="message-emoji" style="font-size: 1.2rem;">${senderEmoji}</span>
                     </div>
                     <div class="message-content">
-                        <div class="message-text">${this.formatMessage(content)}</div>
-                        <div class="message-meta">
-                            <span class="message-time">${timestamp}${metaInfo}</span>
-                            <div class="message-actions">
-                                <button class="message-action" onclick="enhancedChatbot.copyMessage(this)">
-                                    <i class="fas fa-copy"></i>
+                        <div class="message-header">
+                            <span class="message-sender">${senderName}</span>
+                            <span class="message-time">${timestamp}</span>
+                        </div>
+                        <div class="message-text ${metadata.isError ? 'error-message' : ''}">${this.formatMessage(content)}</div>
+                        ${metaInfo ? `<div class="message-meta-info" style="font-size: 0.75rem; color: #666; margin-top: 5px;">${metaInfo}</div>` : ''}
+                        <div class="message-actions">
+                            <button class="message-action" onclick="enhancedChatbot.copyMessage(this)" title="Copy message">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            ${role === 'ai' && !metadata.isError ? `
+                                <button class="message-action" onclick="enhancedChatbot.regenerateMessage(this)" title="Regenerate response">
+                                    <i class="fas fa-redo"></i>
                                 </button>
-                            </div>
+                            ` : ''}
                         </div>
                     </div>
                 `;
@@ -4207,8 +4359,89 @@
             copyMessage(button) {
                 const messageText = button.closest('.message-content').querySelector('.message-text').textContent;
                 navigator.clipboard.writeText(messageText).then(() => {
-                    this.showToast('Message copied to clipboard', 'success');
+                    this.showToast('✅ Message copied to clipboard', 'success');
+                }).catch(() => {
+                    this.showToast('❌ Failed to copy message', 'error');
                 });
+            }
+
+            async regenerateMessage(button) {
+                if (!this.selectedProvider || this.isLoading) return;
+                
+                const messageElement = button.closest('.message');
+                const messageIndex = Array.from(messageElement.parentNode.children).indexOf(messageElement);
+                
+                // Find the last user message before this AI message
+                let lastUserMessage = null;
+                for (let i = messageIndex - 1; i >= 0; i--) {
+                    const msg = this.messages[i];
+                    if (msg && msg.role === 'user') {
+                        lastUserMessage = msg.content;
+                        break;
+                    }
+                }
+                
+                if (!lastUserMessage) {
+                    this.showToast('❌ Cannot find original message to regenerate', 'error');
+                    return;
+                }
+                
+                try {
+                    this.isLoading = true;
+                    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    button.disabled = true;
+                    
+                    // Remove the old AI message
+                    messageElement.remove();
+                    this.messages.splice(messageIndex, 1);
+                    
+                    // Show typing indicator
+                    this.showTypingIndicator();
+                    
+                    console.log(`🔄 Regenerating response from ${this.selectedProvider.name}...`);
+                    
+                    // Fix model name for Gemini to match backend
+                    const correctModel = this.getCorrectModelName(this.selectedProvider.id, this.selectedProvider.model);
+                    
+                    const response = await fetch(`${this.renderBackendURL}/api/ai/chat`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            provider: this.selectedProvider.id,
+                            message: lastUserMessage,
+                            model: correctModel
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    this.hideTypingIndicator();
+                    
+                    if (data.success) {
+                        const aiResponse = data.content || data.response || data.result || 'Response received';
+                        this.addMessage('ai', aiResponse, {
+                            tokens: data.tokensUsed || data.tokens,
+                            cost: data.cost,
+                            responseTime: data.requestTime || data.responseTime,
+                            provider: this.selectedProvider.name,
+                            providerEmoji: this.getProviderEmoji(this.selectedProvider.id)
+                        });
+                        this.updateAnalytics();
+                        this.showToast(`🔄 Regenerated response from ${this.selectedProvider.name}`, 'success');
+                    } else {
+                        this.addMessage('ai', `❌ Error regenerating: ${data.error || 'Unknown error'}`, { 
+                            isError: true,
+                            provider: this.selectedProvider.name,
+                            providerEmoji: this.getProviderEmoji(this.selectedProvider.id)
+                        });
+                        this.showToast(`❌ ${data.error || 'Regeneration failed'}`, 'error');
+                    }
+                } catch (error) {
+                    this.hideTypingIndicator();
+                    this.addMessage('ai', '❌ Connection error during regeneration', { isError: true });
+                    this.showToast('❌ Regeneration failed - connection error', 'error');
+                } finally {
+                    this.isLoading = false;
+                }
             }
 
             updateAnalytics() {
@@ -4261,6 +4494,33 @@
                     chinda: 'bolt'
                 };
                 return icons[providerId] || 'cog';
+            }
+
+            getProviderEmoji(providerId) {
+                const emojis = {
+                    gemini: '✨',
+                    openai: '🤖',
+                    claude: '🧠',
+                    deepseek: '🌟',
+                    chinda: '⚡'
+                };
+                return emojis[providerId] || '🔧';
+            }
+
+            getCorrectModelName(providerId, originalModel) {
+                // Fix model name mapping to match backend configuration
+                const modelMapping = {
+                    'gemini': {
+                        'gemini-pro': 'gemini-2.0-flash',
+                        'gemini-2.0-flash': 'gemini-2.0-flash'
+                    }
+                };
+                
+                if (modelMapping[providerId] && modelMapping[providerId][originalModel]) {
+                    return modelMapping[providerId][originalModel];
+                }
+                
+                return originalModel; // Return original if no mapping found
             }
         }
 
@@ -4394,34 +4654,59 @@
             showTypingIndicator();
             
             try {
-                // Send to AI provider
-                const response = await fetch(`${AISystem.baseURL}/test/${AISystem.currentProvider}`, {
+                // Get the correct model name for the provider
+                const model = AISystem.selectedModels[AISystem.currentProvider] || 'gemini-pro';
+                const correctModel = getCorrectModelName(AISystem.currentProvider, model);
+                
+                // Prepare request data
+                const requestData = {
+                    provider: AISystem.currentProvider,
+                    message: message,
+                    model: correctModel,
+                    maxTokens: 1000,
+                    temperature: 0.7
+                };
+                
+                // Debug logging
+                console.log('🔍 Provider:', AISystem.currentProvider);
+                console.log('🔍 Original model:', model);
+                console.log('🔄 Mapped model:', correctModel);
+                console.log('📤 Request payload:', JSON.stringify(requestData, null, 2));
+                
+                // Send to AI provider using correct chat endpoint
+                const response = await fetch(`${AISystem.baseURL}/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: message })
+                    body: JSON.stringify(requestData)
                 });
                 
+                console.log('📥 Response status:', response.status);
                 const result = await response.json();
+                console.log('📥 Response data:', JSON.stringify(result, null, 2));
                 
                 hideTypingIndicator();
                 
                 if (result.success) {
-                    addChatMessage(result.response, 'ai');
+                    addChatMessage(result.response || result.data?.content || 'Response received', 'ai');
                     AISystem.chatSessions.push({
                         provider: AISystem.currentProvider,
+                        model: correctModel,
                         userMessage: message,
-                        aiResponse: result.response,
+                        aiResponse: result.response || result.data?.content,
                         timestamp: new Date()
                     });
                 } else {
-                    addChatMessage(`Error: ${result.error}`, 'error');
+                    addChatMessage(`Error: ${result.error || result.message || 'Unknown error occurred'}`, 'error');
                 }
                 
             } catch (error) {
                 hideTypingIndicator();
+                console.error('🚨 Chat error:', error);
                 addChatMessage(`Connection error: ${error.message}`, 'error');
             }
             
+            // Re-enable send button
+            document.getElementById('sendBtn').disabled = false;
             updateChatStats();
         }
 
