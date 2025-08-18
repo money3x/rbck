@@ -1543,6 +1543,24 @@
             flex-direction: column;
             gap: var(--space-lg);
             height: calc(100vh - 200px);
+            min-height: 500px; /* Ensure minimum usable height */
+        }
+
+        /* 📱 Mobile & Landscape Responsive Fixes */
+        @media (max-height: 600px) {
+            .chatbot-container {
+                height: auto;
+                max-height: calc(100vh - 120px);
+                min-height: 450px;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 500px) {
+            .chatbot-container {
+                height: auto;
+                max-height: calc(100vh - 80px);
+                min-height: 400px;
+            }
         }
 
         .provider-selection {
@@ -1552,6 +1570,19 @@
             border: 1px solid var(--glass-border);
             padding: var(--space-xl);
             box-shadow: var(--shadow-lg);
+            flex-shrink: 0; /* Prevent shrinking in flex container */
+        }
+
+        /* 📱 Responsive Provider Selection */
+        @media (orientation: landscape) and (max-height: 500px) {
+            .provider-selection {
+                padding: var(--space-lg);
+            }
+            
+            .provider-section-title {
+                font-size: 1rem;
+                margin-bottom: var(--space-md);
+            }
         }
 
         .provider-section-title {
@@ -1569,6 +1600,21 @@
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: var(--space-md);
             margin-bottom: var(--space-lg);
+        }
+
+        /* 📱 Responsive Provider Grid */
+        @media (orientation: landscape) and (max-height: 500px) {
+            .provider-grid {
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: var(--space-sm);
+                margin-bottom: var(--space-md);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .provider-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .provider-card {
@@ -2157,10 +2203,26 @@
         }
 
         .chat-messages {
-            min-height: 400px;
+            flex: 1; /* Take available space in flex container */
+            min-height: 300px;
             max-height: 600px;
             overflow-y: auto;
             padding: var(--space-lg);
+        }
+
+        /* 📱 Responsive Chat Messages */
+        @media (max-height: 600px) {
+            .chat-messages {
+                min-height: 200px;
+                max-height: 400px;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 500px) {
+            .chat-messages {
+                min-height: 180px;
+                max-height: 300px;
+            }
         }
 
         .chat-empty {
@@ -2196,6 +2258,14 @@
         .chat-input-container {
             border-top: 1px solid var(--glass-border);
             padding: var(--space-lg);
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
+        /* 📱 Responsive Input Container */
+        @media (orientation: landscape) and (max-height: 500px) {
+            .chat-input-container {
+                padding: var(--space-md);
+            }
         }
 
         .chat-input-wrapper {
