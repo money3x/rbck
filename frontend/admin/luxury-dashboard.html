@@ -3967,11 +3967,12 @@
                     
                     console.log(`🚀 Sending to ${this.selectedProvider.name} via Render...`);
                     
-                    const response = await fetch(`${this.renderBackendURL}/api/ai/test/${this.selectedProvider.id}`, {
+                    const response = await fetch(`${this.renderBackendURL}/api/ai/chat`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            prompt: message
+                            provider: this.selectedProvider.id,
+                            message: message
                         })
                     });
                     
@@ -3979,7 +3980,7 @@
                     this.hideTypingIndicator();
                     
                     if (data.success) {
-                        this.addMessage('ai', data.result || data.content || data.response, {
+                        this.addMessage('ai', data.response || data.result || data.content, {
                             tokens: data.tokensUsed || data.tokens,
                             cost: data.cost,
                             responseTime: data.responseTime || data.requestTime
@@ -4413,17 +4414,18 @@
             try {
                 // Debug logging
                 console.log('🔍 Sending request:', {
-                    url: `${AISystem.baseURL}/test/${AISystem.currentProvider}`,
+                    url: `${AISystem.baseURL}/chat`,
                     provider: AISystem.currentProvider,
                     message: message
                 });
                 
-                // Send to AI provider using working test endpoint (same as ChindaX)
-                const response = await fetch(`${AISystem.baseURL}/test/${AISystem.currentProvider}`, {
+                // Send to AI provider using real chat endpoint for actual AI responses
+                const response = await fetch(`${AISystem.baseURL}/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        prompt: message 
+                        provider: AISystem.currentProvider,
+                        message: message
                     })
                 });
                 
@@ -4434,11 +4436,11 @@
                 hideTypingIndicator();
                 
                 if (result.success) {
-                    addChatMessage(result.result || result.response || 'Response received', 'ai');
+                    addChatMessage(result.response || result.result || 'Response received', 'ai');
                     AISystem.chatSessions.push({
                         provider: AISystem.currentProvider,
                         userMessage: message,
-                        aiResponse: result.result || result.response,
+                        aiResponse: result.response || result.result,
                         timestamp: new Date()
                     });
                 } else {
