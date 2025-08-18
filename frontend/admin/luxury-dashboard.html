@@ -3967,13 +3967,11 @@
                     
                     console.log(`🚀 Sending to ${this.selectedProvider.name} via Render...`);
                     
-                    const response = await fetch(`${this.renderBackendURL}/api/ai/chat`, {
+                    const response = await fetch(`${this.renderBackendURL}/api/ai/test/${this.selectedProvider.id}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            provider: this.selectedProvider.id,
-                            message: message,
-                            model: this.selectedProvider.model
+                            prompt: message
                         })
                     });
                     
@@ -3981,10 +3979,10 @@
                     this.hideTypingIndicator();
                     
                     if (data.success) {
-                        this.addMessage('ai', data.content || data.response, {
+                        this.addMessage('ai', data.result || data.content || data.response, {
                             tokens: data.tokensUsed || data.tokens,
                             cost: data.cost,
-                            responseTime: data.requestTime
+                            responseTime: data.responseTime || data.requestTime
                         });
                         this.updateAnalytics();
                         this.showToast(`Response from ${this.selectedProvider.name}`, 'success');
