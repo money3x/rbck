@@ -783,66 +783,331 @@
             transform: none;
         }
 
-        /* AI Agents Network */
-        .ai-agents-network .section-header {
+        /* ✨ Beautiful AI Agents Network Design */
+        .agents-network-container {
+            margin-bottom: var(--space-2xl);
+        }
+
+        .section-title {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: var(--space-xl);
+            padding-bottom: var(--space-lg);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
         }
 
-        .section-header h3 {
+        .section-title h2 {
             margin: 0;
-            font-size: 1.5rem;
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .network-health-indicator {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-md) var(--space-lg);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 25px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+
+        .health-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+            animation: healthPulse 3s infinite;
+        }
+
+        .agents-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: var(--space-xl);
+        }
+
+        /* Beautiful Agent Cards */
+        .agent-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: var(--space-xl);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .agent-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+            background-size: 200% 100%;
+            animation: shimmer 3s infinite;
+        }
+
+        .agent-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            border-color: rgba(102, 126, 234, 0.4);
+        }
+
+        .agent-card.online {
+            border-color: rgba(74, 222, 128, 0.3);
+        }
+
+        .agent-card.offline {
+            opacity: 0.6;
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .agent-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--space-lg);
+        }
+
+        .agent-info h4 {
+            margin: 0 0 var(--space-xs) 0;
+            font-size: 1.4rem;
             font-weight: 700;
             color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: var(--space-sm);
         }
 
-        .network-status {
-            display: flex;
-            align-items: center;
-            gap: var(--space-sm);
-            padding: var(--space-sm) var(--space-md);
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            font-size: 0.875rem;
+        .agent-model {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
             font-weight: 500;
         }
 
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            transition: var(--transition-smooth);
+        .agent-status-badge {
+            padding: var(--space-xs) var(--space-md);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .status-dot.loading {
-            background: var(--accent-gold);
-            animation: pulse 2s infinite;
+        .agent-status-badge.connected {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            color: white;
+            box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
         }
 
-        .status-dot.connected {
-            background: var(--accent-green);
+        .agent-status-badge.disconnected {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
         }
 
-        .agents-grid {
+        .agent-metrics {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: var(--space-lg);
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-md);
+            margin-top: var(--space-lg);
         }
 
-        .agent-card {
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--glass-border);
+        .agent-metric {
+            text-align: center;
+            padding: var(--space-md);
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 16px;
-            padding: var(--space-lg);
-            transition: var(--transition-smooth);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .metric-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: var(--space-xs);
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Animations */
+        @keyframes healthPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        /* ✨ Beautiful AI Monitoring Dashboard Design */
+        .monitoring-dashboard-container {
+            margin-bottom: var(--space-2xl);
+        }
+
+        .monitoring-controls-clean {
+            display: flex;
+            gap: var(--space-md);
+        }
+
+        .elegant-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-md) var(--space-lg);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 20px;
+            color: var(--text-primary);
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+        }
+
+        .elegant-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+            border-color: rgba(102, 126, 234, 0.4);
+        }
+
+        .elegant-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: transparent;
+        }
+
+        .providers-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: var(--space-xl);
+        }
+
+        /* Beautiful Provider Cards */
+        .provider-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: var(--space-xl);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
+            overflow: hidden;
+        }
+
+        .provider-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+            background-size: 200% 100%;
+            animation: shimmer 3s infinite;
+        }
+
+        .provider-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            border-color: rgba(102, 126, 234, 0.4);
+        }
+
+        .provider-card.ready {
+            border-color: rgba(74, 222, 128, 0.3);
+        }
+
+        .provider-card.not-ready {
+            opacity: 0.6;
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .provider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--space-lg);
+        }
+
+        .provider-info h4 {
+            margin: 0 0 var(--space-xs) 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .provider-model {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .provider-status-badge {
+            padding: var(--space-sm) var(--space-lg);
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .provider-status-badge.ready {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            color: white;
+            box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
+        }
+
+        .provider-status-badge.not-ready {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .provider-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: var(--space-md);
+            margin-top: var(--space-lg);
+        }
+
+        .provider-metric {
+            text-align: center;
+            padding: var(--space-md);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .provider-metric-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: var(--space-xs);
+        }
+
+        .provider-metric-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .agent-card:hover {
@@ -2486,17 +2751,18 @@
                 </div>
             </div>
 
-            <!-- AI Agents Network Visualization -->
-            <div class="luxury-card ai-agents-network">
-                <div class="section-header">
-                    <h3><i class="fas fa-network-wired"></i> AI Agents Network</h3>
-                    <div class="network-status" id="networkStatus">
-                        <span class="status-dot loading"></span>
-                        <span>Initializing...</span>
+            <!-- ✨ AI Agents Network - Beautiful Cards Design -->
+            <div class="agents-network-container">
+                <div class="section-title">
+                    <h2><i class="fas fa-robot"></i> AI Agents Network</h2>
+                    <div class="network-health-indicator" id="networkHealthIndicator">
+                        <span class="health-dot"></span>
+                        <span class="health-text">Checking connections...</span>
                     </div>
                 </div>
-                <div class="agents-grid" id="agentsGrid">
-                    <!-- Agents will be populated by JavaScript from backend data -->
+                
+                <div class="agents-cards-grid" id="agentsCardsGrid">
+                    <!-- Beautiful agent cards will be populated here -->
                 </div>
             </div>
 
@@ -2589,32 +2855,25 @@
 
         <!-- 📊 AI Monitoring Section -->
         <section id="ai-monitoring" class="content-section">
-            <!-- Overview Metrics -->
-            <div class="luxury-card monitoring-overview">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div>
-                        <div class="card-title">AI Monitoring Dashboard</div>
-                        <div class="card-subtitle">Real-time Performance & Health Monitoring</div>
-                    </div>
-                    <div class="monitoring-controls">
-                        <button id="refreshMonitoringBtn" class="control-btn" onclick="refreshMonitoring()" title="Refresh All Data">
+            <!-- ✨ AI Monitoring Dashboard - Beautiful Cards Design -->
+            <div class="monitoring-dashboard-container">
+                <div class="section-title">
+                    <h2><i class="fas fa-chart-pulse"></i> AI Monitoring Dashboard</h2>
+                    <div class="monitoring-controls-clean">
+                        <button id="refreshMonitoringBtn" class="elegant-btn" onclick="refreshMonitoring()" title="Refresh Data">
                             <i class="fas fa-sync"></i>
+                            <span>Refresh</span>
                         </button>
-                        <button id="testAllProvidersBtn" class="control-btn" onclick="testAllProviders()" title="Test All Providers">
-                            <i class="fas fa-flask"></i>
-                        </button>
-                        <button id="toggleAutoRefreshBtn" class="control-btn active" onclick="toggleAutoRefresh()" title="Auto Refresh: ON">
+                        <button id="toggleAutoRefreshBtn" class="elegant-btn active" onclick="toggleAutoRefresh()" title="Auto Refresh">
                             <i class="fas fa-play"></i>
+                            <span>Auto Refresh</span>
                         </button>
                     </div>
                 </div>
                 
-                <!-- Real-time Provider Status Grid -->
-                <div class="providers-status-grid" id="providersStatusGrid">
-                    <!-- Populated by JavaScript -->
+                <!-- Beautiful Provider Status Cards -->
+                <div class="providers-cards-grid" id="providersCardsGrid">
+                    <!-- Beautiful provider cards will be populated here -->
                 </div>
             </div>
 
@@ -3300,29 +3559,33 @@
         function updateAgentsStatus(providers) {
             console.log('🔄 Updating agents status:', providers);
             
-            // Update agents grid with current provider status
-            providers.forEach(provider => {
-                const agentCard = document.querySelector(`[data-agent="${provider.id}"]`);
-                if (agentCard) {
-                    const statusElement = agentCard.querySelector('.agent-status');
-                    const metricElement = agentCard.querySelector('.agent-metric');
-                    
-                    if (statusElement) {
-                        statusElement.className = `agent-status ${provider.status}`;
-                        statusElement.textContent = provider.status === 'ready' ? 'Connected' : 'Disconnected';
-                    }
-                    
-                    if (metricElement && provider.status === 'ready') {
-                        metricElement.textContent = '✅ Ready';
-                        agentCard.classList.remove('offline');
-                        agentCard.classList.add('online');
-                    } else if (metricElement) {
-                        metricElement.textContent = '❌ Offline';  
-                        agentCard.classList.remove('online');
-                        agentCard.classList.add('offline');
-                    }
-                }
-            });
+            // Create beautiful agent cards
+            const agentsGrid = document.getElementById('agentsCardsGrid');
+            if (agentsGrid) {
+                agentsGrid.innerHTML = providers.map(provider => `
+                    <div class="agent-card ${provider.status === 'ready' ? 'online' : 'offline'}" data-agent="${provider.id}">
+                        <div class="agent-header">
+                            <div class="agent-info">
+                                <h4>${provider.name}</h4>
+                                <div class="agent-model">${provider.model}</div>
+                            </div>
+                            <div class="agent-status-badge ${provider.status === 'ready' ? 'connected' : 'disconnected'}">
+                                ${provider.status === 'ready' ? 'Connected' : 'Disconnected'}
+                            </div>
+                        </div>
+                        <div class="agent-metrics">
+                            <div class="agent-metric">
+                                <div class="metric-value">${provider.status === 'ready' ? '✅' : '❌'}</div>
+                                <div class="metric-label">Status</div>
+                            </div>
+                            <div class="agent-metric">
+                                <div class="metric-value">${provider.configured ? '✅' : '❌'}</div>
+                                <div class="metric-label">Config</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
             
             // Update network connections visualization
             updateNetworkConnections(providers);
@@ -3334,21 +3597,19 @@
             const readyProviders = providers.filter(p => p.status === 'ready');
             const totalProviders = providers.length;
             
-            // Update connection status in UI
-            const connectionStatus = document.querySelector('.connection-status');
-            if (connectionStatus) {
-                connectionStatus.innerHTML = `
-                    <span class="status-indicator ${readyProviders.length > 0 ? 'connected' : 'disconnected'}"></span>
-                    ${readyProviders.length}/${totalProviders} Agents Connected
-                `;
-            }
-            
             // Update network health indicator
-            const healthIndicator = document.querySelector('.network-health');
+            const healthIndicator = document.getElementById('networkHealthIndicator');
             if (healthIndicator) {
-                const healthPercentage = Math.round((readyProviders.length / totalProviders) * 100);
-                healthIndicator.style.setProperty('--health', `${healthPercentage}%`);
-                healthIndicator.setAttribute('data-health', healthPercentage);
+                const healthDot = healthIndicator.querySelector('.health-dot');
+                const healthText = healthIndicator.querySelector('.health-text');
+                
+                if (readyProviders.length > 0) {
+                    healthDot.style.background = 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)';
+                    healthText.textContent = `${readyProviders.length}/${totalProviders} Agents Connected`;
+                } else {
+                    healthDot.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+                    healthText.textContent = 'No Agents Connected';
+                }
             }
             
             console.log(`🌐 Network status: ${readyProviders.length}/${totalProviders} agents ready`);
@@ -3654,52 +3915,41 @@
         }
 
         async function populateProvidersStatusGrid() {
-            const grid = document.getElementById('providersStatusGrid');
+            const grid = document.getElementById('providersCardsGrid');
             if (!grid) return;
             
             let html = '';
             for (const [id, provider] of Object.entries(AISystem.providers)) {
                 const config = getProviderConfig(id);
                 const isConnected = provider.configured;
-                const responseTime = provider.responseTime || 'N/A';
-                const successRate = provider.successRate || 'N/A';
+                const responseTime = provider.responseTime || '--';
+                const successRate = provider.successRate || '--';
                 
                 html += `
-                    <div class="provider-status-card ${isConnected ? 'connected' : 'disconnected'}">
-                        <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-lg);">
-                            <div style="width: 56px; height: 56px; background: ${config.color}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
-                                <i class="${config.icon}"></i>
+                    <div class="provider-card ${isConnected ? 'ready' : 'not-ready'}">
+                        <div class="provider-header">
+                            <div class="provider-info">
+                                <h4>${provider.name}</h4>
+                                <div class="provider-model">${provider.model || 'Default Model'}</div>
                             </div>
-                            <div>
-                                <div style="font-weight: 700; font-size: 1.125rem; color: var(--text-primary);">${provider.name}</div>
-                                <div style="color: var(--text-secondary); font-size: 0.875rem;">${provider.model || 'Default Model'}</div>
-                            </div>
-                        </div>
-                        
-                        <div style="margin-bottom: var(--space-md);">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-sm);">
-                                <span>Status:</span>
-                                <span class="status-badge ${isConnected ? 'connected' : 'disconnected'}">
-                                    ${isConnected ? 'Connected' : 'Disconnected'}
-                                </span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-sm);">
-                                <span>Response:</span>
-                                <span>${responseTime}${typeof responseTime === 'number' ? 'ms' : ''}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between;">
-                                <span>Success Rate:</span>
-                                <span>${successRate}${typeof successRate === 'number' ? '%' : ''}</span>
+                            <div class="provider-status-badge ${isConnected ? 'ready' : 'not-ready'}">
+                                ${isConnected ? 'Ready' : 'Not Ready'}
                             </div>
                         </div>
                         
-                        <div style="display: flex; gap: var(--space-sm);">
-                            <button onclick="testProvider('${id}')" class="test-btn" ${!isConnected ? 'disabled' : ''}>
-                                <i class="fas fa-flask"></i> Test
-                            </button>
-                            <button onclick="viewProviderDetails('${id}')" class="details-btn">
-                                <i class="fas fa-info-circle"></i> Details
-                            </button>
+                        <div class="provider-metrics">
+                            <div class="provider-metric">
+                                <div class="provider-metric-value">${responseTime}</div>
+                                <div class="provider-metric-label">Response</div>
+                            </div>
+                            <div class="provider-metric">
+                                <div class="provider-metric-value">${successRate}</div>
+                                <div class="provider-metric-label">Success</div>
+                            </div>
+                            <div class="provider-metric">
+                                <div class="provider-metric-value">${isConnected ? '✅' : '❌'}</div>
+                                <div class="provider-metric-label">Health</div>
+                            </div>
                         </div>
                     </div>
                 `;
