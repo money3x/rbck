@@ -4376,6 +4376,18 @@
             textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
         }
 
+        // Get correct default model for each provider
+        function getDefaultModelForProvider(providerId) {
+            const modelMap = {
+                'gemini': 'gemini-2.0-flash',
+                'chinda': 'chinda-qwen3-4b',
+                'openai': 'gpt-4',
+                'claude': 'claude-3-sonnet-20240229',
+                'deepseek': 'deepseek-chat'
+            };
+            return modelMap[providerId] || 'gemini-2.0-flash';
+        }
+
         async function sendMessage() {
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
@@ -4401,7 +4413,7 @@
                     body: JSON.stringify({
                         provider: AISystem.currentProvider,
                         message: message,
-                        model: AISystem.selectedModels[AISystem.currentProvider] || 'gemini-pro',
+                        model: getDefaultModelForProvider(AISystem.currentProvider),
                         maxTokens: 1000,
                         temperature: 0.7
                     })
