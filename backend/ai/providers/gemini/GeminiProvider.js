@@ -14,11 +14,9 @@ class GeminiProvider extends BaseProvider {
         try {
             this.validateApiKey();
             
-            const model = options.model || this.model;
-            // Use the complete baseURL that includes the endpoint
-            const apiUrl = this.baseURL.includes(':generateContent') 
-                ? `${this.baseURL}?key=${this.apiKey}`
-                : `${this.baseURL}/models/${model}:generateContent?key=${this.apiKey}`;
+            const model = options.model || this.model || 'gemini-2.0-flash';
+            // Always use the configured baseURL pattern
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.apiKey}`;
             
             const response = await axios.post(apiUrl,
                 {
@@ -65,9 +63,9 @@ class GeminiProvider extends BaseProvider {
         try {
             this.validateApiKey();
             
-            const model = options.model || this.model;
+            const model = options.model || this.model || 'gemini-2.0-flash';
             const response = await axios.post(
-                `${this.baseURL}/models/${model}:streamGenerateContent?key=${this.apiKey}`,
+                `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${this.apiKey}`,
                 {
                     contents: [{
                         parts: [{ text: prompt }]
