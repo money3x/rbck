@@ -4392,7 +4392,14 @@
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
             
-            if (!message || !AISystem.currentProvider) return;
+            if (!message || !AISystem.currentProvider) {
+                console.error('❌ Missing requirements:', {
+                    message: !!message,
+                    currentProvider: AISystem.currentProvider,
+                    aiSystem: AISystem
+                });
+                return;
+            }
             
             // Clear input and disable send button
             input.value = '';
@@ -4406,6 +4413,13 @@
             showTypingIndicator();
             
             try {
+                // Debug logging
+                console.log('🔍 Sending request:', {
+                    url: `${AISystem.baseURL}/test/${AISystem.currentProvider}`,
+                    provider: AISystem.currentProvider,
+                    message: message
+                });
+                
                 // Send to AI provider using working test endpoint (same as ChindaX)
                 const response = await fetch(`${AISystem.baseURL}/test/${AISystem.currentProvider}`, {
                     method: 'POST',
@@ -4415,7 +4429,9 @@
                     })
                 });
                 
+                console.log('📥 Response status:', response.status);
                 const result = await response.json();
+                console.log('📥 Full response:', JSON.stringify(result, null, 2));
                 
                 hideTypingIndicator();
                 
