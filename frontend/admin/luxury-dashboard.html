@@ -3972,7 +3972,9 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             provider: this.selectedProvider.id,
-                            message: message
+                            message: message,
+                            maxTokens: 300, // Faster response with fewer tokens
+                            temperature: 0.7
                         })
                     });
                     
@@ -4425,7 +4427,9 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         provider: AISystem.currentProvider,
-                        message: message
+                        message: message,
+                        maxTokens: 300, // Faster response with fewer tokens
+                        temperature: 0.7
                     })
                 });
                 

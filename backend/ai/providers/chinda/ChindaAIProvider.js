@@ -10,11 +10,14 @@ class ChindaAIProvider extends BaseProvider {
         // Configure axios instance for ChindaX API
         this.client = axios.create({
             baseURL: this.baseURL,
-            timeout: 30000, // 30 seconds for AI processing
+            timeout: 10000, // 10 seconds - faster response
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${this.apiKey}` // ChindaX uses API key as Bearer token
-            }
+            },
+            // Connection optimization
+            maxRedirects: 5,
+            maxContentLength: 50000
         });
         
         if (!this.baseURL || !this.apiKey) {
@@ -39,7 +42,7 @@ class ChindaAIProvider extends BaseProvider {
             const requestData = {
                 model: options.model || 'chinda-qwen3-4b',
                 messages: messages,
-                max_tokens: options.maxTokens || 1000,
+                max_tokens: options.maxTokens || 300, // Reduce tokens for faster response
                 temperature: options.temperature || 0.7
             };
             
@@ -122,7 +125,7 @@ class ChindaAIProvider extends BaseProvider {
     }
     
     async validateRequest(data) {
-        if (!data || !data.prompt) {
+       if (!data?.prompt) {
             return { isValid: false, errors: ['Prompt is required'] };
         }
         if (data.prompt.length > 8000) {
@@ -150,7 +153,8 @@ class ChindaAIProvider extends BaseProvider {
             }
             
             // Try a very minimal request
-            const testResponse = await this.generateResponse('test', { maxTokens: 5, temperature: 0.1 });
+            await this.generateResponse('test', { maxTokens: 5, temperature: 0.1 });
+            // If we reach here, the API is reachable and working
             const responseTime = Date.now() - startTime;
             
             return {

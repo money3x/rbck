@@ -25,13 +25,16 @@ class GeminiProvider extends BaseProvider {
                     }],
                     generationConfig: {
                         temperature: options.temperature || 0.7,
-                        maxOutputTokens: options.maxTokens || 1000
+                        maxOutputTokens: options.maxTokens || 300
                     }
                 },
                 {
                     headers: {
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    timeout: 10000, // 10 seconds timeout
+                    maxContentLength: 50000,
+                    maxRedirects: 5
                 }
             );
 
@@ -72,13 +75,16 @@ class GeminiProvider extends BaseProvider {
                     }],
                     generationConfig: {
                         temperature: options.temperature || 0.7,
-                        maxOutputTokens: options.maxTokens || 1000
+                        maxOutputTokens: options.maxTokens || 300
                     }
                 },
                 {
                     headers: {
                         'Content-Type': 'application/json'
                     },
+                    timeout: 10000, // 10 seconds timeout
+                    maxContentLength: 50000,
+                    maxRedirects: 5,
                     responseType: 'stream'
                 }
             );
