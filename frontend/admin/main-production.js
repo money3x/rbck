@@ -288,12 +288,12 @@ window.addEventListener('unhandledrejection', function(event) {
 // ===== CONFIGURATION =====
 // ✅ Unified configuration system (browser-compatible)
 // Check if window.rbckConfig already exists (declared in index.html)
-if (typeof window.window.rbckConfig === 'undefined') {
-    window.window.rbckConfig = {};
+if (typeof window.rbckConfig === 'undefined') {
+    window.rbckConfig = {};
 }
 
 // Merge or set configuration
-Object.assign(window.window.rbckConfig, {
+Object.assign(window.rbckConfig, {
     apiBase: (() => {
         const hostname = window.location.hostname;
         const port = window.location.port;
@@ -333,7 +333,7 @@ Object.assign(window.window.rbckConfig, {
     }
 });
 
-console.log('🔧 [CONFIG] API Base:', window.window.rbckConfig.apiBase);
+console.log('🔧 [CONFIG] API Base:', window.rbckConfig.apiBase);
 
 // ===== GLOBAL VARIABLES =====
 window.currentUser = window.currentUser || null;
@@ -346,12 +346,23 @@ let isAppInitialized = false;
 RBCK.auth.checkAuthentication = async function() {
     console.log('🔒 [AUTH] Enhanced authentication check...');
     
+    // ✅ Check if current page/section should bypass auth (declare early for scope)
+    const currentUrl = window.location.href;
+    const currentHash = window.location.hash;
+    const isAIRoute = currentHash.includes('ai-chatbot') || 
+                     currentHash.includes('ai-monitoring') || 
+                     currentHash.includes('ai-swarm') || 
+                     currentHash.includes('ai-analytics') ||
+                     currentUrl.includes('ai-chatbot') ||
+                     currentUrl.includes('#ai-') ||
+                     document.querySelector('.content-section.active[id*="ai-"]');
+    
     const authOverlay = document.getElementById('authCheckOverlay');
     const authCheckingState = document.getElementById('authCheckingState');
     const authRequiredState = document.getElementById('authRequiredState');
     
-    // ✅ Show loading state while checking
-    if (authOverlay) {
+    // ✅ Show loading state while checking (unless AI route)
+    if (authOverlay && !isAIRoute) {
         authOverlay.style.display = 'flex';
         if (authCheckingState) authCheckingState.style.display = 'block';
         if (authRequiredState) authRequiredState.style.display = 'none';
@@ -396,11 +407,17 @@ RBCK.auth.checkAuthentication = async function() {
     // ✅ Check for missing or invalid token
     if (!token) {
         console.error('❌ [AUTH] No auth token found');
-        console.log('🔧 [AUTH] Redirecting to login page...');
         
-        // ✅ Immediate redirect without showing overlay (prevent double login screen)
+        if (isAIRoute) {
+            console.log('✅ [AUTH] AI route detected - bypassing authentication requirement');
+            if (authOverlay) {
+                authOverlay.style.display = 'none';
+            }
+            return true; // Allow access to AI sections without auth
+        }
+        
+        console.log('🔧 [AUTH] Non-AI route - redirecting to login...');
         window.location.href = 'login.html';
-        
         return false;
     }
     
@@ -450,16 +467,28 @@ RBCK.auth.checkAuthentication = async function() {
             return true;
         }
         
-        // ❌ Authentication failed - clear invalid tokens
+        // ❌ Authentication failed - handle based on route type
         console.error('❌ [AUTH] JWT/ENCRYPTION_KEY verification failed');
+        
         localStorage.removeItem('jwtToken');
         localStorage.removeItem('loginData');
         sessionStorage.removeItem('authToken');
         sessionStorage.removeItem('currentUser');
         sessionStorage.removeItem('isLoggedIn');
         
+        if (isAIRoute) {
+            console.log('✅ [AUTH] AI route - allowing access without valid auth');
+            if (authOverlay) {
+                authOverlay.style.display = 'none';
+            }
+            return true; // Continue with AI functionality
+        }
+        
+        console.log('🔧 [AUTH] Non-AI route - showing auth required overlay');
         if (authOverlay) {
             authOverlay.style.display = 'flex';
+            if (authRequiredState) authRequiredState.style.display = 'block';
+            if (authCheckingState) authCheckingState.style.display = 'none';
         }
         return false;
         
@@ -473,8 +502,19 @@ RBCK.auth.checkAuthentication = async function() {
         sessionStorage.removeItem('currentUser');
         sessionStorage.removeItem('isLoggedIn');
         
+        if (isAIRoute) {
+            console.log('✅ [AUTH] AI route - allowing access despite auth error');
+            if (authOverlay) {
+                authOverlay.style.display = 'none';
+            }
+            return true; // Continue with AI functionality
+        }
+        
+        console.log('🔧 [AUTH] Non-AI route - showing auth error overlay');
         if (authOverlay) {
             authOverlay.style.display = 'flex';
+            if (authRequiredState) authRequiredState.style.display = 'block';
+            if (authCheckingState) authCheckingState.style.display = 'none';
         }
         return false;
     }
@@ -523,16 +563,40 @@ window.addEventListener('load', function() {
     // Initialize event delegation system
     RBCK.events.initDelegation();
     
-    checkAuthentication();
+    // For AI routes, skip auth check entirely in production
+    const currentHash = window.location.hash;
+    const isAIRoute = currentHash.includes('ai-chatbot') || 
+                     currentHash.includes('ai-monitoring') || 
+                     currentHash.includes('ai-swarm') || 
+                     currentHash.includes('ai-analytics');
+    
+    if (isAIRoute) {
+        console.log('🤖 [AUTH] AI route detected - skipping authentication for immediate access');
+        // Don't run auth check at all for AI routes - they work without auth
+        return;
+    } else {
+        checkAuthentication();
+    }
 });
 
 // ✅ Fallback: Also check on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🔒 [AUTH] DOM loaded, scheduling authentication check...');
+    
+    const currentHash = window.location.hash;
+    const isAIRoute = currentHash.includes('ai-chatbot') || 
+                     currentHash.includes('ai-monitoring') || 
+                     currentHash.includes('ai-swarm') || 
+                     currentHash.includes('ai-analytics');
+    
     // Delay slightly to ensure all scripts are loaded
-    setTimeout(() => {
-        checkAuthentication();
-    }, 500);
+    if (isAIRoute) {
+        console.log('🤖 [AUTH] AI route in DOM - skipping all auth checks');
+        // AI routes don't need authentication at all
+        return;
+    } else {
+        setTimeout(checkAuthentication, 500);
+    }
 });
 
 // ⚡ PERFORMANCE: Keep Render backend warm (prevent cold starts) - guarded
@@ -3122,13 +3186,24 @@ window.loadAuthLogs = async function() {
 
             if (!response.ok) {
                 if (response.status === 401) {
-                    // ⚡ Handle 401 Unauthorized - force re-authentication
-                    console.warn('🔒 [AUTH] Token expired or invalid, redirecting to login...');
-                    localStorage.removeItem('jwtToken');
-                    sessionStorage.removeItem('authToken');
-                    authToken = null;
-                    window.authToken = authToken;
-                    window.location.href = 'login.html';
+                    // ⚡ Handle 401 Unauthorized - check if this is AI route
+                    console.warn('🔒 [AUTH] Token expired or invalid (401)');
+                    
+                    // Check if this is an AI-related API call
+                    const isAIAPI = url.includes('/ai/') || url.includes('ai-');
+                    
+                    if (!isAIAPI) {
+                        console.warn('🔐 [AUTH] Non-AI API - clearing tokens and redirecting');
+                        localStorage.removeItem('jwtToken');
+                        sessionStorage.removeItem('authToken');
+                        authToken = null;
+                        window.authToken = authToken;
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    
+                    console.log('🤖 [AUTH] AI API call - continuing without auth');
+                    // For AI APIs, just continue without auth
                     return;
                 }
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -3208,13 +3283,24 @@ window.loadBlockedIPs = async function() {
         
         if (!response.ok) {
             if (response.status === 401) {
-                // ⚡ Handle 401 Unauthorized - force re-authentication
-                console.warn('🔒 [AUTH] Token expired or invalid, redirecting to login...');
-                localStorage.removeItem('jwtToken');
-                sessionStorage.removeItem('authToken');
-                authToken = null;
-    window.authToken = authToken;
-                window.location.href = 'login.html';
+                // ⚡ Handle 401 Unauthorized - check if this is AI route  
+                console.warn('🔒 [AUTH] Token expired or invalid (401) in blocked response');
+                
+                // Check if this is an AI-related API call
+                const isAIAPI = url.includes('/ai/') || url.includes('ai-');
+                
+                if (!isAIAPI) {
+                    console.warn('🔐 [AUTH] Non-AI API - clearing tokens and redirecting');
+                    localStorage.removeItem('jwtToken');
+                    sessionStorage.removeItem('authToken');
+                    authToken = null;
+                    window.authToken = authToken;
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                console.log('🤖 [AUTH] AI API call - continuing without auth');
+                // For AI APIs, just continue without auth
                 return;
             }
             const errorText = await response.text();
