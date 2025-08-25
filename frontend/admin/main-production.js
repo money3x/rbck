@@ -1017,6 +1017,63 @@ RBCK.ui.showSection = function(sectionId) {
                         console.error('❌ [NAV] Error loading security alerts:', err);
                     }
                     break;
+                case 'ai-chatbot':
+                    title = '💬 AI Chatbot';
+                    setTimeout(async () => {
+                        try {
+                            console.log('🤖 [NAV] Initializing AI Chatbot...');
+                            if (typeof initializeChatbot === 'function') {
+                                await initializeChatbot();
+                            } else {
+                                console.warn('⚠️ [NAV] initializeChatbot function not available');
+                            }
+                        } catch (err) {
+                            console.error('❌ [NAV] Error initializing AI chatbot:', err);
+                        }
+                    }, 100);
+                    break;
+                case 'ai-swarm':
+                    title = '🤖 AI Swarm Council';
+                    setTimeout(async () => {
+                        try {
+                            if (typeof initializeSwarmCouncil === 'function') {
+                                await initializeSwarmCouncil();
+                            } else {
+                                console.warn('⚠️ [NAV] initializeSwarmCouncil function not available');
+                            }
+                        } catch (err) {
+                            console.error('❌ [NAV] Error initializing AI swarm:', err);
+                        }
+                    }, 100);
+                    break;
+                case 'ai-monitoring':
+                    title = '📊 AI Monitoring';
+                    setTimeout(async () => {
+                        try {
+                            if (typeof initializeMonitoring === 'function') {
+                                await initializeMonitoring();
+                            } else {
+                                console.warn('⚠️ [NAV] initializeMonitoring function not available');
+                            }
+                        } catch (err) {
+                            console.error('❌ [NAV] Error initializing AI monitoring:', err);
+                        }
+                    }, 100);
+                    break;
+                case 'ai-analytics':
+                    title = '📊 AI Analytics';
+                    setTimeout(async () => {
+                        try {
+                            if (typeof initializeAnalytics === 'function') {
+                                await initializeAnalytics();
+                            } else {
+                                console.warn('⚠️ [NAV] initializeAnalytics function not available');
+                            }
+                        } catch (err) {
+                            console.error('❌ [NAV] Error initializing AI analytics:', err);
+                        }
+                    }, 100);
+                    break;
                 default:
                     title = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
             }
