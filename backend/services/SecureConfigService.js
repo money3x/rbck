@@ -13,10 +13,10 @@ class SecureConfigService {
     static getProviderConfig(providerName) {
         const configs = {
             gemini: {
-                name: 'Gemini 2.0 Flash',
+                name: 'Gemini 2.5 Flash',
                 type: 'Google AI',
                 endpoint: process.env.GEMINI_API_ENDPOINT || 'https://generativelanguage.googleapis.com/v1beta',
-                model: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
+                model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
                 status: this.hasValidKey('gemini') ? 'active' : 'inactive',
                 responseTime: 800,
                 successRate: 0.95,
@@ -28,7 +28,7 @@ class SecureConfigService {
                 name: 'OpenAI GPT',
                 type: 'OpenAI',
                 endpoint: process.env.OPENAI_API_ENDPOINT || 'https://api.openai.com/v1',
-                model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
+                model: process.env.OPENAI_MODEL || 'gpt-oss-120b',
                 status: this.hasValidKey('openai') ? 'active' : 'inactive',
                 responseTime: 1200,
                 successRate: 0.92,
