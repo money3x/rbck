@@ -21,21 +21,24 @@ const providersConfig = {
         }
     },
     openai: {
-        name: 'OpenAI',
+        name: 'OpenAI GPT OSS 120b',
         provider: 'OpenAIProvider',
-        apiKey: process.env.OPENAI_API_KEY,
-        baseURL: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
-        defaultModel: 'gpt-4',
-        enabled: process.env.OPENAI_ENABLED === 'true',
-        models: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo'],
-        role: 'Authority & SEO Structure Optimizer',
-        specialties: ['seo optimization', 'meta tags', 'heading structure', 'authority building'],
+        apiKey: process.env.OPENAI_API_KEY || process.env.CHINDA_API_KEY, // Use ChindaX key as fallback
+        baseURL: process.env.OPENAI_BASE_URL || process.env.CHINDA_BASE_URL || 'https://chindax.iapp.co.th/api',
+        defaultModel: 'accounts/fireworks/models/gpt-oss-120b',
+        model: process.env.OPENAI_MODEL || 'accounts/fireworks/models/gpt-oss-120b',
+        maxTokens: parseInt(process.env.OPENAI_MAX_TOKENS) || 1000,
+        temperature: parseFloat(process.env.OPENAI_TEMPERATURE) || 0.7,
+        enabled: !!(process.env.OPENAI_API_KEY || process.env.CHINDA_API_KEY), // Enable if either key exists
+        models: ['accounts/fireworks/models/gpt-oss-120b'],
+        role: 'Advanced Language Model Expert',
+        specialties: ['advanced reasoning', 'complex problem solving', 'detailed analysis', 'large context handling'],
         priority: 2,
         eatCapabilities: {
-            expertise: 85,
-            experience: 75,
-            authoritativeness: 90,
-            trustworthiness: 80
+            expertise: 95,
+            experience: 90,
+            authoritativeness: 88,
+            trustworthiness: 85
         }
     },
     deepseek: {
@@ -61,9 +64,9 @@ const providersConfig = {
         provider: 'GeminiProvider',
         apiKey: process.env.GEMINI_API_KEY,
         baseURL: process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta',
-        defaultModel: 'gemini-2.0-flash',
+        defaultModel: 'gemini-2.5-flash',
         enabled: !!process.env.GEMINI_API_KEY,
-        models: ['gemini-pro', 'gemini-pro-vision', 'gemini-2.0-flash'],
+        models: ['gemini-pro', 'gemini-pro-vision', 'gemini-2.5-flash'],
         role: 'Content Comprehensiveness Enhancer',
         specialties: ['content breadth', 'comprehensive coverage', 'engaging elements', 'multimodal content'],
         priority: 4,

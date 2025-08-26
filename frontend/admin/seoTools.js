@@ -7,7 +7,7 @@ import { API_BASE } from '../config.js';
 // ===== STEP 1: CONFIGURATIONS =====
 // const GEMINI_CONFIG = { apiKey: 'xxx', ... } // <-- ไม่ควรใส่ apiKey ใน frontend
 const GEMINI_CONFIG = {
-    model: 'gemini-2.0-flash',
+    model: 'gemini-2.5-flash',
     maxTokens: 2048,
     temperature: 0.3,
     enabled: true,
@@ -15,7 +15,7 @@ const GEMINI_CONFIG = {
         requestsPerMinute: 60,
         requestsPerDay: 1500
     },
-    baseURL: 'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent'
+    baseURL: 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent'
 };
 
 // ===== GLOBAL VARIABLES =====
@@ -169,7 +169,7 @@ export async function researchKeywords() {
                 }
                 `;
 
-                const url = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(apiKey);
+                const url = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(apiKey);
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

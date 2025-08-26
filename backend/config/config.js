@@ -78,12 +78,12 @@ const config = {
     providers: {
       openai: {
         // ✅ REMOVED: apiKey (use SecureConfigService.getApiKey('openai'))
-        model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
+        model: process.env.OPENAI_MODEL || 'gpt-oss-120b',
         enabled: !!process.env.OPENAI_API_KEY
       },
       gemini: {
         // ✅ REMOVED: apiKey (use SecureConfigService.getApiKey('gemini'))
-        model: process.env.GEMINI_MODEL || 'gemini-pro',
+        model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
         enabled: !!process.env.GEMINI_API_KEY
       },
       claude: {

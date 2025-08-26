@@ -986,7 +986,7 @@ class CMSDashboard {
                 isConnected: testResponse.success,
                 lastCheck: new Date(),
                 error: testResponse.success ? null : testResponse.error,
-                model: 'gemini-2.0-flash'
+                model: 'gemini-2.5-flash'
             };
 
             this.updateGeminiStatus();
@@ -1007,7 +1007,7 @@ class CMSDashboard {
     // Test Gemini API connection
     async testGeminiConnection(apiKey) {
         try {
-            const url = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(apiKey);
+            const url = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(apiKey);
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1113,7 +1113,7 @@ class CMSDashboard {
                                     tags: result.tags || [],
                                     summary: result.summary || ''
                                 },
-                                source: 'gemini-2.0-flash'
+                                source: 'gemini-2.5-flash'
                             };
                         }
                     }
@@ -1171,7 +1171,7 @@ class CMSDashboard {
             
             if (!apiKey) throw new Error('API key not found');
 
-            const url = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(apiKey);
+            const url = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(apiKey);
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
