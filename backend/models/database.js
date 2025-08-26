@@ -341,9 +341,9 @@ module.exports = {
     getSupportedProviders: () => ['openai', 'claude', 'gemini', 'deepseek', 'chinda'],
     getSupportedModels: (provider) => {
         const models = {
-            openai: ['gpt-4', 'gpt-3.5-turbo'],
+            openai: ['gpt-oss-120b', 'accounts/fireworks/models/gpt-oss-120b'],
             claude: ['claude-3-sonnet-20240229', 'claude-3-opus-20240229'],
-            gemini: ['gemini-pro', 'gemini-2.0-flash'],
+            gemini: ['gemini-pro', 'gemini-2.5-flash'],
             deepseek: ['deepseek-chat', 'deepseek-coder'],
             chinda: ['chinda-qwen3-4b']
         };

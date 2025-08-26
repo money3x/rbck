@@ -34,8 +34,8 @@ const getInitializedCouncils = () => {
 const AI_PROVIDERS = {
     gemini: {
         name: 'Google Gemini',
-        endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
-        model: 'gemini-2.0-flash',
+        endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+        model: 'gemini-2.5-flash',
         enabled: !!process.env.GEMINI_API_KEY,
         costPerToken: 0.000002,
         status: 'active',
@@ -44,7 +44,7 @@ const AI_PROVIDERS = {
     openai: {
         name: 'OpenAI GPT',
         endpoint: 'https://api.openai.com/v1/chat/completions',
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-oss-120b',
         enabled: !!process.env.OPENAI_API_KEY,
         costPerToken: 0.000002,
         status: 'active',
@@ -107,30 +107,73 @@ router.get('/', (req, res) => {
 });
 
 /**
- * ✅ BROWSER ENDPOINTS: GET /api/ai/providers
- * List all available providers with status
+ * ✅ BROWSER ENDPOINTS: GET /api/ai/providers  
+ * List all available providers with status (uses real provider config)
  */
-router.get('/providers', (req, res) => {
-    const providers = Object.entries(AI_PROVIDERS).map(([key, config]) => {
-        const hasApiKey = !!process.env[`${key.toUpperCase()}_API_KEY`];
-        return {
-            id: key,
-            name: config.name,
-            model: config.model,
-            enabled: config.enabled,
-            configured: hasApiKey,
-            status: hasApiKey && config.enabled ? 'ready' : 'not_configured',
-            testUrl: `/api/ai/test/${key}`
-        };
-    });
-    
-    res.json({
-        success: true,
-        providers: providers,
-        totalProviders: providers.length,
-        readyProviders: providers.filter(p => p.status === 'ready').length,
-        timestamp: new Date().toISOString()
-    });
+router.get('/providers', async (req, res) => {
+    try {
+        console.log('📋 [AI PROVIDERS] Loading provider list from real configuration...');
+        
+        // Use the actual provider configuration
+        const { getAllProviders, getProviderConfig } = require('../ai/providers/config/providers.config');
+        const allProviderNames = getAllProviders();
+        
+        const providers = [];
+        
+        for (const providerName of allProviderNames) {
+            try {
+                const config = getProviderConfig(providerName);
+                
+                providers.push({
+                    id: providerName,
+                    name: config.name,
+                    model: config.defaultModel || config.model,
+                    enabled: config.enabled,
+                    configured: !!(config.apiKey),
+                    status: config.enabled && config.apiKey ? 'ready' : 'not_configured',
+                    testUrl: `/api/ai/test/${providerName}`
+                });
+                
+                console.log(`✅ [PROVIDERS] ${providerName}: ${config.enabled && config.apiKey ? 'READY' : 'NOT CONFIGURED'}`);
+            } catch (error) {
+                console.warn(`⚠️ [PROVIDERS] ${providerName}: ${error.message}`);
+                
+                // Add disabled provider to list  
+                providers.push({
+                    id: providerName,
+                    name: providerName.charAt(0).toUpperCase() + providerName.slice(1),
+                    model: 'N/A',
+                    enabled: false,
+                    configured: false,
+                    status: 'not_configured',
+                    testUrl: `/api/ai/test/${providerName}`,
+                    error: error.message
+                });
+            }
+        }
+        
+        const readyProviders = providers.filter(p => p.status === 'ready');
+        
+        console.log(`📊 [PROVIDERS] Total: ${providers.length}, Ready: ${readyProviders.length}`);
+        
+        res.json({
+            success: true,
+            providers: providers,
+            totalProviders: providers.length,
+            readyProviders: readyProviders.length,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('❌ [PROVIDERS] Failed to load providers:', error);
+        
+        res.status(500).json({
+            success: false,
+            error: 'Failed to load providers',
+            details: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
 });
 
 /**
@@ -139,45 +182,41 @@ router.get('/providers', (req, res) => {
  */
 router.get('/status', async (req, res) => {
     try {
-        const providers = ['gemini', 'openai', 'claude', 'deepseek', 'chinda'];
+        const { getAllProviders, getProviderConfig } = require('../ai/providers/config/providers.config');
+        const providers = getAllProviders();
         const status = {
             system: 'operational',
             timestamp: new Date().toISOString(),
             providers: {}
         };
         
-        console.log('🔍 [AI STATUS] Checking providers status...');
+        console.log('🔍 [AI STATUS] Checking providers status using provider config...');
         
-        // FIXED: Direct environment variable check (simple and reliable)
+        // Use the proper provider configuration system
         for (const provider of providers) {
-            let hasApiKey = false;
-            
-            // Check the actual environment variables that work with chatbot
-            switch (provider) {
-                case 'chinda':
-                    hasApiKey = !!process.env.CHINDA_API_KEY;
-                    break;
-                case 'gemini':
-                    hasApiKey = !!process.env.GEMINI_API_KEY;
-                    break;
-                case 'openai':
-                    hasApiKey = !!process.env.OPENAI_API_KEY;
-                    break;
-                case 'claude':
-                    hasApiKey = !!process.env.CLAUDE_API_KEY;
-                    break;
-                case 'deepseek':
-                    hasApiKey = !!process.env.DEEPSEEK_API_KEY;
-                    break;
-                default:
-                    hasApiKey = !!process.env[`${provider.toUpperCase()}_API_KEY`];
+            try {
+                const config = getProviderConfig(provider);
+                const hasApiKey = !!(config && config.apiKey);
+                const isEnabled = config && config.enabled;
+                
+                status.providers[provider] = {
+                    name: config.name,
+                    configured: hasApiKey,
+                    enabled: isEnabled,
+                    status: hasApiKey && isEnabled ? 'ready' : 'needs_configuration'
+                };
+                
+                console.log(`✅ [AI STATUS] ${provider}: ${hasApiKey && isEnabled ? 'READY' : 'NOT CONFIGURED'}`);
+            } catch (error) {
+                console.warn(`⚠️ [AI STATUS] ${provider}: ${error.message}`);
+                status.providers[provider] = {
+                    name: provider.charAt(0).toUpperCase() + provider.slice(1),
+                    configured: false,
+                    enabled: false,
+                    status: 'not_configured',
+                    error: error.message
+                };
             }
-            
-            status.providers[provider] = {
-                name: provider,
-                configured: hasApiKey,
-                status: hasApiKey ? 'ready' : 'needs_configuration'
-            };
         }
         
         res.json({
@@ -212,7 +251,11 @@ router.get('/usage', async (req, res) => {
         
         for (const providerName of providers) {
             try {
-                const hasApiKey = !!process.env[`${providerName.toUpperCase()}_API_KEY`];
+                // Use proper provider configuration system
+                const { getProviderConfig } = require('../ai/providers/config/providers.config');
+                const config = getProviderConfig(providerName);
+                const hasApiKey = !!(config && config.apiKey);
+                
                 if (hasApiKey) {
                     const provider = ProviderFactory.createProvider(providerName);
                     if (provider && typeof provider.getUsageStats === 'function') {
@@ -312,15 +355,27 @@ router.get('/test/:provider', async (req, res) => {
         
         const providerConfig = AI_PROVIDERS[provider];
         
-        // Check if provider has API key in environment
-        const apiKeyEnvVar = `${provider.toUpperCase()}_API_KEY`;
-        const hasApiKey = !!process.env[apiKeyEnvVar];
-        
-        if (!providerConfig.enabled || !hasApiKey) {
+        // Use proper provider configuration system
+        let actualConfig;
+        try {
+            const { getProviderConfig } = require('../ai/providers/config/providers.config');
+            actualConfig = getProviderConfig(provider);
+            
+            const hasApiKey = !!(actualConfig && actualConfig.apiKey);
+            const isEnabled = actualConfig && actualConfig.enabled;
+            
+            if (!isEnabled || !hasApiKey) {
+                return res.status(400).json({
+                    success: false,
+                    error: `Provider ${provider} not configured or disabled (API key: ${hasApiKey}, enabled: ${isEnabled})`,
+                    code: 'PROVIDER_NOT_CONFIGURED'
+                });
+            }
+        } catch (configError) {
             return res.status(400).json({
                 success: false,
-                error: `Provider ${provider} not configured or disabled (API key: ${hasApiKey}, enabled: ${providerConfig.enabled})`,
-                code: 'PROVIDER_NOT_CONFIGURED'
+                error: `Provider ${provider} configuration error: ${configError.message}`,
+                code: 'PROVIDER_CONFIG_ERROR'
             });
         }
         
@@ -426,15 +481,27 @@ router.post('/test/:provider', async (req, res) => {
         
         const providerConfig = AI_PROVIDERS[provider];
         
-        // Check if provider has API key in environment
-        const apiKeyEnvVar = `${provider.toUpperCase()}_API_KEY`;
-        const hasApiKey = !!process.env[apiKeyEnvVar];
-        
-        if (!providerConfig.enabled || !hasApiKey) {
+        // Use proper provider configuration system
+        let actualConfig;
+        try {
+            const { getProviderConfig } = require('../ai/providers/config/providers.config');
+            actualConfig = getProviderConfig(provider);
+            
+            const hasApiKey = !!(actualConfig && actualConfig.apiKey);
+            const isEnabled = actualConfig && actualConfig.enabled;
+            
+            if (!isEnabled || !hasApiKey) {
+                return res.status(400).json({
+                    success: false,
+                    error: `Provider ${provider} not configured or disabled (API key: ${hasApiKey}, enabled: ${isEnabled})`,
+                    code: 'PROVIDER_NOT_CONFIGURED'
+                });
+            }
+        } catch (configError) {
             return res.status(400).json({
                 success: false,
-                error: `Provider ${provider} not configured or disabled (API key: ${hasApiKey}, enabled: ${providerConfig.enabled})`,
-                code: 'PROVIDER_NOT_CONFIGURED'
+                error: `Provider ${provider} configuration error: ${configError.message}`,
+                code: 'PROVIDER_CONFIG_ERROR'
             });
         }
         
@@ -565,38 +632,51 @@ router.get('/status/:provider', async (req, res) => {
         
         const providerConfig = AI_PROVIDERS[provider];
         
-        // Check if provider has API key in environment
-        const apiKeyEnvVar = `${provider.toUpperCase()}_API_KEY`;
-        const hasApiKey = !!process.env[apiKeyEnvVar];
-        const isEnabled = providerConfig.enabled;
-        
-        // Get usage stats from cost tracking
-        const usage = costTracking.providers[provider] || {
-            totalRequests: 0,
-            totalTokens: 0,
-            totalCost: 0,
-            lastUsed: null
-        };
-        
-        // Professional health check - actual status without simulation
-        const isHealthy = hasApiKey && isEnabled;
-        const responseTime = isHealthy ? (providerConfig.responseTime || 1500) : null;
-        
-        res.json({
-            success: true,
-            provider: provider,
-            name: providerConfig.name,
-            connected: isHealthy,
-            configured: hasApiKey,
-            enabled: isEnabled,
-            status: isHealthy ? 'healthy' : 'error',
-            responseTime: responseTime,
-            successRate: isHealthy ? 0.85 + Math.random() * 0.15 : 0, // 85-100%
-            model: providerConfig.model,
-            endpoint: providerConfig.endpoint,
-            usage: usage,
-            timestamp: new Date().toISOString()
-        });
+        // Use proper provider configuration system
+        let actualConfig;
+        try {
+            const { getProviderConfig } = require('../ai/providers/config/providers.config');
+            actualConfig = getProviderConfig(provider);
+            
+            const hasApiKey = !!(actualConfig && actualConfig.apiKey);
+            const isEnabled = actualConfig && actualConfig.enabled;
+            
+            // Get usage stats from cost tracking
+            const usage = costTracking.providers[provider] || {
+                totalRequests: 0,
+                totalTokens: 0,
+                totalCost: 0,
+                lastUsed: null
+            };
+            
+            // Professional health check - actual status without simulation
+            const isHealthy = hasApiKey && isEnabled;
+            const responseTime = isHealthy ? (actualConfig.responseTime || 1500) : null;
+            
+            res.json({
+                success: true,
+                provider: provider,
+                name: actualConfig.name,
+                connected: isHealthy,
+                configured: hasApiKey,
+                enabled: isEnabled,
+                status: isHealthy ? 'healthy' : 'error',
+                responseTime: responseTime,
+                successRate: isHealthy ? 0.85 + Math.random() * 0.15 : 0, // 85-100%
+                model: actualConfig.defaultModel,
+                endpoint: actualConfig.baseURL,
+                usage: usage,
+                timestamp: new Date().toISOString()
+            });
+            
+        } catch (configError) {
+            res.status(500).json({
+                success: false,
+                error: `Provider configuration error: ${configError.message}`,
+                code: 'CONFIG_ERROR',
+                provider: provider
+            });
+        }
         
     } catch (error) {
         console.error(`❌ [AI STATUS] ${provider} status check failed:`, error);
@@ -640,9 +720,19 @@ router.get('/metrics', async (req, res) => {
         for (const provider of providers) {
             const providerConfig = AI_PROVIDERS[provider];
             
-            // ✅ FIXED: Check environment variables instead of non-existent providerConfig.apiKey
-            const hasApiKey = !!process.env[`${provider.toUpperCase()}_API_KEY`];
-            const isActive = providerConfig.enabled && hasApiKey;
+            // ✅ FIXED: Use proper provider configuration system
+            let hasApiKey = false;
+            let isActive = false;
+            
+            try {
+                const { getProviderConfig } = require('../ai/providers/config/providers.config');
+                const actualConfig = getProviderConfig(provider);
+                hasApiKey = !!(actualConfig && actualConfig.apiKey);
+                isActive = actualConfig && actualConfig.enabled && hasApiKey;
+            } catch (configError) {
+                // Provider not configured, keep defaults
+                console.warn(`⚠️ [METRICS] Provider ${provider} not configured:`, configError.message);
+            }
             const usage = costTracking.providers[provider];
             
             // Get real-time metrics from providerMetrics
@@ -1071,8 +1161,16 @@ router.get('/metrics', async (req, res) => {
             const providerConfig = AI_PROVIDERS[key];
             if (!providerConfig) continue;
             
-            // Check if API key is configured
-            const hasApiKey = !!process.env[`${key.toUpperCase()}_API_KEY`];
+            // Check if API key is configured using proper provider configuration
+            let hasApiKey = false;
+            try {
+                const { getProviderConfig } = require('../ai/providers/config/providers.config');
+                const actualConfig = getProviderConfig(key);
+                hasApiKey = !!(actualConfig && actualConfig.apiKey);
+            } catch (configError) {
+                // Provider not configured, keep default false
+                console.warn(`⚠️ [METRICS] Provider ${key} not configured:`, configError.message);
+            }
             
             // Calculate real-time averages
             const avgResponseTime = realtimeMetrics.responseTimesHistory.length > 0 
@@ -1220,6 +1318,13 @@ router.post('/chat-optimized', async (req, res) => {
             maxTokens: maxTokens,
             temperature: temperature
         });
+        
+        console.log('🎯 [AI CHAT] RESULT - Provider used:', result.provider);
+        console.log('🎯 [AI CHAT] RESULT - Model used:', result.model);
+        console.log('🎯 [AI CHAT] RESULT - Success:', result.success);
+        if (result.fallbackUsed) {
+            console.log('⚠️ [AI CHAT] FALLBACK DETECTED - Original provider:', result.originalProvider);
+        }
         
         const totalTime = Date.now() - requestStart;
         
@@ -1390,6 +1495,9 @@ router.post('/chat', async (req, res) => {
         // Input validation
         const { provider, message, model, maxTokens = 1000, temperature = 0.7 } = req.body;
         
+        console.log('🎯 [AI CHAT] DEBUGGING - Selected provider:', provider);
+        console.log('🎯 [AI CHAT] DEBUGGING - Message preview:', message?.substring(0, 50) + '...');
+        
         // Quick validation
         if (!provider || !message) {
             console.error('❌ [AI CHAT] Missing parameters');
@@ -1417,6 +1525,13 @@ router.post('/chat', async (req, res) => {
             maxTokens: maxTokens,
             temperature: temperature
         });
+        
+        console.log('🎯 [AI CHAT] RESULT - Provider used:', result.provider);
+        console.log('🎯 [AI CHAT] RESULT - Model used:', result.model);
+        console.log('🎯 [AI CHAT] RESULT - Success:', result.success);
+        if (result.fallbackUsed) {
+            console.log('⚠️ [AI CHAT] FALLBACK DETECTED - Original provider:', result.originalProvider);
+        }
         
         const totalTime = Date.now() - requestStart;
         
