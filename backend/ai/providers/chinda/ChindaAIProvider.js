@@ -7,18 +7,29 @@ class ChindaAIProvider extends BaseProvider {
         this.baseURL = config.baseURL || config.baseUrl;
         this.apiKey = config.apiKey;
         
+        // Enhanced token configuration for comprehensive content generation
+        this.tokenLimits = {
+            short: 2500,        // ~1,500-2,000 words
+            medium: 5000,       // ~3,000-3,500 words  
+            long: 7500,         // ~4,500-5,000 words
+            comprehensive: 10000, // ~6,000+ words
+            default: 5000       // Medium length as default
+        };
+        
         // Configure axios instance for ChindaX API
         this.client = axios.create({
             baseURL: this.baseURL,
-            timeout: 10000, // 10 seconds - faster response
+            timeout: 15000, // Extended timeout for longer content
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${this.apiKey}` // ChindaX uses API key as Bearer token
             },
             // Connection optimization
             maxRedirects: 5,
-            maxContentLength: 50000
+            maxContentLength: 100000 // Increased for longer responses
         });
+        
+        console.log(`📏 [ChindaX] Enhanced token limits configured:`, this.tokenLimits);
         
         if (!this.baseURL || !this.apiKey) {
             throw new Error('ChindaX configuration incomplete: baseURL and apiKey required');
@@ -39,12 +50,18 @@ class ChindaAIProvider extends BaseProvider {
                 }
             ];
             
+            // Enhanced token configuration for comprehensive content generation
+            const contentLength = options.contentLength || 'default';
+            const maxTokens = this.calculateOptimalTokens(options.maxTokens, contentLength, options.articleType);
+            
             const requestData = {
                 model: options.model || 'chinda-qwen3-4b',
                 messages: messages,
-                max_tokens: options.maxTokens || 300, // Reduce tokens for faster response
+                max_tokens: maxTokens,
                 temperature: options.temperature || 0.7
             };
+            
+            console.log(`📏 [ChindaX] Using enhanced token limit: ${maxTokens} (type: ${contentLength})`);
             
             console.log(`📤 [ChindaX] Request details:`, {
                 url: `${this.baseURL}/chat/completions`,
@@ -70,12 +87,18 @@ class ChindaAIProvider extends BaseProvider {
                 throw new Error('No content received from ChindaX');
             }
             
-            return {
+            const result = {
                 content: content,
                 model: data.model || options.model || 'chinda-qwen3-4b',
                 provider: 'chinda',
-                usage: data.usage || {}
+                usage: data.usage || {},
+                tokenLimit: requestData.max_tokens,
+                contentLength: options.contentLength || 'default',
+                wordCount: this.estimateWordCount(content)
             };
+            
+            console.log(`✅ [ChindaX] Generated ${result.wordCount} words using ${requestData.max_tokens} token limit`);
+            return result;
             
         } catch (error) {
             console.error('❌ [ChindaX] Generation error:', error.message);
@@ -142,6 +165,79 @@ class ChindaAIProvider extends BaseProvider {
         };
     }
     
+    /**
+     * Calculate Optimal Token Limit
+     * Determines the best token limit based on content requirements
+     */
+    calculateOptimalTokens(explicitTokens, contentLength = 'default', articleType = null) {
+        // If explicit tokens provided, use them (with reasonable bounds)
+        if (explicitTokens) {
+            return Math.min(Math.max(explicitTokens, 500), 12000); // Min 500, Max 12000
+        }
+
+        // Article type specific tokens
+        if (articleType) {
+            const articleTokens = {
+                'engine_maintenance': 6000,        // Comprehensive technical guides
+                'hydraulic_repair': 7000,          // Detailed troubleshooting
+                'troubleshooting': 8000,           // Extensive diagnostic guides  
+                'seasonal_maintenance': 5500,       // Seasonal checklists
+                'parts_replacement': 6500          // Step-by-step instructions
+            };
+            
+            if (articleTokens[articleType]) {
+                console.log(`📄 [ChindaX] Using article-specific token limit for ${articleType}: ${articleTokens[articleType]}`);
+                return articleTokens[articleType];
+            }
+        }
+
+        // Content length based tokens
+        if (this.tokenLimits[contentLength]) {
+            return this.tokenLimits[contentLength];
+        }
+
+        // Default fallback
+        return this.tokenLimits.default;
+    }
+
+    /**
+     * Estimate Word Count
+     * Rough estimation of word count from content
+     */
+    estimateWordCount(content) {
+        if (!content) return 0;
+        
+        // Handle Thai and English mixed content
+        const englishWords = (content.match(/[a-zA-Z]+/g) || []).length;
+        const thaiChars = (content.match(/[\u0E00-\u0E7F]/g) || []).length;
+        const thaiWords = Math.floor(thaiChars / 4); // Approximate: 4 Thai chars = 1 word
+        
+        return englishWords + thaiWords;
+    }
+
+    /**
+     * Get Token Limit Information  
+     * Returns available token limit configurations
+     */
+    getTokenLimitInfo() {
+        return {
+            available: this.tokenLimits,
+            articleTypes: {
+                'engine_maintenance': 6000,
+                'hydraulic_repair': 7000, 
+                'troubleshooting': 8000,
+                'seasonal_maintenance': 5500,
+                'parts_replacement': 6500
+            },
+            recommendedWordCounts: {
+                short: '1,500-2,000 words',
+                medium: '3,000-3,500 words', 
+                long: '4,500-5,000 words',
+                comprehensive: '6,000+ words'
+            }
+        };
+    }
+
     async checkHealth() {
         try {
             // Simple connection test first
