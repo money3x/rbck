@@ -181,7 +181,7 @@ class ChindaAIProvider extends BaseProvider {
     calculateOptimalTokens(explicitTokens, contentLength = 'default', articleType = null) {
         // If explicit tokens provided, use them (with reasonable bounds)
         if (explicitTokens) {
-            return Math.min(Math.max(explicitTokens, 500), 12000); // Min 500, Max 12000
+            return Math.min(Math.max(explicitTokens, 1000), 12000); // Min 1000, Max 12000
         }
 
         // Article type specific tokens
