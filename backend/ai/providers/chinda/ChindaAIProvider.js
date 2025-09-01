@@ -51,8 +51,17 @@ class ChindaAIProvider extends BaseProvider {
             ];
             
             // Enhanced token configuration for comprehensive content generation
+            console.log(`🔍 [ChindaX] DEBUG - Raw options received:`, JSON.stringify(options, null, 2));
+            
             const contentLength = options.contentLength || 'default';
             const maxTokens = this.calculateOptimalTokens(options.maxTokens, contentLength, options.articleType);
+            
+            console.log(`🔍 [ChindaX] DEBUG - Token calculation:`, {
+                explicitTokens: options.maxTokens,
+                contentLength: contentLength,
+                articleType: options.articleType,
+                calculatedTokens: maxTokens
+            });
             
             const requestData = {
                 model: options.model || 'chinda-qwen3-4b',
