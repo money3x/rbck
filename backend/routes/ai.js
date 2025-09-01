@@ -1492,11 +1492,13 @@ router.post('/chat', async (req, res) => {
         console.log('🚀 [AI CHAT] Processing request with optimized service...');
         console.log('🔍 [AI CHAT] Request body:', JSON.stringify(req.body, null, 2));
         
-        // Input validation
-        const { provider, message, model, maxTokens = 1000, temperature = 0.7 } = req.body;
+        // Input validation with enhanced token support
+        const { provider, message, model, maxTokens = 1000, temperature = 0.7, options = {} } = req.body;
         
         console.log('🎯 [AI CHAT] DEBUGGING - Selected provider:', provider);
         console.log('🎯 [AI CHAT] DEBUGGING - Message preview:', message?.substring(0, 50) + '...');
+        console.log('🎯 [AI CHAT] DEBUGGING - Enhanced options:', JSON.stringify(options, null, 2));
+        console.log('🎯 [AI CHAT] DEBUGGING - Token limits:', { maxTokens, optionsMaxTokens: options.maxTokens });
         
         // Quick validation
         if (!provider || !message) {
@@ -1519,12 +1521,18 @@ router.post('/chat', async (req, res) => {
         
         console.log(`🚀 [AI CHAT] Processing message for provider: ${provider}`);
         
-        // Use optimized service
-        const result = await aiProviderService.processMessage(provider, message.trim(), {
+        // Use optimized service with enhanced options
+        const enhancedOptions = {
             model: model,
-            maxTokens: maxTokens,
-            temperature: temperature
-        });
+            maxTokens: options.maxTokens || maxTokens, // Prioritize options.maxTokens
+            temperature: temperature,
+            contentLength: options.contentLength,
+            articleType: options.articleType
+        };
+        
+        console.log('📏 [AI CHAT] Final options passed to service:', enhancedOptions);
+        
+        const result = await aiProviderService.processMessage(provider, message.trim(), enhancedOptions);
         
         console.log('🎯 [AI CHAT] RESULT - Provider used:', result.provider);
         console.log('🎯 [AI CHAT] RESULT - Model used:', result.model);
