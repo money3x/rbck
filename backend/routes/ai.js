@@ -1832,41 +1832,31 @@ router.post('/circuit-breaker/monitoring/stop', authenticateAdmin, async (req, r
  * Enhanced error handling and monitoring for AI Swarm Councils
  */
 
-// Get Swarm Council detailed status
-router.get('/swarm/status', async (req, res) => {
-    try {
-        const swarmStatus = swarmCouncil.getDetailedStatus();
-        const eatSwarmStatus = eatSwarmCouncil.getDetailedStatus ? eatSwarmCouncil.getDetailedStatus() : eatSwarmCouncil.getCouncilStatus();
-        
-        res.json({
-            success: true,
-            swarmCouncil: swarmStatus,
-            eatSwarmCouncil: eatSwarmStatus,
-            timestamp: new Date().toISOString()
-        });
-    } catch (error) {
-        console.error('❌ [SWARM] Status error:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to get swarm council status',
-            message: error.message
-        });
-    }
-});
 
 // Reinitialize Swarm Council
 router.post('/swarm/reinitialize', authenticateAdmin, async (req, res) => {
     try {
         console.log('🔄 [SWARM] Reinitializing Swarm Councils...');
         
-        const swarmStatus = await swarmCouncil.reinitialize();
+        // Get councils from manager
+        const { swarmCouncil: currentSwarmCouncil, eatSwarmCouncil: currentEatSwarmCouncil } = getInitializedCouncils();
+        
+        if (!currentSwarmCouncil) {
+            return res.status(503).json({
+                success: false,
+                error: 'Swarm Council not initialized',
+                message: 'Cannot reinitialize - councils not available'
+            });
+        }
+        
+        const swarmStatus = await currentSwarmCouncil.reinitialize();
         let eatSwarmStatus = null;
         
-        if (typeof eatSwarmCouncil.reinitialize === 'function') {
-            eatSwarmStatus = await eatSwarmCouncil.reinitialize();
-        } else {
+        if (currentEatSwarmCouncil && typeof currentEatSwarmCouncil.reinitialize === 'function') {
+            eatSwarmStatus = await currentEatSwarmCouncil.reinitialize();
+        } else if (currentEatSwarmCouncil) {
             // Fallback for older E-A-T Swarm without reinitialize method
-            eatSwarmStatus = eatSwarmCouncil.getCouncilStatus();
+            eatSwarmStatus = currentEatSwarmCouncil.getCouncilStatus();
         }
         
         res.json({
@@ -2042,7 +2032,7 @@ router.get('/swarm/status', async (req, res) => {
         
         // Get detailed status
         const swarmStatus = swarmCouncil.getDetailedStatus();
-        const eatStatus = eatSwarmCouncil ? eatSwarmCouncil.getDetailedStatus() : null;
+        const eatStatus = eatSwarmCouncil ? eatSwarmCouncil.getCouncilStatus() : null;
         
         res.json({
             success: true,
@@ -2058,7 +2048,7 @@ router.get('/swarm/status', async (req, res) => {
                     available: false,
                     initialized: false
                 },
-                manager: swarmCouncilManager.getStatus(),
+                manager: manager.getStatus(),
                 systemHealth: {
                     totalProviders: Object.keys(AI_PROVIDERS).length,
                     enabledProviders: Object.values(AI_PROVIDERS).filter(p => p.enabled).length,

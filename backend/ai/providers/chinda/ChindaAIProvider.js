@@ -116,7 +116,7 @@ class ChindaAIProvider extends BaseProvider {
                 // HTTP error from ChindaX API
                 const status = error.response.status;
                 const errorData = error.response.data;
-                //let message = 'Unknown API error';
+                let message = 'Unknown API error';
                 
                 // Enhanced error debugging
                 console.error('🔍 [ChindaX] Error response details:', {
