@@ -72,7 +72,7 @@ const windowExt = window;
 class AIMonitoringSystem {
     constructor() {
         /** @type {string[]} */
-        this.providers = ['gemini', 'openai', 'claude', 'deepseek', 'chinda'];
+        this.providers = ['qwen3', 'openai', 'deepseek', 'gemini', 'chinda'];
         
         /** @type {MetricsMap} */
         this.metrics = {};

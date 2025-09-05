@@ -2,14 +2,17 @@
 // Environment variables are loaded by server.js
 
 const providersConfig = {
-    claude: {
-        name: 'Anthropic Claude',
+    qwen3: {
+        name: 'Qwen3-235B via ChindaX',
         provider: 'ClaudeProvider',
-        apiKey: process.env.CLAUDE_API_KEY,
-        baseURL: process.env.CLAUDE_BASE_URL || 'https://api.anthropic.com/v1',
-        defaultModel: 'claude-3-sonnet-20240229',
-        enabled: process.env.CLAUDE_ENABLED === 'true',
-        models: ['claude-3-sonnet-20240229', 'claude-3-opus-20240229', 'claude-3-haiku-20240307'],
+        apiKey: process.env.CLAUDE_API_KEY || process.env.CHINDA_API_KEY, // Use ChindaX key as fallback
+        baseURL: process.env.CLAUDE_BASE_URL || process.env.CHINDA_BASE_URL || 'https://chindax.iapp.co.th/api',
+        defaultModel: 'Qwen/Qwen3-235B-A22B',
+        model: process.env.CLAUDE_MODEL || 'Qwen/Qwen3-235B-A22B',
+        maxTokens: parseInt(process.env.CLAUDE_MAX_TOKENS) || 5000,
+        temperature: parseFloat(process.env.CLAUDE_TEMPERATURE) || 0.7,
+        enabled: !!(process.env.CLAUDE_API_KEY || process.env.CHINDA_API_KEY), // Enable if either key exists
+        models: ['Qwen/Qwen3-235B-A22B'],
         role: 'Chief E-E-A-T Content Specialist',
         specialties: ['trustworthiness', 'experience integration', 'factual accuracy', 'content quality'],
         priority: 1,
@@ -42,13 +45,16 @@ const providersConfig = {
         }
     },
     deepseek: {
-        name: 'DeepSeek',
+        name: 'DeepSeek R1 via ChindaX',
         provider: 'DeepSeekProvider',
-        apiKey: process.env.DEEPSEEK_API_KEY,
-        baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
-        defaultModel: 'deepseek-chat',
-        enabled: process.env.DEEPSEEK_ENABLED === 'true',
-        models: ['deepseek-chat', 'deepseek-coder'],
+        apiKey: process.env.DEEPSEEK_API_KEY || process.env.CHINDA_API_KEY, // Use ChindaX key as fallback
+        baseURL: process.env.DEEPSEEK_BASE_URL || process.env.CHINDA_BASE_URL || 'https://chindax.iapp.co.th/api',
+        defaultModel: 'deepseek-ai/DeepSeek-R1-0528',
+        model: process.env.DEEPSEEK_MODEL || 'deepseek-ai/DeepSeek-R1-0528',
+        maxTokens: parseInt(process.env.DEEPSEEK_MAX_TOKENS) || 5000,
+        temperature: parseFloat(process.env.DEEPSEEK_TEMPERATURE) || 0.7,
+        enabled: !!(process.env.DEEPSEEK_API_KEY || process.env.CHINDA_API_KEY), // Enable if either key exists
+        models: ['deepseek-ai/DeepSeek-R1-0528'],
         role: 'Technical Expertise Validator',
         specialties: ['technical accuracy', 'expertise validation', 'depth analysis', 'schema markup'],
         priority: 3,

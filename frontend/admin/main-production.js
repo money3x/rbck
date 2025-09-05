@@ -2166,7 +2166,7 @@ window.switchAITab = function(tabName) {
 window.updateConnectionStatus = async function() {
     console.log('🔄 [AI Settings] Updating connection status...');
     
-    const providers = ['openai', 'claude', 'gemini', 'deepseek', 'chinda'];
+    const providers = ['qwen3', 'openai', 'deepseek', 'gemini', 'chinda'];
     
     for (const provider of providers) {
         const badge = document.getElementById(`${provider}-badge`);

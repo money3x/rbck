@@ -8,7 +8,7 @@ import { API_BASE } from '../config.js';
 // @ts-check
 
 /**
- * @typedef {'gemini'|'openai'|'claude'|'deepseek'|'chinda'} ProviderKey
+ * @typedef {'qwen3'|'openai'|'deepseek'|'gemini'|'chinda'} ProviderKey
  * @typedef {Object} ProviderConfig
  * @property {string} name
  * @property {boolean} status
@@ -372,7 +372,7 @@ class AIProviderManager {
             console.log('📊 [UNIFIED SYNC FIXED] Got unified status data:', allStatus);
             
             // ✅ FIXED: Use proper provider keys with enhanced sync logic
-            const providerKeys = ['gemini', 'openai', 'claude', 'deepseek', 'chinda'];
+            const providerKeys = ['qwen3', 'openai', 'deepseek', 'gemini', 'chinda'];
             let hasValidData = false;
             
             providerKeys.forEach(providerKey => {
@@ -432,7 +432,7 @@ class AIProviderManager {
         // 🔧 FIX: Direct API fallback when unified manager not available
         console.log('🔄 [DIRECT API FALLBACK] Checking providers directly...');
         
-        const providerKeys = ['gemini', 'openai', 'claude', 'deepseek', 'chinda'];
+        const providerKeys = ['qwen3', 'openai', 'deepseek', 'gemini', 'chinda'];
         const connectedProviders = [];
         
         // Check each provider directly via API

@@ -18,7 +18,7 @@ function ensureGlobals() {
  */
 class UnifiedAIStatusManager {
     constructor() {
-        this.providers = ['gemini', 'openai', 'claude', 'deepseek', 'chinda'];
+        this.providers = ['qwen3', 'openai', 'deepseek', 'gemini', 'chinda'];
         this.providerStatus = {};
         this.isMonitoring = false;
         this.updateInterval = null;
