@@ -43,7 +43,7 @@ const AI_PROVIDERS = {
     },
     openai: {
         name: 'OpenAI GPT',
-        endpoint: 'https://api.openai.com/v1/chat/completions',
+        endpoint: 'https://chindax.iapp.co.th/api/chat/completion',
         model: 'gpt-oss-120b',
         enabled: !!process.env.OPENAI_API_KEY,
         costPerToken: 0.000002,
@@ -61,8 +61,8 @@ const AI_PROVIDERS = {
     },
     deepseek: {
         name: 'DeepSeek AI',
-        endpoint: 'https://api.deepseek.com/v1/chat/completions',
-        model: 'deepseek-chat',
+        endpoint: 'https://chindax.iapp.co.th/api/chat/completions',
+        model: 'DeepSeek-R1-0528',
         enabled: !!process.env.DEEPSEEK_API_KEY,
         costPerToken: 0.000001,
         status: 'active',

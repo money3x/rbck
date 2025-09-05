@@ -51,8 +51,8 @@ class SecureConfigService {
             deepseek: {
                 name: 'DeepSeek AI',
                 type: 'DeepSeek AI',
-                endpoint: process.env.DEEPSEEK_API_ENDPOINT || 'https://api.deepseek.com/v1',
-                model: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
+                endpoint: process.env.DEEPSEEK_API_ENDPOINT || 'https://chindax.iapp.co.th/api',
+                model: process.env.DEEPSEEK_MODEL || 'deepseek-ai/DeepSeek-R1-0528',
                 status: this.hasValidKey('deepseek') ? 'maintenance' : 'inactive',
                 responseTime: 1500,
                 successRate: 0.85,
