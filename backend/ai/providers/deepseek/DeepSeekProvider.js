@@ -51,7 +51,9 @@ class DeepSeekProvider extends BaseProvider {
                     headers: {
                         'Authorization': `Bearer ${this.apiKey}`,
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    timeout: 30000, // 30 second timeout for production
+                    retry: 2 // Retry failed requests
                 }
             );
 
@@ -94,7 +96,8 @@ class DeepSeekProvider extends BaseProvider {
                         'Authorization': `Bearer ${this.apiKey}`,
                         'Content-Type': 'application/json'
                     },
-                    responseType: 'stream'
+                    responseType: 'stream',
+                    timeout: 30000 // 30 second timeout for production streaming
                 }
             );
 
@@ -199,12 +202,13 @@ class DeepSeekProvider extends BaseProvider {
                 responseTime: responseTime
             };
         } catch (error) {
-            console.error('🔥 [DeepSeek-R1] Health check failed:', error.message.substring(0, 300));
+            const errorMsg = error?.message || error?.toString() || 'Network connection error';
+            console.error('🔥 [DeepSeek-R1] Health check failed:', errorMsg.substring(0, 300));
             
             return {
                 status: 'unhealthy',
                 provider: 'deepseek',
-                error: error.message.substring(0, 300)
+                error: errorMsg.substring(0, 300)
             };
         }
     }

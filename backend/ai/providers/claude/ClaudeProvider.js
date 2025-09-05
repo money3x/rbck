@@ -52,7 +52,8 @@ class ClaudeProvider extends BaseProvider {
                     headers: {
                         'Authorization': `Bearer ${this.apiKey}`,
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    timeout: 30000 // 30 second timeout for production
                 }
             );
 
@@ -95,7 +96,8 @@ class ClaudeProvider extends BaseProvider {
                         'Authorization': `Bearer ${this.apiKey}`,
                         'Content-Type': 'application/json'
                     },
-                    responseType: 'stream'
+                    responseType: 'stream',
+                    timeout: 30000 // 30 second timeout for streaming
                 }
             );
 
