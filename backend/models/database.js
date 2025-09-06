@@ -344,7 +344,7 @@ module.exports = {
             openai: ['gpt-oss-120b', 'accounts/fireworks/models/gpt-oss-120b'],
             claude: ['claude-3-sonnet-20240229', 'claude-3-opus-20240229'],
             gemini: ['gemini-pro', 'gemini-2.5-flash'],
-            deepseek: ['DeepSeek-R1-0528', 'deepseek-ai/DeepSeek-R1-0528'],
+            deepseek: ['deepseek-ai/DeepSeek-R1-0528'],
             chinda: ['chinda-qwen3-4b']
         };
         return models[provider] || [];

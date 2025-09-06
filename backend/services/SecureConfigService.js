@@ -53,7 +53,7 @@ class SecureConfigService {
                 type: 'DeepSeek AI',
                 endpoint: process.env.DEEPSEEK_API_ENDPOINT || 'https://chindax.iapp.co.th/api',
                 model: process.env.DEEPSEEK_MODEL || 'deepseek-ai/DeepSeek-R1-0528',
-                status: this.hasValidKey('deepseek') ? 'maintenance' : 'inactive',
+                status: this.hasValidKey('deepseek') ? 'active' : 'inactive',
                 responseTime: 1500,
                 successRate: 0.85,
                 costPerToken: 0.000001,

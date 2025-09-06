@@ -62,7 +62,7 @@ const AI_PROVIDERS = {
     deepseek: {
         name: 'DeepSeek AI',
         endpoint: 'https://chindax.iapp.co.th/api/chat/completions',
-        model: 'DeepSeek-R1-0528',
+        model: 'deepseek-ai/DeepSeek-R1-0528',
         enabled: !!process.env.DEEPSEEK_API_KEY,
         costPerToken: 0.000001,
         status: 'active',

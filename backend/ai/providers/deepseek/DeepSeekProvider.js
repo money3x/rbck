@@ -70,7 +70,8 @@ class DeepSeekProvider extends BaseProvider {
             console.log(`✅ [DeepSeek-R1] Generated ${result.wordCount} words using ${maxTokens} token limit`);
             return result;
         } catch (error) {
-            console.error('❌ [DeepSeek-R1] Generation error:', error.message);
+            const errorMsg = error?.message || error?.toString() || 'DeepSeek generation error';
+            console.error('❌ [DeepSeek-R1] Generation error:', errorMsg);
             throw this.formatError(error);
         }
     }
@@ -103,7 +104,8 @@ class DeepSeekProvider extends BaseProvider {
 
             return response.data;
         } catch (error) {
-            console.error('❌ [DeepSeek-R1] Stream error:', error.message);
+            const errorMsg = error?.message || error?.toString() || 'DeepSeek stream error';
+            console.error('❌ [DeepSeek-R1] Stream error:', errorMsg);
             throw this.formatError(error);
         }
     }
